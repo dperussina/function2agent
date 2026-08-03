@@ -1,0 +1,2 @@
+{"key": ["run", "T.001", "A", 1], "arm": "b", "model": null, "cost_usd": 0.0, "verdict": "pass", "decision": "pass"}
+{"key": ["run", "T.002", "A", 1], "arm": "b", "model": null, "cost_usd": 0.0, "verdict": "fail", "decision": "fail"}

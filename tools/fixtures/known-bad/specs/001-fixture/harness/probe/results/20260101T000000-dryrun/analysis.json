@@ -1,0 +1,20 @@
+{
+ "judge": {
+  "b": {
+   "auroc": 0.5366666666666666,
+   "verdict": "pass"
+  }
+ },
+ "decision": {
+  "MD_best_discounted_pp": 30.724,
+  "rows": [
+   "MD_best (discounted) = 30.7 pp on arm c2, FOC = 65.8%, FPR = 0.0 pp: verifier is a headline feature.",
+   "MD_best clears the gate at 30.7 pp.",
+   "The verifier is materially better than the judge on this corpus."
+  ]
+ },
+ "spend": {
+  "spent_usd": 0.0,
+  "dry_run": true
+ }
+}

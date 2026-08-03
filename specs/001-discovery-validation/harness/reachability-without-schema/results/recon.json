@@ -1,0 +1,216 @@
+{
+  "starlette": {
+    "framework": "starlette",
+    "probes": [
+      {
+        "label": "sibling-absorb, E14 rule (real verb GET)",
+        "verb": "GET",
+        "path": "/items/special",
+        "status": 404,
+        "allow": null,
+        "body": "{\"detail\":\"Item not found\"}"
+      },
+      {
+        "label": "sibling-absorb, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/items/special",
+        "status": 405,
+        "allow": "GET, HEAD",
+        "body": "Method Not Allowed"
+      },
+      {
+        "label": "sibling-absorb, OPTIONS",
+        "verb": "OPTIONS",
+        "path": "/items/special",
+        "status": 405,
+        "allow": "GET, HEAD",
+        "body": "Method Not Allowed"
+      },
+      {
+        "label": "allow-union, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/both",
+        "status": 405,
+        "allow": "GET, HEAD",
+        "body": "Method Not Allowed"
+      },
+      {
+        "label": "allow-union, real unused verb PUT",
+        "verb": "PUT",
+        "path": "/both",
+        "status": 405,
+        "allow": "GET, HEAD",
+        "body": "Method Not Allowed"
+      },
+      {
+        "label": "unrouted control, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/f2a-nope",
+        "status": 404,
+        "allow": null,
+        "body": "Not Found"
+      },
+      {
+        "label": "unrouted control, real verb",
+        "verb": "GET",
+        "path": "/f2a-nope",
+        "status": 404,
+        "allow": null,
+        "body": "Not Found"
+      },
+      {
+        "label": "routed param path, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/items/anything",
+        "status": 405,
+        "allow": "GET, HEAD",
+        "body": "Method Not Allowed"
+      }
+    ],
+    "handlers_invoked": [
+      "HANDLER-INVOKED GET /items/{name} special"
+    ]
+  },
+  "flask": {
+    "framework": "flask",
+    "probes": [
+      {
+        "label": "sibling-absorb, E14 rule (real verb GET)",
+        "verb": "GET",
+        "path": "/items/special",
+        "status": 404,
+        "allow": null,
+        "body": "{\"detail\":\"Item not found\"}\n"
+      },
+      {
+        "label": "sibling-absorb, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/items/special",
+        "status": 405,
+        "allow": "POST, HEAD, GET, OPTIONS",
+        "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowe"
+      },
+      {
+        "label": "sibling-absorb, OPTIONS",
+        "verb": "OPTIONS",
+        "path": "/items/special",
+        "status": 200,
+        "allow": "POST, HEAD, GET, OPTIONS",
+        "body": ""
+      },
+      {
+        "label": "allow-union, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/both",
+        "status": 405,
+        "allow": "POST, HEAD, GET, OPTIONS",
+        "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowe"
+      },
+      {
+        "label": "allow-union, real unused verb PUT",
+        "verb": "PUT",
+        "path": "/both",
+        "status": 405,
+        "allow": "POST, HEAD, GET, OPTIONS",
+        "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowe"
+      },
+      {
+        "label": "unrouted control, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/f2a-nope",
+        "status": 404,
+        "allow": null,
+        "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requ"
+      },
+      {
+        "label": "unrouted control, real verb",
+        "verb": "GET",
+        "path": "/f2a-nope",
+        "status": 404,
+        "allow": null,
+        "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requ"
+      },
+      {
+        "label": "routed param path, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/items/anything",
+        "status": 405,
+        "allow": "HEAD, GET, OPTIONS",
+        "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowe"
+      }
+    ],
+    "handlers_invoked": [
+      "HANDLER-INVOKED GET /items/<name> special"
+    ]
+  },
+  "django": {
+    "framework": "django",
+    "probes": [
+      {
+        "label": "sibling-absorb, E14 rule (real verb GET)",
+        "verb": "GET",
+        "path": "/items/special",
+        "status": 405,
+        "allow": "POST",
+        "body": ""
+      },
+      {
+        "label": "sibling-absorb, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/items/special",
+        "status": 405,
+        "allow": "POST",
+        "body": ""
+      },
+      {
+        "label": "sibling-absorb, OPTIONS",
+        "verb": "OPTIONS",
+        "path": "/items/special",
+        "status": 405,
+        "allow": "POST",
+        "body": ""
+      },
+      {
+        "label": "allow-union, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/both",
+        "status": 405,
+        "allow": "GET, POST",
+        "body": ""
+      },
+      {
+        "label": "allow-union, real unused verb PUT",
+        "verb": "PUT",
+        "path": "/both",
+        "status": 405,
+        "allow": "GET, POST",
+        "body": ""
+      },
+      {
+        "label": "unrouted control, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/f2a-nope",
+        "status": 404,
+        "allow": null,
+        "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>N"
+      },
+      {
+        "label": "unrouted control, real verb",
+        "verb": "GET",
+        "path": "/f2a-nope",
+        "status": 404,
+        "allow": null,
+        "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>N"
+      },
+      {
+        "label": "routed param path, fabricated verb",
+        "verb": "F2APROBE",
+        "path": "/items/anything",
+        "status": 405,
+        "allow": "GET",
+        "body": ""
+      }
+    ],
+    "handlers_invoked": []
+  }
+}

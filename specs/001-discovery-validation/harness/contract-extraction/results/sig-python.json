@@ -1,0 +1,49 @@
+{
+  "label": "ADK Python, promoted endpoints (fresh index)",
+  "language": "python",
+  "return_type_column_populated_nodes": 0,
+  "route_handler_return_resolution": {
+    "builtin_only": 31,
+    "names_an_unresolvable_type": 4,
+    "resolves_to_declared_type": 19,
+    "with_return": 54
+  },
+  "scopes": {
+    "all_callables": {
+      "counts": {
+        "both_components_parseable": 5800,
+        "has_parameters_all_typed": 5883,
+        "n": 21204,
+        "no_signature_recorded": 63,
+        "parameters_fully_structured": 13168,
+        "parameters_none_typed": 7829,
+        "parameters_partially_typed": 144,
+        "return_type_in_signature": 5953,
+        "return_type_uninformative": 1462,
+        "zero_parameters": 7285
+      },
+      "rates": {
+        "both_components_parseable": 0.2735,
+        "parameters_fully_structured": 0.621,
+        "return_type_in_signature": 0.2807
+      }
+    },
+    "route_handlers": {
+      "counts": {
+        "both_components_parseable": 54,
+        "has_parameters_all_typed": 59,
+        "n": 65,
+        "parameters_fully_structured": 65,
+        "return_type_in_signature": 54,
+        "return_type_uninformative": 7,
+        "zero_parameters": 6
+      },
+      "rates": {
+        "both_components_parseable": 0.8308,
+        "parameters_fully_structured": 1.0,
+        "return_type_in_signature": 0.8308
+      }
+    }
+  },
+  "total_nodes": 48154
+}

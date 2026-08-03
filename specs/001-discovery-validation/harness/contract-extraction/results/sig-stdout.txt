@@ -1,0 +1,26 @@
+[ADK Python, promoted endpoints (fresh index)]
+  return_type column populated on 0/48154 nodes
+  route-handler return resolution: {'with_return': 54, 'builtin_only': 31, 'resolves_to_declared_type': 19, 'names_an_unresolvable_type': 4}
+  route_handlers: n=65
+    parameters fully structured  65/65 = 1.0000   (of which 6 take no parameters)
+    return type in signature     54/65 = 0.8308   (uninformative: 7)
+    both components parseable    54/65 = 0.8308
+    partially typed params 0, wholly untyped 0, no signature recorded 0, no call shape 0
+  all_callables: n=21204
+    parameters fully structured  13168/21204 = 0.6210   (of which 7285 take no parameters)
+    return type in signature     5953/21204 = 0.2807   (uninformative: 1462)
+    both components parseable    5800/21204 = 0.2735
+    partially typed params 144, wholly untyped 7829, no signature recorded 63, no call shape 0
+[TypeScript monorepo, verb-filtered routes (stale index, read-only)]
+  return_type column populated on 0/63783 nodes
+  route-handler return resolution: {'with_return': 683, 'builtin_only': 291, 'resolves_to_declared_type': 252, 'names_an_unresolvable_type': 140}
+  route_handlers: n=742
+    parameters fully structured  709/742 = 0.9555   (of which 139 take no parameters)
+    return type in signature     683/742 = 0.9205   (uninformative: 26)
+    both components parseable    664/742 = 0.8949
+    partially typed params 8, wholly untyped 25, no signature recorded 0, no call shape 0
+  all_callables: n=22104
+    parameters fully structured  16860/22104 = 0.7628   (of which 4219 take no parameters)
+    return type in signature     10381/22104 = 0.4696   (uninformative: 970)
+    both components parseable    10179/22104 = 0.4605
+    partially typed params 310, wholly untyped 4933, no signature recorded 1, no call shape 0

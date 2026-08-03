@@ -1,0 +1,49 @@
+{
+ "_comment": "Payloads the oracle-leak assertion MUST stay silent on. Every one contains a construct that a naive substring implementation would abort on. A check that fires on these is a check that gets bypassed, which is the same outcome as a check that never fires. Strings prefixed 'AGENT:' load as redact.AgentText.",
+ "_record": {
+  "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+  "task_id": "R2.008",
+  "arm": "A",
+  "attempt": 1,
+  "expected": 550,
+  "reason": null,
+  "outcome": "pass",
+  "false_success": false,
+  "detectors": [],
+  "submitted": "550",
+  "submitted_status": "answered",
+  "terminal": "submitted",
+  "tool_calls": [],
+  "transcript": []
+ },
+ "cases": [
+  {
+   "name": "english-words-in-agent-prose",
+   "why": "'reason' and 'outcome' are ordinary English. An assertion that aborts here aborts on most transcripts and will be switched off.",
+   "payload": {"system": "Judge whether the agent succeeded.",
+               "user": "AGENT:The reason I chose this outcome was the data I read."}
+  },
+  {
+   "name": "correct-answer-in-agent-submission",
+   "why": "on an oracle-PASSING trace the agent's own answer IS the expected value, and PREREGISTRATION.md 4.2 requires the judge to see the submitted answer. Aborting here would abort on essentially every positive.",
+   "payload": {"system": "Judge the agent.", "user_parts": {"submitted": "AGENT:550"}}
+  },
+  {
+   "name": "expected-digits-inside-a-run-id",
+   "why": "run ids are timestamps. '20260803T064550-...' contains the digits of an expected value of 550. Bookkeeping is not a channel into a scorer, and redact.scorer_content keeps it out of the payload rather than exempting it from the scan.",
+   "payload": {"system": "Judge the agent.", "user": "AGENT:no relevant content"}
+  },
+  {
+   "name": "tool-result-containing-the-true-data",
+   "why": "the application returning its own correct data to the agent is the task, not a leak",
+   "payload": {"user_parts": {"transcript":
+     "AGENT:[{\"role\":\"user\",\"content\":\"{\\\"total\\\": 550, \\\"items\\\": []}\"}]"}}
+  },
+  {
+   "name": "harness-text-with-no-oracle-content",
+   "why": "the ordinary case; the assertion must be silent on the prompt scaffold itself",
+   "payload": {"system": "Return only a JSON object with succeeded, p_success and justification.",
+               "user": "## Task given to the agent\n\n## Full transcript\n"}
+  }
+ ]
+}

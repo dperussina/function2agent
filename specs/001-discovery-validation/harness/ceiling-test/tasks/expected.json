@@ -1,0 +1,92 @@
+{
+ "_comment": "Expected values computed from the seeded fixture at freeze time. The runner recomputes them at scoring time; a mismatch against this file means the fixture drifted and the run is void.",
+ "battery_version": "1.4.0-probe",
+ "expected": {
+  "NM.001": [
+   8,
+   0
+  ],
+  "NM.002": [
+   21,
+   0
+  ],
+  "NM.003": [
+   8,
+   0
+  ],
+  "NM.004": [
+   9,
+   0
+  ],
+  "R1.001": 10,
+  "R1.002": 17,
+  "R1.003": 6,
+  "R1.004": 8,
+  "R1.005": 5,
+  "R1.006": 34,
+  "R1.007": 51,
+  "R1.008": 5,
+  "R1.009": 4.0,
+  "R1.010": 40.0,
+  "R1.011": 8,
+  "R1.012": [
+   "Amber Fennel Ragout",
+   "Blistered Nettle Terrine",
+   "Blistered Turnip Gratin",
+   "Ember Buckwheat Crumble",
+   "Silver Pepita Ragout",
+   "Smoked Cardamom Loaf",
+   "Sunlit Buckwheat Tartine"
+  ],
+  "R2.001": 17,
+  "R2.002": 5,
+  "R2.003": 42.0,
+  "R2.004": 9,
+  "R2.005": "Midnight Quince Crumble",
+  "R2.006": 26,
+  "R2.007": 8,
+  "R2.008": 550.0,
+  "R2.009": 7,
+  "R2.010": 38.0,
+  "R2.011": "Quick Top-Up",
+  "R2.012": [
+   "Blistered Nettle Terrine",
+   "Charred Quince Chowder",
+   "Copper Nettle Terrine",
+   "Ember Chard Galette",
+   "Smoked Quince Bake",
+   "Sunlit Fennel Hash",
+   "Thistle Chard Tartine",
+   "Thistle Parsnip Stew",
+   "Wild Pepita Ragout"
+  ],
+  "R2.013": 4,
+  "R2.014": "Slow Cooker",
+  "R2.015": 1,
+  "R4.001": 13,
+  "R4.002": [
+   "Golden Radish Chowder",
+   "Juniper Millet Fritters",
+   "Smoked Quince Bake"
+  ],
+  "R4.003": "Crimson Sumac Hash",
+  "R4.004": [
+   "Golden Radish Chowder",
+   "Marbled Fennel Fritters",
+   "Midnight Quince Crumble",
+   "Silver Tamarind Stew",
+   "Thistle Parsnip Stew"
+  ],
+  "R4.005": 3.201754,
+  "R4.006": 33.0,
+  "R4.007": 445.0,
+  "R4.008": 9,
+  "R4.009": 44.0,
+  "R4.010": "Midnight Quince Crumble",
+  "R4.011": 13,
+  "R4.012": 49.0,
+  "R4.013": 13,
+  "R4.014": "Blistered Parsnip Crumble"
+ },
+ "fixture_fingerprint": "afd2b135345234cae62ec74131c927f954d64d550033fe815283031ef41f6108"
+}

@@ -1,0 +1,1444 @@
+{
+ "run_id": "20260803T091345-quarantine-check",
+ "started": "2026-08-03T09:13:45",
+ "experiment": "E8 verifier-vs-judge",
+ "preregistration_sha256": "0716e07f641adfb3",
+ "harness_fingerprint": "4c5013cf979cfc65",
+ "harness_version": "1.0.0",
+ "dry_run": true,
+ "arms": [
+  "b",
+  "b_prime",
+  "c2"
+ ],
+ "judge_arms": {
+  "b": {
+   "name": "sonnet-judge",
+   "provider": "anthropic",
+   "id": "claude-sonnet-4-5-20250929",
+   "temperature": 0.0,
+   "max_output_tokens": 250,
+   "price_usd_per_mtok": {
+    "input": 3.0,
+    "output": 15.0
+   }
+  },
+  "b_prime": {
+   "name": "cheap-judge-control",
+   "provider": "anthropic",
+   "id": "claude-3-5-haiku-20241022",
+   "temperature": 0.0,
+   "max_output_tokens": 250,
+   "price_usd_per_mtok": {
+    "input": 0.8,
+    "output": 4.0
+   }
+  }
+ },
+ "judge_prompt_sha256_16": "442967d39382be76",
+ "derivation_rules_sha256_16": "90dd8f99afdbc858",
+ "c2_derivations_sha256_16": "ab4d8b534cd98c72",
+ "pricing_usd_per_mtok": {
+  "b": {
+   "input": 3.0,
+   "output": 15.0
+  },
+  "b_prime": {
+   "input": 0.8,
+   "output": 4.0
+  }
+ },
+ "budgets": {
+  "hard_ceiling_usd": 9.0,
+  "effective_ceiling_usd": 9.0,
+  "budget_usd": 10.0,
+  "repair_reserve_usd": 2.0,
+  "contingency_trigger_usd": 6.5,
+  "contingency_applied": false,
+  "repeats_negatives": 3,
+  "repeats_positives": 3,
+  "transcript_truncation_tokens": 24000
+ },
+ "projection": {
+  "arms": {
+   "b": {
+    "arm": "b",
+    "model_id": "claude-sonnet-4-5-20250929",
+    "calls": 225,
+    "input_tokens": 1148775,
+    "output_tokens": 56250,
+    "input_usd": 3.446325,
+    "output_usd": 0.84375,
+    "total_usd": 4.290075
+   },
+   "b_prime": {
+    "arm": "b_prime",
+    "model_id": "claude-3-5-haiku-20241022",
+    "calls": 225,
+    "input_tokens": 1148775,
+    "output_tokens": 56250,
+    "input_usd": 0.91902,
+    "output_usd": 0.225,
+    "total_usd": 1.14402
+   }
+  },
+  "judge_subtotal_usd": 5.434095,
+  "repair_reserve_usd": 2.0,
+  "planned_total_usd": 7.434095,
+  "hard_ceiling_usd": 9.0,
+  "contingency_trigger_usd": 6.5,
+  "contingency_scope": "judge_arms_combined",
+  "contingency_fires": false,
+  "truncated_records": 0,
+  "n_traces": 75,
+  "mean_input_tokens": 5105.666666666667,
+  "max_raw_bytes": 85280
+ },
+ "corpus_freeze": {
+  "scope_runs": [
+   "20260802T151714-smoke",
+   "20260802T152825-smoke2",
+   "20260802T154826-calibration",
+   "20260802T160705-recalibration",
+   "20260802T163319-bias-probe",
+   "20260802T164929-bias-probe-perrecord",
+   "20260802T165903-ambiguity-recheck",
+   "20260802T173226-reprobe-perrecord-v2",
+   "20260802T173614-baseline-lookup-R1R2",
+   "20260803T064400-smoke-paired-precheck",
+   "20260803T064550-paired-lookup-R1R2-A3budgets"
+  ],
+  "shape": {
+   "records": 246,
+   "traces": 246,
+   "pass": 226,
+   "fail": 20,
+   "false_success": 11,
+   "distinct_tasks": 61,
+   "distinct_false_success_tasks": 6
+  },
+  "files": {
+   "20260802T151714-smoke": {
+    "results.jsonl": "72406dc42ac5a7347c629f6720dfcaf81ff61fa64a223c023222c5e8846fe897",
+    "traces.jsonl": "d26c989d2b23218699a26d9d902726d192a3e8fc038b07d1e130532abbea1d7c",
+    "manifest.json": "5cbebe94af1f677efef96b306530ee1bb71eaf36a335a3f1014836a695f90d91"
+   },
+   "20260802T152825-smoke2": {
+    "results.jsonl": "40984f16c065be8a0f0acef72d13cdeeabb4222a5f1565fb38e574b3dd2eb8d5",
+    "traces.jsonl": "6431ec5801498059359d5a2f5974b7cd01fc22f4e3c342c911c9d7c75ea56d94",
+    "manifest.json": "124e4714734e66e770c0e00faef23d63a400e766f2dc75d464948c0df1ff8108"
+   },
+   "20260802T154826-calibration": {
+    "results.jsonl": "1df614ccd157b5ca381abb9059724822f7fba5478cd6f3385fc87ab73de1a7e7",
+    "traces.jsonl": "d0518d4f23aba9773c1e809a8c1363ecb78ed3f651433fab02a08c8f6a65e5e4",
+    "manifest.json": "5bf49282250f5b58e49ab18e96779834d63b1c83771cedf3628324293a1758d6"
+   },
+   "20260802T160705-recalibration": {
+    "results.jsonl": "716d379ab70d7b7ad906803ed98f08f6631a9e50a09a088b2f97aa65c042028f",
+    "traces.jsonl": "603260651550f1df6d4e8a41ad5c7290167fe06e0842108b265e34372557bdb8",
+    "manifest.json": "8ee15e8a85f67567c934c62fa3f624232ad833f0b810239ce661c78f1f6bf3d8"
+   },
+   "20260802T163319-bias-probe": {
+    "results.jsonl": "563333ddf4110677de864f4a180071f0bb524dd3963be2e8934a6317c5db8269",
+    "traces.jsonl": "44a6f4f6463870ecf64ddddbfa3adc0f065a9d9806c36ee360301a1f891d18a5",
+    "manifest.json": "21ac6f86f7918043945235032a930737c59366112dd6ce8dc050959d50e06460"
+   },
+   "20260802T164929-bias-probe-perrecord": {
+    "results.jsonl": "57158022d0b42082660ec028e6c11a6294687d558f8c96232af6766b50c62768",
+    "traces.jsonl": "6f56a8934d70463d2b19fcbd52cad35a2a6e7120a5b5230b55ef4c2ebc9870fd",
+    "manifest.json": "19bc15ac8f4736af7b0450f651af28b4045cee98f3c1c25f0d0d230ce5f4da34"
+   },
+   "20260802T165903-ambiguity-recheck": {
+    "results.jsonl": "6ef073815741e8e60a7f413e3313a2a61a7c588752e407fe67fc8519ba0a36d8",
+    "traces.jsonl": "5a73d781dcac0284059cfd17cc6a50d746ddf8bcea166a9bd468eb5928896f81",
+    "manifest.json": "ed4567c26d9c1c4681a5c55c75f9c4d83f9e30eba894148f9edcb56311b8a0da"
+   },
+   "20260802T173226-reprobe-perrecord-v2": {
+    "results.jsonl": "ef1d2f4d0f30e79c437f65ae50b018296e5cc091e0fce89202339b69b0513cd1",
+    "traces.jsonl": "bdd12ffe92edb2e5a8a8785c59a5a303dceab1ff71a99c876b9c94483fd08471",
+    "manifest.json": "9d08ad45afdd680452a2f3bbc1dd37e7c42d3951d4f5bf10b8b2cff3df1d6768"
+   },
+   "20260802T173614-baseline-lookup-R1R2": {
+    "results.jsonl": "ab42a3ba976c7089e3aa0e4d9aeb67f83acde8767721a0741e0fd8a5be2d67b4",
+    "traces.jsonl": "e60d214c68bfea0e4d8640a9ae43a01160dff2b367336cf0a314577f1296154c",
+    "manifest.json": "9500a5f20ecd1a65e91d8a4f805ec168705c32e37bbed98f6c593906086b8a29"
+   },
+   "20260803T064400-smoke-paired-precheck": {
+    "results.jsonl": "69c6dc8ca73f8345db6b92a19e79b8018b0a0c2afea5f6dbcea27096b47d62bb",
+    "traces.jsonl": "372675d5775213b5b8468b43a6af72beb5f4ba0dcf18f8762a9ab0241f1cb76b",
+    "manifest.json": "c58ca7287b88630aca0edf720453bf0d5478d323a1c574f8902d9f8f595b4713"
+   },
+   "20260803T064550-paired-lookup-R1R2-A3budgets": {
+    "results.jsonl": "7d57dc7ed2b3a13cd1213ddb7bfee66186e068b28f7251af56b34ac720810f01",
+    "traces.jsonl": "ce544aed9983e123c309c563c966bf66987308871992de2930bb346d1f9857f4",
+    "manifest.json": "abf7b2583012edcfee63df72ca86f60431c2b508ec64637430d0042717965dce"
+   }
+  },
+  "battery": {
+   "version": "1.4.0-probe",
+   "files": {
+    "tasks_rel": "0d188773eb165d59bfd21426ed624f4aa84a0c1e76acbb9c62bf4f4a60ae0e85",
+    "expected_rel": "ac2129ab4c5115a22a40cb5f94a647c2a077c768cced166926f13f784110fcc8"
+   },
+   "run_battery_versions": {
+    "20260802T151714-smoke": "1.0.0",
+    "20260802T152825-smoke2": "1.0.0",
+    "20260802T154826-calibration": "1.1.0",
+    "20260802T160705-recalibration": "1.2.0",
+    "20260802T163319-bias-probe": "1.3.0",
+    "20260802T164929-bias-probe-perrecord": "1.4.0-probe",
+    "20260802T165903-ambiguity-recheck": "1.4.0-probe",
+    "20260802T173226-reprobe-perrecord-v2": "1.4.0-probe",
+    "20260802T173614-baseline-lookup-R1R2": "1.4.0-probe",
+    "20260803T064400-smoke-paired-precheck": "1.4.0-probe",
+    "20260803T064550-paired-lookup-R1R2-A3budgets": "1.4.0-probe"
+   },
+   "cross_battery_runs": [
+    "20260802T151714-smoke",
+    "20260802T152825-smoke2",
+    "20260802T154826-calibration",
+    "20260802T160705-recalibration",
+    "20260802T163319-bias-probe"
+   ],
+   "cross_battery_records": 143
+  }
+ },
+ "eligibility": {
+  "rule": "PREREGISTRATION.md Amendment B3.2, as corrected by B4",
+  "battery_version": "1.4.0-probe",
+  "on_unattested": "exclude",
+  "population": "eligible records only (195 of 246; 51 excluded by Amendment B3.2)",
+  "by_status": {
+   "eligible_same_battery": 103,
+   "eligible_value_attested": 92,
+   "ineligible_stale": 7,
+   "ineligible_unattested": 44
+  },
+  "ledger": {
+   "eligible_same_battery": {
+    "n": 103,
+    "negatives": 7,
+    "positives": 96,
+    "false_successes": 2,
+    "tasks": [
+     "R1.001",
+     "R1.002",
+     "R1.003",
+     "R1.004",
+     "R1.005",
+     "R1.006",
+     "R1.007",
+     "R1.008",
+     "R1.009",
+     "R1.010",
+     "R1.011",
+     "R1.012",
+     "R2.001",
+     "R2.002",
+     "R2.003",
+     "R2.004",
+     "R2.005",
+     "R2.006",
+     "R2.007",
+     "R2.008",
+     "R2.009",
+     "R2.010",
+     "R2.011",
+     "R2.012",
+     "R2.013",
+     "R2.014",
+     "R2.015",
+     "R4.005",
+     "R4.006",
+     "R4.008",
+     "R4.011",
+     "R4.012",
+     "R4.013",
+     "R4.014"
+    ]
+   },
+   "eligible_value_attested": {
+    "n": 92,
+    "negatives": 8,
+    "positives": 84,
+    "false_successes": 8,
+    "tasks": [
+     "R1.001",
+     "R1.002",
+     "R1.003",
+     "R1.004",
+     "R1.005",
+     "R1.006",
+     "R1.007",
+     "R1.008",
+     "R1.009",
+     "R1.010",
+     "R1.011",
+     "R1.012",
+     "R2.001",
+     "R2.002",
+     "R2.003",
+     "R2.004",
+     "R2.005",
+     "R2.006",
+     "R2.007",
+     "R2.008",
+     "R2.009",
+     "R2.010",
+     "R2.011",
+     "R2.012",
+     "R2.013",
+     "R2.014",
+     "R2.015",
+     "R4.001",
+     "R4.002",
+     "R4.003",
+     "R4.004",
+     "R4.005",
+     "R4.006",
+     "R4.007",
+     "R4.008",
+     "R4.009",
+     "R4.010"
+    ]
+   },
+   "ineligible_stale": {
+    "n": 7,
+    "negatives": 1,
+    "positives": 6,
+    "false_successes": 1,
+    "tasks": [
+     "NM.001",
+     "NM.002",
+     "NM.003",
+     "NM.004"
+    ]
+   },
+   "ineligible_unattested": {
+    "n": 44,
+    "negatives": 4,
+    "positives": 40,
+    "false_successes": 0,
+    "tasks": [
+     "N.001",
+     "N.002",
+     "N.003",
+     "N.004",
+     "N.005",
+     "N.006",
+     "R3.001",
+     "R3.002",
+     "R3.003",
+     "R3.004",
+     "R3.005",
+     "W1.001",
+     "W1.002",
+     "W1.003",
+     "W1.004",
+     "W1.005"
+    ]
+   },
+   "_excluded_records": [
+    {
+     "key": [
+      "20260802T151714-smoke",
+      "R3.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T151714-smoke",
+      "R3.001",
+      "B",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T151714-smoke",
+      "N.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     "outcome": "fail",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T151714-smoke",
+      "W1.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T151714-smoke",
+      "W1.001",
+      "B",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T152825-smoke2",
+      "R3.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T152825-smoke2",
+      "R3.001",
+      "B",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T152825-smoke2",
+      "N.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     "outcome": "fail",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T152825-smoke2",
+      "W1.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T152825-smoke2",
+      "W1.001",
+      "B",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.0.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "N.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "N.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "N.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "N.004",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "N.005",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "N.006",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     "outcome": "fail",
+     "false_success": true,
+     "status": "ineligible_stale",
+     "detail": "stored expected [] disagrees with the battery's [8, 0] (run executed battery 1.1.0)"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "NM.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_stale",
+     "detail": "stored expected 0 disagrees with the battery's [21, 0] (run executed battery 1.1.0)"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "NM.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_stale",
+     "detail": "stored expected [] disagrees with the battery's [8, 0] (run executed battery 1.1.0)"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "R3.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "R3.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "R3.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     "outcome": "fail",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "R3.005",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "W1.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "W1.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "W1.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "W1.004",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T154826-calibration",
+      "W1.005",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.1.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "N.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "N.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "N.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "N.004",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "N.005",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "N.006",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'impossible', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_stale",
+     "detail": "stored expected [] disagrees with the battery's [8, 0] (run executed battery 1.2.0)"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "NM.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_stale",
+     "detail": "stored expected 0 disagrees with the battery's [21, 0] (run executed battery 1.2.0)"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "NM.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_stale",
+     "detail": "stored expected [] disagrees with the battery's [8, 0] (run executed battery 1.2.0)"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "NM.004",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_stale",
+     "detail": "stored expected 0 disagrees with the battery's [9, 0] (run executed battery 1.2.0)"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "R3.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "R3.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "R3.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     "outcome": "fail",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "R3.005",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'needs_clarification', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "W1.001",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "W1.002",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "W1.003",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "W1.004",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    },
+    {
+     "key": [
+      "20260802T160705-recalibration",
+      "W1.005",
+      "A",
+      1
+     ],
+     "outcome": "pass",
+     "false_success": false,
+     "status": "ineligible_unattested",
+     "detail": "run executed battery 1.2.0: the task's check kind is 'state', which yields no expected value under any battery version, so nothing attests the join"
+    }
+   ]
+  },
+  "integrity_alarms": []
+ },
+ "scoring_set": {
+  "seed": 20260803,
+  "stratify_by": [
+   "family",
+   "arm"
+  ],
+  "n_negatives": 15,
+  "n_positives": 60,
+  "negatives": [
+   [
+    "20260802T160705-recalibration",
+    "R4.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R4.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R4.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.005",
+    "B",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.006",
+    "B",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.008",
+    "B",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.011",
+    "A",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.014",
+    "A",
+    1
+   ],
+   [
+    "20260802T165903-ambiguity-recheck",
+    "R4.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T173226-reprobe-perrecord-v2",
+    "R4.011",
+    "A",
+    1
+   ],
+   [
+    "20260802T173226-reprobe-perrecord-v2",
+    "R4.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.012",
+    "B",
+    1
+   ]
+  ],
+  "positives": [
+   [
+    "20260802T152825-smoke2",
+    "R1.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R1.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R1.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R1.008",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.003",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.007",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.010",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.012",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.014",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R1.004",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R1.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R1.010",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R1.011",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.002",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.004",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.011",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.014",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R4.009",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.003",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.007",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.008",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.009",
+    "B",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.010",
+    "A",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.011",
+    "B",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.012",
+    "B",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.013",
+    "B",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.014",
+    "B",
+    1
+   ],
+   [
+    "20260802T165903-ambiguity-recheck",
+    "R4.008",
+    "A",
+    1
+   ],
+   [
+    "20260802T173226-reprobe-perrecord-v2",
+    "R4.014",
+    "A",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.004",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.005",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.006",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.007",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.008",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.011",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.001",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.002",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.008",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.013",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.015",
+    "B",
+    1
+   ],
+   [
+    "20260803T064400-smoke-paired-precheck",
+    "R1.009",
+    "A",
+    1
+   ],
+   [
+    "20260803T064400-smoke-paired-precheck",
+    "R1.009",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.001",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.002",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.007",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.008",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.008",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.012",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.001",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.002",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.002",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.006",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.008",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.010",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.011",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.013",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.014",
+    "A",
+    1
+   ]
+  ],
+  "positive_strata": {
+   "R1/A": 13,
+   "R1/B": 9,
+   "R2/A": 16,
+   "R2/B": 10,
+   "R4/A": 7,
+   "R4/B": 5
+  },
+  "population": "eligible records only (195 of 246; 51 excluded by Amendment B3.2)",
+  "eligibility_rule": "PREREGISTRATION.md Amendment B3.2, as corrected by B4",
+  "n_excluded": 51,
+  "_selection_note": "Positives are a seeded prefix of a per-stratum shuffle. Extending the sample takes a longer prefix of the same ordering; the first 60 cannot change.",
+  "_population_note": "PREREGISTRATION.md 9.1 preregistered 'all 20 oracle-negatives'. Amendment B3.2 removes the ineligible ones before selection, so n_negatives is the count of ELIGIBLE negatives. The two figures are not interchangeable and the difference is itemised in the run manifest's `eligibility` block."
+ },
+ "stop_conditions": {
+  "S1_oracle_overturn_max": 2,
+  "S1_audit_n": 40,
+  "S4_flip_rate_pct": 30.0,
+  "S5_after_traces": 40,
+  "S6_first_false_success_traces": 6,
+  "S7_spend_usd": 9.0,
+  "S8_noise_floor_pp": 5.0
+ },
+ "_credentials": "resolved via ../provider-credentials/envroot.py: the process environment, else a dotenv tree named with --env-root / F2A_ENV_ROOT, no default. No credential value appears in this manifest, in any log, in any trace, or in any prompt."
+}

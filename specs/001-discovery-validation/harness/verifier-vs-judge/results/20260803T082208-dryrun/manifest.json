@@ -1,0 +1,685 @@
+{
+ "run_id": "20260803T082208-dryrun",
+ "started": "2026-08-03T08:22:08",
+ "experiment": "E8 verifier-vs-judge",
+ "preregistration_sha256": "a401868b8b33e5c4",
+ "harness_fingerprint": "43628249b94e9bb8",
+ "harness_version": "1.0.0",
+ "dry_run": true,
+ "arms": [
+  "b",
+  "b_prime",
+  "c1",
+  "c2"
+ ],
+ "judge_arms": {
+  "b": {
+   "name": "sonnet-judge",
+   "provider": "anthropic",
+   "id": "claude-sonnet-4-5-20250929",
+   "temperature": 0.0,
+   "max_output_tokens": 250,
+   "price_usd_per_mtok": {
+    "input": 3.0,
+    "output": 15.0
+   }
+  },
+  "b_prime": {
+   "name": "cheap-judge-control",
+   "provider": "anthropic",
+   "id": "claude-3-5-haiku-20241022",
+   "temperature": 0.0,
+   "max_output_tokens": 250,
+   "price_usd_per_mtok": {
+    "input": 0.8,
+    "output": 4.0
+   }
+  }
+ },
+ "judge_prompt_sha256_16": "442967d39382be76",
+ "derivation_rules_sha256_16": "90dd8f99afdbc858",
+ "c2_derivations_sha256_16": "ab4d8b534cd98c72",
+ "pricing_usd_per_mtok": {
+  "b": {
+   "input": 3.0,
+   "output": 15.0
+  },
+  "b_prime": {
+   "input": 0.8,
+   "output": 4.0
+  }
+ },
+ "budgets": {
+  "hard_ceiling_usd": 9.0,
+  "effective_ceiling_usd": 9.0,
+  "budget_usd": 10.0,
+  "repair_reserve_usd": 2.0,
+  "contingency_trigger_usd": 6.5,
+  "contingency_applied": false,
+  "repeats_negatives": 3,
+  "repeats_positives": 3,
+  "transcript_truncation_tokens": 24000
+ },
+ "projection": {
+  "arms": {
+   "b": {
+    "arm": "b",
+    "model_id": "claude-sonnet-4-5-20250929",
+    "calls": 240,
+    "input_tokens": 1177206,
+    "output_tokens": 60000,
+    "input_usd": 3.531618,
+    "output_usd": 0.9,
+    "total_usd": 4.431618
+   },
+   "b_prime": {
+    "arm": "b_prime",
+    "model_id": "claude-3-5-haiku-20241022",
+    "calls": 240,
+    "input_tokens": 1177206,
+    "output_tokens": 60000,
+    "input_usd": 0.9417648000000001,
+    "output_usd": 0.24,
+    "total_usd": 1.1817648
+   }
+  },
+  "judge_subtotal_usd": 5.6133828,
+  "repair_reserve_usd": 2.0,
+  "planned_total_usd": 7.6133828,
+  "hard_ceiling_usd": 9.0,
+  "contingency_trigger_usd": 6.5,
+  "contingency_scope": "judge_arms_combined",
+  "contingency_fires": false,
+  "truncated_records": 0,
+  "n_traces": 80,
+  "mean_input_tokens": 4905.025,
+  "max_raw_bytes": 85280
+ },
+ "corpus_freeze": {
+  "scope_runs": [
+   "20260802T151714-smoke",
+   "20260802T152825-smoke2",
+   "20260802T154826-calibration",
+   "20260802T160705-recalibration",
+   "20260802T163319-bias-probe",
+   "20260802T164929-bias-probe-perrecord",
+   "20260802T165903-ambiguity-recheck",
+   "20260802T173226-reprobe-perrecord-v2",
+   "20260802T173614-baseline-lookup-R1R2",
+   "20260803T064400-smoke-paired-precheck",
+   "20260803T064550-paired-lookup-R1R2-A3budgets"
+  ],
+  "shape": {
+   "records": 246,
+   "traces": 246,
+   "pass": 226,
+   "fail": 20,
+   "false_success": 11,
+   "distinct_tasks": 61,
+   "distinct_false_success_tasks": 6
+  },
+  "files": {
+   "20260802T151714-smoke": {
+    "results.jsonl": "72406dc42ac5a7347c629f6720dfcaf81ff61fa64a223c023222c5e8846fe897",
+    "traces.jsonl": "d26c989d2b23218699a26d9d902726d192a3e8fc038b07d1e130532abbea1d7c"
+   },
+   "20260802T152825-smoke2": {
+    "results.jsonl": "40984f16c065be8a0f0acef72d13cdeeabb4222a5f1565fb38e574b3dd2eb8d5",
+    "traces.jsonl": "6431ec5801498059359d5a2f5974b7cd01fc22f4e3c342c911c9d7c75ea56d94"
+   },
+   "20260802T154826-calibration": {
+    "results.jsonl": "1df614ccd157b5ca381abb9059724822f7fba5478cd6f3385fc87ab73de1a7e7",
+    "traces.jsonl": "d0518d4f23aba9773c1e809a8c1363ecb78ed3f651433fab02a08c8f6a65e5e4"
+   },
+   "20260802T160705-recalibration": {
+    "results.jsonl": "716d379ab70d7b7ad906803ed98f08f6631a9e50a09a088b2f97aa65c042028f",
+    "traces.jsonl": "603260651550f1df6d4e8a41ad5c7290167fe06e0842108b265e34372557bdb8"
+   },
+   "20260802T163319-bias-probe": {
+    "results.jsonl": "563333ddf4110677de864f4a180071f0bb524dd3963be2e8934a6317c5db8269",
+    "traces.jsonl": "44a6f4f6463870ecf64ddddbfa3adc0f065a9d9806c36ee360301a1f891d18a5"
+   },
+   "20260802T164929-bias-probe-perrecord": {
+    "results.jsonl": "57158022d0b42082660ec028e6c11a6294687d558f8c96232af6766b50c62768",
+    "traces.jsonl": "6f56a8934d70463d2b19fcbd52cad35a2a6e7120a5b5230b55ef4c2ebc9870fd"
+   },
+   "20260802T165903-ambiguity-recheck": {
+    "results.jsonl": "6ef073815741e8e60a7f413e3313a2a61a7c588752e407fe67fc8519ba0a36d8",
+    "traces.jsonl": "5a73d781dcac0284059cfd17cc6a50d746ddf8bcea166a9bd468eb5928896f81"
+   },
+   "20260802T173226-reprobe-perrecord-v2": {
+    "results.jsonl": "ef1d2f4d0f30e79c437f65ae50b018296e5cc091e0fce89202339b69b0513cd1",
+    "traces.jsonl": "bdd12ffe92edb2e5a8a8785c59a5a303dceab1ff71a99c876b9c94483fd08471"
+   },
+   "20260802T173614-baseline-lookup-R1R2": {
+    "results.jsonl": "ab42a3ba976c7089e3aa0e4d9aeb67f83acde8767721a0741e0fd8a5be2d67b4",
+    "traces.jsonl": "e60d214c68bfea0e4d8640a9ae43a01160dff2b367336cf0a314577f1296154c"
+   },
+   "20260803T064400-smoke-paired-precheck": {
+    "results.jsonl": "69c6dc8ca73f8345db6b92a19e79b8018b0a0c2afea5f6dbcea27096b47d62bb",
+    "traces.jsonl": "372675d5775213b5b8468b43a6af72beb5f4ba0dcf18f8762a9ab0241f1cb76b"
+   },
+   "20260803T064550-paired-lookup-R1R2-A3budgets": {
+    "results.jsonl": "7d57dc7ed2b3a13cd1213ddb7bfee66186e068b28f7251af56b34ac720810f01",
+    "traces.jsonl": "ce544aed9983e123c309c563c966bf66987308871992de2930bb346d1f9857f4"
+   }
+  }
+ },
+ "scoring_set": {
+  "seed": 20260803,
+  "stratify_by": [
+   "family",
+   "arm"
+  ],
+  "n_negatives": 20,
+  "n_positives": 60,
+  "negatives": [
+   [
+    "20260802T151714-smoke",
+    "N.001",
+    "B",
+    1
+   ],
+   [
+    "20260802T152825-smoke2",
+    "N.001",
+    "B",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "NM.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R3.004",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R3.004",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R4.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R4.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R4.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.005",
+    "B",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.006",
+    "B",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.008",
+    "B",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.011",
+    "A",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.014",
+    "A",
+    1
+   ],
+   [
+    "20260802T165903-ambiguity-recheck",
+    "R4.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T173226-reprobe-perrecord-v2",
+    "R4.011",
+    "A",
+    1
+   ],
+   [
+    "20260802T173226-reprobe-perrecord-v2",
+    "R4.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.012",
+    "B",
+    1
+   ]
+  ],
+  "positives": [
+   [
+    "20260802T151714-smoke",
+    "N.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T151714-smoke",
+    "R3.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T152825-smoke2",
+    "R1.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T152825-smoke2",
+    "R3.001",
+    "B",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "N.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "N.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "NM.003",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R1.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R1.008",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.003",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.007",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.012",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R2.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R3.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "R3.002",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "W1.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "W1.002",
+    "A",
+    1
+   ],
+   [
+    "20260802T154826-calibration",
+    "W1.004",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "N.001",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "NM.003",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R1.004",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R1.005",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R1.010",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.002",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.004",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.006",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.011",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.013",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R2.014",
+    "A",
+    1
+   ],
+   [
+    "20260802T160705-recalibration",
+    "R4.009",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.007",
+    "A",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.009",
+    "B",
+    1
+   ],
+   [
+    "20260802T163319-bias-probe",
+    "R4.010",
+    "A",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.011",
+    "B",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.013",
+    "B",
+    1
+   ],
+   [
+    "20260802T164929-bias-probe-perrecord",
+    "R4.014",
+    "B",
+    1
+   ],
+   [
+    "20260802T165903-ambiguity-recheck",
+    "R4.008",
+    "A",
+    1
+   ],
+   [
+    "20260802T173226-reprobe-perrecord-v2",
+    "R4.014",
+    "A",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.005",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.006",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.007",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.008",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R1.011",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.001",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.002",
+    "B",
+    1
+   ],
+   [
+    "20260802T173614-baseline-lookup-R1R2",
+    "R2.008",
+    "B",
+    1
+   ],
+   [
+    "20260803T064400-smoke-paired-precheck",
+    "R1.009",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.001",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.002",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.007",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.008",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.008",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R1.012",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.002",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.006",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.008",
+    "A",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.010",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.011",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.013",
+    "B",
+    1
+   ],
+   [
+    "20260803T064550-paired-lookup-R1R2-A3budgets",
+    "R2.014",
+    "A",
+    1
+   ]
+  ],
+  "positive_strata": {
+   "N/A": 4,
+   "NM/A": 2,
+   "R1/A": 11,
+   "R1/B": 7,
+   "R2/A": 12,
+   "R2/B": 8,
+   "R3/A": 3,
+   "R3/B": 1,
+   "R4/A": 5,
+   "R4/B": 4,
+   "W1/A": 3
+  },
+  "_selection_note": "Positives are a seeded prefix of a per-stratum shuffle. Extending the sample takes a longer prefix of the same ordering; the first 60 cannot change."
+ },
+ "stop_conditions": {
+  "S1_oracle_overturn_max": 2,
+  "S1_audit_n": 40,
+  "S4_flip_rate_pct": 30.0,
+  "S5_after_traces": 40,
+  "S6_first_false_success_traces": 6,
+  "S7_spend_usd": 9.0,
+  "S8_noise_floor_pp": 5.0
+ },
+ "_credentials": "resolved via ../provider-credentials/envroot.py: the process environment, else a dotenv tree named with --env-root / F2A_ENV_ROOT, no default. No credential value appears in this manifest, in any log, in any trace, or in any prompt."
+}

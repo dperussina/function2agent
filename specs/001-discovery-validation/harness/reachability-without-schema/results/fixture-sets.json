@@ -1,0 +1,379 @@
+{
+  "django": {
+    "declared_not_served": [
+      [
+        "POST",
+        "/admin/purge"
+      ],
+      [
+        "POST",
+        "/gated"
+      ]
+    ],
+    "null_set": [
+      [
+        "GET",
+        "/f2a-phantom-alpha"
+      ],
+      [
+        "POST",
+        "/items/f2a-phantom-beta"
+      ],
+      [
+        "DELETE",
+        "/f2a/phantom/gamma"
+      ],
+      [
+        "PATCH",
+        "/f2a-phantom-delta"
+      ]
+    ],
+    "null_set_size": 4,
+    "served_provenance": {
+      "DELETE /multi": "framework-read: require_http_methods closure",
+      "GET /anymethod": "author-declared: framework holds no method information",
+      "GET /both": "framework-read: require_http_methods closure",
+      "GET /gated": "framework-read: require_http_methods closure",
+      "GET /health": "framework-read: require_http_methods closure",
+      "GET /items/{name}": "framework-read: require_http_methods closure",
+      "GET /multi": "framework-read: require_http_methods closure",
+      "POST /anymethod": "author-declared: framework holds no method information",
+      "POST /both": "framework-read: require_http_methods closure",
+      "POST /items/special": "framework-read: require_http_methods closure"
+    },
+    "served_set": [
+      [
+        "DELETE",
+        "/multi"
+      ],
+      [
+        "GET",
+        "/anymethod"
+      ],
+      [
+        "GET",
+        "/both"
+      ],
+      [
+        "GET",
+        "/gated"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/items/{name}"
+      ],
+      [
+        "GET",
+        "/multi"
+      ],
+      [
+        "POST",
+        "/anymethod"
+      ],
+      [
+        "POST",
+        "/both"
+      ],
+      [
+        "POST",
+        "/items/special"
+      ]
+    ],
+    "served_set_size": 10,
+    "static_set": [
+      [
+        "DELETE",
+        "/multi"
+      ],
+      [
+        "GET",
+        "/both"
+      ],
+      [
+        "GET",
+        "/gated"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/items/{name}"
+      ],
+      [
+        "GET",
+        "/multi"
+      ],
+      [
+        "POST",
+        "/admin/purge"
+      ],
+      [
+        "POST",
+        "/both"
+      ],
+      [
+        "POST",
+        "/gated"
+      ],
+      [
+        "POST",
+        "/items/special"
+      ]
+    ],
+    "static_set_size": 10,
+    "static_unresolved": [
+      "/anymethod (view anymethod: no method decorator)"
+    ]
+  },
+  "flask": {
+    "declared_not_served": [
+      [
+        "POST",
+        "/admin/purge"
+      ],
+      [
+        "POST",
+        "/gated"
+      ]
+    ],
+    "null_set": [
+      [
+        "GET",
+        "/f2a-phantom-alpha"
+      ],
+      [
+        "POST",
+        "/items/f2a-phantom-beta"
+      ],
+      [
+        "DELETE",
+        "/f2a/phantom/gamma"
+      ],
+      [
+        "PATCH",
+        "/f2a-phantom-delta"
+      ]
+    ],
+    "null_set_size": 4,
+    "served_provenance": {
+      "DELETE /multi": "framework-read: Rule.methods",
+      "GET /both": "framework-read: Rule.methods",
+      "GET /gated": "framework-read: Rule.methods",
+      "GET /health": "framework-read: Rule.methods",
+      "GET /items/{name}": "framework-read: Rule.methods",
+      "GET /multi": "framework-read: Rule.methods",
+      "GET /static/{filename}": "framework-read: Rule.methods",
+      "POST /both": "framework-read: Rule.methods",
+      "POST /items/special": "framework-read: Rule.methods"
+    },
+    "served_set": [
+      [
+        "DELETE",
+        "/multi"
+      ],
+      [
+        "GET",
+        "/both"
+      ],
+      [
+        "GET",
+        "/gated"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/items/{name}"
+      ],
+      [
+        "GET",
+        "/multi"
+      ],
+      [
+        "GET",
+        "/static/{filename}"
+      ],
+      [
+        "POST",
+        "/both"
+      ],
+      [
+        "POST",
+        "/items/special"
+      ]
+    ],
+    "served_set_size": 9,
+    "static_set": [
+      [
+        "DELETE",
+        "/multi"
+      ],
+      [
+        "GET",
+        "/both"
+      ],
+      [
+        "GET",
+        "/gated"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/items/{name}"
+      ],
+      [
+        "GET",
+        "/multi"
+      ],
+      [
+        "POST",
+        "/admin/purge"
+      ],
+      [
+        "POST",
+        "/both"
+      ],
+      [
+        "POST",
+        "/gated"
+      ],
+      [
+        "POST",
+        "/items/special"
+      ]
+    ],
+    "static_set_size": 10,
+    "static_unresolved": []
+  },
+  "starlette": {
+    "declared_not_served": [
+      [
+        "POST",
+        "/admin/purge"
+      ],
+      [
+        "POST",
+        "/gated"
+      ]
+    ],
+    "null_set": [
+      [
+        "GET",
+        "/f2a-phantom-alpha"
+      ],
+      [
+        "POST",
+        "/items/f2a-phantom-beta"
+      ],
+      [
+        "DELETE",
+        "/f2a/phantom/gamma"
+      ],
+      [
+        "PATCH",
+        "/f2a-phantom-delta"
+      ]
+    ],
+    "null_set_size": 4,
+    "served_provenance": {
+      "DELETE /multi": "framework-read: Route.methods",
+      "GET /both": "framework-read: Route.methods",
+      "GET /gated": "framework-read: Route.methods",
+      "GET /health": "framework-read: Route.methods",
+      "GET /items/{name}": "framework-read: Route.methods",
+      "GET /multi": "framework-read: Route.methods",
+      "POST /both": "framework-read: Route.methods",
+      "POST /items/special": "framework-read: Route.methods"
+    },
+    "served_set": [
+      [
+        "DELETE",
+        "/multi"
+      ],
+      [
+        "GET",
+        "/both"
+      ],
+      [
+        "GET",
+        "/gated"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/items/{name}"
+      ],
+      [
+        "GET",
+        "/multi"
+      ],
+      [
+        "POST",
+        "/both"
+      ],
+      [
+        "POST",
+        "/items/special"
+      ]
+    ],
+    "served_set_size": 8,
+    "static_set": [
+      [
+        "DELETE",
+        "/multi"
+      ],
+      [
+        "GET",
+        "/both"
+      ],
+      [
+        "GET",
+        "/gated"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/items/{name}"
+      ],
+      [
+        "GET",
+        "/multi"
+      ],
+      [
+        "POST",
+        "/admin/purge"
+      ],
+      [
+        "POST",
+        "/both"
+      ],
+      [
+        "POST",
+        "/gated"
+      ],
+      [
+        "POST",
+        "/items/special"
+      ]
+    ],
+    "static_set_size": 10,
+    "static_unresolved": []
+  }
+}

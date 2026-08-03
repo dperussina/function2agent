@@ -1,0 +1,5370 @@
+{
+  "api_server": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": null,
+        "probe_verb": "PUT",
+        "routed": false,
+        "status": 404,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": null,
+        "probe_verb": "PUT",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 63164
+  },
+  "api_server_pubsub": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/trigger/pubsub"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": null,
+        "probe_verb": "PUT",
+        "routed": false,
+        "status": 404,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": null,
+        "probe_verb": "PUT",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 63168
+  },
+  "devserver_no_assets": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/config/telemetry"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph_image"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/builder"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/{event_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/metrics-info"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/config/telemetry"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/cancel"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/save"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/rebuild"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/run"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": "PUT",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 63173
+  },
+  "enterprise": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/api/reasoning_engine"
+      ],
+      [
+        "POST",
+        "/api/stream_reasoning_engine"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": null,
+        "probe_verb": "PUT",
+        "routed": false,
+        "status": 404,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": null,
+        "probe_verb": "PUT",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 63330
+  },
+  "web": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/builder/app/{app_name}"
+      ],
+      [
+        "GET",
+        "/config/telemetry"
+      ],
+      [
+        "GET",
+        "/dev-ui"
+      ],
+      [
+        "GET",
+        "/dev-ui/config"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph_image"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/builder"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/{event_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/metrics-info"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/builder/app/{app_name}/cancel"
+      ],
+      [
+        "POST",
+        "/builder/save"
+      ],
+      [
+        "POST",
+        "/config/telemetry"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/cancel"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/save"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/rebuild"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/run"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": "PUT",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 63333
+  },
+  "web_a2a": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/builder/app/{app_name}"
+      ],
+      [
+        "GET",
+        "/config/telemetry"
+      ],
+      [
+        "GET",
+        "/dev-ui"
+      ],
+      [
+        "GET",
+        "/dev-ui/config"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph_image"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/builder"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/{event_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/metrics-info"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/builder/app/{app_name}/cancel"
+      ],
+      [
+        "POST",
+        "/builder/save"
+      ],
+      [
+        "POST",
+        "/config/telemetry"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/cancel"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/save"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/rebuild"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/run"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": "PUT",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 63343
+  },
+  "web_no_multipart": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/config/telemetry"
+      ],
+      [
+        "GET",
+        "/dev-ui"
+      ],
+      [
+        "GET",
+        "/dev-ui/config"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph_image"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/builder"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/{event_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/metrics-info"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/config/telemetry"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/cancel"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/save"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/rebuild"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/run"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": "PUT",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 57194
+  },
+  "web_triggers": {
+    "ok": true,
+    "openapi_pairs": [
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "DELETE",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "DELETE",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/app-info"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+      ],
+      [
+        "GET",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+      ],
+      [
+        "GET",
+        "/builder/app/{app_name}"
+      ],
+      [
+        "GET",
+        "/config/telemetry"
+      ],
+      [
+        "GET",
+        "/dev-ui"
+      ],
+      [
+        "GET",
+        "/dev-ui/config"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/build_graph_image"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/builder"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/debug/trace/{event_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/graph"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/metrics-info"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ],
+      [
+        "GET",
+        "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+      ],
+      [
+        "GET",
+        "/health"
+      ],
+      [
+        "GET",
+        "/list-apps"
+      ],
+      [
+        "GET",
+        "/version"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/memory"
+      ],
+      [
+        "PATCH",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/agent-identity/finalize"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/trigger/eventarc"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/trigger/pubsub"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+      ],
+      [
+        "POST",
+        "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+      ],
+      [
+        "POST",
+        "/builder/app/{app_name}/cancel"
+      ],
+      [
+        "POST",
+        "/builder/save"
+      ],
+      [
+        "POST",
+        "/config/telemetry"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/cancel"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/builder/save"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/rebuild"
+      ],
+      [
+        "POST",
+        "/dev/apps/{app_name}/tests/run"
+      ],
+      [
+        "POST",
+        "/run"
+      ],
+      [
+        "POST",
+        "/run_sse"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+      ],
+      [
+        "PUT",
+        "/dev/apps/{app_name}/tests/{test_name}"
+      ]
+    ],
+    "openapi_status": 200,
+    "path_probe": {
+      "/": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/"
+      },
+      "/.well-known/openid_configuration": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/.well-known/openid_configuration"
+      },
+      "/agent-identity/finalize": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/agent-identity/finalize"
+      },
+      "/api/reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/reasoning_engine"
+      },
+      "/api/stream_reasoning_engine": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/api/stream_reasoning_engine"
+      },
+      "/api/weather": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/api/weather"
+      },
+      "/apps/{app_name}/app-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/app-info"
+      },
+      "/apps/{app_name}/f2a-phantom-beta": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/apps/__f2a_probe__/f2a-phantom-beta"
+      },
+      "/apps/{app_name}/trigger/eventarc": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/trigger/eventarc"
+      },
+      "/apps/{app_name}/trigger/pubsub": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/trigger/pubsub"
+      },
+      "/apps/{app_name}/users/{user_id}/memory": {
+        "allow": "PATCH",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/memory"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/metadata"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__"
+      },
+      "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/artifacts/__f2a_probe__/versions/__f2a_probe__/metadata"
+      },
+      "/auth": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/auth"
+      },
+      "/builder/app/{app_name}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/app/__f2a_probe__"
+      },
+      "/builder/app/{app_name}/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/app/__f2a_probe__/cancel"
+      },
+      "/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/builder/save"
+      },
+      "/chat": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/chat"
+      },
+      "/commit": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/commit"
+      },
+      "/config/telemetry": {
+        "allow": "GET",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/config/telemetry"
+      },
+      "/dev-ui": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui"
+      },
+      "/dev-ui/config": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev-ui/config"
+      },
+      "/dev/apps/{app_name}/build_graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph"
+      },
+      "/dev/apps/{app_name}/build_graph_image": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/build_graph_image"
+      },
+      "/dev/apps/{app_name}/builder": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder"
+      },
+      "/dev/apps/{app_name}/builder/cancel": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/cancel"
+      },
+      "/dev/apps/{app_name}/builder/save": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/builder/save"
+      },
+      "/dev/apps/{app_name}/debug/trace/session/{session_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/session/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/debug/trace/{event_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/debug/trace/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results"
+      },
+      "/dev/apps/{app_name}/eval-results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets": {
+        "allow": "POST",
+        "probe_verb": "PUT",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/add-session"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/eval-cases/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval-sets/__f2a_probe__/run"
+      },
+      "/dev/apps/{app_name}/eval_results": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results"
+      },
+      "/dev/apps/{app_name}/eval_results/{eval_result_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_results/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/add_session"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/evals/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/eval_sets/__f2a_probe__/run_eval"
+      },
+      "/dev/apps/{app_name}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/graph"
+      },
+      "/dev/apps/{app_name}/metrics-info": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/metrics-info"
+      },
+      "/dev/apps/{app_name}/tests": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests"
+      },
+      "/dev/apps/{app_name}/tests/rebuild": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/rebuild"
+      },
+      "/dev/apps/{app_name}/tests/run": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/dev/apps/__f2a_probe__/tests/run"
+      },
+      "/dev/apps/{app_name}/tests/{test_name}": {
+        "allow": "PUT",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/tests/__f2a_probe__"
+      },
+      "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/dev/apps/__f2a_probe__/users/__f2a_probe__/sessions/__f2a_probe__/events/__f2a_probe__/graph"
+      },
+      "/f2a-phantom-alpha": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a-phantom-alpha"
+      },
+      "/f2a/phantom/gamma": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/f2a/phantom/gamma"
+      },
+      "/health": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/health"
+      },
+      "/list-apps": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/list-apps"
+      },
+      "/list_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_agents"
+      },
+      "/list_local_agents": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/list_local_agents"
+      },
+      "/run": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run"
+      },
+      "/run_sse": {
+        "allow": "POST",
+        "probe_verb": "GET",
+        "routed": true,
+        "status": 405,
+        "url": "/run_sse"
+      },
+      "/token": {
+        "allow": null,
+        "probe_verb": "GET",
+        "routed": false,
+        "status": 404,
+        "url": "/token"
+      },
+      "/validateUserId": {
+        "allow": null,
+        "probe_verb": "POST",
+        "routed": false,
+        "status": 404,
+        "url": "/validateUserId"
+      },
+      "/version": {
+        "allow": "GET",
+        "probe_verb": "POST",
+        "routed": true,
+        "status": 405,
+        "url": "/version"
+      }
+    },
+    "port": 63355
+  }
+}

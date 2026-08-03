@@ -1,0 +1,2412 @@
+{
+  "configs": {
+    "api_server": {
+      "arms": {
+        "R0_baseline": {
+          "fp": 47,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/config/telemetry"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3188,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 22
+        },
+        "R1_naive": {
+          "fp": 49,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3099,
+          "predicted": 71,
+          "recall": 1.0,
+          "tp": 22,
+          "unresolvable_guards": 7
+        },
+        "R1_naive_failopen": {
+          "fp": 56,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.2821,
+          "predicted": 78,
+          "recall": 1.0,
+          "tp": 22
+        },
+        "R1_tuned": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 22,
+          "recall": 1.0,
+          "tp": 22,
+          "unresolvable_guards": 0
+        },
+        "R1_tuned_failopen": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 22,
+          "recall": 1.0,
+          "tp": 22
+        },
+        "R2_openapi": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "openapi_pairs": 22,
+          "precision": 1.0,
+          "predicted": 22,
+          "recall": 1.0,
+          "served_static_ops_dropped": [],
+          "tp": 22
+        },
+        "R2_routetable_upperbound": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 22,
+          "recall": 1.0,
+          "tp": 22
+        },
+        "R3_emission_time": {
+          "fp": 47,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/config/telemetry"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3188,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 22
+        },
+        "R3_precondition_allow_header": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 16,
+          "recall": 0.7273,
+          "tp": 16
+        },
+        "R3_precondition_path_level": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 22,
+          "recall": 1.0,
+          "tp": 22
+        }
+      },
+      "declared_config": {
+        "web": false
+      },
+      "null": {
+        "R0_baseline": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R1_naive": {
+          "false_inclusion_rate": 0.75,
+          "null_included": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ],
+            [
+              "POST",
+              "/token"
+            ]
+          ]
+        },
+        "R1_tuned": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R2_openapi": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R3_precondition": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        }
+      },
+      "ok": true,
+      "served_in_candidates": 22,
+      "served_total": 27
+    },
+    "api_server_pubsub": {
+      "arms": {
+        "R0_baseline": {
+          "fp": 46,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/config/telemetry"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3333,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 23
+        },
+        "R1_naive": {
+          "fp": 49,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3099,
+          "predicted": 71,
+          "recall": 0.9565,
+          "tp": 22,
+          "unresolvable_guards": 7
+        },
+        "R1_naive_failopen": {
+          "fp": 55,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.2949,
+          "predicted": 78,
+          "recall": 1.0,
+          "tp": 23
+        },
+        "R1_tuned": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 23,
+          "recall": 1.0,
+          "tp": 23,
+          "unresolvable_guards": 0
+        },
+        "R1_tuned_failopen": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 23,
+          "recall": 1.0,
+          "tp": 23
+        },
+        "R2_openapi": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "openapi_pairs": 23,
+          "precision": 1.0,
+          "predicted": 23,
+          "recall": 1.0,
+          "served_static_ops_dropped": [],
+          "tp": 23
+        },
+        "R2_routetable_upperbound": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 23,
+          "recall": 1.0,
+          "tp": 23
+        },
+        "R3_emission_time": {
+          "fp": 46,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/config/telemetry"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3333,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 23
+        },
+        "R3_precondition_allow_header": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 17,
+          "recall": 0.7391,
+          "tp": 17
+        },
+        "R3_precondition_path_level": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 23,
+          "recall": 1.0,
+          "tp": 23
+        }
+      },
+      "declared_config": {
+        "trigger_sources": [
+          "pubsub"
+        ],
+        "web": false
+      },
+      "null": {
+        "R0_baseline": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R1_naive": {
+          "false_inclusion_rate": 0.75,
+          "null_included": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ],
+            [
+              "POST",
+              "/token"
+            ]
+          ]
+        },
+        "R1_tuned": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R2_openapi": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R3_precondition": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        }
+      },
+      "ok": true,
+      "served_in_candidates": 23,
+      "served_total": 28
+    },
+    "devserver_no_assets": {
+      "arms": {
+        "R0_baseline": {
+          "fp": 11,
+          "fp_examples": [
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ],
+            [
+              "GET",
+              "/dev/apps/{app_name}/build_graph"
+            ],
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/eventarc"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8406,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 58
+        },
+        "R1_naive": {
+          "fp": 13,
+          "fp_examples": [
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8169,
+          "predicted": 71,
+          "recall": 1.0,
+          "tp": 58,
+          "unresolvable_guards": 4
+        },
+        "R1_naive_failopen": {
+          "fp": 17,
+          "fp_examples": [
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.7733,
+          "predicted": 75,
+          "recall": 1.0,
+          "tp": 58
+        },
+        "R1_tuned": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 58,
+          "recall": 1.0,
+          "tp": 58,
+          "unresolvable_guards": 0
+        },
+        "R1_tuned_failopen": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 58,
+          "recall": 1.0,
+          "tp": 58
+        },
+        "R2_openapi": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "openapi_pairs": 58,
+          "precision": 1.0,
+          "predicted": 58,
+          "recall": 1.0,
+          "served_static_ops_dropped": [],
+          "tp": 58
+        },
+        "R2_routetable_upperbound": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 58,
+          "recall": 1.0,
+          "tp": 58
+        },
+        "R3_emission_time": {
+          "fp": 11,
+          "fp_examples": [
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ],
+            [
+              "GET",
+              "/dev/apps/{app_name}/build_graph"
+            ],
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/eventarc"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8406,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 58
+        },
+        "R3_precondition_allow_header": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 42,
+          "recall": 0.7241,
+          "tp": 42
+        },
+        "R3_precondition_path_level": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 56,
+          "recall": 0.9655,
+          "tp": 56
+        }
+      },
+      "declared_config": {
+        "web": true,
+        "web_assets_dir": null
+      },
+      "null": {
+        "R0_baseline": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R1_naive": {
+          "false_inclusion_rate": 0.75,
+          "null_included": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ],
+            [
+              "POST",
+              "/token"
+            ]
+          ]
+        },
+        "R1_tuned": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R2_openapi": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R3_precondition": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        }
+      },
+      "ok": true,
+      "served_in_candidates": 58,
+      "served_total": 63
+    },
+    "enterprise": {
+      "arms": {
+        "R0_baseline": {
+          "fp": 45,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/config/telemetry"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3478,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 24
+        },
+        "R1_naive": {
+          "fp": 49,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3288,
+          "predicted": 73,
+          "recall": 1.0,
+          "tp": 24,
+          "unresolvable_guards": 5
+        },
+        "R1_naive_failopen": {
+          "fp": 54,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3077,
+          "predicted": 78,
+          "recall": 1.0,
+          "tp": 24
+        },
+        "R1_tuned": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 24,
+          "recall": 1.0,
+          "tp": 24,
+          "unresolvable_guards": 0
+        },
+        "R1_tuned_failopen": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 24,
+          "recall": 1.0,
+          "tp": 24
+        },
+        "R2_openapi": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "openapi_pairs": 24,
+          "precision": 1.0,
+          "predicted": 24,
+          "recall": 1.0,
+          "served_static_ops_dropped": [],
+          "tp": 24
+        },
+        "R2_routetable_upperbound": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 24,
+          "recall": 1.0,
+          "tp": 24
+        },
+        "R3_emission_time": {
+          "fp": 45,
+          "fp_examples": [
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            ],
+            [
+              "DELETE",
+              "/dev/apps/{app_name}/tests/{test_name}"
+            ],
+            [
+              "GET",
+              "/"
+            ],
+            [
+              "GET",
+              "/builder/app/{app_name}"
+            ],
+            [
+              "GET",
+              "/config/telemetry"
+            ],
+            [
+              "GET",
+              "/dev-ui"
+            ],
+            [
+              "GET",
+              "/dev-ui/config"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.3478,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 24
+        },
+        "R3_precondition_allow_header": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 18,
+          "recall": 0.75,
+          "tp": 18
+        },
+        "R3_precondition_path_level": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 24,
+          "recall": 1.0,
+          "tp": 24
+        }
+      },
+      "declared_config": {
+        "gemini_enterprise_app_name": "probe_app",
+        "web": false
+      },
+      "null": {
+        "R0_baseline": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R1_naive": {
+          "false_inclusion_rate": 0.75,
+          "null_included": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ],
+            [
+              "POST",
+              "/token"
+            ]
+          ]
+        },
+        "R1_tuned": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R2_openapi": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R3_precondition": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        }
+      },
+      "ok": true,
+      "served_in_candidates": 24,
+      "served_total": 29
+    },
+    "web": {
+      "arms": {
+        "R0_baseline": {
+          "fp": 4,
+          "fp_examples": [
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/eventarc"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/pubsub"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.942,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R1_naive": {
+          "fp": 9,
+          "fp_examples": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8732,
+          "predicted": 71,
+          "recall": 0.9538,
+          "tp": 62,
+          "unresolvable_guards": 7
+        },
+        "R1_naive_failopen": {
+          "fp": 13,
+          "fp_examples": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8333,
+          "predicted": 78,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R1_tuned": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 61,
+          "recall": 0.9385,
+          "tp": 61,
+          "unresolvable_guards": 4
+        },
+        "R1_tuned_failopen": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 65,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R2_openapi": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "openapi_pairs": 65,
+          "precision": 1.0,
+          "predicted": 65,
+          "recall": 1.0,
+          "served_static_ops_dropped": [],
+          "tp": 65
+        },
+        "R2_routetable_upperbound": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 65,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R3_emission_time": {
+          "fp": 4,
+          "fp_examples": [
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/eventarc"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/pubsub"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.942,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R3_precondition_allow_header": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 49,
+          "recall": 0.7538,
+          "tp": 49
+        },
+        "R3_precondition_path_level": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 63,
+          "recall": 0.9692,
+          "tp": 63
+        }
+      },
+      "declared_config": {
+        "web": true
+      },
+      "null": {
+        "R0_baseline": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R1_naive": {
+          "false_inclusion_rate": 0.75,
+          "null_included": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ],
+            [
+              "POST",
+              "/token"
+            ]
+          ]
+        },
+        "R1_tuned": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R2_openapi": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R3_precondition": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        }
+      },
+      "ok": true,
+      "served_in_candidates": 65,
+      "served_total": 71
+    },
+    "web_a2a": {
+      "arms": {
+        "R0_baseline": {
+          "fp": 4,
+          "fp_examples": [
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/eventarc"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/pubsub"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.942,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R1_naive": {
+          "fp": 9,
+          "fp_examples": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8732,
+          "predicted": 71,
+          "recall": 0.9538,
+          "tp": 62,
+          "unresolvable_guards": 7
+        },
+        "R1_naive_failopen": {
+          "fp": 13,
+          "fp_examples": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8333,
+          "predicted": 78,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R1_tuned": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 61,
+          "recall": 0.9385,
+          "tp": 61,
+          "unresolvable_guards": 4
+        },
+        "R1_tuned_failopen": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 65,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R2_openapi": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "openapi_pairs": 65,
+          "precision": 1.0,
+          "predicted": 65,
+          "recall": 1.0,
+          "served_static_ops_dropped": [],
+          "tp": 65
+        },
+        "R2_routetable_upperbound": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 65,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R3_emission_time": {
+          "fp": 4,
+          "fp_examples": [
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/eventarc"
+            ],
+            [
+              "POST",
+              "/apps/{app_name}/trigger/pubsub"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.942,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 65
+        },
+        "R3_precondition_allow_header": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 49,
+          "recall": 0.7538,
+          "tp": 49
+        },
+        "R3_precondition_path_level": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 63,
+          "recall": 0.9692,
+          "tp": 63
+        }
+      },
+      "declared_config": {
+        "a2a": true,
+        "web": true
+      },
+      "null": {
+        "R0_baseline": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R1_naive": {
+          "false_inclusion_rate": 0.75,
+          "null_included": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ],
+            [
+              "POST",
+              "/token"
+            ]
+          ]
+        },
+        "R1_tuned": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R2_openapi": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R3_precondition": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        }
+      },
+      "ok": true,
+      "served_in_candidates": 65,
+      "served_total": 73
+    },
+    "web_triggers": {
+      "arms": {
+        "R0_baseline": {
+          "fp": 2,
+          "fp_examples": [
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ]
+          ],
+          "gate_pass": true,
+          "precision": 0.971,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 67
+        },
+        "R1_naive": {
+          "fp": 9,
+          "fp_examples": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.8732,
+          "predicted": 71,
+          "recall": 0.9254,
+          "tp": 62,
+          "unresolvable_guards": 7
+        },
+        "R1_naive_failopen": {
+          "fp": 11,
+          "fp_examples": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ]
+          ],
+          "gate_pass": false,
+          "precision": 0.859,
+          "predicted": 78,
+          "recall": 1.0,
+          "tp": 67
+        },
+        "R1_tuned": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 63,
+          "recall": 0.9403,
+          "tp": 63,
+          "unresolvable_guards": 4
+        },
+        "R1_tuned_failopen": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 67,
+          "recall": 1.0,
+          "tp": 67
+        },
+        "R2_openapi": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "openapi_pairs": 67,
+          "precision": 1.0,
+          "predicted": 67,
+          "recall": 1.0,
+          "served_static_ops_dropped": [],
+          "tp": 67
+        },
+        "R2_routetable_upperbound": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 67,
+          "recall": 1.0,
+          "tp": 67
+        },
+        "R3_emission_time": {
+          "fp": 2,
+          "fp_examples": [
+            [
+              "POST",
+              "/api/reasoning_engine"
+            ],
+            [
+              "POST",
+              "/api/stream_reasoning_engine"
+            ]
+          ],
+          "gate_pass": true,
+          "precision": 0.971,
+          "predicted": 69,
+          "recall": 1.0,
+          "tp": 67
+        },
+        "R3_precondition_allow_header": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 51,
+          "recall": 0.7612,
+          "tp": 51
+        },
+        "R3_precondition_path_level": {
+          "fp": 0,
+          "fp_examples": [],
+          "gate_pass": true,
+          "precision": 1.0,
+          "predicted": 65,
+          "recall": 0.9701,
+          "tp": 65
+        }
+      },
+      "declared_config": {
+        "trigger_sources": [
+          "pubsub",
+          "eventarc"
+        ],
+        "web": true
+      },
+      "null": {
+        "R0_baseline": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R1_naive": {
+          "false_inclusion_rate": 0.75,
+          "null_included": [
+            [
+              "GET",
+              "/.well-known/openid_configuration"
+            ],
+            [
+              "GET",
+              "/api/weather"
+            ],
+            [
+              "GET",
+              "/auth"
+            ],
+            [
+              "GET",
+              "/commit"
+            ],
+            [
+              "GET",
+              "/list_agents"
+            ],
+            [
+              "GET",
+              "/list_local_agents"
+            ],
+            [
+              "GET",
+              "/validateUserId"
+            ],
+            [
+              "POST",
+              "/chat"
+            ],
+            [
+              "POST",
+              "/token"
+            ]
+          ]
+        },
+        "R1_tuned": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R2_openapi": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        },
+        "R3_precondition": {
+          "false_inclusion_rate": 0.0,
+          "null_included": []
+        }
+      },
+      "ok": true,
+      "served_in_candidates": 67,
+      "served_total": 73
+    }
+  },
+  "gate": 0.95,
+  "gate_reading": "emission-time precision, pre-registered",
+  "null_set_size": 12,
+  "openapi_coverage": {
+    "api_server": {
+      "coverage": 0.8148,
+      "in_openapi": 22,
+      "served_not_in_openapi": [
+        [
+          "GET",
+          "/docs"
+        ],
+        [
+          "GET",
+          "/docs/oauth2-redirect"
+        ],
+        [
+          "GET",
+          "/openapi.json"
+        ],
+        [
+          "GET",
+          "/redoc"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "served_total": 27
+    },
+    "api_server_pubsub": {
+      "coverage": 0.8214,
+      "in_openapi": 23,
+      "served_not_in_openapi": [
+        [
+          "GET",
+          "/docs"
+        ],
+        [
+          "GET",
+          "/docs/oauth2-redirect"
+        ],
+        [
+          "GET",
+          "/openapi.json"
+        ],
+        [
+          "GET",
+          "/redoc"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "served_total": 28
+    },
+    "devserver_no_assets": {
+      "coverage": 0.9206,
+      "in_openapi": 58,
+      "served_not_in_openapi": [
+        [
+          "GET",
+          "/docs"
+        ],
+        [
+          "GET",
+          "/docs/oauth2-redirect"
+        ],
+        [
+          "GET",
+          "/openapi.json"
+        ],
+        [
+          "GET",
+          "/redoc"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "served_total": 63
+    },
+    "enterprise": {
+      "coverage": 0.8276,
+      "in_openapi": 24,
+      "served_not_in_openapi": [
+        [
+          "GET",
+          "/docs"
+        ],
+        [
+          "GET",
+          "/docs/oauth2-redirect"
+        ],
+        [
+          "GET",
+          "/openapi.json"
+        ],
+        [
+          "GET",
+          "/redoc"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "served_total": 29
+    },
+    "web": {
+      "coverage": 0.9155,
+      "in_openapi": 65,
+      "served_not_in_openapi": [
+        [
+          "GET",
+          "/docs"
+        ],
+        [
+          "GET",
+          "/docs/oauth2-redirect"
+        ],
+        [
+          "GET",
+          "/openapi.json"
+        ],
+        [
+          "GET",
+          "/redoc"
+        ],
+        [
+          "MOUNT",
+          "/dev-ui"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "served_total": 71
+    },
+    "web_a2a": {
+      "coverage": 0.8904,
+      "in_openapi": 65,
+      "served_not_in_openapi": [
+        [
+          "GET",
+          "/a2a/probe_app/.well-known/agent-card.json"
+        ],
+        [
+          "GET",
+          "/docs"
+        ],
+        [
+          "GET",
+          "/docs/oauth2-redirect"
+        ],
+        [
+          "GET",
+          "/openapi.json"
+        ],
+        [
+          "GET",
+          "/redoc"
+        ],
+        [
+          "MOUNT",
+          "/dev-ui"
+        ],
+        [
+          "POST",
+          "/a2a/probe_app"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "served_total": 73
+    },
+    "web_triggers": {
+      "coverage": 0.9178,
+      "in_openapi": 67,
+      "served_not_in_openapi": [
+        [
+          "GET",
+          "/docs"
+        ],
+        [
+          "GET",
+          "/docs/oauth2-redirect"
+        ],
+        [
+          "GET",
+          "/openapi.json"
+        ],
+        [
+          "GET",
+          "/redoc"
+        ],
+        [
+          "MOUNT",
+          "/dev-ui"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "served_total": 73
+    }
+  },
+  "r3_mechanism": {
+    "api_server": {
+      "distinct_status_codes": [
+        404,
+        405
+      ],
+      "paths_probed": 67,
+      "paths_routed": 16,
+      "routed_with_allow_header": 16,
+      "routed_without_allow_header": []
+    },
+    "api_server_pubsub": {
+      "distinct_status_codes": [
+        404,
+        405
+      ],
+      "paths_probed": 67,
+      "paths_routed": 17,
+      "routed_with_allow_header": 17,
+      "routed_without_allow_header": []
+    },
+    "devserver_no_assets": {
+      "distinct_status_codes": [
+        404,
+        405
+      ],
+      "paths_probed": 67,
+      "paths_routed": 42,
+      "routed_with_allow_header": 42,
+      "routed_without_allow_header": []
+    },
+    "enterprise": {
+      "distinct_status_codes": [
+        404,
+        405
+      ],
+      "paths_probed": 67,
+      "paths_routed": 18,
+      "routed_with_allow_header": 18,
+      "routed_without_allow_header": []
+    },
+    "web": {
+      "distinct_status_codes": [
+        404,
+        405
+      ],
+      "paths_probed": 67,
+      "paths_routed": 49,
+      "routed_with_allow_header": 48,
+      "routed_without_allow_header": [
+        "/dev-ui/config"
+      ]
+    },
+    "web_a2a": {
+      "distinct_status_codes": [
+        404,
+        405
+      ],
+      "paths_probed": 67,
+      "paths_routed": 49,
+      "routed_with_allow_header": 48,
+      "routed_without_allow_header": [
+        "/dev-ui/config"
+      ]
+    },
+    "web_triggers": {
+      "distinct_status_codes": [
+        404,
+        405
+      ],
+      "paths_probed": 67,
+      "paths_routed": 51,
+      "routed_with_allow_header": 50,
+      "routed_without_allow_header": [
+        "/dev-ui/config"
+      ]
+    }
+  },
+  "static_set_size": 69,
+  "verdict": {
+    "R0_baseline": {
+      "clears_gate_everywhere": false,
+      "configs_scored": 7,
+      "max_precision": 0.971,
+      "min_precision": 0.3188,
+      "per_config": {
+        "api_server": 0.3188,
+        "api_server_pubsub": 0.3333,
+        "devserver_no_assets": 0.8406,
+        "enterprise": 0.3478,
+        "web": 0.942,
+        "web_a2a": 0.942,
+        "web_triggers": 0.971
+      }
+    },
+    "R1_naive": {
+      "clears_gate_everywhere": false,
+      "configs_scored": 7,
+      "max_precision": 0.8732,
+      "min_precision": 0.3099,
+      "per_config": {
+        "api_server": 0.3099,
+        "api_server_pubsub": 0.3099,
+        "devserver_no_assets": 0.8169,
+        "enterprise": 0.3288,
+        "web": 0.8732,
+        "web_a2a": 0.8732,
+        "web_triggers": 0.8732
+      }
+    },
+    "R1_naive_failopen": {
+      "clears_gate_everywhere": false,
+      "configs_scored": 7,
+      "max_precision": 0.859,
+      "min_precision": 0.2821,
+      "per_config": {
+        "api_server": 0.2821,
+        "api_server_pubsub": 0.2949,
+        "devserver_no_assets": 0.7733,
+        "enterprise": 0.3077,
+        "web": 0.8333,
+        "web_a2a": 0.8333,
+        "web_triggers": 0.859
+      }
+    },
+    "R1_tuned": {
+      "clears_gate_everywhere": true,
+      "configs_scored": 7,
+      "max_precision": 1.0,
+      "min_precision": 1.0,
+      "per_config": {
+        "api_server": 1.0,
+        "api_server_pubsub": 1.0,
+        "devserver_no_assets": 1.0,
+        "enterprise": 1.0,
+        "web": 1.0,
+        "web_a2a": 1.0,
+        "web_triggers": 1.0
+      }
+    },
+    "R1_tuned_failopen": {
+      "clears_gate_everywhere": true,
+      "configs_scored": 7,
+      "max_precision": 1.0,
+      "min_precision": 1.0,
+      "per_config": {
+        "api_server": 1.0,
+        "api_server_pubsub": 1.0,
+        "devserver_no_assets": 1.0,
+        "enterprise": 1.0,
+        "web": 1.0,
+        "web_a2a": 1.0,
+        "web_triggers": 1.0
+      }
+    },
+    "R2_openapi": {
+      "clears_gate_everywhere": true,
+      "configs_scored": 7,
+      "max_precision": 1.0,
+      "min_precision": 1.0,
+      "per_config": {
+        "api_server": 1.0,
+        "api_server_pubsub": 1.0,
+        "devserver_no_assets": 1.0,
+        "enterprise": 1.0,
+        "web": 1.0,
+        "web_a2a": 1.0,
+        "web_triggers": 1.0
+      }
+    },
+    "R2_routetable_upperbound": {
+      "clears_gate_everywhere": true,
+      "configs_scored": 7,
+      "max_precision": 1.0,
+      "min_precision": 1.0,
+      "per_config": {
+        "api_server": 1.0,
+        "api_server_pubsub": 1.0,
+        "devserver_no_assets": 1.0,
+        "enterprise": 1.0,
+        "web": 1.0,
+        "web_a2a": 1.0,
+        "web_triggers": 1.0
+      }
+    },
+    "R3_emission_time": {
+      "clears_gate_everywhere": false,
+      "configs_scored": 7,
+      "max_precision": 0.971,
+      "min_precision": 0.3188,
+      "per_config": {
+        "api_server": 0.3188,
+        "api_server_pubsub": 0.3333,
+        "devserver_no_assets": 0.8406,
+        "enterprise": 0.3478,
+        "web": 0.942,
+        "web_a2a": 0.942,
+        "web_triggers": 0.971
+      }
+    },
+    "R3_precondition_allow_header": {
+      "clears_gate_everywhere": true,
+      "configs_scored": 7,
+      "max_precision": 1.0,
+      "min_precision": 1.0,
+      "per_config": {
+        "api_server": 1.0,
+        "api_server_pubsub": 1.0,
+        "devserver_no_assets": 1.0,
+        "enterprise": 1.0,
+        "web": 1.0,
+        "web_a2a": 1.0,
+        "web_triggers": 1.0
+      }
+    },
+    "R3_precondition_path_level": {
+      "clears_gate_everywhere": true,
+      "configs_scored": 7,
+      "max_precision": 1.0,
+      "min_precision": 1.0,
+      "per_config": {
+        "api_server": 1.0,
+        "api_server_pubsub": 1.0,
+        "devserver_no_assets": 1.0,
+        "enterprise": 1.0,
+        "web": 1.0,
+        "web_a2a": 1.0,
+        "web_triggers": 1.0
+      }
+    }
+  }
+}

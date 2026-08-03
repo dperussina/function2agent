@@ -1,0 +1,101 @@
+{
+ "when": "20260803T082437",
+ "probe": "mealie GET /api/recipes?categories= fail-open",
+ "target": {
+  "name": "mealie",
+  "image": "ghcr.io/mealie-recipes/mealie@sha256:36c28f0642fb6c75fae8997a2d55994631b9b4bcffba3016c208fc132a4c1e69",
+  "app_version": "v3.22.0",
+  "base_url": "http://localhost:9925"
+ },
+ "app_version_reported": "v3.22.0",
+ "fixture_fingerprint": "afd2b135345234cae62ec74131c927f954d64d550033fe815283031ef41f6108",
+ "battery_version": "1.4.0-probe",
+ "category_name": "Breakfast",
+ "category_uuid": "906d5da2-b4c9-4aee-97c7-57a30013e22e",
+ "category_uuid_recorded": "906d5da2-b4c9-4aee-97c7-57a30013e22e",
+ "category_uuid_matches_record": true,
+ "collection_size": 60,
+ "recorded_in": "results/20260803T072053-repeats5-noisefloor-R1012/NOTES.md",
+ "rows": [
+  {
+   "case": "uuid",
+   "sent": "906d5da2-b4c9-4aee-97c7-57a30013e22e",
+   "parameter_omitted": false,
+   "request_path": "/api/recipes?categories=906d5da2-b4c9-4aee-97c7-57a30013e22e",
+   "http_status": 200,
+   "total": 7,
+   "items_returned": 7,
+   "recorded_total": 7,
+   "agrees_with_record": true,
+   "behaviour": "filtered",
+   "in_hand_run": true
+  },
+  {
+   "case": "name",
+   "sent": "Breakfast",
+   "parameter_omitted": false,
+   "request_path": "/api/recipes?categories=Breakfast",
+   "http_status": 200,
+   "total": 60,
+   "items_returned": 50,
+   "recorded_total": 60,
+   "agrees_with_record": true,
+   "behaviour": "fail-open",
+   "in_hand_run": true
+  },
+  {
+   "case": "nonsense",
+   "sent": "zzzz-not-real",
+   "parameter_omitted": false,
+   "request_path": "/api/recipes?categories=zzzz-not-real",
+   "http_status": 200,
+   "total": 60,
+   "items_returned": 50,
+   "recorded_total": 60,
+   "agrees_with_record": true,
+   "behaviour": "fail-open",
+   "in_hand_run": true
+  },
+  {
+   "case": "empty",
+   "sent": "",
+   "parameter_omitted": false,
+   "request_path": "/api/recipes?categories=",
+   "http_status": 200,
+   "total": 60,
+   "items_returned": 50,
+   "recorded_total": 60,
+   "agrees_with_record": true,
+   "behaviour": "fail-open",
+   "in_hand_run": true
+  },
+  {
+   "case": "omitted",
+   "sent": null,
+   "parameter_omitted": true,
+   "request_path": "/api/recipes",
+   "http_status": 200,
+   "total": 60,
+   "items_returned": 50,
+   "recorded_total": 60,
+   "agrees_with_record": true,
+   "behaviour": "collection size",
+   "in_hand_run": true
+  },
+  {
+   "case": "slug",
+   "sent": "breakfast",
+   "parameter_omitted": false,
+   "request_path": "/api/recipes?categories=breakfast",
+   "http_status": 200,
+   "total": 7,
+   "items_returned": 7,
+   "recorded_total": 7,
+   "agrees_with_record": true,
+   "behaviour": "filtered",
+   "in_hand_run": false
+  }
+ ],
+ "mismatches": [],
+ "model_spend_usd": 0.0
+}

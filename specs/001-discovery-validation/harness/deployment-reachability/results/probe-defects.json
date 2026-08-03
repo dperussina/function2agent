@@ -1,0 +1,27 @@
+{
+  "defect_A": {
+    "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}",
+    "probe_verb": "PUT",
+    "status": 405,
+    "allow_header": "GET",
+    "methods_the_route_table_serves": [
+      "DELETE",
+      "GET",
+      "PATCH",
+      "POST"
+    ]
+  },
+  "defect_B": {
+    "probed": "GET /dev/apps/{app_name}/tests/rebuild",
+    "status": 404,
+    "body": "{\"detail\":\"Test file not found\"}",
+    "unrouted_control": {
+      "probed": "GET /f2a-definitely-not-a-route",
+      "status": 404,
+      "body": "{\"detail\":\"Not Found\"}"
+    },
+    "sibling_route_that_absorbs_it": "GET /dev/apps/{app_name}/tests/{test_name}",
+    "post_is_actually_served": true,
+    "two_404s_are_distinguishable_by_body": true
+  }
+}

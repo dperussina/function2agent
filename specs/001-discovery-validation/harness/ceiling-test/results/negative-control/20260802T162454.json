@@ -1,0 +1,78 @@
+{
+ "when": "20260802T162454",
+ "n": 4,
+ "quarantine_candidates": [],
+ "fixture_fingerprint_start": "afd2b135345234cae62ec74131c927f954d64d550033fe815283031ef41f6108",
+ "fixture_fingerprint_end": "afd2b135345234cae62ec74131c927f954d64d550033fe815283031ef41f6108",
+ "spent_usd": 0.0224,
+ "rows": [
+  {
+   "task_id": "NM.001",
+   "family": "NM",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected [8.0, 0.0], got [12.0, 3.0]",
+   "claimed": "12, 3",
+   "status": "answered",
+   "expected": [
+    8,
+    0
+   ],
+   "cost_usd": 0.005454
+  },
+  {
+   "task_id": "NM.002",
+   "family": "NM",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected [21.0, 0.0], got [47.0, 12.0]",
+   "claimed": "47, 12",
+   "status": "answered",
+   "expected": [
+    21,
+    0
+   ],
+   "cost_usd": 0.005415
+  },
+  {
+   "task_id": "NM.003",
+   "family": "NM",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected [8.0, 0.0], got [23.0, 4.0]",
+   "claimed": "23, 4",
+   "status": "answered",
+   "expected": [
+    8,
+    0
+   ],
+   "cost_usd": 0.005457
+  },
+  {
+   "task_id": "NM.004",
+   "family": "NM",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected [9.0, 0.0], got [12.0, 3.0]",
+   "claimed": "12, 3",
+   "status": "answered",
+   "expected": [
+    9,
+    0
+   ],
+   "cost_usd": 0.006114
+  }
+ ]
+}

@@ -1,0 +1,51 @@
+{
+ "_comment": "Payloads the oracle-leak assertion MUST abort on. Each is a route ground truth could actually travel by. A string prefixed 'AGENT:' is loaded as redact.AgentText — content the agent or a tool produced — and the prefix is stripped. Everything else is harness-authored.",
+ "_record": {
+  "run_id": "20260802T163319-bias-probe",
+  "task_id": "R4.005",
+  "arm": "A",
+  "attempt": 1,
+  "expected": 3.201754,
+  "reason": "expected 3.201754, got 3.23",
+  "outcome": "fail",
+  "false_success": true,
+  "detectors": ["D1"],
+  "submitted": "3.23",
+  "submitted_status": "answered",
+  "terminal": "submitted",
+  "tool_calls": [],
+  "transcript": [{"role": "assistant", "content": "AGENT:computed 3.23"}]
+ },
+ "cases": [
+  {
+   "name": "whole-record-serialised",
+   "why": "the ceiling-test trace shape reaching a scorer verbatim; the hazard PREREGISTRATION.md 4.6 names",
+   "payload": {"system": "Judge the agent.", "user": {"$RECORD": true}}
+  },
+  {
+   "name": "oracle-key-nested-deep",
+   "why": "one oracle field surviving an otherwise careful projection, five levels down",
+   "payload": {"system": "s", "a": {"b": {"c": {"d": {"false_success": true}}}}}
+  },
+  {
+   "name": "expected-value-in-harness-text",
+   "why": "the answer pasted into the rubric by a well-meaning prompt edit",
+   "payload": {"system": "The correct answer is 3.201754. Did the agent get it?"}
+  },
+  {
+   "name": "oracle-reason-string-in-agent-text",
+   "why": "the adjudicator's own sentence; it has no innocent route into a transcript, so it aborts wherever it appears, agent-tagged or not",
+   "payload": {"user": "AGENT:expected 3.201754, got 3.23"}
+  },
+  {
+   "name": "oracle-key-literal-in-harness-text",
+   "why": "a template that labels a slot with an oracle field name, which means something is filling it",
+   "payload": {"system": "Context follows.", "user": "\"false_success\": see below"}
+  },
+  {
+   "name": "outcome-key-in-list-element",
+   "why": "records passed as a list rather than a dict still carry their keys",
+   "payload": {"user_parts": [{"role": "x"}, {"outcome": "fail"}]}
+  }
+ ]
+}

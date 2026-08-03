@@ -1,0 +1,30 @@
+# Exact versions finding 003 was measured against, on Python 3.12.11.
+#
+# These are pins, not floors. ADK's provider behaviour, the Claude Agent SDK's
+# context overhead, and LiteLLM's packaging all moved during the probe window,
+# and a result measured on a different set is a different result.
+#
+# READ THE README BEFORE RELAXING THE LITELLM PIN. 1.91.4 is the last release
+# that publishes a pure-Python `py3-none-any` wheel. From 1.92.0 onward LiteLLM
+# ships compiled platform-specific wheels and publishes NONE for macOS, so on a
+# Mac the resolver falls back to the sdist and demands maturin and rustc. That
+# is why the probe ran on 1.91.4, and it is a stated limit on what finding 003
+# covers — every ADK result in it is measured against 1.91.4, not against
+# current LiteLLM.
+
+google-adk==2.6.1
+litellm==1.91.4
+claude-agent-sdk==0.2.128
+
+# Pulled in transitively; pinned because the probes touch them directly.
+google-genai==2.16.0
+pydantic==2.13.4
+openai==2.52.0
+httpx==0.28.1
+
+# NOT installable from here, and required by probe_cas.py and probe_cost_compare.py:
+#
+#   Claude Code CLI 2.1.220     npm install -g @anthropic-ai/claude-code@2.1.220
+#
+# The claude-agent-sdk drives the CLI as a subprocess. The CLI is proprietary and
+# must stay a declared peer dependency — never vendored (finding 003 result 8).

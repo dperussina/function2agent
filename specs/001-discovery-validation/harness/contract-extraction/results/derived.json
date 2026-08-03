@@ -1,0 +1,3827 @@
+{
+  "contracts": {
+    "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "delete_session",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1372,
+      "index_signature": "(\n        app_name: str, user_id: str, session_id: str\n    ) -> None",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "None"
+    },
+    "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "delete_artifact",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1611,
+      "index_signature": "(\n        app_name: str, user_id: str, session_id: str, artifact_name: str\n    ) -> None",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 4
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "None"
+    },
+    "DELETE /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "delete_eval",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1065,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, eval_case_id: str\n    ) -> None",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1073,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "None"
+    },
+    "DELETE /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "delete_eval",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1065,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, eval_case_id: str\n    ) -> None",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1073,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "None"
+    },
+    "DELETE /dev/apps/{app_name}/tests/{test_name}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "delete_test",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 769,
+      "index_signature": "(app_name: str, test_name: str) -> dict[str, str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "test_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 780,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 205,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 209,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 229,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 215,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, str]"
+    },
+    "GET /": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "redirect_root_to_dev_ui",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1125,
+      "index_signature": "()",
+      "inputs": [],
+      "param_notes": {},
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "GET /apps/{app_name}/app-info": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_adk_app_info",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1267,
+      "index_signature": "(app_name: str) -> AppInfo",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1270,
+          "status_code": 403
+        },
+        {
+          "class": "HTTPException",
+          "line": 1291,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1280,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "AppInfo"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_sessions",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1314,
+      "index_signature": "(app_name: str, user_id: str) -> list[Session]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[Session]"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_session",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1299,
+      "index_signature": "(\n        app_name: str, user_id: str, session_id: str\n    ) -> Session",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1306,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_session",
+          "line": 1306,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "Session"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_artifact_names",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1562,
+      "index_signature": "(\n        app_name: str, user_id: str, session_id: str\n    ) -> list[str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[str]"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "load_artifact",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1590,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        session_id: str,\n        artifact_name: str,\n        version: int | None = Query(None),\n    ) -> types.Part | None",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "version",
+          "required": false,
+          "source": "signature",
+          "type": "integer"
+        }
+      ],
+      "param_notes": {
+        "scalar": 5
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1605,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:load_artifact",
+          "line": 1605,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "types.Part | None"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_artifact_versions",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1573,
+      "index_signature": "(\n        app_name: str, user_id: str, session_id: str, artifact_name: str\n    ) -> list[int]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 4
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[int]"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_artifact_versions_metadata",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1467,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        session_id: str,\n        artifact_name: str,\n    ) -> list[ArtifactVersion]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 4
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": "list[ArtifactVersion]",
+      "return_annotation": "list[ArtifactVersion]"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "load_artifact_version",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1532,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        session_id: str,\n        artifact_name: str,\n        version_id: str,\n    ) -> types.Part | None",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "version_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 5
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1555,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "line": 1544,
+          "status_code": 422
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:load_artifact",
+          "line": 1605,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "types.Part | None"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_artifact_version_metadata",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1434,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        session_id: str,\n        artifact_name: str,\n        version_id: str,\n    ) -> ArtifactVersion",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "version_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 5
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1457,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "line": 1446,
+          "status_code": 422
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": "ArtifactVersion",
+      "return_annotation": "ArtifactVersion"
+    },
+    "GET /builder/app/{app_name}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_agent_builder",
+      "handler_file": "src/google/adk/cli/fast_api.py",
+      "handler_line": 361,
+      "index_signature": "(\n      app_name: str,\n      file_path: Optional[str] = None,\n      tmp: Optional[bool] = False,\n  )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "file_path",
+          "required": false,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "source": "signature",
+          "type": "boolean"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_file_path",
+          "line": 187,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_file_path",
+          "line": 189,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_file_path",
+          "line": 191,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_file_path",
+          "line": 194,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_get_app_root",
+          "line": 122,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_get_app_root",
+          "line": 124,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_get_app_root",
+          "line": 127,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_resolve_under_dir",
+          "line": 205,
+          "status_code": null
+        }
+      ],
+      "response_class": "PlainTextResponse",
+      "response_model": null,
+      "return_annotation": null
+    },
+    "GET /config/telemetry": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_telemetry_consent",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 250,
+      "index_signature": "() -> dict[str, Any]",
+      "inputs": [],
+      "param_notes": {},
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, Any]"
+    },
+    "GET /dev-ui": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "redirect_dev_ui_add_slash",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1129,
+      "index_signature": "()",
+      "inputs": [],
+      "param_notes": {},
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "GET /dev-ui/config": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_ui_config",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1118,
+      "index_signature": "()",
+      "inputs": [],
+      "param_notes": {},
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "GET /dev/apps/{app_name}/build_graph": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_app_info",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 586,
+      "index_signature": "(app_name: str) -> Any",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 590,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 750,
+          "status_code": 403
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 772,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 205,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 209,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 229,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 215,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "Any"
+    },
+    "GET /dev/apps/{app_name}/build_graph_image": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_app_info_image",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 611,
+      "index_signature": "(\n        app_name: str, dark_mode: bool = False, node: Optional[str] = None\n    ) -> dict[str, GetEventGraphResult]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "dark_mode",
+          "required": false,
+          "source": "signature",
+          "type": "boolean"
+        },
+        {
+          "location": "query",
+          "name": "node",
+          "required": false,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 617,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "line": 627,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 750,
+          "status_code": 403
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 772,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, GetEventGraphResult]"
+    },
+    "GET /dev/apps/{app_name}/builder": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_agent_builder",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 511,
+      "index_signature": "(\n        app_name: str,\n        file_path: Optional[str] = None,\n        tmp: Optional[bool] = False,\n    )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "file_path",
+          "required": false,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "source": "signature",
+          "type": "boolean"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_file_path",
+          "line": 344,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_file_path",
+          "line": 346,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_file_path",
+          "line": 348,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_file_path",
+          "line": 351,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_get_app_root",
+          "line": 275,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_get_app_root",
+          "line": 277,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_get_app_root",
+          "line": 280,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_resolve_under_dir",
+          "line": 362,
+          "status_code": null
+        }
+      ],
+      "response_class": "PlainTextResponse",
+      "response_model": null,
+      "return_annotation": null
+    },
+    "GET /dev/apps/{app_name}/debug/trace/session/{session_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_session_trace",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 566,
+      "index_signature": "(app_name: str, session_id: str) -> Any",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "Any"
+    },
+    "GET /dev/apps/{app_name}/debug/trace/{event_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_trace_dict",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 556,
+      "index_signature": "(app_name: str, event_id: str) -> Any",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "event_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 559,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "Any"
+    },
+    "GET /dev/apps/{app_name}/eval-results": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_eval_results",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1198,
+      "index_signature": "(app_name: str) -> ListEvalResultsResponse",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "NotImplementedError",
+          "in": "src/google/adk/evaluation/eval_set_results_manager.py:list_eval_set_results",
+          "line": 51,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "ListEvalResultsResponse"
+    },
+    "GET /dev/apps/{app_name}/eval-results/{eval_result_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_eval_result",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1178,
+      "index_signature": "(\n        app_name: str,\n        eval_result_id: str,\n    ) -> EvalResult",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_result_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1189,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "line": 1191,
+          "status_code": 500
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "NotImplementedError",
+          "in": "src/google/adk/evaluation/eval_set_results_manager.py:get_eval_set_result",
+          "line": 46,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "EvalResult"
+    },
+    "GET /dev/apps/{app_name}/eval-sets": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_eval_sets",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 918,
+      "index_signature": "(app_name: str) -> ListEvalSetsResponse",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "ListEvalSetsResponse"
+    },
+    "GET /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_eval",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1002,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, eval_case_id: str\n    ) -> EvalCase",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1013,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "EvalCase"
+    },
+    "GET /dev/apps/{app_name}/eval_results": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_eval_results_legacy",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 909,
+      "index_signature": "(app_name: str) -> list[str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[str]"
+    },
+    "GET /dev/apps/{app_name}/eval_results/{eval_result_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_eval_result_legacy",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 886,
+      "index_signature": "(\n        app_name: str,\n        eval_result_id: str,\n    ) -> EvalSetResult",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_result_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 895,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "line": 897,
+          "status_code": 500
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "NotImplementedError",
+          "in": "src/google/adk/evaluation/eval_set_results_manager.py:get_eval_set_result",
+          "line": 46,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "EvalSetResult"
+    },
+    "GET /dev/apps/{app_name}/eval_sets": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_eval_sets_legacy",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 855,
+      "index_signature": "(app_name: str) -> list[str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[str]"
+    },
+    "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_evals_in_eval_set",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 978,
+      "index_signature": "(\n        app_name: str,\n        eval_set_id: str,\n    ) -> list[str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 986,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[str]"
+    },
+    "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_eval",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1002,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, eval_case_id: str\n    ) -> EvalCase",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1013,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "EvalCase"
+    },
+    "GET /dev/apps/{app_name}/graph": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_app_graph_dot",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1234,
+      "index_signature": "(\n        app_name: str, dark_mode: bool = False\n    ) -> GetEventGraphResult | dict",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "dark_mode",
+          "required": false,
+          "source": "signature",
+          "type": "boolean"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "GetEventGraphResult | dict"
+    },
+    "GET /dev/apps/{app_name}/metrics-info": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_metrics_info",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1210,
+      "index_signature": "(app_name: str) -> ListMetricsInfoResponse",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1223,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "ListMetricsInfoResponse"
+    },
+    "GET /dev/apps/{app_name}/tests": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_tests",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 653,
+      "index_signature": "(app_name: str) -> list[str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 205,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 209,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 229,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 215,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[str]"
+    },
+    "GET /dev/apps/{app_name}/tests/{test_name}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_test_content",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 786,
+      "index_signature": "(app_name: str, test_name: str) -> dict[str, Any]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "test_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 797,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 205,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 209,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 229,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 215,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, Any]"
+    },
+    "GET /dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "get_event_graph",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1265,
+      "index_signature": "(\n        app_name: str, user_id: str, session_id: str, event_id: str\n    )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "event_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 4
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_session",
+          "line": 1306,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "GET /health": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "health",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1159,
+      "index_signature": "() -> dict[str, str]",
+      "inputs": [],
+      "param_notes": {},
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, str]"
+    },
+    "GET /list-apps": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "list_apps",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1255,
+      "index_signature": "(\n        detailed: bool = Query(\n            default=False, description=\"Return detailed app information\"\n        )\n    ) -> list[str] | ListAppsResponse",
+      "inputs": [
+        {
+          "location": "query",
+          "name": "detailed",
+          "required": false,
+          "source": "signature",
+          "type": "boolean"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[str] | ListAppsResponse"
+    },
+    "GET /version": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "version",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1163,
+      "index_signature": "() -> dict[str, str]",
+      "inputs": [],
+      "param_notes": {},
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, str]"
+    },
+    "PATCH /apps/{app_name}/users/{user_id}/memory": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "patch_memory",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1622,
+      "index_signature": "(\n        app_name: str, user_id: str, update_memory_request: UpdateMemoryRequest\n    ) -> None",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "session_id",
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "source": "model:UpdateMemoryRequest",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1637,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1644,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1654,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_session",
+          "line": 1306,
+          "status_code": 404
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/agents/context.py:add_session_to_memory",
+          "line": 901,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "None"
+    },
+    "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "update_session",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1383,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        session_id: str,\n        req: UpdateSessionRequest,\n    ) -> Session",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "state_delta",
+          "location": "body",
+          "name": "stateDelta",
+          "required": true,
+          "source": "model:UpdateSessionRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1407,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_session",
+          "line": 1306,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "Session"
+    },
+    "POST /agent-identity/finalize": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "finalize_agent_identity_credentials",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1179,
+      "index_signature": "(\n        req: FinalizeAgentIdentityCredentialsRequest,\n    ) -> dict[str, str]",
+      "inputs": [
+        {
+          "declared_name": "connector_name",
+          "location": "body",
+          "name": "connectorName",
+          "required": true,
+          "source": "model:FinalizeAgentIdentityCredentialsRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "user_id",
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "source": "model:FinalizeAgentIdentityCredentialsRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "user_id_validation_state",
+          "location": "body",
+          "name": "userIdValidationState",
+          "required": true,
+          "source": "model:FinalizeAgentIdentityCredentialsRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "consent_nonce",
+          "location": "body",
+          "name": "consentNonce",
+          "required": true,
+          "source": "model:FinalizeAgentIdentityCredentialsRequest",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1189,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "line": 1216,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1231,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1242,
+          "status_code": null
+        },
+        {
+          "class": "HTTPException",
+          "line": 1248,
+          "status_code": 500
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, str]"
+    },
+    "POST /api/reasoning_engine": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "query",
+      "handler_file": "src/google/adk/cli/fast_api.py",
+      "handler_line": 849,
+      "index_signature": "(request: Request)",
+      "inputs": [],
+      "param_notes": {
+        "framework-injected": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 863,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 867,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 853,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 857,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 750,
+          "status_code": 403
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 772,
+          "status_code": 404
+        }
+      ],
+      "response_class": "JSONResponse",
+      "response_model": null,
+      "return_annotation": null
+    },
+    "POST /api/stream_reasoning_engine": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "stream_query",
+      "handler_file": "src/google/adk/cli/fast_api.py",
+      "handler_line": 892,
+      "index_signature": "(request: Request)",
+      "inputs": [],
+      "param_notes": {
+        "framework-injected": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 906,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 910,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 896,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 900,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 750,
+          "status_code": 403
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 772,
+          "status_code": 404
+        }
+      ],
+      "response_class": "StreamingResponse",
+      "response_model": null,
+      "return_annotation": null
+    },
+    "POST /apps/{app_name}/trigger/eventarc": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "trigger_eventarc",
+      "handler_file": "src/google/adk/cli/trigger_routes.py",
+      "handler_line": 477,
+      "index_signature": "(\n          app_name: str, req: EventarcTriggerRequest, request: Request\n      ) -> TriggerResponse",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "data",
+          "location": "body",
+          "name": "data",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "source",
+          "location": "body",
+          "name": "source",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "type",
+          "location": "body",
+          "name": "type",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "id",
+          "location": "body",
+          "name": "id",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "time",
+          "location": "body",
+          "name": "time",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "specversion",
+          "location": "body",
+          "name": "specversion",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "message",
+          "location": "body",
+          "name": "message",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "subscription",
+          "location": "body",
+          "name": "subscription",
+          "required": false,
+          "source": "model:EventarcTriggerRequest",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "framework-injected": 1,
+        "model-expanded": 1,
+        "scalar": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 569,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "line": 575,
+          "status_code": 500
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "TransientError",
+          "in": "src/google/adk/cli/trigger_routes.py:_run_agent_with_retry",
+          "line": 386,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": "TriggerResponse",
+      "return_annotation": "TriggerResponse"
+    },
+    "POST /apps/{app_name}/trigger/pubsub": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "trigger_pubsub",
+      "handler_file": "src/google/adk/cli/trigger_routes.py",
+      "handler_line": 411,
+      "index_signature": "(\n          app_name: str, req: PubSubTriggerRequest, request: Request\n      ) -> TriggerResponse",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "message",
+          "location": "body",
+          "name": "message",
+          "required": true,
+          "source": "model:PubSubTriggerRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "subscription",
+          "location": "body",
+          "name": "subscription",
+          "required": false,
+          "source": "model:PubSubTriggerRequest",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "framework-injected": 1,
+        "model-expanded": 1,
+        "scalar": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 451,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "line": 457,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "line": 428,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "TransientError",
+          "in": "src/google/adk/cli/trigger_routes.py:_run_agent_with_retry",
+          "line": 386,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": "TriggerResponse",
+      "return_annotation": "TriggerResponse"
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "create_session",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1350,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        req: Optional[CreateSessionRequest] = None,\n    ) -> Session",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "session_id",
+          "location": "body",
+          "name": "sessionId",
+          "required": false,
+          "source": "model:CreateSessionRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "state",
+          "location": "body",
+          "name": "state",
+          "required": false,
+          "source": "model:CreateSessionRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "events",
+          "location": "body",
+          "name": "events",
+          "required": false,
+          "source": "model:CreateSessionRequest",
+          "type": "array[object]"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:_create_session",
+          "line": 978,
+          "status_code": 409
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:_create_session",
+          "line": 985,
+          "status_code": 500
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "Session"
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "create_session_with_id",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1333,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        session_id: str,\n        state: Optional[dict[str, Any]] = None,\n    ) -> Session",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "body_whole": true,
+          "declared_name": "state",
+          "location": "body",
+          "name": "__body__",
+          "required": false,
+          "source": "signature",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "complex-body": 1,
+        "scalar": 3
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:_create_session",
+          "line": 978,
+          "status_code": 409
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:_create_session",
+          "line": 985,
+          "status_code": 500
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "Session"
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "save_artifact",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1485,
+      "index_signature": "(\n        app_name: str,\n        user_id: str,\n        session_id: str,\n        req: SaveArtifactRequest,\n    ) -> ArtifactVersion",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "filename",
+          "location": "body",
+          "name": "filename",
+          "required": true,
+          "source": "model:SaveArtifactRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "artifact",
+          "location": "body",
+          "name": "artifact",
+          "required": true,
+          "source": "model:SaveArtifactRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "custom_metadata",
+          "location": "body",
+          "name": "customMetadata",
+          "required": false,
+          "source": "model:SaveArtifactRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1523,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "line": 1502,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1514,
+          "status_code": 500
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:save_artifact",
+          "line": 1523,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:save_artifact",
+          "line": 1502,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:save_artifact",
+          "line": 1514,
+          "status_code": 500
+        }
+      ],
+      "response_class": null,
+      "response_model": "ArtifactVersion",
+      "return_annotation": "ArtifactVersion"
+    },
+    "POST /builder/app/{app_name}/cancel": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "builder_cancel",
+      "handler_file": "src/google/adk/cli/fast_api.py",
+      "handler_line": 353,
+      "index_signature": "(app_name: str) -> bool",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "bool"
+    },
+    "POST /builder/save": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "builder_build",
+      "handler_file": "src/google/adk/cli/fast_api.py",
+      "handler_line": 296,
+      "index_signature": "(\n      files: list[UploadFile] = File(...), tmp: Optional[bool] = False\n  ) -> bool",
+      "inputs": [
+        {
+          "location": "body",
+          "name": "files",
+          "required": true,
+          "source": "signature",
+          "type": "array[string]"
+        },
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "source": "signature",
+          "type": "boolean"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 347,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_get_app_root",
+          "line": 122,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_get_app_root",
+          "line": 124,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_get_app_root",
+          "line": 127,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_check_yaml_for_blocked_keys",
+          "line": 144,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_check_yaml_for_blocked_keys",
+          "line": 150,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_get_tmp_agent_root",
+          "line": 212,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_upload_filename",
+          "line": 165,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_upload_filename",
+          "line": 168,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_upload_filename",
+          "line": 171,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_upload_filename",
+          "line": 173,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_upload_filename",
+          "line": 175,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_parse_upload_filename",
+          "line": 178,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/fast_api.py:_resolve_under_dir",
+          "line": 205,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "bool"
+    },
+    "POST /config/telemetry": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "set_telemetry_consent",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 255,
+      "index_signature": "(\n        req: TelemetryConsentRequest, request: FastAPIRequest\n    ) -> dict[str, Any]",
+      "inputs": [
+        {
+          "declared_name": "telemetry",
+          "location": "body",
+          "name": "telemetry",
+          "required": true,
+          "source": "model:TelemetryConsentRequest",
+          "type": "boolean"
+        }
+      ],
+      "param_notes": {
+        "framework-injected": 1,
+        "model-expanded": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 260,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, Any]"
+    },
+    "POST /dev/apps/{app_name}/builder/cancel": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "builder_cancel",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 503,
+      "index_signature": "(app_name: str) -> bool",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 1
+      },
+      "raises": [],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "bool"
+    },
+    "POST /dev/apps/{app_name}/builder/save": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "builder_build",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 455,
+      "index_signature": "(\n        app_name: str, files: list[UploadFile], tmp: Optional[bool] = False\n    ) -> bool",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "files",
+          "required": true,
+          "source": "signature",
+          "type": "array[string]"
+        },
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "source": "signature",
+          "type": "boolean"
+        }
+      ],
+      "param_notes": {
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 495,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_get_tmp_agent_root",
+          "line": 369,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_check_yaml_for_blocked_keys",
+          "line": 299,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_check_yaml_for_blocked_keys",
+          "line": 305,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_get_app_root",
+          "line": 275,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_get_app_root",
+          "line": 277,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_get_app_root",
+          "line": 280,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_upload_filename",
+          "line": 320,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_upload_filename",
+          "line": 328,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_upload_filename",
+          "line": 330,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_upload_filename",
+          "line": 332,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_parse_upload_filename",
+          "line": 335,
+          "status_code": null
+        },
+        {
+          "class": "ValueError",
+          "in": "src/google/adk/cli/dev_server.py:_resolve_under_dir",
+          "line": 362,
+          "status_code": null
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "bool"
+    },
+    "POST /dev/apps/{app_name}/eval-sets": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "create_eval_set",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 809,
+      "index_signature": "(\n        app_name: str, create_eval_set_request: CreateEvalSetRequest\n    ) -> EvalSet",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "eval_set",
+          "location": "body",
+          "name": "evalSet",
+          "required": true,
+          "source": "model:CreateEvalSetRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 818,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:create_eval_set",
+          "line": 818,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "EvalSet"
+    },
+    "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "add_session_to_eval_set",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 938,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, req: AddSessionToEvalSetRequest\n    )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "eval_id",
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "source": "model:AddSessionToEvalSetRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "session_id",
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "source": "model:AddSessionToEvalSetRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "user_id",
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "source": "model:AddSessionToEvalSetRequest",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 971,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_session",
+          "line": 1306,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "run_eval",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1080,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, req: RunEvalRequest\n    ) -> RunEvalResponse",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "eval_ids",
+          "location": "body",
+          "name": "evalIds",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "array[string]"
+        },
+        {
+          "declared_name": "eval_case_ids",
+          "location": "body",
+          "name": "evalCaseIds",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "array[string]"
+        },
+        {
+          "declared_name": "eval_metrics",
+          "location": "body",
+          "name": "evalMetrics",
+          "required": true,
+          "source": "model:RunEvalRequest",
+          "type": "array[object]"
+        },
+        {
+          "declared_name": "live_model_config",
+          "location": "body",
+          "name": "liveModelConfig",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "user_simulator_config",
+          "location": "body",
+          "name": "userSimulatorConfig",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1095,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1152,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "RunEvalResponse"
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "create_eval_set_legacy",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 833,
+      "index_signature": "(\n        app_name: str,\n        eval_set_id: str,\n    )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:create_eval_set",
+          "line": 818,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "add_session_to_eval_set",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 938,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, req: AddSessionToEvalSetRequest\n    )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "eval_id",
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "source": "model:AddSessionToEvalSetRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "session_id",
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "source": "model:AddSessionToEvalSetRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "user_id",
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "source": "model:AddSessionToEvalSetRequest",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 2
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 971,
+          "status_code": 400
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_session",
+          "line": 1306,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "run_eval_legacy",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 868,
+      "index_signature": "(\n        app_name: str, eval_set_id: str, req: RunEvalRequest\n    ) -> list[RunEvalResult]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "eval_ids",
+          "location": "body",
+          "name": "evalIds",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "array[string]"
+        },
+        {
+          "declared_name": "eval_case_ids",
+          "location": "body",
+          "name": "evalCaseIds",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "array[string]"
+        },
+        {
+          "declared_name": "eval_metrics",
+          "location": "body",
+          "name": "evalMetrics",
+          "required": true,
+          "source": "model:RunEvalRequest",
+          "type": "array[object]"
+        },
+        {
+          "declared_name": "live_model_config",
+          "location": "body",
+          "name": "liveModelConfig",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "user_simulator_config",
+          "location": "body",
+          "name": "userSimulatorConfig",
+          "required": false,
+          "source": "model:RunEvalRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:run_eval",
+          "line": 1095,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:run_eval",
+          "line": 1152,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[RunEvalResult]"
+    },
+    "POST /dev/apps/{app_name}/tests/rebuild": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "rebuild_app_tests",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 667,
+      "index_signature": "(\n        app_name: str, test_name: Optional[str] = None\n    ) -> dict[str, str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "test_name",
+          "required": false,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 205,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 209,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 229,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 215,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, str]"
+    },
+    "POST /dev/apps/{app_name}/tests/run": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "run_app_tests",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 686,
+      "index_signature": "(\n        app_name: str, test_name: Optional[str] = None\n    ) -> StreamingResponse",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "test_name",
+          "required": false,
+          "source": "signature",
+          "type": "string"
+        }
+      ],
+      "param_notes": {
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 205,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 209,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 229,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 215,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "StreamingResponse"
+    },
+    "POST /run": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "run_agent",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1668,
+      "index_signature": "(req: RunAgentRequest, request: Request) -> list[Event]",
+      "inputs": [
+        {
+          "declared_name": "app_name",
+          "location": "body",
+          "name": "appName",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "user_id",
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "session_id",
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "new_message",
+          "location": "body",
+          "name": "newMessage",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "streaming",
+          "location": "body",
+          "name": "streaming",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "boolean"
+        },
+        {
+          "declared_name": "state_delta",
+          "location": "body",
+          "name": "stateDelta",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "function_call_event_id",
+          "location": "body",
+          "name": "functionCallEventId",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "invocation_id",
+          "location": "body",
+          "name": "invocationId",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "custom_metadata",
+          "location": "body",
+          "name": "customMetadata",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "framework-injected": 1,
+        "model-expanded": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1671,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1699,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:worker",
+          "line": 1699,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 750,
+          "status_code": 403
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 772,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "list[Event]"
+    },
+    "POST /run_sse": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "run_agent_sse",
+      "handler_file": "src/google/adk/cli/api_server.py",
+      "handler_line": 1734,
+      "index_signature": "(req: RunAgentRequest) -> StreamingResponse",
+      "inputs": [
+        {
+          "declared_name": "app_name",
+          "location": "body",
+          "name": "appName",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "user_id",
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "session_id",
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "new_message",
+          "location": "body",
+          "name": "newMessage",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "streaming",
+          "location": "body",
+          "name": "streaming",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "boolean"
+        },
+        {
+          "declared_name": "state_delta",
+          "location": "body",
+          "name": "stateDelta",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "object"
+        },
+        {
+          "declared_name": "function_call_event_id",
+          "location": "body",
+          "name": "functionCallEventId",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "invocation_id",
+          "location": "body",
+          "name": "invocationId",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "string"
+        },
+        {
+          "declared_name": "custom_metadata",
+          "location": "body",
+          "name": "customMetadata",
+          "required": false,
+          "source": "model:RunAgentRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1737,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1760,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_session",
+          "line": 1306,
+          "status_code": 404
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 750,
+          "status_code": 403
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/api_server.py:get_runner_async",
+          "line": 772,
+          "status_code": 404
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "StreamingResponse"
+    },
+    "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "update_eval",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1030,
+      "index_signature": "(\n        app_name: str,\n        eval_set_id: str,\n        eval_case_id: str,\n        updated_eval_case: EvalCase,\n    )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "eval_id",
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "source": "model:EvalCase",
+          "type": "string"
+        },
+        {
+          "declared_name": "conversation",
+          "location": "body",
+          "name": "conversation",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "array[object]"
+        },
+        {
+          "declared_name": "conversation_scenario",
+          "location": "body",
+          "name": "conversationScenario",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "object"
+        },
+        {
+          "declared_name": "session_input",
+          "location": "body",
+          "name": "sessionInput",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "object"
+        },
+        {
+          "declared_name": "creation_timestamp",
+          "location": "body",
+          "name": "creationTimestamp",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "number"
+        },
+        {
+          "declared_name": "rubrics",
+          "location": "body",
+          "name": "rubrics",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "array[object]"
+        },
+        {
+          "declared_name": "final_session_state",
+          "location": "body",
+          "name": "finalSessionState",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1040,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1055,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "update_eval",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 1030,
+      "index_signature": "(\n        app_name: str,\n        eval_set_id: str,\n        eval_case_id: str,\n        updated_eval_case: EvalCase,\n    )",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "eval_id",
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "source": "model:EvalCase",
+          "type": "string"
+        },
+        {
+          "declared_name": "conversation",
+          "location": "body",
+          "name": "conversation",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "array[object]"
+        },
+        {
+          "declared_name": "conversation_scenario",
+          "location": "body",
+          "name": "conversationScenario",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "object"
+        },
+        {
+          "declared_name": "session_input",
+          "location": "body",
+          "name": "sessionInput",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "object"
+        },
+        {
+          "declared_name": "creation_timestamp",
+          "location": "body",
+          "name": "creationTimestamp",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "number"
+        },
+        {
+          "declared_name": "rubrics",
+          "location": "body",
+          "name": "rubrics",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "array[object]"
+        },
+        {
+          "declared_name": "final_session_state",
+          "location": "body",
+          "name": "finalSessionState",
+          "required": false,
+          "source": "model:EvalCase",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 3
+      },
+      "raises": [
+        {
+          "class": "HTTPException",
+          "line": 1040,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "line": 1055,
+          "status_code": 404
+        }
+      ],
+      "raises_one_hop": [],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": null
+    },
+    "PUT /dev/apps/{app_name}/tests/{test_name}": {
+      "declared_responses": [],
+      "declared_status_code": null,
+      "handler": "create_test",
+      "handler_file": "src/google/adk/cli/dev_server.py",
+      "handler_line": 748,
+      "index_signature": "(\n        app_name: str, test_name: str, req: CreateTestRequest\n    ) -> dict[str, str]",
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "test_name",
+          "required": true,
+          "source": "signature",
+          "type": "string"
+        },
+        {
+          "declared_name": "session_data",
+          "location": "body",
+          "name": "sessionData",
+          "required": true,
+          "source": "model:CreateTestRequest",
+          "type": "object"
+        }
+      ],
+      "param_notes": {
+        "model-expanded": 1,
+        "scalar": 2
+      },
+      "raises": [],
+      "raises_one_hop": [
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 205,
+          "status_code": 500
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 209,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 229,
+          "status_code": 400
+        },
+        {
+          "class": "HTTPException",
+          "in": "src/google/adk/cli/dev_server.py:_get_agent_dir",
+          "line": 215,
+          "status_code": 400
+        }
+      ],
+      "response_class": null,
+      "response_model": null,
+      "return_annotation": "dict[str, str]"
+    }
+  },
+  "failures": [],
+  "rules": {
+    "alias_generator": true,
+    "aliases": true,
+    "complex_is_body": true,
+    "field_defaults": true,
+    "response_class": true
+  }
+}

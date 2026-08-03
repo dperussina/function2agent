@@ -1,0 +1,86 @@
+================================================================================================
+GATE 2 — schema state detected and distinguished (threshold 1.0000, absolute)
+================================================================================================
+target               expected   got          ok     naive 2xx pipeline   ok
+web                  PRESENT    PRESENT     YES                present  YES
+web_no_schema        ABSENT     ABSENT      YES            not-present  YES
+web_schema_401       FORBIDDEN  FORBIDDEN   YES            not-present  YES
+web_empty_schema     EMPTY      EMPTY       YES                present   NO
+starlette            ABSENT     ABSENT      YES            not-present  YES
+flask                ABSENT     ABSENT      YES            not-present  YES
+django               ABSENT     ABSENT      YES            not-present  YES
+
+  four-state reading: CLEARS (7/7)
+  plan's three-state reading: CLEARS
+  a 2xx-only pipeline would be correct on 6/7 (0.8571)
+
+================================================================================================
+GATE 1 — schema-free path-level precision, arm P-e14 (threshold 0.95)
+================================================================================================
+target             framework                   op-prec  op-rec  path-prec  null-FI  handlers
+django             Django                       0.8889     1.0        1.0      0.0         1  <-- MISS
+flask              Flask / Werkzeug              0.875   0.875        1.0      0.0         2  <-- MISS
+starlette          Starlette (control)           0.875   0.875        1.0      0.0         2  <-- MISS
+web                FastAPI (Starlette router)      1.0     1.0        1.0      0.0         2
+web_empty_schema   FastAPI (Starlette router)      1.0     1.0        1.0      0.0         2
+web_no_schema      FastAPI (Starlette router)      1.0     1.0        1.0      0.0         2
+web_schema_401     FastAPI (Starlette router)      1.0     1.0        1.0      0.0         2
+  operation granularity (THE GATE): MISSES, worst 0.875
+  path granularity (the mechanism's ceiling): CLEARS, worst 1.0
+  handler invocations across all seven targets: 13
+
+================================================================================================
+GATE 1 — schema-free path-level precision, arm P-global (threshold 0.95)
+================================================================================================
+target             framework                   op-prec  op-rec  path-prec  null-FI  handlers
+django             Django                          0.8     1.0     0.8571     0.25         0  <-- MISS
+flask              Flask / Werkzeug                0.8     1.0     0.8571     0.25         0  <-- MISS
+starlette          Starlette (control)             0.8     1.0     0.8571     0.25         0  <-- MISS
+web                FastAPI (Starlette router)      1.0     1.0        1.0      0.0         0
+web_empty_schema   FastAPI (Starlette router)      1.0     1.0        1.0      0.0         0
+web_no_schema      FastAPI (Starlette router)      1.0     1.0        1.0      0.0         0
+web_schema_401     FastAPI (Starlette router)      1.0     1.0        1.0      0.0         0
+  operation granularity (THE GATE): MISSES, worst 0.8
+  path granularity (the mechanism's ceiling): MISSES, worst 0.8571
+  handler invocations across all seven targets: 0
+
+================================================================================================
+GATE 1 — schema-free path-level precision, arm P-global+Allow (threshold 0.95)  [DERIVED, post-hoc]
+================================================================================================
+target             framework                   op-prec  op-rec  path-prec  null-FI  handlers
+django             Django                          1.0     1.0     0.8571      0.0         0
+flask              Flask / Werkzeug                1.0     1.0     0.8571      0.0         0
+starlette          Starlette (control)             1.0   0.875     0.8571      0.0         0
+web                FastAPI (Starlette router)      1.0  0.7692        1.0      0.0         0
+web_empty_schema   FastAPI (Starlette router)      1.0  0.7692        1.0      0.0         0
+web_no_schema      FastAPI (Starlette router)      1.0  0.7692        1.0      0.0         0
+web_schema_401     FastAPI (Starlette router)      1.0  0.7692        1.0      0.0         0
+  operation granularity (THE GATE): CLEARS, worst 1.0
+  path granularity (the mechanism's ceiling): MISSES, worst 0.8571
+  handler invocations across all seven targets: 0
+
+================================================================================================
+MEASUREMENT — method-level discrimination from the Allow header (no gate)
+================================================================================================
+target             framework                   allow-prec  allow-rec  paths wrong  no header
+django             Django                             1.0        1.0            0          1
+flask              Flask / Werkzeug                0.8889        1.0            1          1
+starlette          Starlette (control)                1.0      0.875            1          1
+web                FastAPI (Starlette router)         1.0     0.7692            9          1
+web_empty_schema   FastAPI (Starlette router)         1.0     0.7692            9          1
+web_no_schema      FastAPI (Starlette router)         1.0     0.7692            9          1
+web_schema_401     FastAPI (Starlette router)         1.0     0.7692            9          1
+
+================================================================================================
+MEASUREMENT — reachability with the schema removed (R2 vs the schema-free arms)
+================================================================================================
+target             schema      R0-prec  R2-prec  R2-rec  P-global-prec  P-global-rec
+django             ABSENT       0.5714     None     0.0            0.8           1.0
+flask              ABSENT       0.5714     None     0.0            0.8           1.0
+starlette          ABSENT       0.5714     None     0.0            0.8           1.0
+web                PRESENT      0.8025      1.0     1.0            1.0           1.0
+web_empty_schema   EMPTY        0.8025     None     0.0            1.0           1.0
+web_no_schema      ABSENT       0.8025     None     0.0            1.0           1.0
+web_schema_401     FORBIDDEN    0.8025     None     0.0            1.0           1.0
+
+wrote /dev/null

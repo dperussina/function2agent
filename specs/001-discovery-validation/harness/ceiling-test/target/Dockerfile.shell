@@ -1,0 +1,8 @@
+# SPIKE - E7 ceiling test. Delete after 2026-11-30. Do not import from product code.
+# Sandbox for arm B (the baseline). Deliberately well equipped: a real shell, curl,
+# jq, python3, and the standard text-processing tools. A weak baseline would make the
+# whole experiment worthless.
+FROM alpine:3.20
+RUN apk add --no-cache bash curl jq python3 grep sed gawk coreutils findutils less busybox-extras
+WORKDIR /work
+CMD ["sleep", "infinity"]

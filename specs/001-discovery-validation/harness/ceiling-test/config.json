@@ -1,0 +1,57 @@
+{
+ "_comment": "SPIKE HARNESS - E7 ceiling test. Every value here is pinned so a run is reproducible. Do not import from product code.",
+ "harness_version": "1.0.0",
+ "target": {
+  "name": "mealie",
+  "image": "ghcr.io/mealie-recipes/mealie@sha256:36c28f0642fb6c75fae8997a2d55994631b9b4bcffba3016c208fc132a4c1e69",
+  "app_version": "v3.22.0",
+  "container": "f2a-mealie",
+  "network": "f2a-net",
+  "host_port": 9925,
+  "base_url": "http://localhost:9925",
+  "internal_url": "http://f2a-mealie:9000",
+  "db_path_in_container": "/app/data/mealie.db",
+  "admin_email": "changeme@example.com",
+  "admin_password": "MyPassword",
+  "_credential_note": "Vendor default credentials for a disposable local container. Not a secret. LLM provider credentials never enter this file, the container, or any trace."
+ },
+ "shell_arm": {
+  "image": "f2a-shell:1",
+  "container": "f2a-shell",
+  "workdir": "/work",
+  "command_timeout_s": 60
+ },
+ "model": {
+  "provider": "anthropic",
+  "id": "claude-sonnet-4-5-20250929",
+  "temperature": 0.0,
+  "max_output_tokens": 4096,
+  "_tier": "mid-tier, pinned dated snapshot (not an alias) per research/11-validation-plan.md 4.3"
+ },
+ "pricing_usd_per_mtok": {
+  "input": 3.0,
+  "output": 15.0,
+  "cache_read": 0.3,
+  "cache_write": 3.75,
+  "_source": "Anthropic list price for Claude Sonnet 4.5 at run date; pinned here and never recomputed later"
+ },
+ "budgets": {
+  "arm_a": {
+   "max_turns": 40,
+   "max_tokens": 300000,
+   "max_usd": 1.2,
+   "max_wallclock_s": 600
+  },
+  "arm_b": {
+   "max_turns": 120,
+   "max_tokens": 900000,
+   "max_usd": 3.6,
+   "max_wallclock_s": 1800
+  },
+  "_budget_note": "OD-04 (2026-08-02): the tool arm's turn budget rose from 20 to 40 to admit per-record tasks, and tokens rose with it because tokens, not turns, are what actually bind when the transcript is resent each turn. Arm B scaled to hold the 3x ratio amendment A1 committed to. See PREREGISTRATION.md amendment A3.",
+  "run_total_max_usd": 120.0
+ },
+ "attempts_per_task": 3,
+ "tool_result_truncation_chars": 6000,
+ "fixture_seed": 20260802
+}

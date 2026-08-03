@@ -1,0 +1,1591 @@
+{
+ "_comment": "Frozen scope for E8. PREREGISTRATION.md 2 pins the scoring set to these 11 complete ceiling-test run directories. Any hash change means the corpus moved and the pre-registered run cannot proceed against it.",
+ "_battery_comment": "Amendment B3/B4. A trace stores no prompt, so joining a record to today's tasks.json is an unchecked cross-artifact join. The battery is pinned here \u2014 its files, its declared version, and the version every in-scope run actually executed \u2014 so that a cross-battery join is a counted condition. corpus.eligibility decides per record whether the join is attested; freeze.verify refuses if the battery itself moves.",
+ "frozen_at": "2026-08-03",
+ "scope_runs": [
+  "20260802T151714-smoke",
+  "20260802T152825-smoke2",
+  "20260802T154826-calibration",
+  "20260802T160705-recalibration",
+  "20260802T163319-bias-probe",
+  "20260802T164929-bias-probe-perrecord",
+  "20260802T165903-ambiguity-recheck",
+  "20260802T173226-reprobe-perrecord-v2",
+  "20260802T173614-baseline-lookup-R1R2",
+  "20260803T064400-smoke-paired-precheck",
+  "20260803T064550-paired-lookup-R1R2-A3budgets"
+ ],
+ "out_of_scope_note": "20260803T070942-diag-... was in progress at freeze time; it and every later directory are out of scope for E8 and may be used only in E9.",
+ "files": {
+  "20260802T151714-smoke": {
+   "results.jsonl": "72406dc42ac5a7347c629f6720dfcaf81ff61fa64a223c023222c5e8846fe897",
+   "traces.jsonl": "d26c989d2b23218699a26d9d902726d192a3e8fc038b07d1e130532abbea1d7c",
+   "manifest.json": "5cbebe94af1f677efef96b306530ee1bb71eaf36a335a3f1014836a695f90d91"
+  },
+  "20260802T152825-smoke2": {
+   "results.jsonl": "40984f16c065be8a0f0acef72d13cdeeabb4222a5f1565fb38e574b3dd2eb8d5",
+   "traces.jsonl": "6431ec5801498059359d5a2f5974b7cd01fc22f4e3c342c911c9d7c75ea56d94",
+   "manifest.json": "124e4714734e66e770c0e00faef23d63a400e766f2dc75d464948c0df1ff8108"
+  },
+  "20260802T154826-calibration": {
+   "results.jsonl": "1df614ccd157b5ca381abb9059724822f7fba5478cd6f3385fc87ab73de1a7e7",
+   "traces.jsonl": "d0518d4f23aba9773c1e809a8c1363ecb78ed3f651433fab02a08c8f6a65e5e4",
+   "manifest.json": "5bf49282250f5b58e49ab18e96779834d63b1c83771cedf3628324293a1758d6"
+  },
+  "20260802T160705-recalibration": {
+   "results.jsonl": "716d379ab70d7b7ad906803ed98f08f6631a9e50a09a088b2f97aa65c042028f",
+   "traces.jsonl": "603260651550f1df6d4e8a41ad5c7290167fe06e0842108b265e34372557bdb8",
+   "manifest.json": "8ee15e8a85f67567c934c62fa3f624232ad833f0b810239ce661c78f1f6bf3d8"
+  },
+  "20260802T163319-bias-probe": {
+   "results.jsonl": "563333ddf4110677de864f4a180071f0bb524dd3963be2e8934a6317c5db8269",
+   "traces.jsonl": "44a6f4f6463870ecf64ddddbfa3adc0f065a9d9806c36ee360301a1f891d18a5",
+   "manifest.json": "21ac6f86f7918043945235032a930737c59366112dd6ce8dc050959d50e06460"
+  },
+  "20260802T164929-bias-probe-perrecord": {
+   "results.jsonl": "57158022d0b42082660ec028e6c11a6294687d558f8c96232af6766b50c62768",
+   "traces.jsonl": "6f56a8934d70463d2b19fcbd52cad35a2a6e7120a5b5230b55ef4c2ebc9870fd",
+   "manifest.json": "19bc15ac8f4736af7b0450f651af28b4045cee98f3c1c25f0d0d230ce5f4da34"
+  },
+  "20260802T165903-ambiguity-recheck": {
+   "results.jsonl": "6ef073815741e8e60a7f413e3313a2a61a7c588752e407fe67fc8519ba0a36d8",
+   "traces.jsonl": "5a73d781dcac0284059cfd17cc6a50d746ddf8bcea166a9bd468eb5928896f81",
+   "manifest.json": "ed4567c26d9c1c4681a5c55c75f9c4d83f9e30eba894148f9edcb56311b8a0da"
+  },
+  "20260802T173226-reprobe-perrecord-v2": {
+   "results.jsonl": "ef1d2f4d0f30e79c437f65ae50b018296e5cc091e0fce89202339b69b0513cd1",
+   "traces.jsonl": "bdd12ffe92edb2e5a8a8785c59a5a303dceab1ff71a99c876b9c94483fd08471",
+   "manifest.json": "9d08ad45afdd680452a2f3bbc1dd37e7c42d3951d4f5bf10b8b2cff3df1d6768"
+  },
+  "20260802T173614-baseline-lookup-R1R2": {
+   "results.jsonl": "ab42a3ba976c7089e3aa0e4d9aeb67f83acde8767721a0741e0fd8a5be2d67b4",
+   "traces.jsonl": "e60d214c68bfea0e4d8640a9ae43a01160dff2b367336cf0a314577f1296154c",
+   "manifest.json": "9500a5f20ecd1a65e91d8a4f805ec168705c32e37bbed98f6c593906086b8a29"
+  },
+  "20260803T064400-smoke-paired-precheck": {
+   "results.jsonl": "69c6dc8ca73f8345db6b92a19e79b8018b0a0c2afea5f6dbcea27096b47d62bb",
+   "traces.jsonl": "372675d5775213b5b8468b43a6af72beb5f4ba0dcf18f8762a9ab0241f1cb76b",
+   "manifest.json": "c58ca7287b88630aca0edf720453bf0d5478d323a1c574f8902d9f8f595b4713"
+  },
+  "20260803T064550-paired-lookup-R1R2-A3budgets": {
+   "results.jsonl": "7d57dc7ed2b3a13cd1213ddb7bfee66186e068b28f7251af56b34ac720810f01",
+   "traces.jsonl": "ce544aed9983e123c309c563c966bf66987308871992de2930bb346d1f9857f4",
+   "manifest.json": "abf7b2583012edcfee63df72ca86f60431c2b508ec64637430d0042717965dce"
+  }
+ },
+ "shape": {
+  "records": 246,
+  "traces": 246,
+  "pass": 226,
+  "fail": 20,
+  "false_success": 11,
+  "distinct_tasks": 61,
+  "distinct_false_success_tasks": 6
+ },
+ "battery": {
+  "version": "1.4.0-probe",
+  "files": {
+   "tasks_rel": "0d188773eb165d59bfd21426ed624f4aa84a0c1e76acbb9c62bf4f4a60ae0e85",
+   "expected_rel": "ac2129ab4c5115a22a40cb5f94a647c2a077c768cced166926f13f784110fcc8"
+  },
+  "run_battery_versions": {
+   "20260802T151714-smoke": "1.0.0",
+   "20260802T152825-smoke2": "1.0.0",
+   "20260802T154826-calibration": "1.1.0",
+   "20260802T160705-recalibration": "1.2.0",
+   "20260802T163319-bias-probe": "1.3.0",
+   "20260802T164929-bias-probe-perrecord": "1.4.0-probe",
+   "20260802T165903-ambiguity-recheck": "1.4.0-probe",
+   "20260802T173226-reprobe-perrecord-v2": "1.4.0-probe",
+   "20260802T173614-baseline-lookup-R1R2": "1.4.0-probe",
+   "20260803T064400-smoke-paired-precheck": "1.4.0-probe",
+   "20260803T064550-paired-lookup-R1R2-A3budgets": "1.4.0-probe"
+  },
+  "cross_battery_runs": [
+   "20260802T151714-smoke",
+   "20260802T152825-smoke2",
+   "20260802T154826-calibration",
+   "20260802T160705-recalibration",
+   "20260802T163319-bias-probe"
+  ],
+  "cross_battery_records": 143
+ },
+ "scope_tuples": [
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "R1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "R1.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "R2.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "R2.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "R3.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "R3.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "N.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "N.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "W1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T151714-smoke",
+   "task_id": "W1.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "R1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "R1.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "R2.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "R2.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "R3.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "R3.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "N.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "N.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "W1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T152825-smoke2",
+   "task_id": "W1.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "N.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "N.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "N.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "N.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "N.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "N.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "NM.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "NM.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "NM.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R1.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.013",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.014",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R2.015",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R3.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R3.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R3.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R3.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "R3.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "W1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "W1.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "W1.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "W1.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T154826-calibration",
+   "task_id": "W1.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "N.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "N.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "N.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "N.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "N.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "N.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "NM.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "NM.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "NM.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "NM.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R1.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.013",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.014",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R2.015",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R3.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R3.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R3.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R3.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R3.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "R4.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "W1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "W1.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "W1.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "W1.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T160705-recalibration",
+   "task_id": "W1.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.002",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.003",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.004",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.005",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.006",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.007",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.008",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.009",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T163319-bias-probe",
+   "task_id": "R4.010",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.011",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.012",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.013",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.013",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.014",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T164929-bias-probe-perrecord",
+   "task_id": "R4.014",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T165903-ambiguity-recheck",
+   "task_id": "R4.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T165903-ambiguity-recheck",
+   "task_id": "R4.005",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T165903-ambiguity-recheck",
+   "task_id": "R4.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T165903-ambiguity-recheck",
+   "task_id": "R4.006",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T165903-ambiguity-recheck",
+   "task_id": "R4.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T165903-ambiguity-recheck",
+   "task_id": "R4.008",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173226-reprobe-perrecord-v2",
+   "task_id": "R4.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173226-reprobe-perrecord-v2",
+   "task_id": "R4.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173226-reprobe-perrecord-v2",
+   "task_id": "R4.013",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173226-reprobe-perrecord-v2",
+   "task_id": "R4.014",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.002",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.003",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.004",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.005",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.006",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.007",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.008",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.009",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.010",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.011",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R1.012",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.002",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.003",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.004",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.005",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.006",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.007",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.008",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.009",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.010",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.011",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.012",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.013",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.014",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260802T173614-baseline-lookup-R1R2",
+   "task_id": "R2.015",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064400-smoke-paired-precheck",
+   "task_id": "R1.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064400-smoke-paired-precheck",
+   "task_id": "R1.005",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064400-smoke-paired-precheck",
+   "task_id": "R1.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064400-smoke-paired-precheck",
+   "task_id": "R1.009",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.002",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.003",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.004",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.005",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.006",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.007",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.008",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.009",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.010",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.011",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R1.012",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.001",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.001",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.002",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.002",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.003",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.003",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.004",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.004",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.005",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.005",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.006",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.006",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.007",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.007",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.008",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.008",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.009",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.009",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.010",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.010",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.011",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.011",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.012",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.012",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.013",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.013",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.014",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.014",
+   "arm": "B",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.015",
+   "arm": "A",
+   "attempt": 1
+  },
+  {
+   "run_id": "20260803T064550-paired-lookup-R1R2-A3budgets",
+   "task_id": "R2.015",
+   "arm": "B",
+   "attempt": 1
+  }
+ ]
+}

@@ -1,0 +1,2546 @@
+{
+  "gate_1_path_level_precision": {
+    "P-e14": {
+      "operation_granularity_verdict": "MISSES",
+      "operation_granularity_worst": 0.875,
+      "path_granularity_verdict": "CLEARS",
+      "path_granularity_worst": 1.0,
+      "rows": [
+        {
+          "clears_operation": false,
+          "clears_path": true,
+          "framework": "Django",
+          "handler_invocations": 1,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 0.8889,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "django"
+        },
+        {
+          "clears_operation": false,
+          "clears_path": true,
+          "framework": "Flask / Werkzeug",
+          "handler_invocations": 2,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 0.875,
+          "operation_recall": 0.875,
+          "path_precision": 1.0,
+          "path_recall": 0.8333,
+          "target": "flask"
+        },
+        {
+          "clears_operation": false,
+          "clears_path": true,
+          "framework": "Starlette (control)",
+          "handler_invocations": 2,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 0.875,
+          "operation_recall": 0.875,
+          "path_precision": 1.0,
+          "path_recall": 0.8333,
+          "target": "starlette"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 2,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 2,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_empty_schema"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 2,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_no_schema"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 2,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_schema_401"
+        }
+      ],
+      "targets_missing_operation_gate": [
+        "django",
+        "flask",
+        "starlette"
+      ],
+      "threshold": 0.95,
+      "total_handler_invocations": 13
+    },
+    "P-global": {
+      "operation_granularity_verdict": "MISSES",
+      "operation_granularity_worst": 0.8,
+      "path_granularity_verdict": "MISSES",
+      "path_granularity_worst": 0.8571,
+      "rows": [
+        {
+          "clears_operation": false,
+          "clears_path": false,
+          "framework": "Django",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.25,
+          "operation_precision": 0.8,
+          "operation_recall": 1.0,
+          "path_precision": 0.8571,
+          "path_recall": 1.0,
+          "target": "django"
+        },
+        {
+          "clears_operation": false,
+          "clears_path": false,
+          "framework": "Flask / Werkzeug",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.25,
+          "operation_precision": 0.8,
+          "operation_recall": 1.0,
+          "path_precision": 0.8571,
+          "path_recall": 1.0,
+          "target": "flask"
+        },
+        {
+          "clears_operation": false,
+          "clears_path": false,
+          "framework": "Starlette (control)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.25,
+          "operation_precision": 0.8,
+          "operation_recall": 1.0,
+          "path_precision": 0.8571,
+          "path_recall": 1.0,
+          "target": "starlette"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_empty_schema"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_no_schema"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_schema_401"
+        }
+      ],
+      "targets_missing_operation_gate": [
+        "django",
+        "flask",
+        "starlette"
+      ],
+      "threshold": 0.95,
+      "total_handler_invocations": 0
+    },
+    "P-global+Allow": {
+      "operation_granularity_verdict": "CLEARS",
+      "operation_granularity_worst": 1.0,
+      "path_granularity_verdict": "MISSES",
+      "path_granularity_worst": 0.8571,
+      "rows": [
+        {
+          "clears_operation": true,
+          "clears_path": false,
+          "framework": "Django",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 0.8571,
+          "path_recall": 1.0,
+          "target": "django"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": false,
+          "framework": "Flask / Werkzeug",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 1.0,
+          "path_precision": 0.8571,
+          "path_recall": 1.0,
+          "target": "flask"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": false,
+          "framework": "Starlette (control)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 0.875,
+          "path_precision": 0.8571,
+          "path_recall": 1.0,
+          "target": "starlette"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 0.7692,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 0.7692,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_empty_schema"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 0.7692,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_no_schema"
+        },
+        {
+          "clears_operation": true,
+          "clears_path": true,
+          "framework": "FastAPI (Starlette router)",
+          "handler_invocations": 0,
+          "null_false_inclusion": 0.0,
+          "operation_precision": 1.0,
+          "operation_recall": 0.7692,
+          "path_precision": 1.0,
+          "path_recall": 1.0,
+          "target": "web_schema_401"
+        }
+      ],
+      "targets_missing_operation_gate": [],
+      "threshold": 0.95,
+      "total_handler_invocations": 0
+    }
+  },
+  "gate_2_schema_state": {
+    "four_state_reading": {
+      "correct": 7,
+      "of": 7,
+      "rate": 1.0,
+      "verdict": "CLEARS"
+    },
+    "naive_2xx_pipeline": {
+      "correct": 6,
+      "note": "not an arm under test; the reading a pipeline that only checks whether the fetch succeeded would produce",
+      "of": 7,
+      "rate": 0.8571
+    },
+    "plan_three_state_reading": {
+      "verdict": "CLEARS"
+    },
+    "rows": [
+      {
+        "correct": true,
+        "expected": "PRESENT",
+        "got": "PRESENT",
+        "naive_2xx_reading": "present",
+        "naive_reading_correct": true,
+        "target": "web"
+      },
+      {
+        "correct": true,
+        "expected": "ABSENT",
+        "got": "ABSENT",
+        "naive_2xx_reading": "not-present",
+        "naive_reading_correct": true,
+        "target": "web_no_schema"
+      },
+      {
+        "correct": true,
+        "expected": "FORBIDDEN",
+        "got": "FORBIDDEN",
+        "naive_2xx_reading": "not-present",
+        "naive_reading_correct": true,
+        "target": "web_schema_401"
+      },
+      {
+        "correct": true,
+        "expected": "EMPTY",
+        "got": "EMPTY",
+        "naive_2xx_reading": "present",
+        "naive_reading_correct": false,
+        "target": "web_empty_schema"
+      },
+      {
+        "correct": true,
+        "expected": "ABSENT",
+        "got": "ABSENT",
+        "naive_2xx_reading": "not-present",
+        "naive_reading_correct": true,
+        "target": "starlette"
+      },
+      {
+        "correct": true,
+        "expected": "ABSENT",
+        "got": "ABSENT",
+        "naive_2xx_reading": "not-present",
+        "naive_reading_correct": true,
+        "target": "flask"
+      },
+      {
+        "correct": true,
+        "expected": "ABSENT",
+        "got": "ABSENT",
+        "naive_2xx_reading": "not-present",
+        "naive_reading_correct": true,
+        "target": "django"
+      }
+    ],
+    "threshold": "1.0000 absolute"
+  },
+  "targets": {
+    "django": {
+      "R0_baseline": {
+        "operation_granularity": {
+          "precision": 0.5714,
+          "predicted": 14,
+          "recall": 1.0
+        }
+      },
+      "R2_openapi": {
+        "note": "framework publishes no schema",
+        "precision": null,
+        "predicted": 0,
+        "recall": 0.0
+      },
+      "adversarial_probe": {
+        "handlers_invoked": [
+          "F2APROBE /anymethod"
+        ],
+        "note": "outside the candidate set; not scored in the gate",
+        "paths": [
+          "/anymethod"
+        ],
+        "result": {
+          "/anymethod": {
+            "allow": null,
+            "body": "{\"detail\": \"unsupported\"}",
+            "handler_ran_calibrated": false,
+            "handler_ran_provable": true,
+            "probe_verb": "F2APROBE",
+            "routed": true,
+            "status": 400,
+            "url": "/anymethod"
+          }
+        }
+      },
+      "arms": {
+        "P-e14": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 4,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 1,
+            "false_positive_examples": [
+              "POST /gated"
+            ],
+            "precision": 0.8889,
+            "predicted": 9,
+            "reachable_in_candidates": 8,
+            "recall": 1.0,
+            "true_positive": 8
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 6,
+            "recall": 1.0,
+            "true_positive": 6
+          }
+        },
+        "P-global": {
+          "null_set": {
+            "false_inclusion_rate": 0.25,
+            "falsely_included": 1,
+            "size": 4,
+            "which": [
+              "POST /items/f2a-phantom-beta"
+            ]
+          },
+          "operation_granularity": {
+            "false_positive": 2,
+            "false_positive_examples": [
+              "POST /gated",
+              "POST /items/f2a-phantom-beta"
+            ],
+            "precision": 0.8,
+            "predicted": 10,
+            "reachable_in_candidates": 8,
+            "recall": 1.0,
+            "true_positive": 8
+          },
+          "path_granularity": {
+            "precision": 0.8571,
+            "predicted": 7,
+            "recall": 1.0,
+            "true_positive": 6
+          }
+        },
+        "P-global+Allow": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 4,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 8,
+            "reachable_in_candidates": 8,
+            "recall": 1.0,
+            "true_positive": 8
+          },
+          "path_granularity": {
+            "precision": 0.8571,
+            "predicted": 7,
+            "recall": 1.0,
+            "true_positive": 6
+          },
+          "provenance": "DERIVED, post-hoc, no extra requests"
+        }
+      },
+      "candidate_set_size": 14,
+      "declared_not_served": [
+        [
+          "POST",
+          "/admin/purge"
+        ],
+        [
+          "POST",
+          "/gated"
+        ]
+      ],
+      "framework": "Django",
+      "handlers": {
+        "P-e14": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [
+            "GET /items/{name} f2a-phantom-beta"
+          ],
+          "counted_from_server_log": 1,
+          "detected": 1,
+          "detected_paths": [
+            "/items/f2a-phantom-beta"
+          ],
+          "instrument": "counted from the server's own log"
+        },
+        "P-global": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global+Allow": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        }
+      },
+      "methods": {
+        "P-e14": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 1.0,
+          "examples": [],
+          "methods_correct": 8,
+          "methods_missed": 0,
+          "methods_overreported": 0,
+          "paths_routed": 6,
+          "paths_where_allow_is_wrong": 0,
+          "paths_with_allow_header": 6
+        },
+        "P-global": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 1.0,
+          "examples": [],
+          "methods_correct": 8,
+          "methods_missed": 0,
+          "methods_overreported": 0,
+          "paths_routed": 7,
+          "paths_where_allow_is_wrong": 0,
+          "paths_with_allow_header": 6
+        }
+      },
+      "null_set_size": 4,
+      "schema": {
+        "body_prefix": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+        "naive_2xx_reading": "not-present",
+        "state": "ABSENT",
+        "status": 404,
+        "url": "http://127.0.0.1:57421/openapi.json"
+      },
+      "served_in_candidates": 8,
+      "served_total": 10,
+      "static_set_size": 10,
+      "static_unresolved": [
+        "/anymethod (view anymethod: no method decorator)"
+      ]
+    },
+    "flask": {
+      "R0_baseline": {
+        "operation_granularity": {
+          "precision": 0.5714,
+          "predicted": 14,
+          "recall": 1.0
+        }
+      },
+      "R2_openapi": {
+        "note": "framework publishes no schema",
+        "precision": null,
+        "predicted": 0,
+        "recall": 0.0
+      },
+      "adversarial_probe": {
+        "handlers_invoked": [],
+        "note": "outside the candidate set; not scored in the gate",
+        "paths": [
+          "/anymethod"
+        ],
+        "result": {
+          "/anymethod": {
+            "allow": null,
+            "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+            "handler_ran_calibrated": false,
+            "handler_ran_provable": false,
+            "probe_verb": "F2APROBE",
+            "routed": false,
+            "status": 404,
+            "url": "/anymethod"
+          }
+        }
+      },
+      "arms": {
+        "P-e14": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 4,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 1,
+            "false_positive_examples": [
+              "POST /gated"
+            ],
+            "precision": 0.875,
+            "predicted": 8,
+            "reachable_in_candidates": 8,
+            "recall": 0.875,
+            "true_positive": 7
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 5,
+            "recall": 0.8333,
+            "true_positive": 5
+          }
+        },
+        "P-global": {
+          "null_set": {
+            "false_inclusion_rate": 0.25,
+            "falsely_included": 1,
+            "size": 4,
+            "which": [
+              "POST /items/f2a-phantom-beta"
+            ]
+          },
+          "operation_granularity": {
+            "false_positive": 2,
+            "false_positive_examples": [
+              "POST /gated",
+              "POST /items/f2a-phantom-beta"
+            ],
+            "precision": 0.8,
+            "predicted": 10,
+            "reachable_in_candidates": 8,
+            "recall": 1.0,
+            "true_positive": 8
+          },
+          "path_granularity": {
+            "precision": 0.8571,
+            "predicted": 7,
+            "recall": 1.0,
+            "true_positive": 6
+          }
+        },
+        "P-global+Allow": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 4,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 8,
+            "reachable_in_candidates": 8,
+            "recall": 1.0,
+            "true_positive": 8
+          },
+          "path_granularity": {
+            "precision": 0.8571,
+            "predicted": 7,
+            "recall": 1.0,
+            "true_positive": 6
+          },
+          "provenance": "DERIVED, post-hoc, no extra requests"
+        }
+      },
+      "candidate_set_size": 14,
+      "declared_not_served": [
+        [
+          "POST",
+          "/admin/purge"
+        ],
+        [
+          "POST",
+          "/gated"
+        ]
+      ],
+      "framework": "Flask / Werkzeug",
+      "handlers": {
+        "P-e14": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [
+            "GET /items/{name} f2a-phantom-beta",
+            "GET /items/{name} special"
+          ],
+          "counted_from_server_log": 2,
+          "detected": 2,
+          "detected_paths": [
+            "/items/f2a-phantom-beta",
+            "/items/special"
+          ],
+          "instrument": "counted from the server's own log"
+        },
+        "P-global": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global+Allow": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        }
+      },
+      "methods": {
+        "P-e14": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 1.0,
+          "examples": [],
+          "methods_correct": 7,
+          "methods_missed": 0,
+          "methods_overreported": 0,
+          "paths_routed": 5,
+          "paths_where_allow_is_wrong": 0,
+          "paths_with_allow_header": 5
+        },
+        "P-global": {
+          "allow_method_precision": 0.8889,
+          "allow_method_recall": 1.0,
+          "examples": [
+            {
+              "actually_serves": [
+                "POST"
+              ],
+              "allow_reports": [
+                "GET",
+                "POST"
+              ],
+              "path": "/items/special"
+            }
+          ],
+          "methods_correct": 8,
+          "methods_missed": 0,
+          "methods_overreported": 1,
+          "paths_routed": 7,
+          "paths_where_allow_is_wrong": 1,
+          "paths_with_allow_header": 6
+        }
+      },
+      "null_set_size": 4,
+      "schema": {
+        "body_prefix": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+        "naive_2xx_reading": "not-present",
+        "state": "ABSENT",
+        "status": 404,
+        "url": "http://127.0.0.1:57405/openapi.json"
+      },
+      "served_in_candidates": 8,
+      "served_total": 9,
+      "static_set_size": 10,
+      "static_unresolved": []
+    },
+    "starlette": {
+      "R0_baseline": {
+        "operation_granularity": {
+          "precision": 0.5714,
+          "predicted": 14,
+          "recall": 1.0
+        }
+      },
+      "R2_openapi": {
+        "note": "framework publishes no schema",
+        "precision": null,
+        "predicted": 0,
+        "recall": 0.0
+      },
+      "adversarial_probe": {
+        "handlers_invoked": [],
+        "note": "outside the candidate set; not scored in the gate",
+        "paths": [
+          "/anymethod"
+        ],
+        "result": {
+          "/anymethod": {
+            "allow": null,
+            "body": "Not Found",
+            "handler_ran_calibrated": false,
+            "handler_ran_provable": false,
+            "probe_verb": "F2APROBE",
+            "routed": false,
+            "status": 404,
+            "url": "/anymethod"
+          }
+        }
+      },
+      "arms": {
+        "P-e14": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 4,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 1,
+            "false_positive_examples": [
+              "POST /gated"
+            ],
+            "precision": 0.875,
+            "predicted": 8,
+            "reachable_in_candidates": 8,
+            "recall": 0.875,
+            "true_positive": 7
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 5,
+            "recall": 0.8333,
+            "true_positive": 5
+          }
+        },
+        "P-global": {
+          "null_set": {
+            "false_inclusion_rate": 0.25,
+            "falsely_included": 1,
+            "size": 4,
+            "which": [
+              "POST /items/f2a-phantom-beta"
+            ]
+          },
+          "operation_granularity": {
+            "false_positive": 2,
+            "false_positive_examples": [
+              "POST /gated",
+              "POST /items/f2a-phantom-beta"
+            ],
+            "precision": 0.8,
+            "predicted": 10,
+            "reachable_in_candidates": 8,
+            "recall": 1.0,
+            "true_positive": 8
+          },
+          "path_granularity": {
+            "precision": 0.8571,
+            "predicted": 7,
+            "recall": 1.0,
+            "true_positive": 6
+          }
+        },
+        "P-global+Allow": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 4,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 7,
+            "reachable_in_candidates": 8,
+            "recall": 0.875,
+            "true_positive": 7
+          },
+          "path_granularity": {
+            "precision": 0.8571,
+            "predicted": 7,
+            "recall": 1.0,
+            "true_positive": 6
+          },
+          "provenance": "DERIVED, post-hoc, no extra requests"
+        }
+      },
+      "candidate_set_size": 14,
+      "declared_not_served": [
+        [
+          "POST",
+          "/admin/purge"
+        ],
+        [
+          "POST",
+          "/gated"
+        ]
+      ],
+      "framework": "Starlette (control)",
+      "handlers": {
+        "P-e14": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [
+            "GET /items/{name} f2a-phantom-beta",
+            "GET /items/{name} special"
+          ],
+          "counted_from_server_log": 2,
+          "detected": 2,
+          "detected_paths": [
+            "/items/f2a-phantom-beta",
+            "/items/special"
+          ],
+          "instrument": "counted from the server's own log"
+        },
+        "P-global": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global+Allow": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        }
+      },
+      "methods": {
+        "P-e14": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.8571,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/both"
+            }
+          ],
+          "methods_correct": 6,
+          "methods_missed": 1,
+          "methods_overreported": 0,
+          "paths_routed": 5,
+          "paths_where_allow_is_wrong": 1,
+          "paths_with_allow_header": 5
+        },
+        "P-global": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.875,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/both"
+            }
+          ],
+          "methods_correct": 7,
+          "methods_missed": 1,
+          "methods_overreported": 0,
+          "paths_routed": 7,
+          "paths_where_allow_is_wrong": 1,
+          "paths_with_allow_header": 6
+        }
+      },
+      "null_set_size": 4,
+      "schema": {
+        "body_prefix": "Not Found",
+        "naive_2xx_reading": "not-present",
+        "state": "ABSENT",
+        "status": 404,
+        "url": "http://127.0.0.1:57387/openapi.json"
+      },
+      "served_in_candidates": 8,
+      "served_total": 8,
+      "static_set_size": 10,
+      "static_unresolved": []
+    },
+    "web": {
+      "R0_baseline": {
+        "operation_granularity": {
+          "precision": 0.8025,
+          "predicted": 81,
+          "recall": 1.0
+        }
+      },
+      "R2_openapi": {
+        "precision": 1.0,
+        "predicted": 65,
+        "recall": 1.0,
+        "schema_operation_count": 65
+      },
+      "arms": {
+        "P-e14": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global+Allow": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 50,
+            "reachable_in_candidates": 65,
+            "recall": 0.7692,
+            "true_positive": 50
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          },
+          "provenance": "DERIVED, post-hoc, no extra requests"
+        }
+      },
+      "candidate_set_size": 81,
+      "framework": "FastAPI (Starlette router)",
+      "handlers": {
+        "P-e14": {
+          "by_provable_status_rule": 2,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 2,
+          "detected_paths": [
+            "/dev/apps/{app_name}/tests/rebuild",
+            "/dev/apps/{app_name}/tests/run"
+          ],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global+Allow": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        }
+      },
+      "methods": {
+        "P-e14": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7385,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 48,
+          "methods_missed": 17,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 48
+        },
+        "P-global": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7692,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 50,
+          "methods_missed": 15,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 50
+        }
+      },
+      "null_set_size": 12,
+      "schema": {
+        "body_prefix": "{\"openapi\":\"3.1.0\",\"info\":{\"title\":\"FastAPI\",\"version\":\"0.1.0\"},\"paths\":{\"/health\":{\"get\":{\"summary\":\"Health\",\"operationId\":\"health_health_get\",\"responses\":{\"200\":{\"description\":\"Successful Response\",\"content\":{\"application/json\":{\"schema\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\",\"title\":\"Response Health Health Get\"}}}}}}},\"/version\":{\"get\":{\"summary\":\"Version\",\"operationId\":\"vers",
+        "naive_2xx_reading": "present",
+        "operation_count": 65,
+        "operations": [
+          [
+            "DELETE",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+          ],
+          [
+            "DELETE",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+          ],
+          [
+            "DELETE",
+            "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+          ],
+          [
+            "DELETE",
+            "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+          ],
+          [
+            "DELETE",
+            "/dev/apps/{app_name}/tests/{test_name}"
+          ],
+          [
+            "GET",
+            "/"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/app-info"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}"
+          ],
+          [
+            "GET",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata"
+          ],
+          [
+            "GET",
+            "/builder/app/{app_name}"
+          ],
+          [
+            "GET",
+            "/config/telemetry"
+          ],
+          [
+            "GET",
+            "/dev-ui"
+          ],
+          [
+            "GET",
+            "/dev-ui/config"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/build_graph"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/build_graph_image"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/builder"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/debug/trace/{event_id}"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval-results"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval-sets"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval_results"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval_sets"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/graph"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/metrics-info"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/tests"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/tests/{test_name}"
+          ],
+          [
+            "GET",
+            "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+          ],
+          [
+            "GET",
+            "/health"
+          ],
+          [
+            "GET",
+            "/list-apps"
+          ],
+          [
+            "GET",
+            "/version"
+          ],
+          [
+            "PATCH",
+            "/apps/{app_name}/users/{user_id}/memory"
+          ],
+          [
+            "PATCH",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+          ],
+          [
+            "POST",
+            "/agent-identity/finalize"
+          ],
+          [
+            "POST",
+            "/apps/{app_name}/users/{user_id}/sessions"
+          ],
+          [
+            "POST",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+          ],
+          [
+            "POST",
+            "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+          ],
+          [
+            "POST",
+            "/builder/app/{app_name}/cancel"
+          ],
+          [
+            "POST",
+            "/builder/save"
+          ],
+          [
+            "POST",
+            "/config/telemetry"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/builder/cancel"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/builder/save"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/eval-sets"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/tests/rebuild"
+          ],
+          [
+            "POST",
+            "/dev/apps/{app_name}/tests/run"
+          ],
+          [
+            "POST",
+            "/run"
+          ],
+          [
+            "POST",
+            "/run_sse"
+          ],
+          [
+            "PUT",
+            "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+          ],
+          [
+            "PUT",
+            "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+          ],
+          [
+            "PUT",
+            "/dev/apps/{app_name}/tests/{test_name}"
+          ]
+        ],
+        "state": "PRESENT",
+        "status": 200,
+        "url": "http://127.0.0.1:57449/openapi.json"
+      },
+      "served_in_candidates": 65,
+      "served_total": 71,
+      "static_set_size": 69
+    },
+    "web_empty_schema": {
+      "R0_baseline": {
+        "operation_granularity": {
+          "precision": 0.8025,
+          "predicted": 81,
+          "recall": 1.0
+        }
+      },
+      "R2_openapi": {
+        "note": "schema state EMPTY: no operations readable",
+        "precision": null,
+        "predicted": 0,
+        "recall": 0.0
+      },
+      "arms": {
+        "P-e14": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global+Allow": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 50,
+            "reachable_in_candidates": 65,
+            "recall": 0.7692,
+            "true_positive": 50
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          },
+          "provenance": "DERIVED, post-hoc, no extra requests"
+        }
+      },
+      "candidate_set_size": 81,
+      "framework": "FastAPI (Starlette router)",
+      "handlers": {
+        "P-e14": {
+          "by_provable_status_rule": 2,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 2,
+          "detected_paths": [
+            "/dev/apps/{app_name}/tests/rebuild",
+            "/dev/apps/{app_name}/tests/run"
+          ],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global+Allow": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        }
+      },
+      "methods": {
+        "P-e14": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7385,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 48,
+          "methods_missed": 17,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 48
+        },
+        "P-global": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7692,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 50,
+          "methods_missed": 15,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 50
+        }
+      },
+      "null_set_size": 12,
+      "schema": {
+        "body_prefix": "{\"openapi\":\"3.1.0\",\"info\":{\"title\":\"probe\",\"version\":\"0.0.0\"},\"paths\":{}}",
+        "naive_2xx_reading": "present",
+        "operation_count": 0,
+        "operations": [],
+        "state": "EMPTY",
+        "status": 200,
+        "url": "http://127.0.0.1:57547/openapi.json"
+      },
+      "served_in_candidates": 65,
+      "served_total": 68,
+      "static_set_size": 69
+    },
+    "web_no_schema": {
+      "R0_baseline": {
+        "operation_granularity": {
+          "precision": 0.8025,
+          "predicted": 81,
+          "recall": 1.0
+        }
+      },
+      "R2_openapi": {
+        "note": "schema state ABSENT: no operations readable",
+        "precision": null,
+        "predicted": 0,
+        "recall": 0.0
+      },
+      "arms": {
+        "P-e14": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global+Allow": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 50,
+            "reachable_in_candidates": 65,
+            "recall": 0.7692,
+            "true_positive": 50
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          },
+          "provenance": "DERIVED, post-hoc, no extra requests"
+        }
+      },
+      "candidate_set_size": 81,
+      "framework": "FastAPI (Starlette router)",
+      "handlers": {
+        "P-e14": {
+          "by_provable_status_rule": 2,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 2,
+          "detected_paths": [
+            "/dev/apps/{app_name}/tests/rebuild",
+            "/dev/apps/{app_name}/tests/run"
+          ],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global+Allow": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        }
+      },
+      "methods": {
+        "P-e14": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7385,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 48,
+          "methods_missed": 17,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 48
+        },
+        "P-global": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7692,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 50,
+          "methods_missed": 15,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 50
+        }
+      },
+      "null_set_size": 12,
+      "schema": {
+        "body_prefix": "{\"detail\":\"Not Found\"}",
+        "naive_2xx_reading": "not-present",
+        "state": "ABSENT",
+        "status": 404,
+        "url": "http://127.0.0.1:57479/openapi.json"
+      },
+      "served_in_candidates": 65,
+      "served_total": 67,
+      "static_set_size": 69
+    },
+    "web_schema_401": {
+      "R0_baseline": {
+        "operation_granularity": {
+          "precision": 0.8025,
+          "predicted": 81,
+          "recall": 1.0
+        }
+      },
+      "R2_openapi": {
+        "note": "schema state FORBIDDEN: no operations readable",
+        "precision": null,
+        "predicted": 0,
+        "recall": 0.0
+      },
+      "arms": {
+        "P-e14": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 65,
+            "reachable_in_candidates": 65,
+            "recall": 1.0,
+            "true_positive": 65
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          }
+        },
+        "P-global+Allow": {
+          "null_set": {
+            "false_inclusion_rate": 0.0,
+            "falsely_included": 0,
+            "size": 12,
+            "which": []
+          },
+          "operation_granularity": {
+            "false_positive": 0,
+            "false_positive_examples": [],
+            "precision": 1.0,
+            "predicted": 50,
+            "reachable_in_candidates": 65,
+            "recall": 0.7692,
+            "true_positive": 50
+          },
+          "path_granularity": {
+            "precision": 1.0,
+            "predicted": 51,
+            "recall": 1.0,
+            "true_positive": 51
+          },
+          "provenance": "DERIVED, post-hoc, no extra requests"
+        }
+      },
+      "candidate_set_size": 81,
+      "framework": "FastAPI (Starlette router)",
+      "handlers": {
+        "P-e14": {
+          "by_provable_status_rule": 2,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 2,
+          "detected_paths": [
+            "/dev/apps/{app_name}/tests/rebuild",
+            "/dev/apps/{app_name}/tests/run"
+          ],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        },
+        "P-global+Allow": {
+          "by_provable_status_rule": 0,
+          "counted_detail": [],
+          "counted_from_server_log": 0,
+          "detected": 0,
+          "detected_paths": [],
+          "instrument": "detector validated against counted fixtures"
+        }
+      },
+      "methods": {
+        "P-e14": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7385,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 48,
+          "methods_missed": 17,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 48
+        },
+        "P-global": {
+          "allow_method_precision": 1.0,
+          "allow_method_recall": 0.7692,
+          "examples": [
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PATCH",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/config/telemetry"
+            },
+            {
+              "actually_serves": [
+                "GET",
+                "POST"
+              ],
+              "allow_reports": [
+                "POST"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+            },
+            {
+              "actually_serves": [
+                "DELETE",
+                "GET",
+                "PUT"
+              ],
+              "allow_reports": [
+                "GET"
+              ],
+              "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+            }
+          ],
+          "methods_correct": 50,
+          "methods_missed": 15,
+          "methods_overreported": 0,
+          "paths_routed": 51,
+          "paths_where_allow_is_wrong": 9,
+          "paths_with_allow_header": 50
+        }
+      },
+      "null_set_size": 12,
+      "schema": {
+        "body_prefix": "{\"detail\":\"Not authenticated\"}",
+        "naive_2xx_reading": "not-present",
+        "state": "FORBIDDEN",
+        "status": 401,
+        "url": "http://127.0.0.1:57513/openapi.json"
+      },
+      "served_in_candidates": 65,
+      "served_total": 71,
+      "static_set_size": 69
+    }
+  }
+}

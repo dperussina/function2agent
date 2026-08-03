@@ -1,0 +1,9 @@
+{
+ "run_id": "20260101T000000-dryrun",
+ "arms": ["b", "c2"],
+ "spend": {
+  "spent_usd": 0.0,
+  "calls": 450,
+  "dry_run": true
+ }
+}

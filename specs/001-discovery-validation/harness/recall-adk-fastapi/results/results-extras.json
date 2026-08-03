@@ -1,0 +1,70 @@
+{
+  "ast_parse_failures": [],
+  "docstring_fidelity": {
+    "ast_functions_with_docstring": 10165,
+    "coverage": 0.035,
+    "examples_of_recorded_text": [
+      {
+        "recorded": "Loaded OK, no runnable ADK component found (load-only)",
+        "symbol": ".agents/skills/adk-verify-snippets/scripts/verify_md.py:43 extract_snippets"
+      },
+      {
+        "recorded": "--- Roll Die Sub-Agent ---",
+        "symbol": "contributing/samples/a2a/a2a_basic/agent.py:25 roll_die"
+      },
+      {
+        "recorded": "=============================================================================\nTool functio",
+        "symbol": "contributing/samples/adk_team/adk_documentation/adk_release_analyzer/agent.py:101 get_next_file_group"
+      },
+      {
+        "recorded": "=============================================================================\nAgent 2: Fil",
+        "symbol": "contributing/samples/adk_team/adk_documentation/adk_release_analyzer/agent.py:376 file_analyzer_instruction"
+      },
+      {
+        "recorded": "=============================================================================\nAgent 3: Sum",
+        "symbol": "contributing/samples/adk_team/adk_documentation/adk_release_analyzer/agent.py:506 summary_instruction"
+      }
+    ],
+    "fidelity_of_recorded": 0.0028,
+    "index_recorded_some_docstring": 355,
+    "of_those_present_in_index": 10143,
+    "recorded_text_matches_real_docstring": 1
+  },
+  "symbol_level": {
+    "ast_functions": 16677,
+    "false_negatives": 22,
+    "false_positives": 0,
+    "index_function_nodes": 16655,
+    "missed_files": [
+      "src/google/adk/a2a/logs/log_utils.py",
+      "tests/unittests/a2a/logs/test_log_utils.py"
+    ],
+    "missed_symbols": [
+      "src/google/adk/a2a/logs/log_utils.py:113 build_a2a_request_log",
+      "src/google/adk/a2a/logs/log_utils.py:167 build_a2a_response_log",
+      "src/google/adk/a2a/logs/log_utils.py:44 _is_a2a_task",
+      "src/google/adk/a2a/logs/log_utils.py:52 _is_a2a_client_event",
+      "src/google/adk/a2a/logs/log_utils.py:62 _is_a2a_message",
+      "src/google/adk/a2a/logs/log_utils.py:70 build_message_part_log",
+      "tests/unittests/a2a/logs/test_log_utils.py:118 test_other_part_type",
+      "tests/unittests/a2a/logs/test_log_utils.py:143 test_request_with_parts",
+      "tests/unittests/a2a/logs/test_log_utils.py:180 test_request_without_parts",
+      "tests/unittests/a2a/logs/test_log_utils.py:196 test_request_with_empty_parts_list",
+      "tests/unittests/a2a/logs/test_log_utils.py:216 test_success_response_with_client_event",
+      "tests/unittests/a2a/logs/test_log_utils.py:243 test_success_response_with_task_and_status_message",
+      "tests/unittests/a2a/logs/test_log_utils.py:284 test_success_response_with_message",
+      "tests/unittests/a2a/logs/test_log_utils.py:316 test_success_response_with_message_no_parts",
+      "tests/unittests/a2a/logs/test_log_utils.py:337 test_success_response_with_other_result_type",
+      "tests/unittests/a2a/logs/test_log_utils.py:353 test_success_response_without_model_dump_json",
+      "tests/unittests/a2a/logs/test_log_utils.py:371 test_build_message_part_log_with_metadata",
+      "tests/unittests/a2a/logs/test_log_utils.py:389 test_build_a2a_request_log_with_message_metadata",
+      "tests/unittests/a2a/logs/test_log_utils.py:50 test_text_part_short_text",
+      "tests/unittests/a2a/logs/test_log_utils.py:60 test_text_part_long_text",
+      "tests/unittests/a2a/logs/test_log_utils.py:71 test_data_part_simple_data",
+      "tests/unittests/a2a/logs/test_log_utils.py:86 test_data_part_large_values"
+    ],
+    "precision": 1.0,
+    "recall": 0.9987,
+    "true_positives": 16655
+  }
+}

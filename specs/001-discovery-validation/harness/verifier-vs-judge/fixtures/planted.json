@@ -1,0 +1,103 @@
+{
+ "_comment": "Planted records and synthetic traces with known classifications, for the taxonomy, the c1 clauses and the metric checks. Values here are invented, not drawn from the corpus, so a self-test failure means the code moved rather than the corpus.",
+
+ "taxonomy_records": [
+  {"_want_class": "no_output", "_want_subclass": null, "_want_near_miss": false,
+   "outcome": "fail", "false_success": false,
+   "reason": "no answer submitted (terminal: token_budget_exhausted)"},
+
+  {"_want_class": "protocol", "_want_subclass": null, "_want_near_miss": false,
+   "outcome": "fail", "false_success": false,
+   "reason": "did not ask for clarification (status=impossible)"},
+
+  {"_want_class": "false_success", "_want_subclass": "numeric_value_error",
+   "_want_near_miss": false,
+   "outcome": "fail", "false_success": true, "reason": "expected 9, got 11.0"},
+
+  {"_want_class": "false_success", "_want_subclass": "numeric_value_error",
+   "_want_near_miss": true,
+   "outcome": "fail", "false_success": true, "reason": "expected 3.201754, got 3.23"},
+
+  {"_want_class": "false_success", "_want_subclass": "set_cardinality_error",
+   "_want_near_miss": false,
+   "outcome": "fail", "false_success": true,
+   "reason": "missing [], unexpected ['alpha soup', 'beta stew']"},
+
+  {"_want_class": null, "_want_subclass": null, "_want_near_miss": false,
+   "outcome": "pass", "false_success": false, "reason": null}
+ ],
+
+ "c1_traces": [
+  {"_name": "no-submission",
+   "_want_verdict": "fail", "_want_clause": "C1.1",
+   "task_prompt": "How many recipes are tagged 'weeknight'?",
+   "terminal": "token_budget_exhausted",
+   "submitted": null, "submitted_status": null,
+   "tool_calls": [{"name": "search_recipes", "args": {}, "ok": true, "result_chars": 10}],
+   "transcript": []},
+
+  {"_name": "well-typed-wrong-number",
+   "_note": "THE central prediction: a wrong float is a well-typed float, so no c1 clause may fail this. If this row ever turns into a fail, c1 is void.",
+   "_want_verdict": "unverifiable", "_want_clause": "C1.7",
+   "task_prompt": "What is the mean rating across all recipes?",
+   "terminal": "submitted",
+   "submitted": "3.23", "submitted_status": "answered",
+   "tool_calls": [{"name": "search_recipes", "args": {}, "ok": true, "result_chars": 900},
+                  {"name": "submit_answer", "args": {}, "ok": true, "result_chars": 4}],
+   "transcript": [{"role": "user", "content": "{\"total\": 40, \"items\": []}"}]},
+
+  {"_name": "cardinality-mismatch",
+   "_want_verdict": "fail", "_want_clause": "C1.5",
+   "task_prompt": "List every recipe tagged 'weeknight'.",
+   "terminal": "submitted",
+   "submitted": ["alpha soup", "beta stew", "gamma pie"], "submitted_status": "answered",
+   "tool_calls": [{"name": "search_recipes", "args": {}, "ok": true, "result_chars": 900},
+                  {"name": "submit_answer", "args": {}, "ok": true, "result_chars": 4}],
+   "transcript": [{"role": "user", "content": "{\"page\": 1, \"total\": 0, \"items\": []}"}]},
+
+  {"_name": "cardinality-agrees",
+   "_want_verdict": "unverifiable", "_want_clause": "C1.7",
+   "task_prompt": "List every recipe tagged 'weeknight'.",
+   "terminal": "submitted",
+   "submitted": ["alpha soup"], "submitted_status": "answered",
+   "tool_calls": [{"name": "search_recipes", "args": {}, "ok": true, "result_chars": 900},
+                  {"name": "submit_answer", "args": {}, "ok": true, "result_chars": 4}],
+   "transcript": [{"role": "user", "content": "{\"page\": 1, \"total\": 1, \"items\": []}"}]},
+
+  {"_name": "cardinality-mismatch-as-a-delimited-string",
+   "_note": "the submit contract serialises every answer as text, so a collection arrives delimited, never as a JSON array. If this row passes as unverifiable, C1.4 and C1.5 are vacuous on the whole corpus.",
+   "_want_verdict": "fail", "_want_clause": "C1.5",
+   "task_prompt": "List every recipe tagged 'weeknight'.",
+   "terminal": "submitted",
+   "submitted": "alpha soup, beta stew, gamma pie", "submitted_status": "answered",
+   "tool_calls": [{"name": "search_recipes", "args": {}, "ok": true, "result_chars": 900},
+                  {"name": "submit_answer", "args": {}, "ok": true, "result_chars": 4}],
+   "transcript": [{"role": "user", "content": "{\"page\": 1, \"total\": 0, \"items\": []}"}]},
+
+  {"_name": "scalar-with-a-thousands-separator-is-not-a-collection",
+   "_note": "guards the collection reader against turning '1,250' into two members and inventing a cardinality failure",
+   "_want_verdict": "unverifiable", "_want_clause": "C1.7",
+   "task_prompt": "How many recipes are there in total?",
+   "terminal": "submitted",
+   "submitted": "1,250", "submitted_status": "answered",
+   "tool_calls": [{"name": "search_recipes", "args": {}, "ok": true, "result_chars": 900},
+                  {"name": "submit_answer", "args": {}, "ok": true, "result_chars": 4}],
+   "transcript": [{"role": "user", "content": "{\"page\": 1, \"total\": 0, \"items\": []}"}]},
+
+  {"_name": "undeclared-attribute-answered-confidently",
+   "_want_verdict": "fail", "_want_clause": "C1.6",
+   "task_prompt": "Report the zzzqqx coefficient and the wwwvvy index for this instance.",
+   "terminal": "submitted",
+   "submitted": "42", "submitted_status": "answered",
+   "tool_calls": [{"name": "submit_answer", "args": {}, "ok": true, "result_chars": 4}],
+   "transcript": []},
+
+  {"_name": "undeclared-attribute-abstained",
+   "_want_verdict": "unverifiable", "_want_clause": "C1.7",
+   "task_prompt": "Report the zzzqqx coefficient and the wwwvvy index for this instance.",
+   "terminal": "submitted",
+   "submitted": null, "submitted_status": "impossible",
+   "tool_calls": [{"name": "submit_answer", "args": {}, "ok": true, "result_chars": 4}],
+   "transcript": []}
+ ]
+}

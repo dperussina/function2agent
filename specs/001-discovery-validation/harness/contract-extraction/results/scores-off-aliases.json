@@ -1,0 +1,841 @@
+{
+  "exceptions": {
+    "by_class": {
+      "HTTPException": 66
+    },
+    "endpoints_raising_a_status_openapi_does_not_declare": 37,
+    "endpoints_with_a_raise_within_one_call_hop": 49,
+    "endpoints_with_at_least_one_raise": 37,
+    "endpoints_with_no_raise": 32,
+    "http_exception_sites": 66,
+    "http_exception_sites_with_literal_status": 65,
+    "one_hop_raise_classes": {
+      "HTTPException": 61,
+      "NotImplementedError": 3,
+      "TransientError": 2,
+      "ValueError": 42
+    },
+    "raise_sites": 66,
+    "status_codes_seen": {
+      "400": 29,
+      "403": 1,
+      "404": 23,
+      "422": 2,
+      "500": 10
+    },
+    "undeclared_detail": [
+      {
+        "op": "DELETE /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "DELETE /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "DELETE /dev/apps/{app_name}/tests/{test_name}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /apps/{app_name}/app-info",
+        "raised_but_undeclared": [
+          "400",
+          "403",
+          "404"
+        ]
+      },
+      {
+        "op": "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/build_graph",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/build_graph_image",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/debug/trace/{event_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/eval-results/{eval_result_id}",
+        "raised_but_undeclared": [
+          "404",
+          "500"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/eval_results/{eval_result_id}",
+        "raised_but_undeclared": [
+          "404",
+          "500"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/metrics-info",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "GET /dev/apps/{app_name}/tests/{test_name}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "PATCH /apps/{app_name}/users/{user_id}/memory",
+        "raised_but_undeclared": [
+          "400",
+          "404"
+        ]
+      },
+      {
+        "op": "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+        "raised_but_undeclared": [
+          "404"
+        ]
+      },
+      {
+        "op": "POST /agent-identity/finalize",
+        "raised_but_undeclared": [
+          "400",
+          "500"
+        ]
+      },
+      {
+        "op": "POST /api/reasoning_engine",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /api/stream_reasoning_engine",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /apps/{app_name}/trigger/eventarc",
+        "raised_but_undeclared": [
+          "500"
+        ]
+      },
+      {
+        "op": "POST /apps/{app_name}/trigger/pubsub",
+        "raised_but_undeclared": [
+          "400",
+          "500"
+        ]
+      },
+      {
+        "op": "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+        "raised_but_undeclared": [
+          "400",
+          "500"
+        ]
+      },
+      {
+        "op": "POST /builder/save",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /config/telemetry",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /dev/apps/{app_name}/builder/save",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /dev/apps/{app_name}/eval-sets",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/run",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session",
+        "raised_but_undeclared": [
+          "400"
+        ]
+      },
+      {
+        "op": "POST /run",
+        "raised_but_undeclared": [
+          "400",
+          "404"
+        ]
+      },
+      {
+        "op": "POST /run_sse",
+        "raised_but_undeclared": [
+          "400",
+          "404"
+        ]
+      },
+      {
+        "op": "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+        "raised_but_undeclared": [
+          "400",
+          "404"
+        ]
+      },
+      {
+        "op": "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+        "raised_but_undeclared": [
+          "400",
+          "404"
+        ]
+      }
+    ]
+  },
+  "gate": {
+    "all_three_components_including_raises": 28,
+    "all_three_rate": 0.4058,
+    "n": 69,
+    "produced_parameters_and_return_type": 60,
+    "produced_rate": 0.8696,
+    "threshold": 0.8,
+    "validated_parameters_and_return_type": 53,
+    "validated_rate": 0.7681
+  },
+  "n_derived": 69,
+  "n_endpoints_scored": 69,
+  "n_key": 69,
+  "only_in_derived": [],
+  "only_in_key": [],
+  "parameters": {
+    "absence": 0,
+    "agreement": 69,
+    "counts": {
+      "agree_empty": 8,
+      "agree_full": 59,
+      "agree_names": 61
+    },
+    "detail": [
+      {
+        "derived_only": [
+          [
+            "conversation",
+            "body",
+            false,
+            "object"
+          ]
+        ],
+        "expected_only": [
+          [
+            "conversation",
+            "body",
+            false,
+            "array[object]"
+          ]
+        ],
+        "op": "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+        "verdict": "names agree, type/required differ"
+      },
+      {
+        "derived_only": [
+          [
+            "conversation",
+            "body",
+            false,
+            "object"
+          ]
+        ],
+        "expected_only": [
+          [
+            "conversation",
+            "body",
+            false,
+            "array[object]"
+          ]
+        ],
+        "op": "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+        "verdict": "names agree, type/required differ"
+      }
+    ],
+    "disagreement": 0,
+    "exact_including_type_and_required": 67
+  },
+  "per_endpoint": {
+    "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "handler": "delete_session",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "declared_no_payload"
+    },
+    "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}": {
+      "handler": "delete_artifact",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "declared_no_payload"
+    },
+    "DELETE /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "handler": "delete_eval",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "declared_no_payload"
+    },
+    "DELETE /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "handler": "delete_eval",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "declared_no_payload"
+    },
+    "DELETE /dev/apps/{app_name}/tests/{test_name}": {
+      "handler": "delete_test",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /": {
+      "handler": "redirect_root_to_dev_ui",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "GET /apps/{app_name}/app-info": {
+      "handler": "get_adk_app_info",
+      "params_ok": true,
+      "raises": 3,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions": {
+      "handler": "list_sessions",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "handler": "get_session",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+      "handler": "list_artifact_names",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}": {
+      "handler": "load_artifact",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions": {
+      "handler": "list_artifact_versions",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata": {
+      "handler": "list_artifact_versions_metadata",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}": {
+      "handler": "load_artifact_version",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata": {
+      "handler": "get_artifact_version_metadata",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /builder/app/{app_name}": {
+      "handler": "get_agent_builder",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /config/telemetry": {
+      "handler": "get_telemetry_consent",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev-ui": {
+      "handler": "redirect_dev_ui_add_slash",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "GET /dev-ui/config": {
+      "handler": "get_ui_config",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "GET /dev/apps/{app_name}/build_graph": {
+      "handler": "get_app_info",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "declared_untyped"
+    },
+    "GET /dev/apps/{app_name}/build_graph_image": {
+      "handler": "get_app_info_image",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/builder": {
+      "handler": "get_agent_builder",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/debug/trace/session/{session_id}": {
+      "handler": "get_session_trace",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "declared_untyped"
+    },
+    "GET /dev/apps/{app_name}/debug/trace/{event_id}": {
+      "handler": "get_trace_dict",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "declared_untyped"
+    },
+    "GET /dev/apps/{app_name}/eval-results": {
+      "handler": "list_eval_results",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /dev/apps/{app_name}/eval-results/{eval_result_id}": {
+      "handler": "get_eval_result",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /dev/apps/{app_name}/eval-sets": {
+      "handler": "list_eval_sets",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "handler": "get_eval",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /dev/apps/{app_name}/eval_results": {
+      "handler": "list_eval_results_legacy",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/eval_results/{eval_result_id}": {
+      "handler": "get_eval_result_legacy",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /dev/apps/{app_name}/eval_sets": {
+      "handler": "list_eval_sets_legacy",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+      "handler": "list_evals_in_eval_set",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "handler": "get_eval",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /dev/apps/{app_name}/graph": {
+      "handler": "get_app_graph_dot",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/metrics-info": {
+      "handler": "list_metrics_info",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "GET /dev/apps/{app_name}/tests": {
+      "handler": "list_tests",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/tests/{test_name}": {
+      "handler": "get_test_content",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+      "handler": "get_event_graph",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "GET /health": {
+      "handler": "health",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /list-apps": {
+      "handler": "list_apps",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "GET /version": {
+      "handler": "version",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "PATCH /apps/{app_name}/users/{user_id}/memory": {
+      "handler": "patch_memory",
+      "params_ok": true,
+      "raises": 3,
+      "return_present": true,
+      "return_verdict": "declared_no_payload"
+    },
+    "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "handler": "update_session",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /agent-identity/finalize": {
+      "handler": "finalize_agent_identity_credentials",
+      "params_ok": true,
+      "raises": 5,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /api/reasoning_engine": {
+      "handler": "query",
+      "params_ok": true,
+      "raises": 4,
+      "return_present": true,
+      "return_verdict": "response_object"
+    },
+    "POST /api/stream_reasoning_engine": {
+      "handler": "stream_query",
+      "params_ok": true,
+      "raises": 4,
+      "return_present": true,
+      "return_verdict": "response_object"
+    },
+    "POST /apps/{app_name}/trigger/eventarc": {
+      "handler": "trigger_eventarc",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /apps/{app_name}/trigger/pubsub": {
+      "handler": "trigger_pubsub",
+      "params_ok": true,
+      "raises": 3,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions": {
+      "handler": "create_session",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "handler": "create_session_with_id",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+      "handler": "save_artifact",
+      "params_ok": true,
+      "raises": 3,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /builder/app/{app_name}/cancel": {
+      "handler": "builder_cancel",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /builder/save": {
+      "handler": "builder_build",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /config/telemetry": {
+      "handler": "set_telemetry_consent",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /dev/apps/{app_name}/builder/cancel": {
+      "handler": "builder_cancel",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /dev/apps/{app_name}/builder/save": {
+      "handler": "builder_build",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /dev/apps/{app_name}/eval-sets": {
+      "handler": "create_eval_set",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+      "handler": "add_session_to_eval_set",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+      "handler": "run_eval",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_named_model"
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+      "handler": "create_eval_set_legacy",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+      "handler": "add_session_to_eval_set",
+      "params_ok": true,
+      "raises": 1,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+      "handler": "run_eval_legacy",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /dev/apps/{app_name}/tests/rebuild": {
+      "handler": "rebuild_app_tests",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /dev/apps/{app_name}/tests/run": {
+      "handler": "run_app_tests",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "response_object"
+    },
+    "POST /run": {
+      "handler": "run_agent",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    },
+    "POST /run_sse": {
+      "handler": "run_agent_sse",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": true,
+      "return_verdict": "response_object"
+    },
+    "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "handler": "update_eval",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "handler": "update_eval",
+      "params_ok": true,
+      "raises": 2,
+      "return_present": false,
+      "return_verdict": "neither_declares"
+    },
+    "PUT /dev/apps/{app_name}/tests/{test_name}": {
+      "handler": "create_test",
+      "params_ok": true,
+      "raises": 0,
+      "return_present": true,
+      "return_verdict": "agree_shape"
+    }
+  },
+  "return_contract_exists_somewhere": {
+    "n": 53,
+    "rate": 1.0,
+    "validated": 53
+  },
+  "return_source_conflict": {
+    "conflicts": [],
+    "endpoints_declaring_both": 5
+  },
+  "return_type": {
+    "absence": 0,
+    "agreement": 53,
+    "agreement_note": "declared_no_payload counts as agreement: the handler is annotated `-> None` and the framework publishes no response schema, which is a checkable statement that the endpoint returns no body",
+    "counts": {
+      "agree_named_model": 18,
+      "agree_shape": 30,
+      "declared_no_payload": 5,
+      "declared_untyped": 3,
+      "neither_declares": 9,
+      "response_object": 4
+    },
+    "detail": [],
+    "disagreement": 0,
+    "no_shape_on_either_side": 16
+  }
+}

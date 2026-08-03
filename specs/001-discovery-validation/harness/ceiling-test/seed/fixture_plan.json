@@ -1,0 +1,4055 @@
+{
+ "categories": [
+  "Breakfast",
+  "Lunch",
+  "Dinner",
+  "Dessert",
+  "Side",
+  "Soup",
+  "Snack",
+  "Beverage"
+ ],
+ "cookbooks": [
+  {
+   "description": "Auto-collected: Weeknight Rotation.",
+   "name": "Weeknight Rotation",
+   "query_filter": "tags.name IN [\"weeknight\"]"
+  },
+  {
+   "description": "Auto-collected: Freezer Stash.",
+   "name": "Freezer Stash",
+   "query_filter": "tags.name IN [\"freezer-friendly\"]"
+  },
+  {
+   "description": "Auto-collected: Soup Season.",
+   "name": "Soup Season",
+   "query_filter": "recipeCategory.name IN [\"Soup\"]"
+  },
+  {
+   "description": "Auto-collected: Sweet Endings.",
+   "name": "Sweet Endings",
+   "query_filter": "recipeCategory.name IN [\"Dessert\"]"
+  }
+ ],
+ "cooking_tools": [
+  "Air Fryer",
+  "Dutch Oven",
+  "Blender",
+  "Stand Mixer",
+  "Slow Cooker",
+  "Wok"
+ ],
+ "favorites": [
+  {
+   "recipe": "Crimson Persimmon Tartine",
+   "username": "dpike"
+  },
+  {
+   "recipe": "Amber Sumac Bisque",
+   "username": "dpike"
+  },
+  {
+   "recipe": "Blistered Turnip Gratin",
+   "username": "dpike"
+  },
+  {
+   "recipe": "Sunlit Sorrel Stew",
+   "username": "dpike"
+  },
+  {
+   "recipe": "Silver Pepita Ragout",
+   "username": "nrowe"
+  },
+  {
+   "recipe": "Copper Quince Galette",
+   "username": "nrowe"
+  },
+  {
+   "recipe": "Juniper Cardamom Crumble",
+   "username": "nrowe"
+  },
+  {
+   "recipe": "Marbled Sorrel Bisque",
+   "username": "tvasquez"
+  },
+  {
+   "recipe": "Frosted Plantain Pilaf",
+   "username": "tvasquez"
+  },
+  {
+   "recipe": "Marbled Quince Gratin",
+   "username": "tvasquez"
+  },
+  {
+   "recipe": "Thistle Parsnip Stew",
+   "username": "tvasquez"
+  },
+  {
+   "recipe": "Smoked Sorrel Fritters",
+   "username": "tvasquez"
+  },
+  {
+   "recipe": "Blistered Turnip Gratin",
+   "username": "tvasquez"
+  },
+  {
+   "recipe": "Crimson Buckwheat Crumble",
+   "username": "bfoley"
+  },
+  {
+   "recipe": "Blistered Parsnip Crumble",
+   "username": "bfoley"
+  },
+  {
+   "recipe": "Golden Millet Bisque",
+   "username": "bfoley"
+  }
+ ],
+ "foods": [
+  "red lentils",
+  "smoked paprika",
+  "greek yogurt",
+  "sourdough starter",
+  "pearl barley",
+  "brown butter",
+  "harissa paste",
+  "preserved lemon",
+  "sunflower seeds",
+  "aged cheddar",
+  "leeks",
+  "celeriac",
+  "black garlic",
+  "fresh dill",
+  "walnut oil",
+  "rye flour",
+  "buttermilk",
+  "sherry vinegar",
+  "sumac",
+  "pomegranate molasses",
+  "chickpea flour",
+  "tahini",
+  "wild rice",
+  "sweet potato"
+ ],
+ "labels": [
+  "Produce",
+  "Pantry",
+  "Dairy",
+  "Bakery",
+  "Frozen"
+ ],
+ "mealplan": [
+  {
+   "date": "2026-08-03",
+   "entry_type": "lunch",
+   "recipe": "Juniper Cardamom Crumble"
+  },
+  {
+   "date": "2026-08-03",
+   "entry_type": "dinner",
+   "recipe": "Thistle Kohlrabi Pilaf"
+  },
+  {
+   "date": "2026-08-04",
+   "entry_type": "side",
+   "recipe": "Crimson Chestnut Terrine"
+  },
+  {
+   "date": "2026-08-05",
+   "entry_type": "breakfast",
+   "recipe": "Velvet Nettle Tartine"
+  },
+  {
+   "date": "2026-08-06",
+   "entry_type": "breakfast",
+   "recipe": "Bramble Plantain Crumble"
+  },
+  {
+   "date": "2026-08-07",
+   "entry_type": "dinner",
+   "recipe": "Crimson Sumac Hash"
+  },
+  {
+   "date": "2026-08-07",
+   "entry_type": "side",
+   "recipe": "Marbled Tamarind Terrine"
+  },
+  {
+   "date": "2026-08-08",
+   "entry_type": "side",
+   "recipe": "Charred Quince Chowder"
+  },
+  {
+   "date": "2026-08-09",
+   "entry_type": "breakfast",
+   "recipe": "Blistered Parsnip Crumble"
+  },
+  {
+   "date": "2026-08-09",
+   "entry_type": "lunch",
+   "recipe": "Frosted Plantain Pilaf"
+  },
+  {
+   "date": "2026-08-09",
+   "entry_type": "dinner",
+   "recipe": "Golden Radish Chowder"
+  },
+  {
+   "date": "2026-08-10",
+   "entry_type": "breakfast",
+   "recipe": "Frosted Plantain Pilaf"
+  },
+  {
+   "date": "2026-08-11",
+   "entry_type": "breakfast",
+   "recipe": "Marbled Tamarind Terrine"
+  },
+  {
+   "date": "2026-08-11",
+   "entry_type": "lunch",
+   "recipe": "Sunlit Sorrel Stew"
+  },
+  {
+   "date": "2026-08-12",
+   "entry_type": "dinner",
+   "recipe": "Smoked Cardamom Loaf"
+  },
+  {
+   "date": "2026-08-13",
+   "entry_type": "side",
+   "recipe": "Blistered Nettle Terrine"
+  },
+  {
+   "date": "2026-08-16",
+   "entry_type": "breakfast",
+   "recipe": "Bramble Plantain Crumble"
+  },
+  {
+   "date": "2026-08-16",
+   "entry_type": "dinner",
+   "recipe": "Thistle Kohlrabi Pilaf"
+  },
+  {
+   "date": "2026-08-16",
+   "entry_type": "side",
+   "recipe": "Hazel Parsnip Tartine"
+  },
+  {
+   "date": "2026-08-18",
+   "entry_type": "dinner",
+   "recipe": "Ember Chard Galette"
+  },
+  {
+   "date": "2026-08-20",
+   "entry_type": "breakfast",
+   "recipe": "Bramble Chestnut Hash"
+  },
+  {
+   "date": "2026-08-20",
+   "entry_type": "lunch",
+   "recipe": "Velvet Parsnip Stew"
+  },
+  {
+   "date": "2026-08-21",
+   "entry_type": "dinner",
+   "recipe": "Smoked Quince Bake"
+  },
+  {
+   "date": "2026-08-22",
+   "entry_type": "lunch",
+   "recipe": "Hazel Parsnip Tartine"
+  },
+  {
+   "date": "2026-08-23",
+   "entry_type": "lunch",
+   "recipe": "Ember Chard Galette"
+  },
+  {
+   "date": "2026-08-24",
+   "entry_type": "lunch",
+   "recipe": "Silver Pepita Ragout"
+  },
+  {
+   "date": "2026-08-25",
+   "entry_type": "breakfast",
+   "recipe": "Silver Radish Ragout"
+  },
+  {
+   "date": "2026-08-25",
+   "entry_type": "dinner",
+   "recipe": "Crimson Sumac Hash"
+  },
+  {
+   "date": "2026-08-25",
+   "entry_type": "side",
+   "recipe": "Marbled Fennel Fritters"
+  },
+  {
+   "date": "2026-08-26",
+   "entry_type": "breakfast",
+   "recipe": "Silver Tamarind Stew"
+  },
+  {
+   "date": "2026-08-27",
+   "entry_type": "lunch",
+   "recipe": "Juniper Millet Fritters"
+  },
+  {
+   "date": "2026-08-28",
+   "entry_type": "dinner",
+   "recipe": "Crimson Sumac Hash"
+  },
+  {
+   "date": "2026-08-29",
+   "entry_type": "lunch",
+   "recipe": "Midnight Quince Crumble"
+  },
+  {
+   "date": "2026-08-30",
+   "entry_type": "lunch",
+   "recipe": "Ember Chard Ragout"
+  }
+ ],
+ "plan_sha256": "7de891d140a84e2277d3554eef6031a267feaff4969b749cccde4d28cad40182",
+ "ratings": [
+  {
+   "rating": 5,
+   "recipe": "Smoked Cardamom Loaf",
+   "username": "dpike"
+  },
+  {
+   "rating": 4,
+   "recipe": "Rustic Cardamom Skillet",
+   "username": "dpike"
+  },
+  {
+   "rating": 1,
+   "recipe": "Blistered Turnip Gratin",
+   "username": "dpike"
+  },
+  {
+   "rating": 2,
+   "recipe": "Frosted Plantain Pilaf",
+   "username": "dpike"
+  },
+  {
+   "rating": 5,
+   "recipe": "Thistle Radish Crumble",
+   "username": "dpike"
+  },
+  {
+   "rating": 4,
+   "recipe": "Amber Fennel Ragout",
+   "username": "dpike"
+  },
+  {
+   "rating": 2,
+   "recipe": "Midnight Quince Crumble",
+   "username": "dpike"
+  },
+  {
+   "rating": 5,
+   "recipe": "Crimson Persimmon Tartine",
+   "username": "dpike"
+  },
+  {
+   "rating": 4,
+   "recipe": "Silver Radish Ragout",
+   "username": "dpike"
+  },
+  {
+   "rating": 5,
+   "recipe": "Amber Sumac Bisque",
+   "username": "dpike"
+  },
+  {
+   "rating": 4,
+   "recipe": "Sunlit Buckwheat Tartine",
+   "username": "dpike"
+  },
+  {
+   "rating": 5,
+   "recipe": "Hazel Parsnip Tartine",
+   "username": "dpike"
+  },
+  {
+   "rating": 5,
+   "recipe": "Thistle Chard Tartine",
+   "username": "dpike"
+  },
+  {
+   "rating": 1,
+   "recipe": "Ember Buckwheat Crumble",
+   "username": "dpike"
+  },
+  {
+   "rating": 2,
+   "recipe": "Sunlit Sorrel Stew",
+   "username": "dpike"
+  },
+  {
+   "rating": 2,
+   "recipe": "Silver Pepita Ragout",
+   "username": "dpike"
+  },
+  {
+   "rating": 5,
+   "recipe": "Blistered Quince Pilaf",
+   "username": "dpike"
+  },
+  {
+   "rating": 5,
+   "recipe": "Blistered Nettle Terrine",
+   "username": "nrowe"
+  },
+  {
+   "rating": 5,
+   "recipe": "Copper Nettle Terrine",
+   "username": "nrowe"
+  },
+  {
+   "rating": 2,
+   "recipe": "Rustic Quince Terrine",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Marbled Sorrel Bisque",
+   "username": "nrowe"
+  },
+  {
+   "rating": 2,
+   "recipe": "Golden Turnip Bake",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Ember Chard Galette",
+   "username": "nrowe"
+  },
+  {
+   "rating": 5,
+   "recipe": "Juniper Turnip Stew",
+   "username": "nrowe"
+  },
+  {
+   "rating": 5,
+   "recipe": "Frosted Pepita Bisque",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Blistered Nettle Tartine",
+   "username": "nrowe"
+  },
+  {
+   "rating": 3,
+   "recipe": "Ember Buckwheat Crumble",
+   "username": "nrowe"
+  },
+  {
+   "rating": 4,
+   "recipe": "Bramble Chestnut Hash",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Copper Quince Galette",
+   "username": "nrowe"
+  },
+  {
+   "rating": 5,
+   "recipe": "Crimson Chestnut Terrine",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Charred Quince Chowder",
+   "username": "nrowe"
+  },
+  {
+   "rating": 5,
+   "recipe": "Juniper Cardamom Crumble",
+   "username": "nrowe"
+  },
+  {
+   "rating": 4,
+   "recipe": "Marbled Buckwheat Bisque",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Silver Pepita Ragout",
+   "username": "nrowe"
+  },
+  {
+   "rating": 3,
+   "recipe": "Blistered Quince Pilaf",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Velvet Parsnip Stew",
+   "username": "nrowe"
+  },
+  {
+   "rating": 1,
+   "recipe": "Blistered Parsnip Crumble",
+   "username": "nrowe"
+  },
+  {
+   "rating": 2,
+   "recipe": "Blistered Nettle Tartine",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 2,
+   "recipe": "Blistered Turnip Gratin",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 5,
+   "recipe": "Crimson Sumac Hash",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 1,
+   "recipe": "Wild Farro Skillet",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 2,
+   "recipe": "Frosted Plantain Pilaf",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 5,
+   "recipe": "Blistered Parsnip Crumble",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 2,
+   "recipe": "Silver Pepita Ragout",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 2,
+   "recipe": "Amber Fennel Ragout",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 2,
+   "recipe": "Rustic Buckwheat Gratin",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 3,
+   "recipe": "Golden Turnip Bake",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 4,
+   "recipe": "Velvet Parsnip Stew",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 4,
+   "recipe": "Thistle Radish Crumble",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 4,
+   "recipe": "Ember Chard Galette",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 3,
+   "recipe": "Smoked Sorrel Fritters",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 1,
+   "recipe": "Marbled Quince Gratin",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 5,
+   "recipe": "Wild Pepita Ragout",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 5,
+   "recipe": "Thistle Parsnip Stew",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 3,
+   "recipe": "Marbled Sorrel Bisque",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 3,
+   "recipe": "Crimson Chestnut Terrine",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 2,
+   "recipe": "Silver Radish Ragout",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 5,
+   "recipe": "Rustic Quince Terrine",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 1,
+   "recipe": "Smoked Quince Bake",
+   "username": "tvasquez"
+  },
+  {
+   "rating": 2,
+   "recipe": "Smoked Quince Bake",
+   "username": "bfoley"
+  },
+  {
+   "rating": 4,
+   "recipe": "Marbled Tamarind Terrine",
+   "username": "bfoley"
+  },
+  {
+   "rating": 4,
+   "recipe": "Copper Cardamom Gratin",
+   "username": "bfoley"
+  },
+  {
+   "rating": 4,
+   "recipe": "Hazel Parsnip Tartine",
+   "username": "bfoley"
+  },
+  {
+   "rating": 5,
+   "recipe": "Wild Pepita Ragout",
+   "username": "bfoley"
+  },
+  {
+   "rating": 3,
+   "recipe": "Midnight Quince Crumble",
+   "username": "bfoley"
+  },
+  {
+   "rating": 1,
+   "recipe": "Sunlit Sorrel Stew",
+   "username": "bfoley"
+  },
+  {
+   "rating": 3,
+   "recipe": "Silver Kohlrabi Hash",
+   "username": "bfoley"
+  },
+  {
+   "rating": 5,
+   "recipe": "Marbled Fennel Fritters",
+   "username": "bfoley"
+  },
+  {
+   "rating": 1,
+   "recipe": "Bramble Chestnut Hash",
+   "username": "bfoley"
+  },
+  {
+   "rating": 1,
+   "recipe": "Frosted Pepita Bisque",
+   "username": "bfoley"
+  },
+  {
+   "rating": 2,
+   "recipe": "Blistered Quince Pilaf",
+   "username": "bfoley"
+  },
+  {
+   "rating": 3,
+   "recipe": "Juniper Radish Braise",
+   "username": "bfoley"
+  },
+  {
+   "rating": 4,
+   "recipe": "Copper Quince Galette",
+   "username": "bfoley"
+  },
+  {
+   "rating": 5,
+   "recipe": "Rustic Nettle Galette",
+   "username": "bfoley"
+  },
+  {
+   "rating": 3,
+   "recipe": "Marbled Sorrel Bisque",
+   "username": "bfoley"
+  },
+  {
+   "rating": 5,
+   "recipe": "Velvet Parsnip Stew",
+   "username": "bfoley"
+  },
+  {
+   "rating": 3,
+   "recipe": "Golden Millet Bisque",
+   "username": "bfoley"
+  },
+  {
+   "rating": 1,
+   "recipe": "Wild Farro Skillet",
+   "username": "bfoley"
+  },
+  {
+   "rating": 2,
+   "recipe": "Sunlit Fennel Hash",
+   "username": "bfoley"
+  },
+  {
+   "rating": 4,
+   "recipe": "Blistered Nettle Terrine",
+   "username": "bfoley"
+  },
+  {
+   "rating": 2,
+   "recipe": "Blistered Turnip Gratin",
+   "username": "bfoley"
+  },
+  {
+   "rating": 1,
+   "recipe": "Blistered Parsnip Crumble",
+   "username": "bfoley"
+  },
+  {
+   "rating": 2,
+   "recipe": "Crimson Buckwheat Crumble",
+   "username": "bfoley"
+  },
+  {
+   "rating": 5,
+   "recipe": "Rustic Buckwheat Gratin",
+   "username": "bfoley"
+  }
+ ],
+ "recipes": [
+  {
+   "categories": [
+    "Lunch",
+    "Snack"
+   ],
+   "cook_minutes": 60,
+   "description": "A hearty dish built around sunflower seeds.",
+   "ingredients": [
+    {
+     "food": "sunflower seeds",
+     "quantity": 0.25,
+     "unit": "pinch"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 1.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 6,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 12,
+     "unit": "sprig"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 1.5,
+     "unit": "pinch"
+    },
+    {
+     "food": "rye flour",
+     "quantity": 2.5,
+     "unit": "clove"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Rustic Cardamom Skillet",
+   "order": 0,
+   "prep_minutes": 30,
+   "servings": 4,
+   "tags": [
+    "one-pot",
+    "high-protein",
+    "no-oven"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side"
+   ],
+   "cook_minutes": 120,
+   "description": "A hearty dish built around harissa paste.",
+   "ingredients": [
+    {
+     "food": "harissa paste",
+     "quantity": 1.5,
+     "unit": "clove"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 6,
+     "unit": "milliliter"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 6,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 3,
+     "unit": "gram"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 2,
+     "unit": "clove"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 0.5,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Transfer to the prepared dish and level the surface.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Golden Millet Bisque",
+   "order": 1,
+   "prep_minutes": 5,
+   "servings": 4,
+   "tags": [
+    "picnic"
+   ],
+   "tools": [
+    "Air Fryer",
+    "Slow Cooker"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch"
+   ],
+   "cook_minutes": 15,
+   "description": "A delicate dish built around wild rice.",
+   "ingredients": [
+    {
+     "food": "wild rice",
+     "quantity": 100,
+     "unit": "cup"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 0.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 6,
+     "unit": "gram"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 2,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Marbled Tamarind Terrine",
+   "order": 2,
+   "prep_minutes": 25,
+   "servings": 4,
+   "tags": [
+    "weeknight"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch",
+    "Side"
+   ],
+   "cook_minutes": 15,
+   "description": "A bright dish built around sherry vinegar.",
+   "ingredients": [
+    {
+     "food": "sherry vinegar",
+     "quantity": 2,
+     "unit": "cup"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 12,
+     "unit": "gram"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 0.5,
+     "unit": "cup"
+    },
+    {
+     "food": "brown butter",
+     "quantity": 6,
+     "unit": "gram"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 3,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "greek yogurt",
+     "quantity": 2.5,
+     "unit": "milliliter"
+    }
+   ],
+   "instructions": [
+    "Season to taste and finish with the reserved garnish.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Transfer to the prepared dish and level the surface."
+   ],
+   "name": "Frosted Pepita Bisque",
+   "order": 3,
+   "prep_minutes": 25,
+   "servings": 2,
+   "tags": [
+    "high-protein"
+   ],
+   "tools": [
+    "Wok",
+    "Stand Mixer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert",
+    "Dinner"
+   ],
+   "cook_minutes": 120,
+   "description": "A brothy dish built around smoked paprika.",
+   "ingredients": [
+    {
+     "food": "smoked paprika",
+     "quantity": 1.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 8,
+     "unit": "gram"
+    },
+    {
+     "food": "sumac",
+     "quantity": 2,
+     "unit": "milliliter"
+    },
+    {
+     "food": "tahini",
+     "quantity": 2.5,
+     "unit": "pinch"
+    }
+   ],
+   "instructions": [
+    "Heat the pan over medium heat and add the aromatics.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Golden Radish Chowder",
+   "order": 4,
+   "prep_minutes": 20,
+   "servings": 8,
+   "tags": [
+    "weeknight"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 15,
+   "description": "A brothy dish built around brown butter.",
+   "ingredients": [
+    {
+     "food": "brown butter",
+     "quantity": 250,
+     "unit": "cup"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "tahini",
+     "quantity": 3,
+     "unit": "sprig"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 1.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 3,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Season to taste and finish with the reserved garnish.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Golden Turnip Bake",
+   "order": 5,
+   "prep_minutes": 45,
+   "servings": 6,
+   "tags": [
+    "no-oven",
+    "freezer-friendly"
+   ],
+   "tools": [
+    "Dutch Oven",
+    "Air Fryer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side"
+   ],
+   "cook_minutes": 30,
+   "description": "A smoky dish built around aged cheddar.",
+   "ingredients": [
+    {
+     "food": "aged cheddar",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "rye flour",
+     "quantity": 3,
+     "unit": "clove"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 8,
+     "unit": "cup"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 3,
+     "unit": "cup"
+    },
+    {
+     "food": "tahini",
+     "quantity": 250,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 1,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Smoked Sorrel Fritters",
+   "order": 6,
+   "prep_minutes": 10,
+   "servings": 3,
+   "tags": [],
+   "tools": [
+    "Dutch Oven",
+    "Blender"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner"
+   ],
+   "cook_minutes": 0,
+   "description": "A hearty dish built around leeks.",
+   "ingredients": [
+    {
+     "food": "leeks",
+     "quantity": 1.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 4,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 6,
+     "unit": "clove"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 100,
+     "unit": "pinch"
+    },
+    {
+     "food": "brown butter",
+     "quantity": 1.5,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Transfer to the prepared dish and level the surface.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Wild Pepita Ragout",
+   "order": 7,
+   "prep_minutes": 15,
+   "servings": 3,
+   "tags": [
+    "celebration",
+    "one-pot"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Soup"
+   ],
+   "cook_minutes": 20,
+   "description": "A hearty dish built around walnut oil.",
+   "ingredients": [
+    {
+     "food": "walnut oil",
+     "quantity": 3,
+     "unit": "cup"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 0.25,
+     "unit": "clove"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 0.5,
+     "unit": "gram"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 2,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Rustic Quince Terrine",
+   "order": 8,
+   "prep_minutes": 60,
+   "servings": 8,
+   "tags": [
+    "picnic"
+   ],
+   "tools": [
+    "Blender",
+    "Dutch Oven"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Breakfast"
+   ],
+   "cook_minutes": 15,
+   "description": "A hearty dish built around brown butter.",
+   "ingredients": [
+    {
+     "food": "brown butter",
+     "quantity": 8,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 2.5,
+     "unit": "gram"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 1.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 100,
+     "unit": "pinch"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 3,
+     "unit": "gram"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Toast the spices until fragrant, then grind coarsely."
+   ],
+   "name": "Smoked Cardamom Loaf",
+   "order": 9,
+   "prep_minutes": 15,
+   "servings": 6,
+   "tags": [
+    "freezer-friendly",
+    "low-sodium",
+    "batch-cook"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage"
+   ],
+   "cook_minutes": 45,
+   "description": "A smoky dish built around harissa paste.",
+   "ingredients": [
+    {
+     "food": "harissa paste",
+     "quantity": 4,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 4,
+     "unit": "cup"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 2,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Copper Quince Galette",
+   "order": 10,
+   "prep_minutes": 40,
+   "servings": 4,
+   "tags": [
+    "budget",
+    "kid-approved"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 60,
+   "description": "A bright dish built around leeks.",
+   "ingredients": [
+    {
+     "food": "leeks",
+     "quantity": 0.25,
+     "unit": "sprig"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 6,
+     "unit": "cup"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 6,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 6,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 8,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Transfer to the prepared dish and level the surface.",
+    "Deglaze the pan and scrape up the browned bits."
+   ],
+   "name": "Thistle Kohlrabi Pilaf",
+   "order": 11,
+   "prep_minutes": 10,
+   "servings": 4,
+   "tags": [
+    "high-protein"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch"
+   ],
+   "cook_minutes": 60,
+   "description": "A smoky dish built around sourdough starter.",
+   "ingredients": [
+    {
+     "food": "sourdough starter",
+     "quantity": 12,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 4,
+     "unit": "sprig"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 6,
+     "unit": "sprig"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 2.5,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Heat the pan over medium heat and add the aromatics.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Crimson Sumac Hash",
+   "order": 12,
+   "prep_minutes": 10,
+   "servings": 2,
+   "tags": [
+    "no-oven"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch",
+    "Soup"
+   ],
+   "cook_minutes": 20,
+   "description": "A bright dish built around sourdough starter.",
+   "ingredients": [
+    {
+     "food": "sourdough starter",
+     "quantity": 4,
+     "unit": "gram"
+    },
+    {
+     "food": "tahini",
+     "quantity": 250,
+     "unit": "clove"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 6,
+     "unit": "pinch"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 6,
+     "unit": "milliliter"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Fold the dry ingredients into the wet mixture until just combined."
+   ],
+   "name": "Copper Cardamom Gratin",
+   "order": 13,
+   "prep_minutes": 5,
+   "servings": 6,
+   "tags": [
+    "batch-cook",
+    "high-protein"
+   ],
+   "tools": [
+    "Blender"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side"
+   ],
+   "cook_minutes": 60,
+   "description": "A hearty dish built around greek yogurt.",
+   "ingredients": [
+    {
+     "food": "greek yogurt",
+     "quantity": 1.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 0.25,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 1,
+     "unit": "gram"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 100,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Rustic Buckwheat Gratin",
+   "order": 14,
+   "prep_minutes": 40,
+   "servings": 4,
+   "tags": [
+    "one-pot"
+   ],
+   "tools": [
+    "Wok"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage",
+    "Breakfast"
+   ],
+   "cook_minutes": 25,
+   "description": "A smoky dish built around celeriac.",
+   "ingredients": [
+    {
+     "food": "celeriac",
+     "quantity": 4,
+     "unit": "pinch"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 6,
+     "unit": "clove"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 0.25,
+     "unit": "pinch"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 6,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Transfer to the prepared dish and level the surface.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Sunlit Buckwheat Tartine",
+   "order": 15,
+   "prep_minutes": 20,
+   "servings": 8,
+   "tags": [
+    "no-oven",
+    "batch-cook"
+   ],
+   "tools": [
+    "Slow Cooker",
+    "Stand Mixer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage"
+   ],
+   "cook_minutes": 60,
+   "description": "A brothy dish built around harissa paste.",
+   "ingredients": [
+    {
+     "food": "harissa paste",
+     "quantity": 100,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 6,
+     "unit": "gram"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 4,
+     "unit": "milliliter"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 1,
+     "unit": "milliliter"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 4,
+     "unit": "milliliter"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Rest off the heat for ten minutes before serving.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Velvet Nettle Tartine",
+   "order": 16,
+   "prep_minutes": 60,
+   "servings": 4,
+   "tags": [
+    "low-sodium",
+    "budget"
+   ],
+   "tools": [
+    "Wok"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 15,
+   "description": "A bright dish built around sumac.",
+   "ingredients": [
+    {
+     "food": "sumac",
+     "quantity": 0.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 1.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 0.25,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 100,
+     "unit": "cup"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 100,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 2.5,
+     "unit": "tablespoon"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Deglaze the pan and scrape up the browned bits."
+   ],
+   "name": "Velvet Parsnip Stew",
+   "order": 17,
+   "prep_minutes": 30,
+   "servings": 4,
+   "tags": [
+    "low-sodium",
+    "weeknight",
+    "budget"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner"
+   ],
+   "cook_minutes": 0,
+   "description": "A bright dish built around walnut oil.",
+   "ingredients": [
+    {
+     "food": "walnut oil",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 0.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "greek yogurt",
+     "quantity": 12,
+     "unit": "pinch"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 250,
+     "unit": "sprig"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 0.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 2,
+     "unit": "pinch"
+    },
+    {
+     "food": "leeks",
+     "quantity": 2,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Season to taste and finish with the reserved garnish.",
+    "Transfer to the prepared dish and level the surface."
+   ],
+   "name": "Marbled Buckwheat Bisque",
+   "order": 18,
+   "prep_minutes": 30,
+   "servings": 6,
+   "tags": [
+    "kid-approved"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Soup",
+    "Lunch"
+   ],
+   "cook_minutes": 30,
+   "description": "A hearty dish built around leeks.",
+   "ingredients": [
+    {
+     "food": "leeks",
+     "quantity": 3,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 1,
+     "unit": "clove"
+    },
+    {
+     "food": "brown butter",
+     "quantity": 3,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "rye flour",
+     "quantity": 2.5,
+     "unit": "pinch"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Transfer to the prepared dish and level the surface."
+   ],
+   "name": "Crimson Chestnut Terrine",
+   "order": 19,
+   "prep_minutes": 10,
+   "servings": 4,
+   "tags": [
+    "celebration",
+    "kid-approved"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side",
+    "Dessert"
+   ],
+   "cook_minutes": 45,
+   "description": "A hearty dish built around walnut oil.",
+   "ingredients": [
+    {
+     "food": "walnut oil",
+     "quantity": 2.5,
+     "unit": "gram"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 1.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 8,
+     "unit": "clove"
+    },
+    {
+     "food": "tahini",
+     "quantity": 12,
+     "unit": "cup"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 2.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "leeks",
+     "quantity": 1,
+     "unit": "sprig"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 4,
+     "unit": "milliliter"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Juniper Millet Fritters",
+   "order": 20,
+   "prep_minutes": 40,
+   "servings": 6,
+   "tags": [
+    "high-protein"
+   ],
+   "tools": [
+    "Air Fryer",
+    "Blender"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage",
+    "Lunch"
+   ],
+   "cook_minutes": 60,
+   "description": "A delicate dish built around red lentils.",
+   "ingredients": [
+    {
+     "food": "red lentils",
+     "quantity": 0.5,
+     "unit": "gram"
+    },
+    {
+     "food": "brown butter",
+     "quantity": 3,
+     "unit": "milliliter"
+    },
+    {
+     "food": "greek yogurt",
+     "quantity": 100,
+     "unit": "gram"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 2,
+     "unit": "tablespoon"
+    }
+   ],
+   "instructions": [
+    "Heat the pan over medium heat and add the aromatics.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Rest off the heat for ten minutes before serving.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Frosted Plantain Pilaf",
+   "order": 21,
+   "prep_minutes": 5,
+   "servings": 4,
+   "tags": [
+    "celebration",
+    "batch-cook",
+    "picnic"
+   ],
+   "tools": [
+    "Air Fryer",
+    "Blender"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage"
+   ],
+   "cook_minutes": 10,
+   "description": "A bright dish built around sourdough starter.",
+   "ingredients": [
+    {
+     "food": "sourdough starter",
+     "quantity": 3,
+     "unit": "clove"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 12,
+     "unit": "clove"
+    },
+    {
+     "food": "leeks",
+     "quantity": 6,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 12,
+     "unit": "clove"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Heat the pan over medium heat and add the aromatics.",
+    "Rest off the heat for ten minutes before serving.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Fold the dry ingredients into the wet mixture until just combined."
+   ],
+   "name": "Blistered Nettle Tartine",
+   "order": 22,
+   "prep_minutes": 60,
+   "servings": 3,
+   "tags": [
+    "make-ahead",
+    "kid-approved",
+    "weeknight"
+   ],
+   "tools": [
+    "Air Fryer",
+    "Slow Cooker"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Snack"
+   ],
+   "cook_minutes": 90,
+   "description": "A hearty dish built around leeks.",
+   "ingredients": [
+    {
+     "food": "leeks",
+     "quantity": 6,
+     "unit": "pinch"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 2,
+     "unit": "cup"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 8,
+     "unit": "cup"
+    },
+    {
+     "food": "sumac",
+     "quantity": 3,
+     "unit": "clove"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 12,
+     "unit": "tablespoon"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Season to taste and finish with the reserved garnish.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Ember Chard Galette",
+   "order": 23,
+   "prep_minutes": 5,
+   "servings": 6,
+   "tags": [
+    "low-sodium"
+   ],
+   "tools": [
+    "Dutch Oven",
+    "Wok"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage"
+   ],
+   "cook_minutes": 45,
+   "description": "A brothy dish built around harissa paste.",
+   "ingredients": [
+    {
+     "food": "harissa paste",
+     "quantity": 3,
+     "unit": "pinch"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 250,
+     "unit": "cup"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 1,
+     "unit": "gram"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 0.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "rye flour",
+     "quantity": 100,
+     "unit": "milliliter"
+    },
+    {
+     "food": "leeks",
+     "quantity": 6,
+     "unit": "milliliter"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Rest off the heat for ten minutes before serving.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Sunlit Sorrel Stew",
+   "order": 24,
+   "prep_minutes": 30,
+   "servings": 4,
+   "tags": [
+    "weeknight",
+    "high-protein"
+   ],
+   "tools": [
+    "Slow Cooker",
+    "Dutch Oven"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side"
+   ],
+   "cook_minutes": 60,
+   "description": "A delicate dish built around rye flour.",
+   "ingredients": [
+    {
+     "food": "rye flour",
+     "quantity": 2.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 2,
+     "unit": "milliliter"
+    },
+    {
+     "food": "sumac",
+     "quantity": 1.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 0.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 3,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "tahini",
+     "quantity": 6,
+     "unit": "cup"
+    }
+   ],
+   "instructions": [
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Transfer to the prepared dish and level the surface."
+   ],
+   "name": "Amber Sumac Bisque",
+   "order": 25,
+   "prep_minutes": 15,
+   "servings": 6,
+   "tags": [
+    "batch-cook"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch"
+   ],
+   "cook_minutes": 30,
+   "description": "A brothy dish built around pearl barley.",
+   "ingredients": [
+    {
+     "food": "pearl barley",
+     "quantity": 12,
+     "unit": "cup"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 250,
+     "unit": "clove"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 8,
+     "unit": "pinch"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 12,
+     "unit": "clove"
+    },
+    {
+     "food": "tahini",
+     "quantity": 250,
+     "unit": "milliliter"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 100,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Transfer to the prepared dish and level the surface.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Blistered Quince Pilaf",
+   "order": 26,
+   "prep_minutes": 10,
+   "servings": 6,
+   "tags": [
+    "one-pot"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch"
+   ],
+   "cook_minutes": 20,
+   "description": "A bright dish built around greek yogurt.",
+   "ingredients": [
+    {
+     "food": "greek yogurt",
+     "quantity": 12,
+     "unit": "cup"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 0.25,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 8,
+     "unit": "milliliter"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Transfer to the prepared dish and level the surface.",
+    "Season to taste and finish with the reserved garnish.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Deglaze the pan and scrape up the browned bits."
+   ],
+   "name": "Wild Farro Skillet",
+   "order": 27,
+   "prep_minutes": 10,
+   "servings": 3,
+   "tags": [
+    "budget"
+   ],
+   "tools": [
+    "Wok",
+    "Blender"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner",
+    "Breakfast"
+   ],
+   "cook_minutes": 0,
+   "description": "A delicate dish built around sunflower seeds.",
+   "ingredients": [
+    {
+     "food": "sunflower seeds",
+     "quantity": 0.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 1,
+     "unit": "sprig"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 6,
+     "unit": "gram"
+    }
+   ],
+   "instructions": [
+    "Season to taste and finish with the reserved garnish.",
+    "Rest off the heat for ten minutes before serving.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Toast the spices until fragrant, then grind coarsely."
+   ],
+   "name": "Ember Buckwheat Crumble",
+   "order": 28,
+   "prep_minutes": 45,
+   "servings": 2,
+   "tags": [
+    "one-pot",
+    "high-protein"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side",
+    "Snack"
+   ],
+   "cook_minutes": 0,
+   "description": "A smoky dish built around tahini.",
+   "ingredients": [
+    {
+     "food": "tahini",
+     "quantity": 1.5,
+     "unit": "cup"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 6,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Fold the dry ingredients into the wet mixture until just combined."
+   ],
+   "name": "Smoked Quince Bake",
+   "order": 29,
+   "prep_minutes": 40,
+   "servings": 3,
+   "tags": [
+    "one-pot",
+    "low-sodium",
+    "no-oven"
+   ],
+   "tools": [
+    "Stand Mixer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert",
+    "Snack"
+   ],
+   "cook_minutes": 0,
+   "description": "A brothy dish built around sumac.",
+   "ingredients": [
+    {
+     "food": "sumac",
+     "quantity": 0.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "rye flour",
+     "quantity": 2.5,
+     "unit": "pinch"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 0.5,
+     "unit": "cup"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 0.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 4,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 8,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Thistle Chard Tartine",
+   "order": 30,
+   "prep_minutes": 30,
+   "servings": 8,
+   "tags": [
+    "batch-cook",
+    "celebration"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 25,
+   "description": "A hearty dish built around tahini.",
+   "ingredients": [
+    {
+     "food": "tahini",
+     "quantity": 0.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 100,
+     "unit": "cup"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 12,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Season to taste and finish with the reserved garnish.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Transfer to the prepared dish and level the surface."
+   ],
+   "name": "Wild Millet Pilaf",
+   "order": 31,
+   "prep_minutes": 15,
+   "servings": 3,
+   "tags": [
+    "batch-cook",
+    "picnic",
+    "celebration"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side"
+   ],
+   "cook_minutes": 30,
+   "description": "A brothy dish built around chickpea flour.",
+   "ingredients": [
+    {
+     "food": "chickpea flour",
+     "quantity": 1,
+     "unit": "cup"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 3,
+     "unit": "pinch"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 8,
+     "unit": "clove"
+    },
+    {
+     "food": "greek yogurt",
+     "quantity": 3,
+     "unit": "gram"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 6,
+     "unit": "clove"
+    }
+   ],
+   "instructions": [
+    "Season to taste and finish with the reserved garnish.",
+    "Transfer to the prepared dish and level the surface.",
+    "Heat the pan over medium heat and add the aromatics.",
+    "Rest off the heat for ten minutes before serving.",
+    "Fold the dry ingredients into the wet mixture until just combined."
+   ],
+   "name": "Crimson Persimmon Tartine",
+   "order": 32,
+   "prep_minutes": 40,
+   "servings": 6,
+   "tags": [
+    "kid-approved",
+    "freezer-friendly"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert",
+    "Soup"
+   ],
+   "cook_minutes": 90,
+   "description": "A brothy dish built around sweet potato.",
+   "ingredients": [
+    {
+     "food": "sweet potato",
+     "quantity": 250,
+     "unit": "sprig"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 12,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Fold the dry ingredients into the wet mixture until just combined."
+   ],
+   "name": "Silver Tamarind Stew",
+   "order": 33,
+   "prep_minutes": 25,
+   "servings": 4,
+   "tags": [
+    "low-sodium",
+    "batch-cook"
+   ],
+   "tools": [
+    "Wok",
+    "Dutch Oven"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 60,
+   "description": "A hearty dish built around walnut oil.",
+   "ingredients": [
+    {
+     "food": "walnut oil",
+     "quantity": 1.5,
+     "unit": "clove"
+    },
+    {
+     "food": "sumac",
+     "quantity": 0.25,
+     "unit": "cup"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 2,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Rest off the heat for ten minutes before serving."
+   ],
+   "name": "Marbled Fennel Fritters",
+   "order": 34,
+   "prep_minutes": 60,
+   "servings": 4,
+   "tags": [
+    "weeknight",
+    "batch-cook",
+    "budget"
+   ],
+   "tools": [
+    "Blender",
+    "Slow Cooker"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side",
+    "Dessert"
+   ],
+   "cook_minutes": 10,
+   "description": "A hearty dish built around fresh dill.",
+   "ingredients": [
+    {
+     "food": "fresh dill",
+     "quantity": 8,
+     "unit": "sprig"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 6,
+     "unit": "cup"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 0.5,
+     "unit": "clove"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 100,
+     "unit": "clove"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 100,
+     "unit": "cup"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 12,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "leeks",
+     "quantity": 0.5,
+     "unit": "gram"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Season to taste and finish with the reserved garnish.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Silver Kohlrabi Hash",
+   "order": 35,
+   "prep_minutes": 5,
+   "servings": 2,
+   "tags": [],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch"
+   ],
+   "cook_minutes": 20,
+   "description": "A bright dish built around sweet potato.",
+   "ingredients": [
+    {
+     "food": "sweet potato",
+     "quantity": 8,
+     "unit": "clove"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 0.25,
+     "unit": "clove"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 2.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 6,
+     "unit": "clove"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Rest off the heat for ten minutes before serving.",
+    "Toast the spices until fragrant, then grind coarsely."
+   ],
+   "name": "Crimson Chard Gratin",
+   "order": 36,
+   "prep_minutes": 20,
+   "servings": 6,
+   "tags": [],
+   "tools": [
+    "Slow Cooker"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage"
+   ],
+   "cook_minutes": 45,
+   "description": "A bright dish built around sumac.",
+   "ingredients": [
+    {
+     "food": "sumac",
+     "quantity": 2.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 0.25,
+     "unit": "gram"
+    },
+    {
+     "food": "leeks",
+     "quantity": 2,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 250,
+     "unit": "gram"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 0.25,
+     "unit": "sprig"
+    },
+    {
+     "food": "tahini",
+     "quantity": 0.5,
+     "unit": "pinch"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Transfer to the prepared dish and level the surface.",
+    "Rest off the heat for ten minutes before serving.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Marbled Sorrel Bisque",
+   "order": 37,
+   "prep_minutes": 40,
+   "servings": 2,
+   "tags": [
+    "low-sodium"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner",
+    "Dessert"
+   ],
+   "cook_minutes": 10,
+   "description": "A hearty dish built around walnut oil.",
+   "ingredients": [
+    {
+     "food": "walnut oil",
+     "quantity": 1.5,
+     "unit": "cup"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 2.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 3,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Rest off the heat for ten minutes before serving.",
+    "Season to taste and finish with the reserved garnish.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Thistle Radish Crumble",
+   "order": 38,
+   "prep_minutes": 25,
+   "servings": 8,
+   "tags": [
+    "celebration",
+    "picnic",
+    "one-pot"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Breakfast",
+    "Side"
+   ],
+   "cook_minutes": 45,
+   "description": "A smoky dish built around black garlic.",
+   "ingredients": [
+    {
+     "food": "black garlic",
+     "quantity": 12,
+     "unit": "milliliter"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 1,
+     "unit": "gram"
+    },
+    {
+     "food": "sumac",
+     "quantity": 3,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 0.25,
+     "unit": "pinch"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 8,
+     "unit": "milliliter"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 250,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Transfer to the prepared dish and level the surface.",
+    "Season to taste and finish with the reserved garnish.",
+    "Deglaze the pan and scrape up the browned bits."
+   ],
+   "name": "Blistered Nettle Terrine",
+   "order": 39,
+   "prep_minutes": 45,
+   "servings": 3,
+   "tags": [
+    "weeknight",
+    "picnic",
+    "freezer-friendly"
+   ],
+   "tools": [
+    "Air Fryer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert",
+    "Breakfast"
+   ],
+   "cook_minutes": 60,
+   "description": "A hearty dish built around sourdough starter.",
+   "ingredients": [
+    {
+     "food": "sourdough starter",
+     "quantity": 8,
+     "unit": "sprig"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 12,
+     "unit": "pinch"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 1.5,
+     "unit": "clove"
+    },
+    {
+     "food": "leeks",
+     "quantity": 6,
+     "unit": "cup"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 2.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "brown butter",
+     "quantity": 3,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 2.5,
+     "unit": "tablespoon"
+    }
+   ],
+   "instructions": [
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Season to taste and finish with the reserved garnish.",
+    "Transfer to the prepared dish and level the surface."
+   ],
+   "name": "Silver Pepita Ragout",
+   "order": 40,
+   "prep_minutes": 25,
+   "servings": 8,
+   "tags": [
+    "budget"
+   ],
+   "tools": [
+    "Wok"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Soup"
+   ],
+   "cook_minutes": 45,
+   "description": "A hearty dish built around greek yogurt.",
+   "ingredients": [
+    {
+     "food": "greek yogurt",
+     "quantity": 250,
+     "unit": "pinch"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 8,
+     "unit": "clove"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 250,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 6,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "sumac",
+     "quantity": 2.5,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Transfer to the prepared dish and level the surface.",
+    "Season to taste and finish with the reserved garnish.",
+    "Fold the dry ingredients into the wet mixture until just combined."
+   ],
+   "name": "Charred Quince Chowder",
+   "order": 41,
+   "prep_minutes": 25,
+   "servings": 4,
+   "tags": [
+    "freezer-friendly"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner"
+   ],
+   "cook_minutes": 30,
+   "description": "A hearty dish built around sourdough starter.",
+   "ingredients": [
+    {
+     "food": "sourdough starter",
+     "quantity": 12,
+     "unit": "sprig"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 250,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 12,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 12,
+     "unit": "milliliter"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 250,
+     "unit": "milliliter"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 1.5,
+     "unit": "gram"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 250,
+     "unit": "clove"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Transfer to the prepared dish and level the surface."
+   ],
+   "name": "Blistered Parsnip Crumble",
+   "order": 42,
+   "prep_minutes": 20,
+   "servings": 4,
+   "tags": [],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 10,
+   "description": "A delicate dish built around sumac.",
+   "ingredients": [
+    {
+     "food": "sumac",
+     "quantity": 2.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 8,
+     "unit": "gram"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 3,
+     "unit": "sprig"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 12,
+     "unit": "cup"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Deglaze the pan and scrape up the browned bits."
+   ],
+   "name": "Silver Radish Ragout",
+   "order": 43,
+   "prep_minutes": 40,
+   "servings": 4,
+   "tags": [
+    "budget",
+    "weeknight",
+    "one-pot"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner",
+    "Dessert"
+   ],
+   "cook_minutes": 0,
+   "description": "A smoky dish built around preserved lemon.",
+   "ingredients": [
+    {
+     "food": "preserved lemon",
+     "quantity": 0.25,
+     "unit": "gram"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 0.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "sumac",
+     "quantity": 3,
+     "unit": "sprig"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 100,
+     "unit": "clove"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 6,
+     "unit": "gram"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Season to taste and finish with the reserved garnish.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Rustic Nettle Galette",
+   "order": 44,
+   "prep_minutes": 60,
+   "servings": 8,
+   "tags": [],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch",
+    "Dessert"
+   ],
+   "cook_minutes": 90,
+   "description": "A bright dish built around brown butter.",
+   "ingredients": [
+    {
+     "food": "brown butter",
+     "quantity": 2.5,
+     "unit": "pinch"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 6,
+     "unit": "gram"
+    },
+    {
+     "food": "greek yogurt",
+     "quantity": 2.5,
+     "unit": "milliliter"
+    }
+   ],
+   "instructions": [
+    "Transfer to the prepared dish and level the surface.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Midnight Quince Crumble",
+   "order": 45,
+   "prep_minutes": 60,
+   "servings": 3,
+   "tags": [
+    "low-sodium",
+    "one-pot"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side"
+   ],
+   "cook_minutes": 120,
+   "description": "A delicate dish built around buttermilk.",
+   "ingredients": [
+    {
+     "food": "buttermilk",
+     "quantity": 1.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 100,
+     "unit": "sprig"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 2,
+     "unit": "milliliter"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 1,
+     "unit": "pinch"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 100,
+     "unit": "cup"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Heat the pan over medium heat and add the aromatics.",
+    "Toast the spices until fragrant, then grind coarsely."
+   ],
+   "name": "Crimson Buckwheat Crumble",
+   "order": 46,
+   "prep_minutes": 15,
+   "servings": 4,
+   "tags": [
+    "high-protein",
+    "kid-approved"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage",
+    "Breakfast"
+   ],
+   "cook_minutes": 15,
+   "description": "A hearty dish built around fresh dill.",
+   "ingredients": [
+    {
+     "food": "fresh dill",
+     "quantity": 3,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 6,
+     "unit": "cup"
+    },
+    {
+     "food": "red lentils",
+     "quantity": 12,
+     "unit": "gram"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 4,
+     "unit": "milliliter"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 250,
+     "unit": "gram"
+    },
+    {
+     "food": "buttermilk",
+     "quantity": 1,
+     "unit": "gram"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Transfer to the prepared dish and level the surface.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Blistered Turnip Gratin",
+   "order": 47,
+   "prep_minutes": 45,
+   "servings": 3,
+   "tags": [
+    "no-oven"
+   ],
+   "tools": [
+    "Dutch Oven",
+    "Wok"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Breakfast",
+    "Side"
+   ],
+   "cook_minutes": 45,
+   "description": "A hearty dish built around brown butter.",
+   "ingredients": [
+    {
+     "food": "brown butter",
+     "quantity": 6,
+     "unit": "sprig"
+    },
+    {
+     "food": "tahini",
+     "quantity": 0.25,
+     "unit": "gram"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 0.25,
+     "unit": "pinch"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 4,
+     "unit": "milliliter"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 8,
+     "unit": "cup"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 100,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Season to taste and finish with the reserved garnish.",
+    "Transfer to the prepared dish and level the surface.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Amber Fennel Ragout",
+   "order": 48,
+   "prep_minutes": 60,
+   "servings": 4,
+   "tags": [
+    "budget",
+    "batch-cook"
+   ],
+   "tools": [
+    "Stand Mixer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage"
+   ],
+   "cook_minutes": 60,
+   "description": "A smoky dish built around pomegranate molasses.",
+   "ingredients": [
+    {
+     "food": "pomegranate molasses",
+     "quantity": 0.25,
+     "unit": "sprig"
+    },
+    {
+     "food": "brown butter",
+     "quantity": 4,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 250,
+     "unit": "gram"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 6,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Simmer uncovered, stirring occasionally, until reduced by half.",
+    "Rest off the heat for ten minutes before serving.",
+    "Season to taste and finish with the reserved garnish.",
+    "Fold the dry ingredients into the wet mixture until just combined."
+   ],
+   "name": "Juniper Cardamom Crumble",
+   "order": 49,
+   "prep_minutes": 15,
+   "servings": 8,
+   "tags": [],
+   "tools": [
+    "Stand Mixer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner"
+   ],
+   "cook_minutes": 120,
+   "description": "A bright dish built around buttermilk.",
+   "ingredients": [
+    {
+     "food": "buttermilk",
+     "quantity": 6,
+     "unit": "cup"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 3,
+     "unit": "milliliter"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 1.5,
+     "unit": "cup"
+    },
+    {
+     "food": "sourdough starter",
+     "quantity": 0.5,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Heat the pan over medium heat and add the aromatics.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Copper Nettle Terrine",
+   "order": 50,
+   "prep_minutes": 40,
+   "servings": 8,
+   "tags": [
+    "picnic",
+    "make-ahead"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage",
+    "Soup"
+   ],
+   "cook_minutes": 60,
+   "description": "A delicate dish built around fresh dill.",
+   "ingredients": [
+    {
+     "food": "fresh dill",
+     "quantity": 3,
+     "unit": "cup"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 1,
+     "unit": "pinch"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 3,
+     "unit": "clove"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 100,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 4,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "sumac",
+     "quantity": 12,
+     "unit": "clove"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Toast the spices until fragrant, then grind coarsely."
+   ],
+   "name": "Sunlit Fennel Hash",
+   "order": 51,
+   "prep_minutes": 10,
+   "servings": 4,
+   "tags": [
+    "celebration"
+   ],
+   "tools": [
+    "Blender"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Soup"
+   ],
+   "cook_minutes": 10,
+   "description": "A brothy dish built around rye flour.",
+   "ingredients": [
+    {
+     "food": "rye flour",
+     "quantity": 2.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 2.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "sumac",
+     "quantity": 8,
+     "unit": "clove"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 4,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Toast the spices until fragrant, then grind coarsely.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Bramble Chestnut Hash",
+   "order": 52,
+   "prep_minutes": 10,
+   "servings": 8,
+   "tags": [
+    "celebration"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Snack"
+   ],
+   "cook_minutes": 15,
+   "description": "A bright dish built around sourdough starter.",
+   "ingredients": [
+    {
+     "food": "sourdough starter",
+     "quantity": 1,
+     "unit": "milliliter"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 100,
+     "unit": "milliliter"
+    },
+    {
+     "food": "smoked paprika",
+     "quantity": 1.5,
+     "unit": "pinch"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 0.5,
+     "unit": "milliliter"
+    },
+    {
+     "food": "sumac",
+     "quantity": 0.25,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 8,
+     "unit": "clove"
+    },
+    {
+     "food": "pearl barley",
+     "quantity": 0.25,
+     "unit": "cup"
+    }
+   ],
+   "instructions": [
+    "Heat the pan over medium heat and add the aromatics.",
+    "Season to taste and finish with the reserved garnish.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Hazel Parsnip Tartine",
+   "order": 53,
+   "prep_minutes": 60,
+   "servings": 4,
+   "tags": [
+    "weeknight",
+    "no-oven",
+    "kid-approved"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 0,
+   "description": "A delicate dish built around sherry vinegar.",
+   "ingredients": [
+    {
+     "food": "sherry vinegar",
+     "quantity": 12,
+     "unit": "gram"
+    },
+    {
+     "food": "sumac",
+     "quantity": 2,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 4,
+     "unit": "clove"
+    }
+   ],
+   "instructions": [
+    "Season to taste and finish with the reserved garnish.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Bramble Plantain Crumble",
+   "order": 54,
+   "prep_minutes": 20,
+   "servings": 2,
+   "tags": [
+    "weeknight"
+   ],
+   "tools": [
+    "Stand Mixer",
+    "Dutch Oven"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Side"
+   ],
+   "cook_minutes": 30,
+   "description": "A bright dish built around sumac.",
+   "ingredients": [
+    {
+     "food": "sumac",
+     "quantity": 250,
+     "unit": "gram"
+    },
+    {
+     "food": "chickpea flour",
+     "quantity": 1,
+     "unit": "cup"
+    },
+    {
+     "food": "walnut oil",
+     "quantity": 0.5,
+     "unit": "cup"
+    },
+    {
+     "food": "brown butter",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 0.25,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Season to taste and finish with the reserved garnish.",
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Juniper Radish Braise",
+   "order": 55,
+   "prep_minutes": 40,
+   "servings": 8,
+   "tags": [
+    "batch-cook",
+    "low-sodium",
+    "one-pot"
+   ],
+   "tools": [
+    "Blender",
+    "Stand Mixer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dessert"
+   ],
+   "cook_minutes": 120,
+   "description": "A smoky dish built around preserved lemon.",
+   "ingredients": [
+    {
+     "food": "preserved lemon",
+     "quantity": 2,
+     "unit": "pinch"
+    },
+    {
+     "food": "pomegranate molasses",
+     "quantity": 250,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "black garlic",
+     "quantity": 1,
+     "unit": "pinch"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 250,
+     "unit": "gram"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 3,
+     "unit": "cup"
+    },
+    {
+     "food": "sumac",
+     "quantity": 6,
+     "unit": "cup"
+    }
+   ],
+   "instructions": [
+    "Fold the dry ingredients into the wet mixture until just combined.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Thistle Parsnip Stew",
+   "order": 56,
+   "prep_minutes": 40,
+   "servings": 2,
+   "tags": [
+    "low-sodium"
+   ],
+   "tools": [
+    "Air Fryer"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Beverage"
+   ],
+   "cook_minutes": 120,
+   "description": "A delicate dish built around chickpea flour.",
+   "ingredients": [
+    {
+     "food": "chickpea flour",
+     "quantity": 12,
+     "unit": "sprig"
+    },
+    {
+     "food": "celeriac",
+     "quantity": 2.5,
+     "unit": "pinch"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 1,
+     "unit": "gram"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 0.25,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "preserved lemon",
+     "quantity": 1.5,
+     "unit": "sprig"
+    },
+    {
+     "food": "sherry vinegar",
+     "quantity": 0.25,
+     "unit": "tablespoon"
+    }
+   ],
+   "instructions": [
+    "Rest off the heat for ten minutes before serving.",
+    "Deglaze the pan and scrape up the browned bits.",
+    "Season to taste and finish with the reserved garnish.",
+    "Heat the pan over medium heat and add the aromatics."
+   ],
+   "name": "Marbled Quince Gratin",
+   "order": 57,
+   "prep_minutes": 5,
+   "servings": 4,
+   "tags": [
+    "low-sodium",
+    "no-oven"
+   ],
+   "tools": [
+    "Slow Cooker",
+    "Dutch Oven"
+   ],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Lunch",
+    "Snack"
+   ],
+   "cook_minutes": 45,
+   "description": "A bright dish built around wild rice.",
+   "ingredients": [
+    {
+     "food": "wild rice",
+     "quantity": 1.5,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "leeks",
+     "quantity": 0.5,
+     "unit": "pinch"
+    },
+    {
+     "food": "sweet potato",
+     "quantity": 2,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "tahini",
+     "quantity": 0.5,
+     "unit": "teaspoon"
+    },
+    {
+     "food": "harissa paste",
+     "quantity": 12,
+     "unit": "teaspoon"
+    }
+   ],
+   "instructions": [
+    "Deglaze the pan and scrape up the browned bits.",
+    "Rest off the heat for ten minutes before serving.",
+    "Simmer uncovered, stirring occasionally, until reduced by half."
+   ],
+   "name": "Juniper Turnip Stew",
+   "order": 58,
+   "prep_minutes": 40,
+   "servings": 4,
+   "tags": [
+    "batch-cook"
+   ],
+   "tools": [],
+   "yield_text": null
+  },
+  {
+   "categories": [
+    "Dinner"
+   ],
+   "cook_minutes": 45,
+   "description": "A smoky dish built around brown butter.",
+   "ingredients": [
+    {
+     "food": "brown butter",
+     "quantity": 250,
+     "unit": "milliliter"
+    },
+    {
+     "food": "sunflower seeds",
+     "quantity": 6,
+     "unit": "tablespoon"
+    },
+    {
+     "food": "fresh dill",
+     "quantity": 4,
+     "unit": "cup"
+    },
+    {
+     "food": "aged cheddar",
+     "quantity": 2,
+     "unit": "cup"
+    },
+    {
+     "food": "leeks",
+     "quantity": 12,
+     "unit": "gram"
+    },
+    {
+     "food": "wild rice",
+     "quantity": 2.5,
+     "unit": "sprig"
+    }
+   ],
+   "instructions": [
+    "Heat the pan over medium heat and add the aromatics.",
+    "Transfer to the prepared dish and level the surface.",
+    "Season to taste and finish with the reserved garnish."
+   ],
+   "name": "Ember Chard Ragout",
+   "order": 59,
+   "prep_minutes": 45,
+   "servings": 2,
+   "tags": [
+    "low-sodium"
+   ],
+   "tools": [
+    "Air Fryer",
+    "Stand Mixer"
+   ],
+   "yield_text": null
+  }
+ ],
+ "seed": 20260802,
+ "shopping_lists": [
+  {
+   "items": [
+    {
+     "checked": true,
+     "label": "Bakery",
+     "note": "chickpea flour",
+     "quantity": 3
+    },
+    {
+     "checked": false,
+     "label": "Produce",
+     "note": "preserved lemon",
+     "quantity": 1
+    },
+    {
+     "checked": true,
+     "label": null,
+     "note": "sherry vinegar",
+     "quantity": 3
+    },
+    {
+     "checked": false,
+     "label": null,
+     "note": "smoked paprika",
+     "quantity": 2
+    },
+    {
+     "checked": true,
+     "label": "Produce",
+     "note": "harissa paste",
+     "quantity": 1
+    }
+   ],
+   "name": "Weekly Staples"
+  },
+  {
+   "items": [
+    {
+     "checked": true,
+     "label": "Pantry",
+     "note": "celeriac",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": "Pantry",
+     "note": "rye flour",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": null,
+     "note": "tahini",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": "Frozen",
+     "note": "sumac",
+     "quantity": 6
+    },
+    {
+     "checked": true,
+     "label": null,
+     "note": "tahini",
+     "quantity": 6
+    }
+   ],
+   "name": "Farmers Market"
+  },
+  {
+   "items": [
+    {
+     "checked": false,
+     "label": null,
+     "note": "chickpea flour",
+     "quantity": 2
+    },
+    {
+     "checked": false,
+     "label": "Produce",
+     "note": "sourdough starter",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": "Bakery",
+     "note": "pomegranate molasses",
+     "quantity": 3
+    },
+    {
+     "checked": false,
+     "label": "Bakery",
+     "note": "sunflower seeds",
+     "quantity": 1
+    },
+    {
+     "checked": true,
+     "label": null,
+     "note": "fresh dill",
+     "quantity": 6
+    },
+    {
+     "checked": true,
+     "label": "Dairy",
+     "note": "black garlic",
+     "quantity": 6
+    },
+    {
+     "checked": true,
+     "label": "Pantry",
+     "note": "sumac",
+     "quantity": 2
+    },
+    {
+     "checked": false,
+     "label": "Bakery",
+     "note": "tahini",
+     "quantity": 2
+    },
+    {
+     "checked": false,
+     "label": "Dairy",
+     "note": "tahini",
+     "quantity": 4
+    },
+    {
+     "checked": true,
+     "label": "Pantry",
+     "note": "brown butter",
+     "quantity": 3
+    }
+   ],
+   "name": "Bulk Run"
+  },
+  {
+   "items": [
+    {
+     "checked": false,
+     "label": "Dairy",
+     "note": "sherry vinegar",
+     "quantity": 2
+    },
+    {
+     "checked": false,
+     "label": "Frozen",
+     "note": "celeriac",
+     "quantity": 6
+    },
+    {
+     "checked": true,
+     "label": "Produce",
+     "note": "harissa paste",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": "Frozen",
+     "note": "sumac",
+     "quantity": 1
+    },
+    {
+     "checked": true,
+     "label": "Pantry",
+     "note": "walnut oil",
+     "quantity": 2
+    }
+   ],
+   "name": "Holiday Prep"
+  },
+  {
+   "items": [
+    {
+     "checked": false,
+     "label": "Pantry",
+     "note": "pearl barley",
+     "quantity": 3
+    },
+    {
+     "checked": false,
+     "label": "Dairy",
+     "note": "black garlic",
+     "quantity": 3
+    },
+    {
+     "checked": false,
+     "label": null,
+     "note": "wild rice",
+     "quantity": 1
+    },
+    {
+     "checked": true,
+     "label": "Produce",
+     "note": "sumac",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": "Dairy",
+     "note": "sweet potato",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": "Pantry",
+     "note": "chickpea flour",
+     "quantity": 2
+    },
+    {
+     "checked": false,
+     "label": "Dairy",
+     "note": "smoked paprika",
+     "quantity": 2
+    },
+    {
+     "checked": true,
+     "label": "Pantry",
+     "note": "wild rice",
+     "quantity": 1
+    },
+    {
+     "checked": false,
+     "label": "Dairy",
+     "note": "sourdough starter",
+     "quantity": 2
+    },
+    {
+     "checked": true,
+     "label": "Frozen",
+     "note": "leeks",
+     "quantity": 2
+    }
+   ],
+   "name": "Quick Top-Up"
+  }
+ ],
+ "tags": [
+  "weeknight",
+  "make-ahead",
+  "one-pot",
+  "freezer-friendly",
+  "high-protein",
+  "low-sodium",
+  "kid-approved",
+  "picnic",
+  "batch-cook",
+  "no-oven",
+  "budget",
+  "celebration"
+ ],
+ "units": [
+  {
+   "abbreviation": "c",
+   "name": "cup"
+  },
+  {
+   "abbreviation": "tbsp",
+   "name": "tablespoon"
+  },
+  {
+   "abbreviation": "tsp",
+   "name": "teaspoon"
+  },
+  {
+   "abbreviation": "g",
+   "name": "gram"
+  },
+  {
+   "abbreviation": "ml",
+   "name": "milliliter"
+  },
+  {
+   "abbreviation": "clv",
+   "name": "clove"
+  },
+  {
+   "abbreviation": "sprig",
+   "name": "sprig"
+  },
+  {
+   "abbreviation": "pinch",
+   "name": "pinch"
+  }
+ ],
+ "users": [
+  {
+   "email": "dana.pike@f2a.local",
+   "full_name": "Dana Pike",
+   "username": "dpike"
+  },
+  {
+   "email": "noor.rowe@f2a.local",
+   "full_name": "Noor Rowe",
+   "username": "nrowe"
+  },
+  {
+   "email": "theo.vasquez@f2a.local",
+   "full_name": "Theo Vasquez",
+   "username": "tvasquez"
+  },
+  {
+   "email": "bea.foley@f2a.local",
+   "full_name": "Bea Foley",
+   "username": "bfoley"
+  }
+ ]
+}

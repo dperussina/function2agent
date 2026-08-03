@@ -1,0 +1,938 @@
+{
+ "_comment": "Arm (c2) postcondition derivations. Written by a human applying derivation-rules.md 'c2', in a step of its own, BEFORE the first judge call (PREREGISTRATION.md 7.1 construction order). This file is hashed into every run manifest, so a derivation added after a judge verdict is visible is mechanically detectable and is an amendment under rule 2 rather than a quiet edit.",
+ "_keying": "Entries are keyed by request signature (c2_postcond.request_signature: sha256 of the whitespace-normalised, lower-cased task prompt, first 16 hex). Keyed by the request, not by a task identifier, so the file stays a rule application and cannot become a per-task answer key. Each entry repeats the request text verbatim; c2_postcond.audit_all re-hashes it and rejects any entry whose text does not hash to its own key.",
+ "_coverage": "The derivation procedure was applied to EVERY request in the battery in one pass, including the ones it must refuse. Deriving only where a derivation was expected to succeed would select the numerator of MD_c2, so refusals are recorded as first-class entries with their reason rather than left absent.",
+ "_forbidden": "No expected value, no per-task tolerance, no task identifier, and no family name may appear in this file. c2_postcond.validate_derivation enforces all four mechanically: every literal a pipeline compares against must be declared in `literals` with a source, and a `prompt`-sourced literal must actually occur in the request text. An expected value does not occur in the text of the request that produced it.",
+ "_precision": "Every entry names the rung of derivation-rules.md's precision ladder its comparison rests on. Rung P1 (schema-declared precision) is EMPTY ON THIS TARGET: groundtruth/openapi.json contains no multipleOf and no numeric format in any of its 243 component schemas. See PREREGISTRATION.md Amendment B2.",
+
+ "derivations": {
+
+  "55e7ea2f3ff103b8": {
+   "request": "How many recipes are tagged 'weeknight'? Answer with the number only.",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "tags[].name", "test": "contains", "value": "weeknight"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "a cardinality is an integer by construction; no tolerance exists to choose"},
+   "literals": [{"value": "weeknight", "token": "weeknight", "source": "prompt"}],
+   "provenance": "openapi paths[/api/recipes] -> PaginationBase_RecipeSummary_.items -> RecipeSummary.tags[].name",
+   "status": "validated"
+  },
+
+  "7f47e4f2d0c7945e": {
+   "request": "How many recipes are filed under the 'Dessert' category?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "recipeCategory[].name", "test": "contains", "value": "Dessert"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": "Dessert", "token": "dessert", "source": "prompt"}],
+   "provenance": "openapi RecipeSummary.recipeCategory[] -> RecipeCategory.name",
+   "status": "validated"
+  },
+
+  "108e8924e10c174d": {
+   "request": "How many recipes have no tags on them at all?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "tags", "test": "is_empty"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [],
+   "provenance": "openapi RecipeSummary.tags (declared array); emptiness is a structural test and compares against no literal",
+   "status": "validated"
+  },
+
+  "afdd1b5c1b9df8dc": {
+   "request": "How many recipes list the 'Air Fryer' among their required tools?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "tools[].name", "test": "contains", "value": "Air Fryer"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": "Air Fryer", "token": "air fryer", "source": "prompt"}],
+   "provenance": "openapi RecipeSummary.tools[] -> RecipeTool.name",
+   "status": "validated"
+  },
+
+  "31ce6bbc66453bd3": {
+   "request": "How many shopping lists exist?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/shopping/lists"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [],
+   "provenance": "openapi paths[/api/households/shopping/lists] paginated envelope over ShoppingListOut",
+   "status": "validated"
+  },
+
+  "1f8129df34d8435f": {
+   "request": "How many entries are on the meal plan in total?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [],
+   "provenance": "openapi paths[/api/households/mealplans] paginated envelope over ReadPlanEntry",
+   "status": "validated"
+  },
+
+  "bbeb88600e5aef3d": {
+   "request": "How many recipes currently have a rating recorded on them?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/users/{id}/ratings"},
+    {"op": "filter", "field": "rating", "test": "not_null"},
+    {"op": "aggregate", "kind": "count_distinct", "field": "recipeId"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [],
+   "provenance": "openapi paths[/api/users/{id}/ratings] -> UserRatingOut.rating / UserRatingOut.recipeId. Read through the per-principal operation rather than RecipeSummary.rating, so the count does not depend on how the application reduces multiple principals to one column.",
+   "status": "validated"
+  },
+
+  "a6c4236821b9f448": {
+   "request": "How many user accounts exist on this instance?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/admin/users"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [],
+   "provenance": "openapi paths[/api/admin/users] paginated envelope over UserOut",
+   "status": "validated"
+  },
+
+  "f965a2eb6263eb0e": {
+   "request": "How many servings does the recipe 'Marbled Quince Gratin' make?",
+   "rule": "C2.scalar-field-readback",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "name", "test": "eq", "value": "Marbled Quince Gratin"},
+    {"op": "aggregate", "kind": "single", "field": "recipeServings"}
+   ],
+   "comparison": "exact_decimal",
+   "precision": {"rule": "P3_app_serialisation", "decimals": null, "source": "RecipeSummary.recipeServings is declared `type: number` with no multipleOf and no format; the comparison is exact at the decimals the application itself emits"},
+   "literals": [{"value": "Marbled Quince Gratin", "token": "marbled quince gratin", "source": "prompt"}],
+   "provenance": "openapi RecipeSummary.recipeServings",
+   "status": "validated"
+  },
+
+  "6dac91434f346251": {
+   "request": "What is the prep time, in minutes, of the recipe 'Juniper Turnip Stew'?",
+   "rule": "C2.scalar-field-readback",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "name", "test": "eq", "value": "Juniper Turnip Stew"},
+    {"op": "derive", "as": "prepMinutes", "fn": "duration_minutes", "field": "prepTime"},
+    {"op": "aggregate", "kind": "single", "field": "prepMinutes"}
+   ],
+   "comparison": "exact_decimal",
+   "precision": {"rule": "P3_app_serialisation", "decimals": null, "source": "RecipeSummary.prepTime is declared `anyOf: [string, null]` with no format, so the magnitude is read out of the application's own duration rendering and compared at the decimals that rendering emits"},
+   "literals": [{"value": "Juniper Turnip Stew", "token": "juniper turnip stew", "source": "prompt"}],
+   "provenance": "openapi RecipeSummary.prepTime",
+   "status": "validated"
+  },
+
+  "b6990785fac9b6cc": {
+   "request": "How many distinct measurement units are defined on this instance?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/units"},
+    {"op": "aggregate", "kind": "count_distinct", "field": "name"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [],
+   "provenance": "openapi paths[/api/units] -> IngredientUnit-Output.name",
+   "status": "validated"
+  },
+
+  "f6c0e4a510004aed": {
+   "request": "List the names of every recipe in the 'Breakfast' category. Give them comma-separated.",
+   "rule": "C2.set-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "recipeCategory[].name", "test": "contains", "value": "Breakfast"},
+    {"op": "aggregate", "kind": "set", "field": "name"}
+   ],
+   "comparison": "exact_set",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "set identity over declared string fields; no numeric precision applies"},
+   "literals": [{"value": "Breakfast", "token": "breakfast", "source": "prompt"}],
+   "provenance": "openapi RecipeSummary.recipeCategory[].name and RecipeSummary.name",
+   "status": "validated"
+  },
+
+  "4c94c999715d3c94": {
+   "request": "How many recipes use 'sumac' as an ingredient?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "filter", "field": "recipeIngredient[].food.name", "test": "contains", "value": "sumac"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": "sumac", "token": "sumac", "source": "prompt"}],
+   "provenance": "openapi Recipe-Output.recipeIngredient[] -> RecipeIngredient-Output.food -> IngredientFood-Output.name. The detail operation is used because RecipeSummary does not declare recipeIngredient.",
+   "status": "validated"
+  },
+
+  "9e85dbd6bac11319": {
+   "request": "How many recipes use both 'sumac' and 'wild rice' as ingredients?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "filter", "field": "recipeIngredient[].food.name", "test": "contains", "value": "sumac"},
+    {"op": "filter", "field": "recipeIngredient[].food.name", "test": "contains", "value": "wild rice"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [
+    {"value": "sumac", "token": "sumac", "source": "prompt"},
+    {"value": "wild rice", "token": "wild rice", "source": "prompt"}
+   ],
+   "provenance": "openapi Recipe-Output.recipeIngredient[].food.name",
+   "status": "validated"
+  },
+
+  "87da2084dd8ee6ba": {
+   "request": "Across every recipe tagged 'one-pot', how many ingredient lines are there in total?",
+   "rule": "C2.sum-of-declared-array-lengths",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "filter", "field": "tags[].name", "test": "contains", "value": "one-pot"},
+    {"op": "derive", "as": "ingredientLines", "fn": "length", "field": "recipeIngredient"},
+    {"op": "aggregate", "kind": "sum", "field": "ingredientLines"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "a sum of array lengths is an integer by construction"},
+   "literals": [{"value": "one-pot", "token": "one-pot", "source": "prompt"}],
+   "provenance": "openapi Recipe-Output.recipeIngredient (declared array) and RecipeSummary.tags[].name",
+   "status": "validated"
+  },
+
+  "88a715a0642b0f65": {
+   "request": "Of the recipes that appear at least once on the meal plan, how many are tagged 'weeknight'?",
+   "rule": "C2.count-over-joined-collections",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "filter", "field": "recipe.tags[].name", "test": "contains", "value": "weeknight"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": "weeknight", "token": "weeknight", "source": "prompt"}],
+   "provenance": "openapi ReadPlanEntry.recipeId and ReadPlanEntry.recipe -> RecipeSummary.tags[].name",
+   "status": "validated"
+  },
+
+  "47e40cec34184a44": {
+   "request": "Among the recipes scheduled on the meal plan, which one has the longest total time (prep plus cook)? Give the recipe name only.",
+   "rule": "C2.extremum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "derive", "as": "prepMinutes", "fn": "duration_minutes", "field": "recipe.prepTime"},
+    {"op": "derive", "as": "cookMinutes", "fn": "duration_minutes", "field": "recipe.cookTime"},
+    {"op": "derive", "as": "totalMinutes", "fn": "add", "fields": ["prepMinutes", "cookMinutes"]},
+    {"op": "aggregate", "kind": "argmax", "field": "totalMinutes", "label": "recipe.name"}
+   ],
+   "comparison": "exact_text",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "the answer is a declared string field; no numeric precision applies to the comparison"},
+   "literals": [],
+   "provenance": "openapi ReadPlanEntry.recipe -> RecipeSummary.prepTime / .cookTime / .name. totalTime is declared but the application returns it null, so the total is recomputed from the two declared components.",
+   "status": "provisional",
+   "note": "provisional: an argmax is undefined under a tie, and nothing in the contract declares a tie-break."
+  },
+
+  "08d6ff9edc1eb5d6": {
+   "request": "How many distinct recipes appear on the meal plan?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "aggregate", "kind": "count_distinct", "field": "recipeId"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [],
+   "provenance": "openapi ReadPlanEntry.recipeId",
+   "status": "validated"
+  },
+
+  "7c91b1798cad1073": {
+   "request": "How many meal plan entries fall on a Sunday?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "derive", "as": "weekdayName", "fn": "weekday", "field": "date"},
+    {"op": "filter", "field": "weekdayName", "test": "eq", "value": "sunday"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": "sunday", "token": "sunday", "source": "prompt"}],
+   "provenance": "openapi ReadPlanEntry.date, declared `format: date`; the weekday is a total function of a declared date and introduces no tolerance",
+   "status": "validated"
+  },
+
+  "574342b9fb070dec": {
+   "request": "Add up the prep times of every recipe in the 'Dessert' category. What is the total, in minutes?",
+   "rule": "C2.sum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "recipeCategory[].name", "test": "contains", "value": "Dessert"},
+    {"op": "derive", "as": "prepMinutes", "fn": "duration_minutes", "field": "prepTime"},
+    {"op": "aggregate", "kind": "sum", "field": "prepMinutes"}
+   ],
+   "comparison": "exact_decimal",
+   "precision": {"rule": "P3_app_serialisation", "decimals": null, "source": "the summands are the magnitudes the application serialises into prepTime; the sum is taken in decimal arithmetic and compared at the decimals that serialisation emits"},
+   "literals": [{"value": "Dessert", "token": "dessert", "source": "prompt"}],
+   "provenance": "openapi RecipeSummary.prepTime and RecipeSummary.recipeCategory[].name",
+   "status": "validated"
+  },
+
+  "64544e57a86bc6be": {
+   "request": "How many recipes have more than five ingredients and serve six or more people?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "derive", "as": "ingredientLines", "fn": "length", "field": "recipeIngredient"},
+    {"op": "filter", "field": "ingredientLines", "test": "gt", "value": 5},
+    {"op": "filter", "field": "recipeServings", "test": "gte", "value": 6},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [
+    {"value": 5, "token": "five", "source": "prompt"},
+    {"value": 6, "token": "six", "source": "prompt"}
+   ],
+   "provenance": "openapi Recipe-Output.recipeIngredient (array) and Recipe-Output.recipeServings",
+   "status": "validated"
+  },
+
+  "3522329086a946ce": {
+   "request": "Across all shopping lists, add up the quantities of every item that has already been checked off. What is the total?",
+   "rule": "C2.sum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/shopping/lists"},
+    {"op": "explode", "field": "listItems"},
+    {"op": "filter", "field": "checked", "test": "eq", "value": true},
+    {"op": "aggregate", "kind": "sum", "field": "quantity"}
+   ],
+   "comparison": "exact_decimal",
+   "precision": {"rule": "P3_app_serialisation", "decimals": null, "source": "ShoppingListItemOut-Output.quantity is declared `type: number` with no multipleOf; the summands are the decimals the application serialises and the sum is taken in decimal arithmetic"},
+   "literals": [{"value": true, "token": "checked off", "source": "prompt"}],
+   "provenance": "openapi ShoppingListOut.listItems[] -> ShoppingListItemOut-Output.checked / .quantity",
+   "status": "validated"
+  },
+
+  "2696f8b7e6cca46d": {
+   "request": "Which shopping list has the most unchecked items on it? Give the list name only.",
+   "rule": "C2.extremum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/shopping/lists"},
+    {"op": "derive", "as": "uncheckedItems", "fn": "count_where", "field": "listItems",
+     "where": {"field": "checked", "test": "eq", "value": false}},
+    {"op": "aggregate", "kind": "argmax", "field": "uncheckedItems", "label": "name"}
+   ],
+   "comparison": "exact_text",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "the answer is a declared string field"},
+   "literals": [{"value": false, "token": "unchecked", "source": "prompt"}],
+   "provenance": "openapi ShoppingListOut.name and ShoppingListOut.listItems[].checked",
+   "status": "provisional",
+   "note": "provisional: an argmax is undefined under a tie, and nothing in the contract declares a tie-break."
+  },
+
+  "f0087ab30ce30eb9": {
+   "request": "Which recipes use 'black garlic' as an ingredient? Give the recipe names, comma-separated.",
+   "rule": "C2.set-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "filter", "field": "recipeIngredient[].food.name", "test": "contains", "value": "black garlic"},
+    {"op": "aggregate", "kind": "set", "field": "name"}
+   ],
+   "comparison": "exact_set",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "set identity over declared string fields"},
+   "literals": [{"value": "black garlic", "token": "black garlic", "source": "prompt"}],
+   "provenance": "openapi Recipe-Output.recipeIngredient[].food.name and Recipe-Output.name",
+   "status": "validated"
+  },
+
+  "03ff518ced1eeb63": {
+   "request": "How many recipes are tagged 'batch-cook' and also filed under the 'Dessert' category?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "tags[].name", "test": "contains", "value": "batch-cook"},
+    {"op": "filter", "field": "recipeCategory[].name", "test": "contains", "value": "Dessert"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [
+    {"value": "batch-cook", "token": "batch-cook", "source": "prompt"},
+    {"value": "Dessert", "token": "dessert", "source": "prompt"}
+   ],
+   "provenance": "openapi RecipeSummary.tags[].name and RecipeSummary.recipeCategory[].name",
+   "status": "validated"
+  },
+
+  "94eb36bd2b548c66": {
+   "request": "Which cooking tool is required by the fewest recipes? Give the tool name only.",
+   "refused": "The projection is a per-organizer cardinality that must include organizers with zero members. No declared operation returns a recipe count per tool, and grouping the recipe collection by tool cannot produce a tool that no recipe references. The committed step vocabulary does not express a correlated count over a second collection, and inventing one after seeing the request would be a post-hoc clause under amendment rule 2.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi paths[/api/organizers/tools] -> RecipeTool declares householdsWithTool, not a recipe count",
+   "status": "provisional"
+  },
+
+  "1287e30872ea6030": {
+   "request": "How many recipes have a cook time of zero minutes and are tagged 'no-oven'?",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "derive", "as": "cookMinutes", "fn": "duration_minutes", "field": "cookTime"},
+    {"op": "filter", "field": "cookMinutes", "test": "eq", "value": 0},
+    {"op": "filter", "field": "tags[].name", "test": "contains", "value": "no-oven"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [
+    {"value": 0, "token": "zero", "source": "prompt"},
+    {"value": "no-oven", "token": "no-oven", "source": "prompt"}
+   ],
+   "provenance": "openapi RecipeSummary.cookTime and RecipeSummary.tags[].name",
+   "status": "validated"
+  },
+
+  "5f0ff8601e4cc334": {
+   "request": "How many recipes are rated four stars or higher but do not appear anywhere on the meal plan? Answer with the number only.",
+   "rule": "C2.count-over-joined-collections",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "rating", "test": "gte", "value": 4},
+    {"op": "anti_join", "operation": "/api/households/mealplans", "on": "id", "side_key": "recipeId"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": 4, "token": "four", "source": "prompt"}],
+   "provenance": "openapi RecipeSummary.rating, RecipeSummary.id, ReadPlanEntry.recipeId",
+   "status": "provisional",
+   "note": "provisional: RecipeSummary.rating reduces multiple principals to one number and the contract does not declare which reduction. See the cross-principal rule in derivation-rules.md."
+  },
+
+  "5ff8fb3c0007e900": {
+   "request": "Which recipes that appear on the meal plan use tahini? Give their names comma-separated.",
+   "rule": "C2.set-over-joined-collections",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "join", "operation": "/api/recipes/{slug}", "on": "recipe.slug", "side_key": "slug", "as": "detail"},
+    {"op": "filter", "field": "detail.recipeIngredient[].food.name", "test": "contains", "value": "tahini"},
+    {"op": "aggregate", "kind": "set", "field": "recipe.name"}
+   ],
+   "comparison": "exact_set",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "set identity over declared string fields"},
+   "literals": [{"value": "tahini", "token": "tahini", "source": "prompt"}],
+   "provenance": "openapi ReadPlanEntry.recipe -> RecipeSummary.slug joined to paths[/api/recipes/{slug}] -> Recipe-Output.recipeIngredient[].food.name",
+   "status": "validated"
+  },
+
+  "2df19a8e72c4d03e": {
+   "request": "Among the recipes scheduled on the meal plan two or more times, which has the highest rating? Answer with the recipe name only.",
+   "rule": "C2.extremum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "group", "by": "recipeId"},
+    {"op": "filter", "field": "count", "test": "gte", "value": 2},
+    {"op": "join", "operation": "/api/recipes", "on": "key", "side_key": "id", "as": "recipe"},
+    {"op": "aggregate", "kind": "argmax", "field": "recipe.rating", "label": "recipe.name"}
+   ],
+   "comparison": "exact_text",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "the answer is a declared string field"},
+   "literals": [{"value": 2, "token": "two", "source": "prompt"}],
+   "provenance": "openapi ReadPlanEntry.recipeId grouped, joined to RecipeSummary.id -> .rating / .name",
+   "status": "provisional",
+   "note": "provisional twice over: the rating reduction is undeclared, and an argmax is undefined under a tie."
+  },
+
+  "abf0322624c7b38f": {
+   "request": "Which recipes in the 'Dessert' category take more than 90 minutes in total, counting preparation and cooking together? Give their names comma-separated.",
+   "rule": "C2.set-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes"},
+    {"op": "filter", "field": "recipeCategory[].name", "test": "contains", "value": "Dessert"},
+    {"op": "derive", "as": "prepMinutes", "fn": "duration_minutes", "field": "prepTime"},
+    {"op": "derive", "as": "cookMinutes", "fn": "duration_minutes", "field": "cookTime"},
+    {"op": "derive", "as": "totalMinutes", "fn": "add", "fields": ["prepMinutes", "cookMinutes"]},
+    {"op": "filter", "field": "totalMinutes", "test": "gt", "value": 90},
+    {"op": "aggregate", "kind": "set", "field": "name"}
+   ],
+   "comparison": "exact_set",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "set identity over declared string fields"},
+   "literals": [
+    {"value": "Dessert", "token": "dessert", "source": "prompt"},
+    {"value": 90, "token": "90", "source": "prompt"}
+   ],
+   "provenance": "openapi RecipeSummary.recipeCategory[].name, .prepTime, .cookTime, .name",
+   "status": "validated"
+  },
+
+  "d8f083b4774030c8": {
+   "request": "What is the mean rating of the recipes that appear on the meal plan? Count each recipe once however many times it is scheduled, and ignore recipes with no rating. Give the answer to two decimal places.",
+   "rule": "C2.mean-over-joined-collections",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "filter", "field": "recipe.rating", "test": "not_null"},
+    {"op": "aggregate", "kind": "mean", "field": "recipe.rating"}
+   ],
+   "comparison": "decimal_at_declared_precision",
+   "precision": {"rule": "P4_request_declared", "decimals": 2, "source": "the request declares its own output precision ('to two decimal places'). Rung P1 is empty on this target — openapi.json declares no multipleOf and no numeric format — and rung P3 does not apply because a mean introduces precision the application never serialised. P4 is the first rung of the committed ladder that this projection reaches."},
+   "literals": [],
+   "provenance": "openapi ReadPlanEntry.recipeId and ReadPlanEntry.recipe -> RecipeSummary.rating",
+   "status": "provisional",
+   "note": "provisional: RecipeSummary.rating reduces multiple principals to one number and the contract does not declare which reduction."
+  },
+
+  "b7dca33873745070": {
+   "request": "Add up the ingredient lines of every recipe scheduled in a breakfast slot on the meal plan. Count each recipe once however many times it is scheduled. What is the total?",
+   "rule": "C2.sum-of-declared-array-lengths",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "filter", "field": "entryType", "test": "eq", "value": "breakfast"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "join", "operation": "/api/recipes/{slug}", "on": "recipe.slug", "side_key": "slug", "as": "detail"},
+    {"op": "derive", "as": "ingredientLines", "fn": "length", "field": "detail.recipeIngredient"},
+    {"op": "aggregate", "kind": "sum", "field": "ingredientLines"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "a sum of array lengths is an integer by construction"},
+   "literals": [{"value": "breakfast", "token": "breakfast", "source": "prompt"}],
+   "provenance": "openapi ReadPlanEntry.entryType (declared enum PlanEntryType) and Recipe-Output.recipeIngredient",
+   "status": "validated"
+  },
+
+  "e99e62371406cae7": {
+   "request": "Add up the total time, preparation plus cooking, of every recipe scheduled in a dinner slot on the meal plan. Count each recipe once. What is the total in minutes?",
+   "rule": "C2.sum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "filter", "field": "entryType", "test": "eq", "value": "dinner"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "derive", "as": "prepMinutes", "fn": "duration_minutes", "field": "recipe.prepTime"},
+    {"op": "derive", "as": "cookMinutes", "fn": "duration_minutes", "field": "recipe.cookTime"},
+    {"op": "derive", "as": "totalMinutes", "fn": "add", "fields": ["prepMinutes", "cookMinutes"]},
+    {"op": "aggregate", "kind": "sum", "field": "totalMinutes"}
+   ],
+   "comparison": "exact_decimal",
+   "precision": {"rule": "P3_app_serialisation", "decimals": null, "source": "the summands are the magnitudes the application serialises into prepTime and cookTime; summed in decimal arithmetic and compared at the decimals that serialisation emits"},
+   "literals": [{"value": "dinner", "token": "dinner", "source": "prompt"}],
+   "provenance": "openapi ReadPlanEntry.entryType and ReadPlanEntry.recipe -> RecipeSummary.prepTime / .cookTime",
+   "status": "validated"
+  },
+
+  "15cd62a3b6f0c4a8": {
+   "request": "How many recipes on the meal plan are rated below three stars? Count each recipe once however many times it is scheduled. Answer with the number only.",
+   "rule": "C2.count-over-joined-collections",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "filter", "field": "recipe.rating", "test": "not_null"},
+    {"op": "filter", "field": "recipe.rating", "test": "lt", "value": 3},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": 3, "token": "three", "source": "prompt"}],
+   "provenance": "openapi ReadPlanEntry.recipeId and ReadPlanEntry.recipe -> RecipeSummary.rating",
+   "status": "provisional",
+   "note": "provisional: RecipeSummary.rating reduces multiple principals to one number and the contract does not declare which reduction."
+  },
+
+  "4af6c759086110a8": {
+   "request": "Across every shopping list except 'Weekly Staples', add up the quantities of the items that are still unchecked. What is the total?",
+   "rule": "C2.sum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/shopping/lists"},
+    {"op": "filter", "field": "name", "test": "ne", "value": "Weekly Staples"},
+    {"op": "explode", "field": "listItems"},
+    {"op": "filter", "field": "checked", "test": "eq", "value": false},
+    {"op": "aggregate", "kind": "sum", "field": "quantity"}
+   ],
+   "comparison": "exact_decimal",
+   "precision": {"rule": "P3_app_serialisation", "decimals": null, "source": "ShoppingListItemOut-Output.quantity is declared `type: number` with no multipleOf; summed in decimal arithmetic at the decimals the application serialises"},
+   "literals": [
+    {"value": "Weekly Staples", "token": "weekly staples", "source": "prompt"},
+    {"value": false, "token": "unchecked", "source": "prompt"}
+   ],
+   "provenance": "openapi ShoppingListOut.name and ShoppingListOut.listItems[].checked / .quantity",
+   "status": "validated"
+  },
+
+  "cc93441b135559d6": {
+   "request": "Of the recipes that appear on the meal plan, which takes the longest in total, counting preparation and cooking together? Answer with the recipe name only.",
+   "rule": "C2.extremum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/households/mealplans"},
+    {"op": "dedupe", "field": "recipeId"},
+    {"op": "derive", "as": "prepMinutes", "fn": "duration_minutes", "field": "recipe.prepTime"},
+    {"op": "derive", "as": "cookMinutes", "fn": "duration_minutes", "field": "recipe.cookTime"},
+    {"op": "derive", "as": "totalMinutes", "fn": "add", "fields": ["prepMinutes", "cookMinutes"]},
+    {"op": "aggregate", "kind": "argmax", "field": "totalMinutes", "label": "recipe.name"}
+   ],
+   "comparison": "exact_text",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "the answer is a declared string field"},
+   "literals": [],
+   "provenance": "openapi ReadPlanEntry.recipe -> RecipeSummary.prepTime / .cookTime / .name",
+   "status": "provisional",
+   "note": "provisional: an argmax is undefined under a tie, and nothing in the contract declares a tie-break."
+  },
+
+  "a2a76c5a56b1249b": {
+   "request": "How many recipes have more than four instruction steps? Answer with the number only.",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "derive", "as": "instructionSteps", "fn": "length", "field": "recipeInstructions"},
+    {"op": "filter", "field": "instructionSteps", "test": "gt", "value": 4},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [{"value": 4, "token": "four", "source": "prompt"}],
+   "provenance": "openapi Recipe-Output.recipeInstructions (declared array of RecipeStep)",
+   "status": "validated"
+  },
+
+  "59d22cb6f194b59a": {
+   "request": "Add up the instruction steps of every recipe in the 'Dessert' category. What is the total?",
+   "rule": "C2.sum-of-declared-array-lengths",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "filter", "field": "recipeCategory[].name", "test": "contains", "value": "Dessert"},
+    {"op": "derive", "as": "instructionSteps", "fn": "length", "field": "recipeInstructions"},
+    {"op": "aggregate", "kind": "sum", "field": "instructionSteps"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "a sum of array lengths is an integer by construction"},
+   "literals": [{"value": "Dessert", "token": "dessert", "source": "prompt"}],
+   "provenance": "openapi Recipe-Output.recipeInstructions and Recipe-Output.recipeCategory[].name",
+   "status": "validated"
+  },
+
+  "ecc161fda9f1ac77": {
+   "request": "How many recipes have at least one ingredient measured in cups and at least one measured in grams? Answer with the number only.",
+   "rule": "C2.count-over-declared-collection",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "filter", "field": "recipeIngredient[].unit.name", "test": "contains", "value": "cup"},
+    {"op": "filter", "field": "recipeIngredient[].unit.name", "test": "contains", "value": "gram"},
+    {"op": "aggregate", "kind": "count"}
+   ],
+   "comparison": "exact_int",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "cardinality"},
+   "literals": [
+    {"value": "cup", "token": "cups", "source": "prompt"},
+    {"value": "gram", "token": "grams", "source": "prompt"}
+   ],
+   "provenance": "openapi Recipe-Output.recipeIngredient[].unit -> IngredientUnit-Output.name. The request's plural is matched against the singular the application stores in IngredientUnit-Output.name, which also declares pluralName; the singularisation is a morphological step over the request's own words, not a lookup of the answer.",
+   "status": "validated"
+  },
+
+  "7fdd306e8b1eadf5": {
+   "request": "Adding up the quantities of all its ingredient lines, which recipe has the largest total? Answer with the recipe name only.",
+   "rule": "C2.extremum-over-declared-fields",
+   "pipeline": [
+    {"op": "read", "operation": "/api/recipes/{slug}"},
+    {"op": "derive", "as": "quantityTotal", "fn": "sum_field", "field": "recipeIngredient[].quantity"},
+    {"op": "aggregate", "kind": "argmax", "field": "quantityTotal", "label": "name"}
+   ],
+   "comparison": "exact_text",
+   "precision": {"rule": "P0_exact_identity", "decimals": null, "source": "the answer is a declared string field"},
+   "literals": [],
+   "provenance": "openapi Recipe-Output.recipeIngredient[].quantity and Recipe-Output.name",
+   "status": "provisional",
+   "note": "provisional: an argmax is undefined under a tie, and nothing in the contract declares a tie-break."
+  },
+
+  "54605b08884f52e7": {
+   "request": "How many recipes require the Wok, and how many require both the Wok and the Air Fryer? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "rule": "C2.sequence-of-counts",
+   "parts": [
+    [
+     {"op": "read", "operation": "/api/recipes"},
+     {"op": "filter", "field": "tools[].name", "test": "contains", "value": "Wok"},
+     {"op": "aggregate", "kind": "count"}
+    ],
+    [
+     {"op": "read", "operation": "/api/recipes"},
+     {"op": "filter", "field": "tools[].name", "test": "contains", "value": "Wok"},
+     {"op": "filter", "field": "tools[].name", "test": "contains", "value": "Air Fryer"},
+     {"op": "aggregate", "kind": "count"}
+    ]
+   ],
+   "comparison": "sequence",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "each part is a cardinality"},
+   "literals": [
+    {"value": "Wok", "token": "wok", "source": "prompt"},
+    {"value": "Air Fryer", "token": "air fryer", "source": "prompt"}
+   ],
+   "provenance": "openapi RecipeSummary.tools[] -> RecipeTool.name. The request declares its own output arity ('exactly two numbers in that order'), which is what makes the sequence comparison a contract fact rather than a formatting guess.",
+   "status": "validated"
+  },
+
+  "e193eefbfd69501a": {
+   "request": "How many recipes serve six or more people, and how many serve twelve or more? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "rule": "C2.sequence-of-counts",
+   "parts": [
+    [
+     {"op": "read", "operation": "/api/recipes"},
+     {"op": "filter", "field": "recipeServings", "test": "gte", "value": 6},
+     {"op": "aggregate", "kind": "count"}
+    ],
+    [
+     {"op": "read", "operation": "/api/recipes"},
+     {"op": "filter", "field": "recipeServings", "test": "gte", "value": 12},
+     {"op": "aggregate", "kind": "count"}
+    ]
+   ],
+   "comparison": "sequence",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "each part is a cardinality"},
+   "literals": [
+    {"value": 6, "token": "six", "source": "prompt"},
+    {"value": 12, "token": "twelve", "source": "prompt"}
+   ],
+   "provenance": "openapi RecipeSummary.recipeServings",
+   "status": "validated"
+  },
+
+  "2a83131102dcbfb9": {
+   "request": "How many recipes carry the 'budget' tag, and how many carry both 'budget' and 'celebration'? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "rule": "C2.sequence-of-counts",
+   "parts": [
+    [
+     {"op": "read", "operation": "/api/recipes"},
+     {"op": "filter", "field": "tags[].name", "test": "contains", "value": "budget"},
+     {"op": "aggregate", "kind": "count"}
+    ],
+    [
+     {"op": "read", "operation": "/api/recipes"},
+     {"op": "filter", "field": "tags[].name", "test": "contains", "value": "budget"},
+     {"op": "filter", "field": "tags[].name", "test": "contains", "value": "celebration"},
+     {"op": "aggregate", "kind": "count"}
+    ]
+   ],
+   "comparison": "sequence",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "each part is a cardinality"},
+   "literals": [
+    {"value": "budget", "token": "budget", "source": "prompt"},
+    {"value": "celebration", "token": "celebration", "source": "prompt"}
+   ],
+   "provenance": "openapi RecipeSummary.tags[] -> RecipeTag.name",
+   "status": "validated"
+  },
+
+  "72bf0ccb215125e6": {
+   "request": "How many dinner entries are on the meal plan, and how many of those are for a recipe tagged 'batch-cook' that takes more than an hour in total? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "rule": "C2.sequence-of-counts",
+   "parts": [
+    [
+     {"op": "read", "operation": "/api/households/mealplans"},
+     {"op": "filter", "field": "entryType", "test": "eq", "value": "dinner"},
+     {"op": "aggregate", "kind": "count"}
+    ],
+    [
+     {"op": "read", "operation": "/api/households/mealplans"},
+     {"op": "filter", "field": "entryType", "test": "eq", "value": "dinner"},
+     {"op": "filter", "field": "recipe.tags[].name", "test": "contains", "value": "batch-cook"},
+     {"op": "derive", "as": "prepMinutes", "fn": "duration_minutes", "field": "recipe.prepTime"},
+     {"op": "derive", "as": "cookMinutes", "fn": "duration_minutes", "field": "recipe.cookTime"},
+     {"op": "derive", "as": "totalMinutes", "fn": "add", "fields": ["prepMinutes", "cookMinutes"]},
+     {"op": "filter", "field": "totalMinutes", "test": "gt", "value": 60},
+     {"op": "aggregate", "kind": "count"}
+    ]
+   ],
+   "comparison": "sequence",
+   "precision": {"rule": "P2_integer_closed", "decimals": null, "source": "each part is a cardinality"},
+   "literals": [
+    {"value": "dinner", "token": "dinner", "source": "prompt"},
+    {"value": "batch-cook", "token": "batch-cook", "source": "prompt"},
+    {"value": 60, "token": "hour", "source": "prompt"}
+   ],
+   "provenance": "openapi ReadPlanEntry.entryType and ReadPlanEntry.recipe -> RecipeSummary.tags / .prepTime / .cookTime. The threshold 60 is the request's own 'an hour' expressed in the minutes the application serialises durations in.",
+   "status": "validated"
+  },
+
+  "d72d1e3ccc3b3cb5": {
+   "request": "Export the August meal plan to Google Calendar and report the identifier of the calendar event that was created.",
+   "refused": "No declared operation or response property exposes the requested capability, so there is no postcondition to recompute. The correct contract response is abstention, which is arm (c1)'s abstention clause, not a c2 postcondition.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi declared paths and component schema properties contain no matching operation",
+   "status": "provisional"
+  },
+
+  "753c9573f75f5fcd": {
+   "request": "Which recipes has the user 'mcallister' rated four stars or higher? Give the recipe names.",
+   "refused": "The request names a principal that the declared user collection does not contain, so the read the projection depends on cannot be issued. c2 does not manufacture an empty result from a failed read; a read that cannot be issued is unverifiable, not a pass.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi paths[/api/admin/users] -> UserOut.username",
+   "status": "provisional"
+  },
+
+  "496757e103d94754": {
+   "request": "What is the carbon footprint score recorded for the recipe 'Juniper Turnip Stew'?",
+   "refused": "No declared response property exposes the requested attribute, so there is no postcondition to recompute.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi component schema properties contain no matching field",
+   "status": "provisional"
+  },
+
+  "9e2d82520a7edb69": {
+   "request": "How many recipes were archived in the last thirty days?",
+   "refused": "No declared response property records an archival event, so there is no postcondition to recompute.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi component schema properties contain no matching field",
+   "status": "provisional"
+  },
+
+  "115cd7a8053a38e2": {
+   "request": "Report the estimated cost per serving, in dollars, stored on the recipe 'Wild Millet Pilaf'.",
+   "refused": "No declared response property exposes the requested attribute, so there is no postcondition to recompute.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi component schema properties contain no matching field",
+   "status": "provisional"
+  },
+
+  "2d228666df56ffa1": {
+   "request": "Which recipes have been flagged by the spam filter? Give their names.",
+   "refused": "No declared operation or response property exposes the requested attribute, so there is no postcondition to recompute.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi declared paths and component schema properties contain no matching operation",
+   "status": "provisional"
+  },
+
+  "0b4bdc37541c0dd0": {
+   "request": "Set the prep time on the stew.",
+   "refused": "The request names neither a resource identifier nor a value, so no declared operation's parameters can be bound and no postcondition is expressible.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi declared parameters cannot be bound from the request",
+   "status": "provisional"
+  },
+
+  "d4eecda1efc98f1b": {
+   "request": "Add three items to the shopping list.",
+   "refused": "The request names neither a resource identifier nor the item values, so no declared operation's parameters can be bound and no postcondition is expressible.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi declared parameters cannot be bound from the request",
+   "status": "provisional"
+  },
+
+  "9dbc16a872b7127f": {
+   "request": "Schedule the galette for dinner.",
+   "refused": "The request names neither a unique resource nor a date, so no declared operation's parameters can be bound and no postcondition is expressible.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi declared parameters cannot be bound from the request",
+   "status": "provisional"
+  },
+
+  "3f77d9fabca1091a": {
+   "request": "Rename the list.",
+   "refused": "The request names neither a resource identifier nor a new value, so no declared operation's parameters can be bound and no postcondition is expressible.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi declared parameters cannot be bound from the request",
+   "status": "provisional"
+  },
+
+  "6636e00aa614a325": {
+   "request": "Delete the duplicate.",
+   "refused": "The request names no resource, so no declared operation's parameters can be bound and no postcondition is expressible.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "openapi declared parameters cannot be bound from the request",
+   "status": "provisional"
+  },
+
+  "658dc7033eadf14f": {
+   "request": "Create a new shopping list called 'Ceiling Test List'. Put exactly two items on it: 'red lentils' with quantity 3, and 'tahini' with quantity 1. Leave both unchecked.",
+   "refused": "A write request's postcondition is a statement about a state transition, and the pre-state is gone: the recomputation source holds one state, not the pair the transition is defined over. derivation-rules.md refuses write tasks for this reason.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "the recomputation source exposes current state only; no declared operation returns a prior state",
+   "status": "provisional"
+  },
+
+  "b2492664920da0c7": {
+   "request": "Put the recipe 'Wild Millet Pilaf' on the meal plan for 14 September 2026 as the dinner entry.",
+   "refused": "A write request's postcondition is a statement about a state transition, and the pre-state is gone.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "the recomputation source exposes current state only",
+   "status": "provisional"
+  },
+
+  "68870f11a21476c7": {
+   "request": "Add the tag 'weeknight' to the recipe 'Ember Chard Ragout', keeping any tags it already has.",
+   "refused": "A write request's postcondition is a statement about a state transition, and the pre-state is gone.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "the recomputation source exposes current state only",
+   "status": "provisional"
+  },
+
+  "40dd553d822da2c0": {
+   "request": "Every item on the 'Holiday Prep' shopping list has been bought. Mark them all as checked off.",
+   "refused": "A write request's postcondition is a statement about a state transition, and the pre-state is gone.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "the recomputation source exposes current state only",
+   "status": "provisional"
+  },
+
+  "9bfb9e04d13cf118": {
+   "request": "Add a new recipe named 'Ceiling Probe Casserole'. It serves 4, takes 35 minutes to prepare, and should carry the 'budget' tag.",
+   "refused": "A write request's postcondition is a statement about a state transition, and the pre-state is gone.",
+   "precision": {"rule": "P5_refuse", "decimals": null, "source": "not applicable to a refusal"},
+   "literals": [],
+   "provenance": "the recomputation source exposes current state only",
+   "status": "provisional"
+  }
+ }
+}

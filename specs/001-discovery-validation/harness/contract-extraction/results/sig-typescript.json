@@ -1,0 +1,51 @@
+{
+  "label": "TypeScript monorepo, verb-filtered routes (stale index, read-only)",
+  "language": "typescript",
+  "return_type_column_populated_nodes": 0,
+  "route_handler_return_resolution": {
+    "builtin_only": 291,
+    "names_an_unresolvable_type": 140,
+    "resolves_to_declared_type": 252,
+    "with_return": 683
+  },
+  "scopes": {
+    "all_callables": {
+      "counts": {
+        "both_components_parseable": 10179,
+        "has_parameters_all_typed": 12641,
+        "n": 22104,
+        "no_signature_recorded": 1,
+        "parameters_fully_structured": 16860,
+        "parameters_none_typed": 4933,
+        "parameters_partially_typed": 310,
+        "return_type_in_signature": 10381,
+        "return_type_uninformative": 970,
+        "zero_parameters": 4219
+      },
+      "rates": {
+        "both_components_parseable": 0.4605,
+        "parameters_fully_structured": 0.7628,
+        "return_type_in_signature": 0.4696
+      }
+    },
+    "route_handlers": {
+      "counts": {
+        "both_components_parseable": 664,
+        "has_parameters_all_typed": 570,
+        "n": 742,
+        "parameters_fully_structured": 709,
+        "parameters_none_typed": 25,
+        "parameters_partially_typed": 8,
+        "return_type_in_signature": 683,
+        "return_type_uninformative": 26,
+        "zero_parameters": 139
+      },
+      "rates": {
+        "both_components_parseable": 0.8949,
+        "parameters_fully_structured": 0.9555,
+        "return_type_in_signature": 0.9205
+      }
+    }
+  },
+  "total_nodes": 63783
+}

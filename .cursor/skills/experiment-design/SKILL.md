@@ -1,0 +1,192 @@
+---
+name: experiment-design
+description: Designs experiments and validation spikes that can actually falsify a claim about an agent system, and rejects designs that cannot. Use when planning a spike, benchmark, eval suite, A/B comparison, or ablation over agents; defining task success criteria or a grading rubric; proposing an LLM-as-judge; comparing single-agent against multi-agent or one tool surface against another; deciding what to measure before building a pipeline; or reviewing a result whose arms differ in more than one variable.
+---
+
+# Experiment design
+
+> **Standing: v1, unchanged — and it has a worked example now.** On 2026-08-02 a criterion
+> pre-registered in `11-validation-plan.md` §7, **before any experiment ran**, fired against the
+> interest of the people who wrote it and was honored as written: the product was re-scoped to about a
+> tenth of its planned size (`plan.md` OD-09). **Four things this skill teaches are what made that
+> possible, and they are worth pointing at rather than restating.** ① The falsifying arm was the one
+> *most likely to embarrass the product* — a shell, a socket and the app's own spec. ② A **ceiling
+> arm** of hand-written ideal tools meant the disappointing result could not be blamed on
+> implementation quality. ③ The thresholds were written down first and not moved. ④ A **second**
+> pre-registered rule — tool arm above 85% means the task set is mis-calibrated, draw no conclusion —
+> fired too, and removed two of the three families from the evidence base, leaving the re-scope
+> resting on **one family at n = 4** (U-42).
+>
+> **Read ④ as the load-bearing one.** A pre-registration that only ever fires in your favor is
+> decoration. Also note the honest weakness: the run was n = 4 per family against a power analysis
+> written for 45 tasks × 5 repeats — thresholds were not moved, but the instrument was smaller than
+> the one they were calibrated for.
+
+Source: `research/11-validation-plan.md` §3, §4, §7, §9.
+
+**The ordering principle: the cheapest experiment that can falsify the thesis runs first.** If the
+thesis is wrong, learn it in week one. Design backwards from "what result would make us stop."
+
+## Rule 1: no LLM judge in the primary success path
+
+**An LLM judge is anti-correlated with truth on false-success detection — AUROC 0.18–0.30.** A
+confident judge verdict is evidence *in the wrong direction*. Every primary outcome must be decided
+by something that executes.
+
+Acceptable primary oracles:
+
+- SQL assertions over a database diff against a **privately-seeded fixture** (the agent has never
+  seen the seed).
+- HTTP status codes and request records from a **recording proxy** — not the agent's own tool-call
+  log, which shows a call that returned 500 as having happened.
+- Exact match against a value computed by a hand-written reference query.
+- For writes: a target-state predicate plus a hand-written reference implementation, with
+  `expect_changes` recorded from its actual diff and `allow_changes` widened by hand for legitimate
+  alternative paths.
+
+**Run the judge anyway — as an object of study, never as a gate.** Its jobs are to produce judge
+AUROC against the oracle on your own corpus, to supply the denominator for "failures the judge
+missed that the contract verifier caught," and to give an honest number to put in front of the next
+person who proposes an LLM judge in the product. If it lands above 0.7 on your domain, that is a
+genuinely useful result that makes future evaluation cheaper — **but the decision to trust it comes
+after the measurement, never before.**
+
+### Task authoring: invert it
+
+Do not write a question and then hunt for the answer. **Compute the answer first, then phrase the
+question:**
+
+1. Generate candidate answers by running queries against the seeded fixture.
+2. Reject degenerate candidates automatically: empty results, zero counts, single-row answers
+   trivially first by primary key, anything obtainable from one unfiltered `GET /entity`.
+3. **Only now bring in an LLM — to phrase the query in natural language.** A human accepts or
+   rejects the phrasing. The model determines surface form and nothing about correctness.
+4. **Freeze** the task file, the generator seed, and the fixture hash **before any arm runs.**
+
+### Measure false success separately
+
+False success — the agent reports doing something it did not do — is the failure mode that matters
+operationally and the one judges are worst at. Four deterministic detectors, no model in any of
+them: **D1** answer/oracle mismatch with voluntary (non-budget-capped) termination; **D2**
+trace/claim divergence, where the final message asserts an action the proxy shows no successful
+request for; **D3** collateral damage (`D_Δ ⊄ C_expect ∪ C_allow`); **D4** null-task affirmation —
+confidently answering about a capability that does not exist, which is the cheapest signal available
+since there is no oracle to author.
+
+**Report FSR with failed tasks as the denominator, per detector and pooled.** A system at 40% task
+success with 5% false success is far more shippable than one at 60%/50%, and a single success-rate
+number hides that completely.
+
+## Rule 2: run the ceiling test before building anything
+
+**Hand-write the ideal tools first.** Roughly 20 tools written by an engineer who knows the app well
+— call this arm **A8** — measures the ceiling of the *idea* without building a synthesizer at all.
+Against the baseline arm **A0** (shell, read, grep, code search, no network to the app):
+
+- **A8 ≈ A0** → domain tools do not help on these tasks regardless of generation quality. **The
+  thesis is dead and it cost a week.**
+- **A8 ≫ A0** → there is real headroom, and every later question becomes the far more tractable
+  "how close does synthesis get to A8?"
+
+Once a synthesizer exists, the decomposition is clean and this is the whole point:
+
+```
+A8 − A0  =  the value of the idea
+A8 − A2  =  the quality of the synthesizer   (A2 = generated, selected tools)
+```
+
+**Without a ceiling arm those two are confounded, and every disappointing result stays ambiguous
+forever** — you can always attribute it to implementation quality and keep going indefinitely.
+
+**Make the baseline mean.** A0 should use a real coding-agent harness, not a hand-rolled loop. Add
+**A0b** — the baseline plus a running app, `curl`, and the OpenAPI JSON on disk — which separates
+"the value is synthesis" from "the value is merely access." A0b is the arm most likely to embarrass
+the product, which is exactly why it must exist.
+
+### Calibrate difficulty before freezing
+
+Run the strongest model on A8 first. Target roughly **20% of tasks solved by every arm, 20% solved
+by none, 60% discriminating.** Above 85% on A8 the tasks cannot separate arms; below 25% the corpus
+measures noise. Adjust **before** freezing, never after seeing arm results. Useful external anchor:
+frontier models score ~43.7% on MCP-Universe, so any design showing 90%+ in every arm is too easy.
+
+## Rule 3: hold the harness fixed — it swings 10–20 points
+
+**Benchmark scores swing 10–20 points on identical model weights depending on harness alone.** An
+uncontrolled harness difference will dwarf whatever you are trying to measure.
+
+| Hold fixed | Detail |
+|---|---|
+| **Model** | One pinned snapshot ID for the whole program, recorded in every result row. Re-run A0 at program end to detect provider-side drift |
+| **Harness** | One loop, one context assembler, one truncation policy, one retry policy, one termination rule set. Emit a `harness_fingerprint` hash of the harness source into every result row and **refuse to pool results across differing fingerprints** |
+| **System prompt** | One template with `{tool_list}` and `{role}` slots. **Per-arm prompt tuning is forbidden.** If one arm gets tuned, every arm gets the same tuning budget from the same person |
+| **Tool result handling** | Identical truncation limit and serialization across arms, **including the baseline's shell output** |
+| **Sampling** | Temperature, top-p, and reasoning effort fixed and recorded |
+| **Fixture** | Identical snapshot restored before every run; verify by hashing the restored DB |
+| **Task order** | Randomized per run with a recorded seed |
+| **Repeats** | n = 5 for headline arms, n = 3 for the rest |
+
+## Rule 4: always run the budget-matched control
+
+**Arm A5: a single agent given the multi-agent budget** — set to the *measured* mean spend of the
+best multi-agent arm, with everything else identical to the single-agent arm it derives from.
+
+**This is the control almost nobody runs, and without it a multi-agent win is uninterpretable**,
+because token spend alone explains most of the variance in agent benchmarks. If A5 matches the
+multi-agent arms, the topology contributed nothing and you bought a k× token bill for a
+presentation. See `multi-agent-topology-review`.
+
+The same logic generalizes: **whenever an arm gets more of a resource, add a control that gives the
+simpler arm the same resource.** More tools, more turns, more context, more wall clock — each one
+needs its matched control or the comparison measures the resource, not the design.
+
+## Rule 5: write kill criteria before running, and do not move them
+
+**Pre-register kill criteria as "stop," not as "investigate further."** State them in the plan
+document before any data exists, and **nominate the person empowered to call the kill before Phase 0
+begins.** Moving a threshold after seeing results is how a dead thesis survives for a year.
+
+Worked examples of well-formed criteria:
+
+| Result | Pre-registered consequence |
+|---|---|
+| A8 ≈ A0 | Thesis dead. Stop. Domain tools do not help here |
+| Contract verifier catches < 10 pp beyond the judge | Contract-derived verification is a CI detail, not a headline differentiator. **Adjust the product narrative honestly** |
+| Judge AUROC < 0.5 | Published anti-correlation replicated. **No LLM judge anywhere in the product's success path, ever.** Encode it in the constitution |
+| A5 ≈ best multi-agent arm | Multi-agent adds nothing beyond tokens. Ship the single agent |
+
+A criterion phrased as "if X, we will investigate further" is not a kill criterion. It is
+permission to continue.
+
+**Rows 2 and 3 are well-formed and *neither branch of either ever evaluated* — note this, because it
+is a failure mode pre-registration does not protect against.** Added 2026-08-03. The experiment that
+would have read them, E8, was pre-registered, built, self-tested and dry-run at **$0.00**, and then
+deliberately **not executed** by owner decision (`plan.md` OD-14). Both rows read a quantity defined
+over judge verdicts, **no judge verdict exists anywhere**, and three independent blockers — each
+sufficient alone, **all computable before the first call** — made the corpus unable to answer at any
+price: the gate's 10 pp boundary sat inside a single trace, three pre-registered riders capped the
+verdict independently of any result, and the only sound eligibility rule cost four of seven task
+families. **So nothing cleared these rows and nothing failed them**, and the hypothesis is closed
+UNMEASURED rather than answered — a null on *power*, not on the hypothesis.
+
+Two things to carry from that, both about the *instrument* rather than the thresholds. **A criterion
+can be written correctly and still never fire, and no property of the criterion tells you so** — what
+tells you is a power check against the corpus you will actually have, run before the corpus is
+frozen. And the corollary to ④ in the standing box above: *a pre-registration that only fires in your
+favour is decoration*, but **a pre-registration that never fires at all is the more expensive
+failure**, because it consumes the whole build and returns no evidence in either direction.
+([`14`](../../../research/14-architecture-synthesis.md) TL;DR 21, U-47;
+[finding 015](../../../specs/001-discovery-validation/findings/015-verifier-vs-judge-not-run.md).)
+
+## Spike hygiene
+
+**Spike code is disposable; the task corpus and its oracles are not.** The corpus outlives the
+spike; every file in `spike/` carries a delete-by date and may not be imported by v1. Track it
+explicitly — spike drift, where a spike that works becomes the thing you ship, is a governance
+failure rather than a technical one.
+
+Two related distinctions worth keeping straight: **cassette replay tests the plumbing; evaluations
+test the prompts.** And when annotating failures, an LLM may pre-sort traces to make human
+annotation faster, but **the label of record is human** — with a written codebook, two annotators,
+and Cohen's κ reported. Using a model's own annotation pipeline as the primary label reinherits the
+judge-reliability problem the whole design exists to route around.

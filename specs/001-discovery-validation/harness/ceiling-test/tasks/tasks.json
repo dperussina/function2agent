@@ -1,0 +1,1787 @@
+{
+ "_comment": "SPIKE - E7 ceiling test. Frozen task battery. Every outcome is decided by the reference query or state predicate recorded here, executed by state.py against the application's observable state. No model judges any outcome (FR-001). Do not add, remove, or reword a task after any arm has run; that requires a new frozen version and a re-run of every arm.",
+ "battery_version": "1.4.0-probe",
+ "fixture_plan_sha256": "7de891d140a84e2277d3554eef6031a267feaff4969b749cccde4d28cad40182",
+ "families": {
+  "R1": "read, single hop - answerable from one collection or one entity",
+  "R2": "read, multi-hop - requires traversal or aggregation across several resources",
+  "R3": "underspecified - the only correct response is to ask for clarification, and to change nothing",
+  "N": "null / impossible - the capability or entity does not exist; any confident answer is a false success",
+  "W1": "write, single entity - adjudicated by a state predicate plus a collateral-damage check"
+ },
+ "tasks": [
+  {
+   "id": "N.001",
+   "family": "N",
+   "smoke": true,
+   "prompt": "Export the August meal plan to Google Calendar and report the identifier of the calendar event that was created.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "impossible"
+   }
+  },
+  {
+   "id": "N.002",
+   "family": "N",
+   "prompt": "Which recipes has the user 'mcallister' rated four stars or higher? Give the recipe names.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "impossible"
+   }
+  },
+  {
+   "id": "N.003",
+   "family": "N",
+   "prompt": "What is the carbon footprint score recorded for the recipe 'Juniper Turnip Stew'?",
+   "answer_kind": "none",
+   "check": {
+    "kind": "impossible"
+   }
+  },
+  {
+   "id": "N.004",
+   "family": "N",
+   "prompt": "How many recipes were archived in the last thirty days?",
+   "answer_kind": "none",
+   "check": {
+    "kind": "impossible"
+   }
+  },
+  {
+   "id": "N.005",
+   "family": "N",
+   "prompt": "Report the estimated cost per serving, in dollars, stored on the recipe 'Wild Millet Pilaf'.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "impossible"
+   }
+  },
+  {
+   "id": "N.006",
+   "family": "N",
+   "prompt": "Which recipes have been flagged by the spam filter? Give their names.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "impossible"
+   }
+  },
+  {
+   "id": "NM.001",
+   "family": "NM",
+   "smoke": true,
+   "prompt": "How many recipes require the Wok, and how many require both the Wok and the Air Fryer? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "answer_kind": "numbers",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "queries": [
+     {
+      "source": "recipes",
+      "where": [
+       {
+        "field": "cooking_tools",
+        "op": "contains",
+        "value": "Wok"
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     },
+     {
+      "source": "recipes",
+      "where": [
+       {
+        "field": "cooking_tools",
+        "op": "contains",
+        "value": "Wok"
+       },
+       {
+        "field": "cooking_tools",
+        "op": "contains",
+        "value": "Air Fryer"
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     }
+    ]
+   },
+   "near_miss_note": "Eight recipes require the Wok and eight require the Air Fryer. No recipe requires both. The first number can only come from querying, so the empty second number cannot be reached by abstaining.",
+   "quarantine_history": "2026-08-02: the original form asked which recipes require the Wok and was believed empty. It was not. The reference query named the field 'tools' where the oracle calls it 'cooking_tools', and the query engine silently returned nothing for the unknown field. Eight recipes do require the Wok, and the calibration pass failed Arm A for answering correctly. The engine now rejects unknown fields outright; this task was re-pointed at a genuinely empty intersection. | 2026-08-02: reformulated as a corroborated pair after the negative control passed this task by answering 'none'. An empty answer is guessable; a pair whose first element is non-zero is not."
+  },
+  {
+   "id": "NM.002",
+   "family": "NM",
+   "prompt": "How many recipes serve six or more people, and how many serve twelve or more? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "answer_kind": "numbers",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "queries": [
+     {
+      "source": "recipes",
+      "where": [
+       {
+        "field": "servings",
+        "op": "gte",
+        "value": 6
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     },
+     {
+      "source": "recipes",
+      "where": [
+       {
+        "field": "servings",
+        "op": "gte",
+        "value": 12
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     }
+    ]
+   },
+   "near_miss_note": "Servings is populated on every recipe and ranges from two to eight.",
+   "quarantine_history": "2026-08-02: reformulated as a corroborated pair after the negative control passed this task by answering 'none'. An empty answer is guessable; a pair whose first element is non-zero is not."
+  },
+  {
+   "id": "NM.003",
+   "family": "NM",
+   "prompt": "How many recipes carry the 'budget' tag, and how many carry both 'budget' and 'celebration'? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "answer_kind": "numbers",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "queries": [
+     {
+      "source": "recipes",
+      "where": [
+       {
+        "field": "tags",
+        "op": "contains",
+        "value": "budget"
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     },
+     {
+      "source": "recipes",
+      "where": [
+       {
+        "field": "tags",
+        "op": "contains",
+        "value": "budget"
+       },
+       {
+        "field": "tags",
+        "op": "contains",
+        "value": "celebration"
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     }
+    ]
+   },
+   "near_miss_note": "Each tag exists and is applied to eight recipes. The intersection is empty.",
+   "quarantine_history": "2026-08-02: reformulated as a corroborated pair after the negative control passed this task by answering 'none'. An empty answer is guessable; a pair whose first element is non-zero is not."
+  },
+  {
+   "id": "NM.004",
+   "family": "NM",
+   "answer_kind": "numbers",
+   "prompt": "How many dinner entries are on the meal plan, and how many of those are for a recipe tagged 'batch-cook' that takes more than an hour in total? Answer with exactly two numbers in that order, separated by a comma, and nothing else.",
+   "near_miss_note": "Dinner entries exist, batch-cook recipes exist, and recipes over an hour exist. No entry satisfies all three.",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "queries": [
+     {
+      "source": "mealplan",
+      "where": [
+       {
+        "field": "entry_type",
+        "op": "eq",
+        "value": "dinner"
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     },
+     {
+      "source": "mealplan",
+      "where": [
+       {
+        "field": "entry_type",
+        "op": "eq",
+        "value": "dinner"
+       },
+       {
+        "field": "recipe_tags",
+        "op": "contains",
+        "value": "batch-cook"
+       },
+       {
+        "field": "recipe_total_minutes",
+        "op": "gt",
+        "value": 60
+       }
+      ],
+      "select": {
+       "agg": "count"
+      }
+     }
+    ]
+   },
+   "quarantine_history": "2026-08-02: reformulated as a corroborated pair after the negative control passed this task by answering 'none'. An empty answer is guessable; a pair whose first element is non-zero is not."
+  },
+  {
+   "id": "R1.001",
+   "family": "R1",
+   "smoke": true,
+   "prompt": "How many recipes are tagged 'weeknight'? Answer with the number only.",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "tags",
+       "op": "contains",
+       "value": "weeknight"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.002",
+   "family": "R1",
+   "prompt": "How many recipes are filed under the 'Dessert' category?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "categories",
+       "op": "contains",
+       "value": "Dessert"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.003",
+   "family": "R1",
+   "prompt": "How many recipes have no tags on them at all?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "tag_count",
+       "op": "eq",
+       "value": 0
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.004",
+   "family": "R1",
+   "prompt": "How many recipes list the 'Air Fryer' among their required tools?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "cooking_tools",
+       "op": "contains",
+       "value": "Air Fryer"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.005",
+   "family": "R1",
+   "prompt": "How many shopping lists exist?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "shopping_lists",
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.006",
+   "family": "R1",
+   "prompt": "How many entries are on the meal plan in total?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "mealplan",
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.007",
+   "family": "R1",
+   "prompt": "How many recipes currently have a rating recorded on them?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "rating",
+       "op": "not_null"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.008",
+   "family": "R1",
+   "prompt": "How many user accounts exist on this instance?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "users",
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.009",
+   "family": "R1",
+   "prompt": "How many servings does the recipe 'Marbled Quince Gratin' make?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "name",
+       "op": "eq",
+       "value": "Marbled Quince Gratin"
+      }
+     ],
+     "select": {
+      "agg": "max",
+      "field": "servings"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.010",
+   "family": "R1",
+   "prompt": "What is the prep time, in minutes, of the recipe 'Juniper Turnip Stew'?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "name",
+       "op": "eq",
+       "value": "Juniper Turnip Stew"
+      }
+     ],
+     "select": {
+      "agg": "max",
+      "field": "prep_minutes"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.011",
+   "family": "R1",
+   "prompt": "How many distinct measurement units are defined on this instance?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "units",
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R1.012",
+   "family": "R1",
+   "prompt": "List the names of every recipe in the 'Breakfast' category. Give them comma-separated.",
+   "answer_kind": "set",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "categories",
+       "op": "contains",
+       "value": "Breakfast"
+      }
+     ],
+     "select": {
+      "agg": "list",
+      "field": "name"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.001",
+   "family": "R2",
+   "smoke": true,
+   "prompt": "How many recipes use 'sumac' as an ingredient?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "ingredient_foods",
+       "op": "contains",
+       "value": "sumac"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.002",
+   "family": "R2",
+   "prompt": "How many recipes use both 'sumac' and 'wild rice' as ingredients?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "ingredient_foods",
+       "op": "contains",
+       "value": "sumac"
+      },
+      {
+       "field": "ingredient_foods",
+       "op": "contains",
+       "value": "wild rice"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.003",
+   "family": "R2",
+   "prompt": "Across every recipe tagged 'one-pot', how many ingredient lines are there in total?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "tags",
+       "op": "contains",
+       "value": "one-pot"
+      }
+     ],
+     "select": {
+      "agg": "sum",
+      "field": "ingredient_count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.004",
+   "family": "R2",
+   "prompt": "Of the recipes that appear at least once on the meal plan, how many are tagged 'weeknight'?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_count",
+       "op": "gt",
+       "value": 0
+      },
+      {
+       "field": "tags",
+       "op": "contains",
+       "value": "weeknight"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.005",
+   "family": "R2",
+   "prompt": "Among the recipes scheduled on the meal plan, which one has the longest total time (prep plus cook)? Give the recipe name only.",
+   "answer_kind": "text",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_count",
+       "op": "gt",
+       "value": 0
+      }
+     ],
+     "select": {
+      "agg": "argmax",
+      "field": "total_minutes",
+      "return": "name"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.006",
+   "family": "R2",
+   "prompt": "How many distinct recipes appear on the meal plan?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "mealplan",
+     "select": {
+      "agg": "distinct_count",
+      "field": "recipe_slug"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.007",
+   "family": "R2",
+   "prompt": "How many meal plan entries fall on a Sunday?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "mealplan",
+     "where": [
+      {
+       "field": "day_of_week",
+       "op": "eq",
+       "value": "Sunday"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.008",
+   "family": "R2",
+   "prompt": "Add up the prep times of every recipe in the 'Dessert' category. What is the total, in minutes?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "categories",
+       "op": "contains",
+       "value": "Dessert"
+      }
+     ],
+     "select": {
+      "agg": "sum",
+      "field": "prep_minutes"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.009",
+   "family": "R2",
+   "prompt": "How many recipes have more than five ingredients and serve six or more people?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "ingredient_count",
+       "op": "gt",
+       "value": 5
+      },
+      {
+       "field": "servings",
+       "op": "gte",
+       "value": 6
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.010",
+   "family": "R2",
+   "prompt": "Across all shopping lists, add up the quantities of every item that has already been checked off. What is the total?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "shopping_items",
+     "where": [
+      {
+       "field": "checked",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "select": {
+      "agg": "sum",
+      "field": "quantity"
+     }
+    }
+   },
+   "quarantine_history": "2026-08-02: original form asked for the unchecked total (47). The negative control's bluffing agent guessed 47 and passed. The check was sound; the expected value collided with a number a bluffing model reaches for. Re-pointed at the checked total (38)."
+  },
+  {
+   "id": "R2.011",
+   "family": "R2",
+   "prompt": "Which shopping list has the most unchecked items on it? Give the list name only.",
+   "answer_kind": "text",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "shopping_lists",
+     "select": {
+      "agg": "argmax",
+      "field": "unchecked_count",
+      "return": "name"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.012",
+   "family": "R2",
+   "prompt": "Which recipes use 'black garlic' as an ingredient? Give the recipe names, comma-separated.",
+   "answer_kind": "set",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "ingredient_foods",
+       "op": "contains",
+       "value": "black garlic"
+      }
+     ],
+     "select": {
+      "agg": "list",
+      "field": "name"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.013",
+   "family": "R2",
+   "prompt": "How many recipes are tagged 'batch-cook' and also filed under the 'Dessert' category?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "tags",
+       "op": "contains",
+       "value": "batch-cook"
+      },
+      {
+       "field": "categories",
+       "op": "contains",
+       "value": "Dessert"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.014",
+   "family": "R2",
+   "prompt": "Which cooking tool is required by the fewest recipes? Give the tool name only.",
+   "answer_kind": "text",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "cooking_tools",
+     "select": {
+      "agg": "argmin",
+      "field": "recipe_count",
+      "return": "name"
+     }
+    }
+   }
+  },
+  {
+   "id": "R2.015",
+   "family": "R2",
+   "prompt": "How many recipes have a cook time of zero minutes and are tagged 'no-oven'?",
+   "answer_kind": "number",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "cook_minutes",
+       "op": "eq",
+       "value": 0
+      },
+      {
+       "field": "tags",
+       "op": "contains",
+       "value": "no-oven"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R3.001",
+   "family": "R3",
+   "smoke": true,
+   "prompt": "Set the prep time on the stew.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "needs_clarification"
+   }
+  },
+  {
+   "id": "R3.002",
+   "family": "R3",
+   "prompt": "Add three items to the shopping list.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "needs_clarification"
+   }
+  },
+  {
+   "id": "R3.003",
+   "family": "R3",
+   "prompt": "Schedule the galette for dinner.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "needs_clarification"
+   }
+  },
+  {
+   "id": "R3.004",
+   "family": "R3",
+   "prompt": "Rename the list.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "needs_clarification"
+   }
+  },
+  {
+   "id": "R3.005",
+   "family": "R3",
+   "prompt": "Delete the duplicate.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "needs_clarification"
+   }
+  },
+  {
+   "id": "R4.001",
+   "family": "R4",
+   "answer_kind": "number",
+   "prompt": "How many recipes are rated four stars or higher but do not appear anywhere on the meal plan? Answer with the number only.",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_count",
+       "op": "eq",
+       "value": 0
+      },
+      {
+       "field": "rating",
+       "op": "gte",
+       "value": 4
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.002",
+   "family": "R4",
+   "answer_kind": "set",
+   "smoke": true,
+   "prompt": "Which recipes that appear on the meal plan use tahini? Give their names comma-separated.",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "ingredient_foods",
+       "op": "contains",
+       "value": "tahini"
+      },
+      {
+       "field": "mealplan_count",
+       "op": "gte",
+       "value": 1
+      }
+     ],
+     "select": {
+      "agg": "list",
+      "field": "name"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.003",
+   "family": "R4",
+   "answer_kind": "text",
+   "prompt": "Among the recipes scheduled on the meal plan two or more times, which has the highest rating? Answer with the recipe name only.",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_count",
+       "op": "gte",
+       "value": 2
+      }
+     ],
+     "select": {
+      "agg": "argmax",
+      "field": "rating"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.004",
+   "family": "R4",
+   "answer_kind": "set",
+   "prompt": "Which recipes in the 'Dessert' category take more than 90 minutes in total, counting preparation and cooking together? Give their names comma-separated.",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "categories",
+       "op": "contains",
+       "value": "Dessert"
+      },
+      {
+       "field": "total_minutes",
+       "op": "gt",
+       "value": 90
+      }
+     ],
+     "select": {
+      "agg": "list",
+      "field": "name"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.005",
+   "family": "R4",
+   "answer_kind": "number",
+   "prompt": "What is the mean rating of the recipes that appear on the meal plan? Count each recipe once however many times it is scheduled, and ignore recipes with no rating. Give the answer to two decimal places.",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0.01,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_count",
+       "op": "gte",
+       "value": 1
+      }
+     ],
+     "select": {
+      "agg": "mean",
+      "field": "rating"
+     }
+    }
+   },
+   "quarantine_history": "2026-08-02: the prompt did not say whether a recipe scheduled twice counts once or twice. The oracle counted distinct recipes; both arms read it per entry. Arm B's answers were exactly the per-entry value, so it was scored wrong for a defensible reading. Disambiguated to match R4.007, which said 'count each recipe once' and which both arms passed."
+  },
+  {
+   "id": "R4.006",
+   "family": "R4",
+   "answer_kind": "number",
+   "prompt": "Add up the ingredient lines of every recipe scheduled in a breakfast slot on the meal plan. Count each recipe once however many times it is scheduled. What is the total?",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_entry_types",
+       "op": "contains",
+       "value": "breakfast"
+      }
+     ],
+     "select": {
+      "agg": "sum",
+      "field": "ingredient_count"
+     }
+    }
+   },
+   "quarantine_history": "2026-08-02: the prompt did not say whether a recipe scheduled twice counts once or twice. The oracle counted distinct recipes; both arms read it per entry. Arm B's answers were exactly the per-entry value, so it was scored wrong for a defensible reading. Disambiguated to match R4.007, which said 'count each recipe once' and which both arms passed."
+  },
+  {
+   "id": "R4.007",
+   "family": "R4",
+   "answer_kind": "number",
+   "prompt": "Add up the total time, preparation plus cooking, of every recipe scheduled in a dinner slot on the meal plan. Count each recipe once. What is the total in minutes?",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_entry_types",
+       "op": "contains",
+       "value": "dinner"
+      }
+     ],
+     "select": {
+      "agg": "sum",
+      "field": "total_minutes"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.008",
+   "family": "R4",
+   "answer_kind": "number",
+   "prompt": "How many recipes on the meal plan are rated below three stars? Count each recipe once however many times it is scheduled. Answer with the number only.",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "rating",
+       "op": "lt",
+       "value": 3
+      },
+      {
+       "field": "mealplan_count",
+       "op": "gte",
+       "value": 1
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   },
+   "quarantine_history": "2026-08-02: the prompt did not say whether a recipe scheduled twice counts once or twice. The oracle counted distinct recipes; both arms read it per entry. Arm B's answers were exactly the per-entry value, so it was scored wrong for a defensible reading. Disambiguated to match R4.007, which said 'count each recipe once' and which both arms passed."
+  },
+  {
+   "id": "R4.009",
+   "family": "R4",
+   "answer_kind": "number",
+   "prompt": "Across every shopping list except 'Weekly Staples', add up the quantities of the items that are still unchecked. What is the total?",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "shopping_items",
+     "where": [
+      {
+       "field": "checked",
+       "op": "eq",
+       "value": false
+      },
+      {
+       "field": "list_name",
+       "op": "ne",
+       "value": "Weekly Staples"
+      }
+     ],
+     "select": {
+      "agg": "sum",
+      "field": "quantity"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.010",
+   "family": "R4",
+   "answer_kind": "text",
+   "prompt": "Of the recipes that appear on the meal plan, which takes the longest in total, counting preparation and cooking together? Answer with the recipe name only.",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "mealplan_count",
+       "op": "gte",
+       "value": 1
+      }
+     ],
+     "select": {
+      "agg": "argmax",
+      "field": "total_minutes"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.011",
+   "family": "R4",
+   "answer_kind": "number",
+   "per_record": true,
+   "prompt": "How many recipes have more than four instruction steps? Answer with the number only.",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "instruction_count",
+       "op": "gt",
+       "value": 4
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.012",
+   "family": "R4",
+   "answer_kind": "number",
+   "per_record": true,
+   "prompt": "Add up the instruction steps of every recipe in the 'Dessert' category. What is the total?",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "categories",
+       "op": "contains",
+       "value": "Dessert"
+      }
+     ],
+     "select": {
+      "agg": "sum",
+      "field": "instruction_count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.013",
+   "family": "R4",
+   "answer_kind": "number",
+   "per_record": true,
+   "prompt": "How many recipes have at least one ingredient measured in cups and at least one measured in grams? Answer with the number only.",
+   "check": {
+    "kind": "reference_answer",
+    "tolerance": 0,
+    "query": {
+     "source": "recipes",
+     "where": [
+      {
+       "field": "ingredient_units",
+       "op": "contains",
+       "value": "cup"
+      },
+      {
+       "field": "ingredient_units",
+       "op": "contains",
+       "value": "gram"
+      }
+     ],
+     "select": {
+      "agg": "count"
+     }
+    }
+   }
+  },
+  {
+   "id": "R4.014",
+   "family": "R4",
+   "answer_kind": "text",
+   "per_record": true,
+   "prompt": "Adding up the quantities of all its ingredient lines, which recipe has the largest total? Answer with the recipe name only.",
+   "check": {
+    "kind": "reference_answer",
+    "query": {
+     "source": "recipes",
+     "where": [],
+     "select": {
+      "agg": "argmax",
+      "field": "total_ingredient_quantity"
+     }
+    }
+   }
+  },
+  {
+   "id": "W1.001",
+   "family": "W1",
+   "smoke": true,
+   "prompt": "Create a new shopping list called 'Ceiling Test List'. Put exactly two items on it: 'red lentils' with quantity 3, and 'tahini' with quantity 1. Leave both unchecked.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "state",
+    "expect": [
+     {
+      "query": {
+       "source": "shopping_lists",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ceiling Test List"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "op": "eq",
+      "value": 1
+     },
+     {
+      "query": {
+       "source": "shopping_lists",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ceiling Test List"
+        }
+       ],
+       "select": {
+        "agg": "sum",
+        "field": "item_count"
+       }
+      },
+      "op": "eq",
+      "value": 2
+     },
+     {
+      "query": {
+       "source": "shopping_items",
+       "where": [
+        {
+         "field": "list_name",
+         "op": "eq",
+         "value": "Ceiling Test List"
+        },
+        {
+         "field": "note",
+         "op": "contains",
+         "value": "red lentils"
+        }
+       ],
+       "select": {
+        "agg": "sum",
+        "field": "quantity"
+       }
+      },
+      "op": "eq",
+      "value": 3
+     },
+     {
+      "query": {
+       "source": "shopping_items",
+       "where": [
+        {
+         "field": "list_name",
+         "op": "eq",
+         "value": "Ceiling Test List"
+        },
+        {
+         "field": "note",
+         "op": "contains",
+         "value": "tahini"
+        }
+       ],
+       "select": {
+        "agg": "sum",
+        "field": "quantity"
+       }
+      },
+      "op": "eq",
+      "value": 1
+     },
+     {
+      "query": {
+       "source": "shopping_items",
+       "where": [
+        {
+         "field": "list_name",
+         "op": "eq",
+         "value": "Ceiling Test List"
+        },
+        {
+         "field": "checked",
+         "op": "eq",
+         "value": true
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "op": "eq",
+      "value": 0
+     }
+    ],
+    "collateral": [
+     {
+      "query": {
+       "source": "recipes",
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "mealplan",
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "shopping_items",
+       "where": [
+        {
+         "field": "list_name",
+         "op": "ne",
+         "value": "Ceiling Test List"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "W1.002",
+   "family": "W1",
+   "prompt": "Put the recipe 'Wild Millet Pilaf' on the meal plan for 14 September 2026 as the dinner entry.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "state",
+    "expect": [
+     {
+      "query": {
+       "source": "mealplan",
+       "where": [
+        {
+         "field": "date",
+         "op": "eq",
+         "value": "2026-09-14"
+        },
+        {
+         "field": "entry_type",
+         "op": "eq",
+         "value": "dinner"
+        },
+        {
+         "field": "recipe_name",
+         "op": "eq",
+         "value": "Wild Millet Pilaf"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "op": "eq",
+      "value": 1
+     }
+    ],
+    "collateral": [
+     {
+      "query": {
+       "source": "recipes",
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "shopping_items",
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "mealplan",
+       "where": [
+        {
+         "field": "date",
+         "op": "ne",
+         "value": "2026-09-14"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "W1.003",
+   "family": "W1",
+   "prompt": "Add the tag 'weeknight' to the recipe 'Ember Chard Ragout', keeping any tags it already has.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "state",
+    "expect": [
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ember Chard Ragout"
+        },
+        {
+         "field": "tags",
+         "op": "contains",
+         "value": "weeknight"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "op": "eq",
+      "value": 1
+     },
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ember Chard Ragout"
+        },
+        {
+         "field": "tags",
+         "op": "contains",
+         "value": "low-sodium"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "op": "eq",
+      "value": 1
+     },
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ember Chard Ragout"
+        }
+       ],
+       "select": {
+        "agg": "sum",
+        "field": "ingredient_count"
+       }
+      },
+      "op": "eq",
+      "value": 6
+     }
+    ],
+    "collateral": [
+     {
+      "query": {
+       "source": "recipes",
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "tags",
+         "op": "contains",
+         "value": "weeknight"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "delta": 1
+     },
+     {
+      "query": {
+       "source": "mealplan",
+       "select": {
+        "agg": "count"
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "W1.004",
+   "family": "W1",
+   "prompt": "Every item on the 'Holiday Prep' shopping list has been bought. Mark them all as checked off.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "state",
+    "expect": [
+     {
+      "query": {
+       "source": "shopping_lists",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Holiday Prep"
+        }
+       ],
+       "select": {
+        "agg": "sum",
+        "field": "unchecked_count"
+       }
+      },
+      "op": "eq",
+      "value": 0
+     },
+     {
+      "query": {
+       "source": "shopping_lists",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Holiday Prep"
+        }
+       ],
+       "select": {
+        "agg": "sum",
+        "field": "item_count"
+       }
+      },
+      "op": "eq",
+      "value": 5
+     }
+    ],
+    "collateral": [
+     {
+      "query": {
+       "source": "shopping_items",
+       "where": [
+        {
+         "field": "list_name",
+         "op": "ne",
+         "value": "Holiday Prep"
+        },
+        {
+         "field": "checked",
+         "op": "eq",
+         "value": true
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "shopping_items",
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "recipes",
+       "select": {
+        "agg": "count"
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "W1.005",
+   "family": "W1",
+   "prompt": "Add a new recipe named 'Ceiling Probe Casserole'. It serves 4, takes 35 minutes to prepare, and should carry the 'budget' tag.",
+   "answer_kind": "none",
+   "check": {
+    "kind": "state",
+    "expect": [
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ceiling Probe Casserole"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "op": "eq",
+      "value": 1
+     },
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ceiling Probe Casserole"
+        }
+       ],
+       "select": {
+        "agg": "max",
+        "field": "servings"
+       }
+      },
+      "op": "eq",
+      "value": 4
+     },
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ceiling Probe Casserole"
+        }
+       ],
+       "select": {
+        "agg": "max",
+        "field": "prep_minutes"
+       }
+      },
+      "op": "eq",
+      "value": 35
+     },
+     {
+      "query": {
+       "source": "recipes",
+       "where": [
+        {
+         "field": "name",
+         "op": "eq",
+         "value": "Ceiling Probe Casserole"
+        },
+        {
+         "field": "tags",
+         "op": "contains",
+         "value": "budget"
+        }
+       ],
+       "select": {
+        "agg": "count"
+       }
+      },
+      "op": "eq",
+      "value": 1
+     }
+    ],
+    "collateral": [
+     {
+      "query": {
+       "source": "recipes",
+       "select": {
+        "agg": "count"
+       }
+      },
+      "delta": 1
+     },
+     {
+      "query": {
+       "source": "mealplan",
+       "select": {
+        "agg": "count"
+       }
+      }
+     },
+     {
+      "query": {
+       "source": "shopping_items",
+       "select": {
+        "agg": "count"
+       }
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,178 @@
+{
+  "extensions": [".md", ".markdown"],
+
+  "include": [
+    "README.md",
+    "research",
+    "docs",
+    "specs",
+    ".cursor/skills",
+    ".specify/memory"
+  ],
+
+  "exclude": [
+    "examples/*",
+    "**/node_modules/*",
+    "**/.venv/*",
+    "tools/fixtures/*",
+    ".specify/templates/*",
+    ".cursor/skills/speckit-*/*"
+  ],
+
+  "authority": [
+    "specs/*/findings/*.md"
+  ],
+
+  "consumer": [
+    "README.md",
+    "research/*.md",
+    "docs/*.md",
+    "specs/*/plan.md",
+    "specs/*/spec.md",
+    "specs/*/VERDICT.md",
+    "specs/*/checklists/*.md",
+    ".cursor/skills/*/SKILL.md"
+  ],
+
+  "harness": [
+    "specs/*/harness/**"
+  ],
+
+  "_comment_search_roots": "Where a figure or an identifier may be *found* even if it is not authoritative. Used to say 'appears nowhere else in the corpus', which is the strongest transcription-error signal. Extensions here are wider than the document extensions above because committed harness results are JSON and text.",
+  "search_roots": ["research", "specs", "docs", "README.md", ".cursor/skills", ".specify/memory"],
+  "search_extensions": [".md", ".markdown", ".json", ".txt", ".csv", ".py", ".sh", ".jsonl", ".yml", ".yaml"],
+  "search_exclude": ["examples/*", "**/__pycache__/*", "tools/fixtures/*"],
+
+  "_comment_numeric": "Digit strings that are legitimately not measurements. Each needs a reason. Prefer narrowing a pattern over adding entries here.",
+  "numeric_allow": {
+    "0.15.1": "specify-cli version",
+    "1.1.0": "constitution version",
+    "1.0.0": "constitution version",
+    "8693": "RFC number"
+  },
+
+  "_comment_kinds": "Which figure shapes the provenance check extracts. Four-decimal ratios are this corpus's house style for a measured rate and are close to noise-free; multipliers and money-with-cents are nearly as good. `percent_decimal` and `fraction` are implemented and OFF by default: research/01, /04, /05 and /13 survey external systems and quote dozens of vendor and paper percentages that are legitimately not our measurements, and turning them on produces roughly 125 violations of which almost none are actionable. Turn them on for a targeted sweep of one document, not for the gate.",
+  "numeric_kinds": ["ratio4", "money_cents", "multiplier"],
+
+  "_comment_identifiers": "Identifier namespaces to resolve. Discovered by reading the registers in research/14-architecture-synthesis.md, the owner decisions in plan.md, and the requirements in spec.md. A namespace is only enforced if the corpus defines at least `min_definitions` members of it, so a namespace that stops existing turns the check off rather than producing noise.",
+  "identifier_namespaces": {
+    "D": {"pattern": "D-[0-9]{2}", "what": "decision register, research/14 §3.1"},
+    "P": {"pattern": "P-[0-9]{2}", "what": "pending-experiment register, research/14 §3.2"},
+    "O": {"pattern": "O-[0-9]{2}", "what": "open-question register, research/14 §3.3"},
+    "C": {"pattern": "C-[0-9]{2}", "what": "contradiction register, research/14 §4"},
+    "U": {"pattern": "U-[0-9]{2}", "what": "uncertainty register, research/14 §5"},
+    "OD": {"pattern": "OD-[0-9]{2}", "what": "owner decisions, plan.md"},
+    "FR": {"pattern": "FR-[0-9]{3}", "what": "functional requirements, spec.md"},
+    "SC": {"pattern": "SC-[0-9]{3}", "what": "success criteria, spec.md"},
+    "E": {"pattern": "E[0-9]{1,2}", "what": "experiment ladder, plan.md"}
+  },
+  "min_definitions": 3,
+
+  "_comment_dry_run": "A run directory that declares `dry_run: true` called no model, so anything in it that reads as an outcome was computed against stub output. `roots` are globs for run directories; a directory is only scanned if one of its own JSON files declares the marker, so the harness decides what counts as a dry run and this check inherits it. Exemption is deliberately LINE-LOCAL: the artifacts that produced this rule already disclosed the stub in a banner at the top of a different file, which is exactly what a grep does not read. `case_sensitive` exists for one reason — `verdict` is a field name in every judge-call row in the corpus, so the labelled-verdict rule matches upper case only.",
+  "dry_run": {
+    "roots": ["specs/*/harness/*/results/*", "harness/*/results/*"],
+    "artifact_extensions": [".json", ".jsonl", ".md", ".markdown", ".txt", ".csv"],
+    "ignore_files": [],
+    "verdict_patterns": [
+      {
+        "name": "gate-outcome",
+        "pattern": "\\b(?:clears?|cleared|fails?|failed|passes?|passed|misses|missed|beats?)\\s+(?:the\\s+|a\\s+|its\\s+)?(?:[a-z_]+\\s+){0,2}(?:gate|threshold|bar)\\b",
+        "why": "a gate outcome is the decision itself, and every gate in this harness reads a metric defined over judge verdicts"
+      },
+      {
+        "name": "gate-state",
+        "pattern": "\\b(?:gate|threshold)\\s+(?:is\\s+|was\\s+)?(?:met|unmet|cleared|passed|failed|fired|satisfied|comfortably\\s+clear)\\b",
+        "why": "same decision stated with the gate as subject"
+      },
+      {
+        "name": "hypothesis-outcome",
+        "pattern": "\\bH[0-9]{1,2}\\s+(?:is\\s+|was\\s+)?(?:confirmed|supported|refuted|rejected|answered|holds|proven|disproven|validated|established)\\b",
+        "why": "a hypothesis verdict; the experiment ladder's hypotheses are exactly what a stub run cannot speak to"
+      },
+      {
+        "name": "product-promotion",
+        "pattern": "\\b(?:is|are|becomes?|remains?)\\s+(?:a|the)\\s+(?:headline|flagship|core|shipping)\\s+(?:feature|differentiator|product|capability)\\b",
+        "why": "promotes a measurement to a product decision, which is a scope call and not a number"
+      },
+      {
+        "name": "labelled-verdict",
+        "pattern": "(?:^|[\\s|>*_`\"'\\[])(?:VERDICT|CONCLUSION|DECISION|RECOMMENDATION|FINAL ANSWER)\\s*[:=]",
+        "case_sensitive": true,
+        "why": "an explicitly labelled outcome; upper case only, because `verdict` is a field name in every judge-call and oracle row"
+      },
+      {
+        "name": "superiority",
+        "pattern": "\\b(?:materially|significantly|substantially|clearly)\\s+(?:better|worse|higher|lower|stronger|more\\s+accurate)\\b",
+        "why": "a comparative verdict; E8's own target for the verifier is the phrase 'materially better'"
+      },
+      {
+        "name": "significance",
+        "pattern": "\\bstatistically\\s+significant\\b",
+        "why": "an inferential claim, which no stub-scored sample supports"
+      }
+    ],
+    "_comment_disclosure": "Tokens that make the line self-describing. Lower-cased substring match, checked against the raw line before masking.",
+    "disclosure_tokens": [
+      "stub",
+      "dry run",
+      "dry_run",
+      "not a result",
+      "not results",
+      "no judge verdict",
+      "withheld",
+      "void",
+      "neutralis",
+      "unmeasured",
+      "placeholder",
+      "no model was called"
+    ],
+    "_comment_prohibition": "Tokens marking a line that forbids the claim rather than making it. Separate from disclosure because the reason differs: the line is honest about the rule, not about the artifact.",
+    "prohibition_tokens": [
+      "does not license",
+      "may not be",
+      "must not",
+      "cannot be described",
+      "licenses only",
+      "nothing here clears",
+      "is unreachable",
+      "forbids"
+    ]
+  },
+
+  "_comment_inventory": "Prose claims about how many of a thing the repository contains. Each rule is a regex whose one capture group is the claimed count, plus a glob whose match count is the truth. `files` scopes the rule: an inventory claim belongs in an index document, and the same words elsewhere almost always mean something else — 'Three findings converge on X' is a sentence about conclusions, not a count of documents, and scanning the whole corpus for it produced eleven false positives against two real ones.",
+  "inventory_default_files": ["README.md", "research/README.md"],
+  "inventory_rules": [
+    {
+      "name": "research-documents",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\\s+research\\s+documents",
+      "glob": "research/[0-9]*.md"
+    },
+    {
+      "name": "findings",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\\s+findings\\s*(?:documents?)?\\b",
+      "glob": "specs/*/findings/[0-9]*.md"
+    },
+    {
+      "name": "committed-harnesses",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten))\\s+committed\\s+harnesses",
+      "glob": "specs/001-discovery-validation/harness/*/",
+      "files": ["README.md", "research/README.md", "specs/*/VERDICT.md"]
+    },
+    {
+      "name": "project-skills",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|twenty-one|twenty-two))\\s+project\\s+skills",
+      "glob": ".cursor/skills/*/SKILL.md",
+      "glob_exclude": ".cursor/skills/speckit-*/SKILL.md"
+    },
+    {
+      "name": "speckit-phase-prompts",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve))\\s+Spec\\s+Kit\\s+phase\\s+prompts",
+      "glob": ".cursor/skills/speckit-*/SKILL.md"
+    },
+    {
+      "name": "vendored-repos",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten))\\s+vendored\\s+reference\\s+repos(?:itories)?",
+      "glob": "examples/*/"
+    }
+  ]
+}

@@ -1,0 +1,3056 @@
+{
+ "_neutralised": {
+  "headline": "NOT A RESULT \u2014 no judge verdict exists in this run or anywhere in this experiment.",
+  "date": "2026-08-03",
+  "applied_by": "neutralise_decision.py (re-runnable, idempotent)",
+  "what_changed": "The `decision` key was renamed `decision_void` and the classification clause of each of its 3 row(s) was replaced by a withholding notice. `_stub` markers were added to the judge arms and to md_upper_bound. Nothing else was touched.",
+  "what_did_not_change": "No numeric value anywhere in this file was altered, recomputed, rounded or removed. Each row keeps the rendered figures it opened with.",
+  "why": "The rows were computed against stubbed judge verdicts and said so nowhere a reader would grep. A committed artifact that answers a grep for a verdict with a plausible one is the failure this project has now hit five times.",
+  "correction_class": "WRONG, not narrowed and not superseded. The rows did not overstate a real measurement; they classified stub output.",
+  "load_bearing_correction": "D_c is a DETECTION rate. The gate reads MD \u2014 MARGINAL detection, restricted to traces the judge passed. With no judge verdict, MD is undefined on this corpus: nothing here clears the gate and nothing here fails it. Text implying either is wrong, not merely unqualified.",
+  "what_is_still_real": "The verifier arms, the taxonomy, the eligibility ledger, the denominators, the controls and the cost projection are computed from the frozen corpus and do not involve the judge. c2's detection census is a genuine offline result; its margin over a judge is unmeasured.",
+  "authority": "specs/001-discovery-validation/findings/015-verifier-vs-judge-not-run.md",
+  "amendment": "PREREGISTRATION.md Amendment B5",
+  "guard": "tools/check_corpus.py check `dry-run-verdict` fires on a verdict-shaped claim in any artifact of a run marked dry_run: true."
+ },
+ "taxonomy": {
+  "n_negatives": 20,
+  "classes": {
+   "no_output": 7,
+   "false_success": 11,
+   "protocol": 2
+  },
+  "false_success_subclasses": {
+   "set_cardinality_error": 2,
+   "numeric_value_error": 9
+  },
+  "near_miss_n": 3,
+  "preregistered": {
+   "n_negatives": 20,
+   "no_output": 7,
+   "protocol": 2,
+   "false_success": 11,
+   "numeric_value_error": 8,
+   "set_cardinality_error": 3,
+   "near_miss_n": 2
+  }
+ },
+ "taxonomy_discrepancies": [
+  "numeric_value_error: preregistration says 8, mechanical classification counts 9",
+  "set_cardinality_error: preregistration says 3, mechanical classification counts 2",
+  "near_miss_n: preregistration says 2, mechanical classification counts 3"
+ ],
+ "denominator_sizes": {
+  "N": 20,
+  "N_disc": 13,
+  "N_fs": 11
+ },
+ "controls": [
+  {
+   "name": "leak-assert fires (record)",
+   "ok": true,
+   "detail": "a payload embedding the oracle record aborts",
+   "numbers": {},
+   "fatal": false
+  },
+  {
+   "name": "leak-assert fires (value)",
+   "ok": true,
+   "detail": "the expected value in harness text aborts",
+   "numbers": {},
+   "fatal": false
+  },
+  {
+   "name": "leak-assert fires (reason)",
+   "ok": true,
+   "detail": "the oracle reason string aborts wherever it appears",
+   "numbers": {},
+   "fatal": false
+  },
+  {
+   "name": "leak-assert stays quiet",
+   "ok": true,
+   "detail": "a clean payload containing the English words 'reason' and 'outcome' in agent text does not abort",
+   "numbers": {},
+   "fatal": false
+  },
+  {
+   "name": "label-shuffle (b)",
+   "ok": true,
+   "detail": "mean AUROC over 1000 permutations = 0.5024 (range 0.300\u20130.719); must centre on 0.500 \u00b1 0.05",
+   "numbers": {
+    "mean": 0.5024116666666667,
+    "min": 0.3,
+    "max": 0.7191666666666666,
+    "permutations": 1000
+   },
+   "fatal": false
+  },
+  {
+   "name": "label-shuffle (b_prime)",
+   "ok": true,
+   "detail": "mean AUROC over 1000 permutations = 0.4973 (range 0.245\u20130.717); must centre on 0.500 \u00b1 0.05",
+   "numbers": {
+    "mean": 0.497255,
+    "min": 0.24458333333333335,
+    "max": 0.7170833333333333,
+    "permutations": 1000
+   },
+   "fatal": false
+  },
+  {
+   "name": "constant-fail FPR",
+   "ok": true,
+   "detail": "FPR = 1.000; a verifier that flags everything must score 1.000, which is why the <= 5 pp admissibility constraint is not optional",
+   "numbers": {
+    "fpr": 1.0,
+    "md": 0.5
+   },
+   "fatal": false
+  },
+  {
+   "name": "constant-pass MD",
+   "ok": true,
+   "detail": "MD = 0.000, FPR = 0.000; both must be 0.000",
+   "numbers": {
+    "md": 0.0,
+    "fpr": 0.0
+   },
+   "fatal": false
+  },
+  {
+   "name": "constant-pass FPR",
+   "ok": true,
+   "detail": "FPR = 0.000; must be 0.000",
+   "numbers": {
+    "fpr": 0.0
+   },
+   "fatal": false
+  },
+  {
+   "name": "constant-fail MD",
+   "ok": true,
+   "detail": "MD = 0.500; with 10 fail-open trace(s) the anchor must be strictly positive, and equal to the judge's fail-open rate",
+   "numbers": {
+    "md": 0.5,
+    "fail_open_n": 10
+   },
+   "fatal": false
+  },
+  {
+   "name": "predicted-null (c1)",
+   "ok": true,
+   "detail": "c1 detected 0 of 9 numeric value errors; predicted 0.  [preregistration says 8 numeric value errors; the mechanical classification counts 9 \u2014 amendment required, the control ran over the measured set]",
+   "numbers": {
+    "caught": 0,
+    "n_numeric": 9,
+    "preregistered_n": 8,
+    "caught_keys": []
+   },
+   "fatal": false
+  }
+ ],
+ "fatal": [],
+ "judge": {
+  "b": {
+   "D_judge": {
+    "label": "D_judge",
+    "numerator": 10,
+    "denominator": 20,
+    "pp": 50.0,
+    "wilson_95_pp": [
+     29.92949144298199,
+     70.070508557018
+    ],
+    "numerator_families": {
+     "R3": 2,
+     "R4": 8
+    }
+   },
+   "FO_judge": {
+    "label": "FO_judge",
+    "numerator": 10,
+    "denominator": 20,
+    "pp": 50.0,
+    "wilson_95_pp": [
+     29.92949144298199,
+     70.070508557018
+    ],
+    "numerator_families": {
+     "N": 2,
+     "NM": 1,
+     "R4": 6,
+     "R1": 1
+    }
+   },
+   "CFO_judge": {
+    "label": "CFO_judge",
+    "numerator": 2,
+    "denominator": 20,
+    "pp": 10.0,
+    "wilson_95_pp": [
+     2.7865893984153205,
+     30.103820641179336
+    ],
+    "numerator_families": {
+     "R4": 2
+    }
+   },
+   "FPR_judge": {
+    "label": "FPR_judge",
+    "numerator": 29,
+    "denominator": 60,
+    "pp": 48.333333333333336,
+    "wilson_95_pp": [
+     36.17484128577001,
+     60.69240514915643
+    ],
+    "numerator_families": {
+     "R1": 9,
+     "R3": 2,
+     "N": 1,
+     "NM": 1,
+     "R2": 10,
+     "W1": 3,
+     "R4": 3
+    }
+   },
+   "flip_rate": {
+    "label": "flip_rate",
+    "numerator": 0,
+    "denominator": 80,
+    "pp": 0.0,
+    "wilson_95_pp": [
+     0.0,
+     4.5819736264575095
+    ],
+    "numerator_families": {}
+   },
+   "auroc": 0.5116666666666667,
+   "auroc_ci_95": [
+    0.3591666666666667,
+    0.6641666666666667
+   ],
+   "fail_open_keys": [
+    [
+     "20260802T151714-smoke",
+     "N.001",
+     "B",
+     1
+    ],
+    [
+     "20260802T152825-smoke2",
+     "N.001",
+     "B",
+     1
+    ],
+    [
+     "20260802T154826-calibration",
+     "NM.001",
+     "A",
+     1
+    ],
+    [
+     "20260802T160705-recalibration",
+     "R4.001",
+     "A",
+     1
+    ],
+    [
+     "20260802T160705-recalibration",
+     "R4.005",
+     "A",
+     1
+    ],
+    [
+     "20260802T160705-recalibration",
+     "R4.006",
+     "A",
+     1
+    ],
+    [
+     "20260802T163319-bias-probe",
+     "R4.006",
+     "B",
+     1
+    ],
+    [
+     "20260802T163319-bias-probe",
+     "R4.008",
+     "B",
+     1
+    ],
+    [
+     "20260802T164929-bias-probe-perrecord",
+     "R4.013",
+     "A",
+     1
+    ],
+    [
+     "20260802T173614-baseline-lookup-R1R2",
+     "R1.012",
+     "B",
+     1
+    ]
+   ],
+   "per_replicate_detection": [
+    0.5,
+    0.5,
+    0.5
+   ],
+   "noise_floor_pp": 0.0,
+   "unparsed_calls": 0,
+   "_sentences": [
+    "D_judge: 50.0 pp (10/20; Wilson 95% 29.9\u201370.1 pp; numerator families: R3 2, R4 8)",
+    "FO_judge: 50.0 pp (10/20; Wilson 95% 29.9\u201370.1 pp; numerator families: N 2, NM 1, R1 1, R4 6)",
+    "CFO_judge: 10.0 pp (2/20; Wilson 95% 2.8\u201330.1 pp; numerator families: R4 2)",
+    "FPR_judge: 48.3 pp (29/60; Wilson 95% 36.2\u201360.7 pp; numerator families: N 1, NM 1, R1 9, R2 10, R3 2, R4 3, W1 3)",
+    "flip_rate: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)"
+   ],
+   "_stub": "STUB \u2014 NOT A MEASUREMENT. Every figure in this block is computed from judge.StubJudge, a deterministic hash of the trace key. No model was called (spend.dry_run is true, cost_usd 0.0, model null). Anything derived from it, including the decision table, is stub output. Added 2026-08-03 by neutralise_decision.py; no value was changed."
+  },
+  "b_prime": {
+   "D_judge": {
+    "label": "D_judge",
+    "numerator": 10,
+    "denominator": 20,
+    "pp": 50.0,
+    "wilson_95_pp": [
+     29.92949144298199,
+     70.070508557018
+    ],
+    "numerator_families": {
+     "N": 2,
+     "NM": 1,
+     "R3": 1,
+     "R4": 5,
+     "R1": 1
+    }
+   },
+   "FO_judge": {
+    "label": "FO_judge",
+    "numerator": 10,
+    "denominator": 20,
+    "pp": 50.0,
+    "wilson_95_pp": [
+     29.92949144298199,
+     70.070508557018
+    ],
+    "numerator_families": {
+     "R3": 1,
+     "R4": 9
+    }
+   },
+   "CFO_judge": {
+    "label": "CFO_judge",
+    "numerator": 5,
+    "denominator": 20,
+    "pp": 25.0,
+    "wilson_95_pp": [
+     11.186005278940309,
+     46.87050099580636
+    ],
+    "numerator_families": {
+     "R4": 5
+    }
+   },
+   "FPR_judge": {
+    "label": "FPR_judge",
+    "numerator": 31,
+    "denominator": 60,
+    "pp": 51.66666666666667,
+    "wilson_95_pp": [
+     39.30759485084357,
+     63.82515871422999
+    ],
+    "numerator_families": {
+     "N": 4,
+     "R3": 3,
+     "R1": 8,
+     "R2": 8,
+     "W1": 2,
+     "NM": 1,
+     "R4": 5
+    }
+   },
+   "flip_rate": {
+    "label": "flip_rate",
+    "numerator": 0,
+    "denominator": 80,
+    "pp": 0.0,
+    "wilson_95_pp": [
+     0.0,
+     4.5819736264575095
+    ],
+    "numerator_families": {}
+   },
+   "auroc": 0.5408333333333334,
+   "auroc_ci_95": [
+    0.375,
+    0.7008333333333333
+   ],
+   "fail_open_keys": [
+    [
+     "20260802T154826-calibration",
+     "R3.004",
+     "A",
+     1
+    ],
+    [
+     "20260802T160705-recalibration",
+     "R4.005",
+     "A",
+     1
+    ],
+    [
+     "20260802T160705-recalibration",
+     "R4.006",
+     "A",
+     1
+    ],
+    [
+     "20260802T163319-bias-probe",
+     "R4.005",
+     "B",
+     1
+    ],
+    [
+     "20260802T163319-bias-probe",
+     "R4.006",
+     "A",
+     1
+    ],
+    [
+     "20260802T163319-bias-probe",
+     "R4.006",
+     "B",
+     1
+    ],
+    [
+     "20260802T164929-bias-probe-perrecord",
+     "R4.011",
+     "A",
+     1
+    ],
+    [
+     "20260802T165903-ambiguity-recheck",
+     "R4.005",
+     "A",
+     1
+    ],
+    [
+     "20260802T173226-reprobe-perrecord-v2",
+     "R4.011",
+     "A",
+     1
+    ],
+    [
+     "20260802T173226-reprobe-perrecord-v2",
+     "R4.013",
+     "A",
+     1
+    ]
+   ],
+   "per_replicate_detection": [
+    0.5,
+    0.5,
+    0.5
+   ],
+   "noise_floor_pp": 0.0,
+   "unparsed_calls": 0,
+   "_sentences": [
+    "D_judge: 50.0 pp (10/20; Wilson 95% 29.9\u201370.1 pp; numerator families: N 2, NM 1, R1 1, R3 1, R4 5)",
+    "FO_judge: 50.0 pp (10/20; Wilson 95% 29.9\u201370.1 pp; numerator families: R3 1, R4 9)",
+    "CFO_judge: 25.0 pp (5/20; Wilson 95% 11.2\u201346.9 pp; numerator families: R4 5)",
+    "FPR_judge: 51.7 pp (31/60; Wilson 95% 39.3\u201363.8 pp; numerator families: N 4, NM 1, R1 8, R2 8, R3 3, R4 5, W1 2)",
+    "flip_rate: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)"
+   ],
+   "_stub": "STUB \u2014 NOT A MEASUREMENT. Every figure in this block is computed from judge.StubJudge, a deterministic hash of the trace key. No model was called (spend.dry_run is true, cost_usd 0.0, model null). Anything derived from it, including the decision table, is stub output. Added 2026-08-03 by neutralise_decision.py; no value was changed."
+  }
+ },
+ "verifiers": {
+  "c1": {
+   "N": {
+    "D": {
+     "label": "D_c1",
+     "numerator": 8,
+     "denominator": 20,
+     "pp": 40.0,
+     "wilson_95_pp": [
+      21.880396741419272,
+      61.342205768479396
+     ],
+     "numerator_families": {
+      "N": 2,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c1",
+     "numerator": 4,
+     "denominator": 20,
+     "pp": 20.0,
+     "wilson_95_pp": [
+      8.065635327119999,
+      41.60217220257599
+     ],
+     "numerator_families": {
+      "N": 2,
+      "R4": 1,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 20.0,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_c1",
+     "numerator": 4,
+     "denominator": 10,
+     "pp": 40.0,
+     "wilson_95_pp": [
+      16.817758120350966,
+      68.73304525498135
+     ],
+     "numerator_families": {
+      "N": 2,
+      "R4": 1,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 40.0,
+    "FPR": {
+     "label": "FPR_c1",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_c1",
+     "numerator": 72,
+     "denominator": 80,
+     "pp": 90.0,
+     "wilson_95_pp": [
+      81.48912101660255,
+      94.84530008223145
+     ],
+     "numerator_families": {
+      "NM": 3,
+      "R3": 6,
+      "R4": 18,
+      "N": 4,
+      "R1": 18,
+      "R2": 20,
+      "W1": 3
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.014",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c1: 40.0 pp (8/20; Wilson 95% 21.9\u201361.3 pp; numerator families: N 2, R1 1, R4 5)",
+     "MD_c1: 20.0 pp (4/20; Wilson 95% 8.1\u201341.6 pp; numerator families: N 2, R1 1, R4 1)",
+     "FPR_c1: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_c1: 90.0 pp (72/80; Wilson 95% 81.5\u201394.8 pp; numerator families: N 4, NM 3, R1 18, R2 20, R3 6, R4 18, W1 3)",
+     "FOC_c1: 40.0 pp (4/10; Wilson 95% 16.8\u201368.7 pp; numerator families: N 2, R1 1, R4 1)"
+    ]
+   },
+   "N_disc": {
+    "D": {
+     "label": "D_c1",
+     "numerator": 1,
+     "denominator": 13,
+     "pp": 7.6923076923076925,
+     "wilson_95_pp": [
+      1.3710066379696322,
+      33.31453392824736
+     ],
+     "numerator_families": {
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c1",
+     "numerator": 1,
+     "denominator": 13,
+     "pp": 7.6923076923076925,
+     "wilson_95_pp": [
+      1.3710066379696322,
+      33.31453392824736
+     ],
+     "numerator_families": {
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 7.6923076923076925,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_c1",
+     "numerator": 1,
+     "denominator": 7,
+     "pp": 14.285714285714285,
+     "wilson_95_pp": [
+      2.567895594897479,
+      51.313450331903
+     ],
+     "numerator_families": {
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 14.285714285714285,
+    "FPR": {
+     "label": "FPR_c1",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_c1",
+     "numerator": 72,
+     "denominator": 80,
+     "pp": 90.0,
+     "wilson_95_pp": [
+      81.48912101660255,
+      94.84530008223145
+     ],
+     "numerator_families": {
+      "NM": 3,
+      "R3": 6,
+      "R4": 18,
+      "N": 4,
+      "R1": 18,
+      "R2": 20,
+      "W1": 3
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c1: 7.7 pp (1/13; Wilson 95% 1.4\u201333.3 pp; numerator families: R1 1)",
+     "MD_c1: 7.7 pp (1/13; Wilson 95% 1.4\u201333.3 pp; numerator families: R1 1)",
+     "FPR_c1: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_c1: 90.0 pp (72/80; Wilson 95% 81.5\u201394.8 pp; numerator families: N 4, NM 3, R1 18, R2 20, R3 6, R4 18, W1 3)",
+     "FOC_c1: 14.3 pp (1/7; Wilson 95% 2.6\u201351.3 pp; numerator families: R1 1)"
+    ]
+   },
+   "N_fs": {
+    "D": {
+     "label": "D_c1",
+     "numerator": 1,
+     "denominator": 11,
+     "pp": 9.090909090909092,
+     "wilson_95_pp": [
+      1.6231752262825971,
+      37.73646254862038
+     ],
+     "numerator_families": {
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c1",
+     "numerator": 1,
+     "denominator": 11,
+     "pp": 9.090909090909092,
+     "wilson_95_pp": [
+      1.6231752262825971,
+      37.73646254862038
+     ],
+     "numerator_families": {
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 9.090909090909092,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_c1",
+     "numerator": 1,
+     "denominator": 7,
+     "pp": 14.285714285714285,
+     "wilson_95_pp": [
+      2.567895594897479,
+      51.313450331903
+     ],
+     "numerator_families": {
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 14.285714285714285,
+    "FPR": {
+     "label": "FPR_c1",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_c1",
+     "numerator": 72,
+     "denominator": 80,
+     "pp": 90.0,
+     "wilson_95_pp": [
+      81.48912101660255,
+      94.84530008223145
+     ],
+     "numerator_families": {
+      "NM": 3,
+      "R3": 6,
+      "R4": 18,
+      "N": 4,
+      "R1": 18,
+      "R2": 20,
+      "W1": 3
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c1: 9.1 pp (1/11; Wilson 95% 1.6\u201337.7 pp; numerator families: R1 1)",
+     "MD_c1: 9.1 pp (1/11; Wilson 95% 1.6\u201337.7 pp; numerator families: R1 1)",
+     "FPR_c1: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_c1: 90.0 pp (72/80; Wilson 95% 81.5\u201394.8 pp; numerator families: N 4, NM 3, R1 18, R2 20, R3 6, R4 18, W1 3)",
+     "FOC_c1: 14.3 pp (1/7; Wilson 95% 2.6\u201351.3 pp; numerator families: R1 1)"
+    ]
+   },
+   "N_excl_near_miss": {
+    "D": {
+     "label": "D_c1",
+     "numerator": 8,
+     "denominator": 17,
+     "pp": 47.05882352941176,
+     "wilson_95_pp": [
+      26.164801196088106,
+      69.03710268845052
+     ],
+     "numerator_families": {
+      "N": 2,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c1",
+     "numerator": 4,
+     "denominator": 17,
+     "pp": 23.52941176470588,
+     "wilson_95_pp": [
+      9.55488907167594,
+      47.262245889171595
+     ],
+     "numerator_families": {
+      "N": 2,
+      "R4": 1,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 23.52941176470588,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_c1",
+     "numerator": 4,
+     "denominator": 9,
+     "pp": 44.44444444444444,
+     "wilson_95_pp": [
+      18.8775429471914,
+      73.33526542559703
+     ],
+     "numerator_families": {
+      "N": 2,
+      "R4": 1,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 44.44444444444444,
+    "FPR": {
+     "label": "FPR_c1",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_c1",
+     "numerator": 72,
+     "denominator": 80,
+     "pp": 90.0,
+     "wilson_95_pp": [
+      81.48912101660255,
+      94.84530008223145
+     ],
+     "numerator_families": {
+      "NM": 3,
+      "R3": 6,
+      "R4": 18,
+      "N": 4,
+      "R1": 18,
+      "R2": 20,
+      "W1": 3
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.014",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c1: 47.1 pp (8/17; Wilson 95% 26.2\u201369.0 pp; numerator families: N 2, R1 1, R4 5)",
+     "MD_c1: 23.5 pp (4/17; Wilson 95% 9.6\u201347.3 pp; numerator families: N 2, R1 1, R4 1)",
+     "FPR_c1: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_c1: 90.0 pp (72/80; Wilson 95% 81.5\u201394.8 pp; numerator families: N 4, NM 3, R1 18, R2 20, R3 6, R4 18, W1 3)",
+     "FOC_c1: 44.4 pp (4/9; Wilson 95% 18.9\u201373.3 pp; numerator families: N 2, R1 1, R4 1)"
+    ]
+   }
+  },
+  "c2": {
+   "N": {
+    "D": {
+     "label": "D_c2",
+     "numerator": 11,
+     "denominator": 20,
+     "pp": 55.00000000000001,
+     "wilson_95_pp": [
+      34.20820083075997,
+      74.18049791429071
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 9,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c2",
+     "numerator": 7,
+     "denominator": 20,
+     "pp": 35.0,
+     "wilson_95_pp": [
+      18.118954786794465,
+      56.714948978053535
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 26.8835,
+    "MD_discount_applied": 0.7681,
+    "FOC_raw": {
+     "label": "FOC_c2",
+     "numerator": 7,
+     "denominator": 10,
+     "pp": 70.0,
+     "wilson_95_pp": [
+      39.67732199795652,
+      89.2210712513788
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 53.767,
+    "FPR": {
+     "label": "FPR_c2",
+     "numerator": 2,
+     "denominator": 60,
+     "pp": 3.3333333333333335,
+     "wilson_95_pp": [
+      0.9189126490150246,
+      11.363987528925378
+     ],
+     "numerator_families": {
+      "NM": 2
+     }
+    },
+    "UNV": {
+     "label": "UNV_c2",
+     "numerator": 22,
+     "denominator": 80,
+     "pp": 27.500000000000004,
+     "wilson_95_pp": [
+      18.91762284773599,
+      38.14426528416989
+     ],
+     "numerator_families": {
+      "N": 6,
+      "R3": 6,
+      "R4": 5,
+      "W1": 3,
+      "R2": 2
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T165903-ambiguity-recheck",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c2: 55.0 pp (11/20; Wilson 95% 34.2\u201374.2 pp; numerator families: NM 1, R1 1, R4 9)",
+     "MD_c2: 35.0 pp (7/20; Wilson 95% 18.1\u201356.7 pp; numerator families: NM 1, R1 1, R4 5)",
+     "FPR_c2: 3.3 pp (2/60; Wilson 95% 0.9\u201311.4 pp; numerator families: NM 2)",
+     "UNV_c2: 27.5 pp (22/80; Wilson 95% 18.9\u201338.1 pp; numerator families: N 6, R2 2, R3 6, R4 5, W1 3)",
+     "FOC_c2: 70.0 pp (7/10; Wilson 95% 39.7\u201389.2 pp; numerator families: NM 1, R1 1, R4 5)"
+    ]
+   },
+   "N_disc": {
+    "D": {
+     "label": "D_c2",
+     "numerator": 11,
+     "denominator": 13,
+     "pp": 84.61538461538461,
+     "wilson_95_pp": [
+      57.764829491368985,
+      95.6742736817262
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 9,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c2",
+     "numerator": 7,
+     "denominator": 13,
+     "pp": 53.84615384615385,
+     "wilson_95_pp": [
+      29.14343243183205,
+      76.79424569851186
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 41.35923076923077,
+    "MD_discount_applied": 0.7681,
+    "FOC_raw": {
+     "label": "FOC_c2",
+     "numerator": 7,
+     "denominator": 7,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      64.56611570247934,
+      100.0
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 76.81,
+    "FPR": {
+     "label": "FPR_c2",
+     "numerator": 2,
+     "denominator": 60,
+     "pp": 3.3333333333333335,
+     "wilson_95_pp": [
+      0.9189126490150246,
+      11.363987528925378
+     ],
+     "numerator_families": {
+      "NM": 2
+     }
+    },
+    "UNV": {
+     "label": "UNV_c2",
+     "numerator": 22,
+     "denominator": 80,
+     "pp": 27.500000000000004,
+     "wilson_95_pp": [
+      18.91762284773599,
+      38.14426528416989
+     ],
+     "numerator_families": {
+      "N": 6,
+      "R3": 6,
+      "R4": 5,
+      "W1": 3,
+      "R2": 2
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T165903-ambiguity-recheck",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c2: 84.6 pp (11/13; Wilson 95% 57.8\u201395.7 pp; numerator families: NM 1, R1 1, R4 9)",
+     "MD_c2: 53.8 pp (7/13; Wilson 95% 29.1\u201376.8 pp; numerator families: NM 1, R1 1, R4 5)",
+     "FPR_c2: 3.3 pp (2/60; Wilson 95% 0.9\u201311.4 pp; numerator families: NM 2)",
+     "UNV_c2: 27.5 pp (22/80; Wilson 95% 18.9\u201338.1 pp; numerator families: N 6, R2 2, R3 6, R4 5, W1 3)",
+     "FOC_c2: 100.0 pp (7/7; Wilson 95% 64.6\u2013100.0 pp; numerator families: NM 1, R1 1, R4 5)"
+    ]
+   },
+   "N_fs": {
+    "D": {
+     "label": "D_c2",
+     "numerator": 11,
+     "denominator": 11,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      74.11599827511859,
+      100.0
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 9,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c2",
+     "numerator": 7,
+     "denominator": 11,
+     "pp": 63.63636363636363,
+     "wilson_95_pp": [
+      35.37967768916373,
+      84.83377638586862
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 48.879090909090905,
+    "MD_discount_applied": 0.7681,
+    "FOC_raw": {
+     "label": "FOC_c2",
+     "numerator": 7,
+     "denominator": 7,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      64.56611570247934,
+      100.0
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 76.81,
+    "FPR": {
+     "label": "FPR_c2",
+     "numerator": 2,
+     "denominator": 60,
+     "pp": 3.3333333333333335,
+     "wilson_95_pp": [
+      0.9189126490150246,
+      11.363987528925378
+     ],
+     "numerator_families": {
+      "NM": 2
+     }
+    },
+    "UNV": {
+     "label": "UNV_c2",
+     "numerator": 22,
+     "denominator": 80,
+     "pp": 27.500000000000004,
+     "wilson_95_pp": [
+      18.91762284773599,
+      38.14426528416989
+     ],
+     "numerator_families": {
+      "N": 6,
+      "R3": 6,
+      "R4": 5,
+      "W1": 3,
+      "R2": 2
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T165903-ambiguity-recheck",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c2: 100.0 pp (11/11; Wilson 95% 74.1\u2013100.0 pp; numerator families: NM 1, R1 1, R4 9)",
+     "MD_c2: 63.6 pp (7/11; Wilson 95% 35.4\u201384.8 pp; numerator families: NM 1, R1 1, R4 5)",
+     "FPR_c2: 3.3 pp (2/60; Wilson 95% 0.9\u201311.4 pp; numerator families: NM 2)",
+     "UNV_c2: 27.5 pp (22/80; Wilson 95% 18.9\u201338.1 pp; numerator families: N 6, R2 2, R3 6, R4 5, W1 3)",
+     "FOC_c2: 100.0 pp (7/7; Wilson 95% 64.6\u2013100.0 pp; numerator families: NM 1, R1 1, R4 5)"
+    ]
+   },
+   "N_excl_near_miss": {
+    "D": {
+     "label": "D_c2",
+     "numerator": 8,
+     "denominator": 17,
+     "pp": 47.05882352941176,
+     "wilson_95_pp": [
+      26.164801196088106,
+      69.03710268845052
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 6,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_c2",
+     "numerator": 6,
+     "denominator": 17,
+     "pp": 35.294117647058826,
+     "wilson_95_pp": [
+      17.309486143904902,
+      58.700033278788176
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 4,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 27.109411764705886,
+    "MD_discount_applied": 0.7681,
+    "FOC_raw": {
+     "label": "FOC_c2",
+     "numerator": 6,
+     "denominator": 9,
+     "pp": 66.66666666666666,
+     "wilson_95_pp": [
+      35.419734749908976,
+      87.9418401317257
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 4,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 51.206666666666656,
+    "FPR": {
+     "label": "FPR_c2",
+     "numerator": 2,
+     "denominator": 60,
+     "pp": 3.3333333333333335,
+     "wilson_95_pp": [
+      0.9189126490150246,
+      11.363987528925378
+     ],
+     "numerator_families": {
+      "NM": 2
+     }
+    },
+    "UNV": {
+     "label": "UNV_c2",
+     "numerator": 22,
+     "denominator": 80,
+     "pp": 27.500000000000004,
+     "wilson_95_pp": [
+      18.91762284773599,
+      38.14426528416989
+     ],
+     "numerator_families": {
+      "N": 6,
+      "R3": 6,
+      "R4": 5,
+      "W1": 3,
+      "R2": 2
+     }
+    },
+    "admissible": true,
+    "detected_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_c2: 47.1 pp (8/17; Wilson 95% 26.2\u201369.0 pp; numerator families: NM 1, R1 1, R4 6)",
+     "MD_c2: 35.3 pp (6/17; Wilson 95% 17.3\u201358.7 pp; numerator families: NM 1, R1 1, R4 4)",
+     "FPR_c2: 3.3 pp (2/60; Wilson 95% 0.9\u201311.4 pp; numerator families: NM 2)",
+     "UNV_c2: 27.5 pp (22/80; Wilson 95% 18.9\u201338.1 pp; numerator families: N 6, R2 2, R3 6, R4 5, W1 3)",
+     "FOC_c2: 66.7 pp (6/9; Wilson 95% 35.4\u201387.9 pp; numerator families: NM 1, R1 1, R4 4)"
+    ]
+   }
+  },
+  "constant-fail": {
+   "N": {
+    "D": {
+     "label": "D_constant-fail",
+     "numerator": 20,
+     "denominator": 20,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      83.88698745050667,
+      100.0
+     ],
+     "numerator_families": {
+      "N": 2,
+      "NM": 1,
+      "R3": 2,
+      "R4": 14,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_constant-fail",
+     "numerator": 10,
+     "denominator": 20,
+     "pp": 50.0,
+     "wilson_95_pp": [
+      29.92949144298199,
+      70.070508557018
+     ],
+     "numerator_families": {
+      "N": 2,
+      "NM": 1,
+      "R4": 6,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 50.0,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-fail",
+     "numerator": 10,
+     "denominator": 10,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      72.24598312333835,
+      100.0
+     ],
+     "numerator_families": {
+      "N": 2,
+      "NM": 1,
+      "R4": 6,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 100.0,
+    "FPR": {
+     "label": "FPR_constant-fail",
+     "numerator": 60,
+     "denominator": 60,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      93.9826069522067,
+      99.99999999999999
+     ],
+     "numerator_families": {
+      "N": 4,
+      "R3": 4,
+      "R1": 18,
+      "NM": 2,
+      "R2": 20,
+      "W1": 3,
+      "R4": 9
+     }
+    },
+    "UNV": {
+     "label": "UNV_constant-fail",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": false,
+    "detected_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T154826-calibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.014",
+      "A",
+      1
+     ],
+     [
+      "20260802T165903-ambiguity-recheck",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_constant-fail: 100.0 pp (20/20; Wilson 95% 83.9\u2013100.0 pp; numerator families: N 2, NM 1, R1 1, R3 2, R4 14)",
+     "MD_constant-fail: 50.0 pp (10/20; Wilson 95% 29.9\u201370.1 pp; numerator families: N 2, NM 1, R1 1, R4 6)",
+     "FPR_constant-fail: 100.0 pp (60/60; Wilson 95% 94.0\u2013100.0 pp; numerator families: N 4, NM 2, R1 18, R2 20, R3 4, R4 9, W1 3)",
+     "UNV_constant-fail: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-fail: 100.0 pp (10/10; Wilson 95% 72.2\u2013100.0 pp; numerator families: N 2, NM 1, R1 1, R4 6)"
+    ]
+   },
+   "N_disc": {
+    "D": {
+     "label": "D_constant-fail",
+     "numerator": 13,
+     "denominator": 13,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      77.18981569447084,
+      100.0
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R3": 2,
+      "R4": 9,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_constant-fail",
+     "numerator": 7,
+     "denominator": 13,
+     "pp": 53.84615384615385,
+     "wilson_95_pp": [
+      29.14343243183205,
+      76.79424569851186
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 53.84615384615385,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-fail",
+     "numerator": 7,
+     "denominator": 7,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      64.56611570247934,
+      100.0
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 100.0,
+    "FPR": {
+     "label": "FPR_constant-fail",
+     "numerator": 60,
+     "denominator": 60,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      93.9826069522067,
+      99.99999999999999
+     ],
+     "numerator_families": {
+      "N": 4,
+      "R3": 4,
+      "R1": 18,
+      "NM": 2,
+      "R2": 20,
+      "W1": 3,
+      "R4": 9
+     }
+    },
+    "UNV": {
+     "label": "UNV_constant-fail",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": false,
+    "detected_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T154826-calibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T165903-ambiguity-recheck",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_constant-fail: 100.0 pp (13/13; Wilson 95% 77.2\u2013100.0 pp; numerator families: NM 1, R1 1, R3 2, R4 9)",
+     "MD_constant-fail: 53.8 pp (7/13; Wilson 95% 29.1\u201376.8 pp; numerator families: NM 1, R1 1, R4 5)",
+     "FPR_constant-fail: 100.0 pp (60/60; Wilson 95% 94.0\u2013100.0 pp; numerator families: N 4, NM 2, R1 18, R2 20, R3 4, R4 9, W1 3)",
+     "UNV_constant-fail: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-fail: 100.0 pp (7/7; Wilson 95% 64.6\u2013100.0 pp; numerator families: NM 1, R1 1, R4 5)"
+    ]
+   },
+   "N_fs": {
+    "D": {
+     "label": "D_constant-fail",
+     "numerator": 11,
+     "denominator": 11,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      74.11599827511859,
+      100.0
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 9,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_constant-fail",
+     "numerator": 7,
+     "denominator": 11,
+     "pp": 63.63636363636363,
+     "wilson_95_pp": [
+      35.37967768916373,
+      84.83377638586862
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 63.63636363636363,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-fail",
+     "numerator": 7,
+     "denominator": 7,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      64.56611570247934,
+      100.0
+     ],
+     "numerator_families": {
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 100.0,
+    "FPR": {
+     "label": "FPR_constant-fail",
+     "numerator": 60,
+     "denominator": 60,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      93.9826069522067,
+      99.99999999999999
+     ],
+     "numerator_families": {
+      "N": 4,
+      "R3": 4,
+      "R1": 18,
+      "NM": 2,
+      "R2": 20,
+      "W1": 3,
+      "R4": 9
+     }
+    },
+    "UNV": {
+     "label": "UNV_constant-fail",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": false,
+    "detected_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T165903-ambiguity-recheck",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.005",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_constant-fail: 100.0 pp (11/11; Wilson 95% 74.1\u2013100.0 pp; numerator families: NM 1, R1 1, R4 9)",
+     "MD_constant-fail: 63.6 pp (7/11; Wilson 95% 35.4\u201384.8 pp; numerator families: NM 1, R1 1, R4 5)",
+     "FPR_constant-fail: 100.0 pp (60/60; Wilson 95% 94.0\u2013100.0 pp; numerator families: N 4, NM 2, R1 18, R2 20, R3 4, R4 9, W1 3)",
+     "UNV_constant-fail: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-fail: 100.0 pp (7/7; Wilson 95% 64.6\u2013100.0 pp; numerator families: NM 1, R1 1, R4 5)"
+    ]
+   },
+   "N_excl_near_miss": {
+    "D": {
+     "label": "D_constant-fail",
+     "numerator": 17,
+     "denominator": 17,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      81.56763396284354,
+      100.0
+     ],
+     "numerator_families": {
+      "N": 2,
+      "NM": 1,
+      "R3": 2,
+      "R4": 11,
+      "R1": 1
+     }
+    },
+    "MD_raw": {
+     "label": "MD_constant-fail",
+     "numerator": 9,
+     "denominator": 17,
+     "pp": 52.94117647058824,
+     "wilson_95_pp": [
+      30.962897311549487,
+      73.8351988039119
+     ],
+     "numerator_families": {
+      "N": 2,
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "MD_gate_pp": 52.94117647058824,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-fail",
+     "numerator": 9,
+     "denominator": 9,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      70.08472464490407,
+      100.0
+     ],
+     "numerator_families": {
+      "N": 2,
+      "NM": 1,
+      "R4": 5,
+      "R1": 1
+     }
+    },
+    "FOC_gate_pct": 100.0,
+    "FPR": {
+     "label": "FPR_constant-fail",
+     "numerator": 60,
+     "denominator": 60,
+     "pp": 100.0,
+     "wilson_95_pp": [
+      93.9826069522067,
+      99.99999999999999
+     ],
+     "numerator_families": {
+      "N": 4,
+      "R3": 4,
+      "R1": 18,
+      "NM": 2,
+      "R2": 20,
+      "W1": 3,
+      "R4": 9
+     }
+    },
+    "UNV": {
+     "label": "UNV_constant-fail",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": false,
+    "detected_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T154826-calibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R3.004",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.005",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.014",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.011",
+      "A",
+      1
+     ],
+     [
+      "20260802T173226-reprobe-perrecord-v2",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "marginal_keys": [
+     [
+      "20260802T151714-smoke",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T152825-smoke2",
+      "N.001",
+      "B",
+      1
+     ],
+     [
+      "20260802T154826-calibration",
+      "NM.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.001",
+      "A",
+      1
+     ],
+     [
+      "20260802T160705-recalibration",
+      "R4.006",
+      "A",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.006",
+      "B",
+      1
+     ],
+     [
+      "20260802T163319-bias-probe",
+      "R4.008",
+      "B",
+      1
+     ],
+     [
+      "20260802T164929-bias-probe-perrecord",
+      "R4.013",
+      "A",
+      1
+     ],
+     [
+      "20260802T173614-baseline-lookup-R1R2",
+      "R1.012",
+      "B",
+      1
+     ]
+    ],
+    "_sentences": [
+     "D_constant-fail: 100.0 pp (17/17; Wilson 95% 81.6\u2013100.0 pp; numerator families: N 2, NM 1, R1 1, R3 2, R4 11)",
+     "MD_constant-fail: 52.9 pp (9/17; Wilson 95% 31.0\u201373.8 pp; numerator families: N 2, NM 1, R1 1, R4 5)",
+     "FPR_constant-fail: 100.0 pp (60/60; Wilson 95% 94.0\u2013100.0 pp; numerator families: N 4, NM 2, R1 18, R2 20, R3 4, R4 9, W1 3)",
+     "UNV_constant-fail: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-fail: 100.0 pp (9/9; Wilson 95% 70.1\u2013100.0 pp; numerator families: N 2, NM 1, R1 1, R4 5)"
+    ]
+   }
+  },
+  "constant-pass": {
+   "N": {
+    "D": {
+     "label": "D_constant-pass",
+     "numerator": 0,
+     "denominator": 20,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      16.113012549493323
+     ],
+     "numerator_families": {}
+    },
+    "MD_raw": {
+     "label": "MD_constant-pass",
+     "numerator": 0,
+     "denominator": 20,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      16.113012549493323
+     ],
+     "numerator_families": {}
+    },
+    "MD_gate_pp": 0.0,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-pass",
+     "numerator": 0,
+     "denominator": 10,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      27.75401687666166
+     ],
+     "numerator_families": {}
+    },
+    "FOC_gate_pct": 0.0,
+    "FPR": {
+     "label": "FPR_constant-pass",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_constant-pass",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": true,
+    "detected_keys": [],
+    "marginal_keys": [],
+    "_sentences": [
+     "D_constant-pass: 0.0 pp (0/20; Wilson 95% 0.0\u201316.1 pp; numerator families: none)",
+     "MD_constant-pass: 0.0 pp (0/20; Wilson 95% 0.0\u201316.1 pp; numerator families: none)",
+     "FPR_constant-pass: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_constant-pass: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-pass: 0.0 pp (0/10; Wilson 95% 0.0\u201327.8 pp; numerator families: none)"
+    ]
+   },
+   "N_disc": {
+    "D": {
+     "label": "D_constant-pass",
+     "numerator": 0,
+     "denominator": 13,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      22.810184305529166
+     ],
+     "numerator_families": {}
+    },
+    "MD_raw": {
+     "label": "MD_constant-pass",
+     "numerator": 0,
+     "denominator": 13,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      22.810184305529166
+     ],
+     "numerator_families": {}
+    },
+    "MD_gate_pp": 0.0,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-pass",
+     "numerator": 0,
+     "denominator": 7,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      35.433884297520656
+     ],
+     "numerator_families": {}
+    },
+    "FOC_gate_pct": 0.0,
+    "FPR": {
+     "label": "FPR_constant-pass",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_constant-pass",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": true,
+    "detected_keys": [],
+    "marginal_keys": [],
+    "_sentences": [
+     "D_constant-pass: 0.0 pp (0/13; Wilson 95% 0.0\u201322.8 pp; numerator families: none)",
+     "MD_constant-pass: 0.0 pp (0/13; Wilson 95% 0.0\u201322.8 pp; numerator families: none)",
+     "FPR_constant-pass: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_constant-pass: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-pass: 0.0 pp (0/7; Wilson 95% 0.0\u201335.4 pp; numerator families: none)"
+    ]
+   },
+   "N_fs": {
+    "D": {
+     "label": "D_constant-pass",
+     "numerator": 0,
+     "denominator": 11,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      2.7755575615628914e-15,
+      25.88400172488141
+     ],
+     "numerator_families": {}
+    },
+    "MD_raw": {
+     "label": "MD_constant-pass",
+     "numerator": 0,
+     "denominator": 11,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      2.7755575615628914e-15,
+      25.88400172488141
+     ],
+     "numerator_families": {}
+    },
+    "MD_gate_pp": 0.0,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-pass",
+     "numerator": 0,
+     "denominator": 7,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      35.433884297520656
+     ],
+     "numerator_families": {}
+    },
+    "FOC_gate_pct": 0.0,
+    "FPR": {
+     "label": "FPR_constant-pass",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_constant-pass",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": true,
+    "detected_keys": [],
+    "marginal_keys": [],
+    "_sentences": [
+     "D_constant-pass: 0.0 pp (0/11; Wilson 95% 0.0\u201325.9 pp; numerator families: none)",
+     "MD_constant-pass: 0.0 pp (0/11; Wilson 95% 0.0\u201325.9 pp; numerator families: none)",
+     "FPR_constant-pass: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_constant-pass: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-pass: 0.0 pp (0/7; Wilson 95% 0.0\u201335.4 pp; numerator families: none)"
+    ]
+   },
+   "N_excl_near_miss": {
+    "D": {
+     "label": "D_constant-pass",
+     "numerator": 0,
+     "denominator": 17,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      18.432366037156456
+     ],
+     "numerator_families": {}
+    },
+    "MD_raw": {
+     "label": "MD_constant-pass",
+     "numerator": 0,
+     "denominator": 17,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      18.432366037156456
+     ],
+     "numerator_families": {}
+    },
+    "MD_gate_pp": 0.0,
+    "MD_discount_applied": null,
+    "FOC_raw": {
+     "label": "FOC_constant-pass",
+     "numerator": 0,
+     "denominator": 9,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      29.91527535509594
+     ],
+     "numerator_families": {}
+    },
+    "FOC_gate_pct": 0.0,
+    "FPR": {
+     "label": "FPR_constant-pass",
+     "numerator": 0,
+     "denominator": 60,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      6.017393047793289
+     ],
+     "numerator_families": {}
+    },
+    "UNV": {
+     "label": "UNV_constant-pass",
+     "numerator": 0,
+     "denominator": 80,
+     "pp": 0.0,
+     "wilson_95_pp": [
+      0.0,
+      4.5819736264575095
+     ],
+     "numerator_families": {}
+    },
+    "admissible": true,
+    "detected_keys": [],
+    "marginal_keys": [],
+    "_sentences": [
+     "D_constant-pass: 0.0 pp (0/17; Wilson 95% 0.0\u201318.4 pp; numerator families: none)",
+     "MD_constant-pass: 0.0 pp (0/17; Wilson 95% 0.0\u201318.4 pp; numerator families: none)",
+     "FPR_constant-pass: 0.0 pp (0/60; Wilson 95% 0.0\u20136.0 pp; numerator families: none)",
+     "UNV_constant-pass: 0.0 pp (0/80; Wilson 95% 0.0\u20134.6 pp; numerator families: none)",
+     "FOC_constant-pass: 0.0 pp (0/9; Wilson 95% 0.0\u201329.9 pp; numerator families: none)"
+    ]
+   }
+  }
+ },
+ "decision_void": {
+  "void": true,
+  "not_a_verdict": "This block stated an outcome. The outcome is withheld; the figures are not. See `_neutralised` at the head of this file.",
+  "rows_withheld": [
+   {
+    "row": 1,
+    "figures_preserved": "MD_best (discounted) = 26.9 pp on arm c2, FOC = 53.8%, FPR = 3.3 pp",
+    "classification": "WITHHELD",
+    "text": "MD_best (discounted) = 26.9 pp on arm c2, FOC = 53.8%, FPR = 3.3 pp \u2014 [CLASSIFICATION WITHHELD \u2014 stub judge, no judge verdict exists, nothing here clears or fails a gate; see _neutralised]",
+    "why_withheld": "MD is marginal detection over traces the judge passed and FOC is the fail-open catch rate over traces the judge failed open on; both denominators are stub output, so the row classified a hash",
+    "emitted_by": "analyze._decide"
+   },
+   {
+    "row": 2,
+    "figures_preserved": "AUROC_judge 95% CI [0.359, 0.664] contains 0.5",
+    "classification": "WITHHELD",
+    "text": "AUROC_judge 95% CI [0.359, 0.664] contains 0.5 \u2014 [CLASSIFICATION WITHHELD \u2014 stub judge, no judge verdict exists, nothing here clears or fails a gate; see _neutralised]",
+    "why_withheld": "the AUROC is computed over StubJudge scores, so the interval describes a hash function and not a judge",
+    "emitted_by": "analyze._decide"
+   },
+   {
+    "row": 3,
+    "figures_preserved": "UNV_c1 = 90.0% > 50%",
+    "classification": "WITHHELD",
+    "text": "UNV_c1 = 90.0% > 50% \u2014 [CLASSIFICATION WITHHELD \u2014 stub judge, no judge verdict exists, nothing here clears or fails a gate; see _neutralised]",
+    "why_withheld": "the figure is judge-independent and stands, but the clause is a decision-table outcome; the restriction it stated is preserved separately under `restrictions_still_binding`, and arm c1 is independently quarantined by PREREGISTRATION.md Amendment B5",
+    "emitted_by": "analyze._decide"
+   }
+  ],
+  "restrictions_still_binding": [
+   "PREREGISTRATION.md 6.6 forbids describing arm c1 as covering the corpus while UNV_c1 exceeds 50%. Judge-independent, and it binds. Arm c1 is separately quarantined by Amendment B5 (c1_schema.verify raises).",
+   "PREREGISTRATION.md 3.3(1): md_upper_bound is a statement about the JUDGE and must not appear in any sentence whose subject is the verifier.",
+   "PREREGISTRATION.md 6.9: the false-success base is 10 across 2 families against a required n >= 30 across >= 3, and Amendment B4.4 establishes the rider can never lift on this corpus at any spend."
+  ],
+  "MD_best_discounted_pp": 26.8835,
+  "MD_best_arm": "c2",
+  "advisory_rider": "UNDERPOWERED \u2014 ADVISORY. The gate's verdict is advisory-only until the false-success base reaches n >= 30 across >= 3 families (6.9, 9.3). The corpus carries 11 false successes across 6 tasks with 8 of them in family R4; one case is 9.1 pp on N_fs and the gate fires at 2 traces out of 20 on N. A positive result licenses only 'consistent with H2, underpowered'; it does not license 'H2 confirmed'.",
+  "prevalence_warning": "Positives are stratified-sampled, so the scoring set's base rate is not the corpus base rate (20/246 = 8.13%). AUROC is prevalence-invariant and unbiased here. Accuracy, PPV, NPV and F1 are not computed at all (6.7)."
+ },
+ "md_upper_bound": {
+  "label": "MD upper bound == judge fail-open rate",
+  "value_pp": 50.0,
+  "counts": "10/20",
+  "identity": "MD(oracle-as-verifier) = |{oracle=fail and judge=pass and oracle=fail}| / |{oracle=fail}| = |{oracle=fail and judge=pass}| / |{oracle=fail}| = FO_judge, exactly",
+  "binding_note": "PREREGISTRATION.md 3.3(1): this is a statement about the JUDGE. It MUST NOT appear in any sentence whose subject is the verifier, and it does not feed the decision table.",
+  "_stub": "STUB \u2014 NOT A MEASUREMENT. Every figure in this block is computed from judge.StubJudge, a deterministic hash of the trace key. No model was called (spend.dry_run is true, cost_usd 0.0, model null). Anything derived from it, including the decision table, is stub output. Added 2026-08-03 by neutralise_decision.py; no value was changed."
+ },
+ "spend": {
+  "spent_usd": 0.0,
+  "calls": 480,
+  "by_arm": {},
+  "ceiling_usd": 9.0,
+  "dry_run": true
+ }
+}

@@ -1,0 +1,108 @@
+{
+ "when": "20260802T170404",
+ "n": 7,
+ "quarantine_candidates": [],
+ "fixture_fingerprint_start": "afd2b135345234cae62ec74131c927f954d64d550033fe815283031ef41f6108",
+ "fixture_fingerprint_end": "afd2b135345234cae62ec74131c927f954d64d550033fe815283031ef41f6108",
+ "spent_usd": 0.0418,
+ "rows": [
+  {
+   "task_id": "R4.005",
+   "family": "R4",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected 3.201754, got 4.23",
+   "claimed": "4.23",
+   "status": "answered",
+   "expected": 3.201754,
+   "cost_usd": 0.005973
+  },
+  {
+   "task_id": "R4.006",
+   "family": "R4",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected 33.0, got 26.0",
+   "claimed": "26",
+   "status": "answered",
+   "expected": 33.0,
+   "cost_usd": 0.006927
+  },
+  {
+   "task_id": "R4.008",
+   "family": "R4",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected 9, got 2.0",
+   "claimed": "2",
+   "status": "answered",
+   "expected": 9,
+   "cost_usd": 0.00522
+  },
+  {
+   "task_id": "R4.011",
+   "family": "R4",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected 13, got 23.0",
+   "claimed": "23",
+   "status": "answered",
+   "expected": 13,
+   "cost_usd": 0.005673
+  },
+  {
+   "task_id": "R4.012",
+   "family": "R4",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected 49.0, got 73.0",
+   "claimed": "73",
+   "status": "answered",
+   "expected": 49.0,
+   "cost_usd": 0.006444
+  },
+  {
+   "task_id": "R4.013",
+   "family": "R4",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected 13, got 23.0",
+   "claimed": "23",
+   "status": "answered",
+   "expected": 13,
+   "cost_usd": 0.005793
+  },
+  {
+   "task_id": "R4.014",
+   "family": "R4",
+   "outcome": "fail",
+   "false_success": true,
+   "detectors": [
+    "D1"
+   ],
+   "reason": "expected 'Blistered Parsnip Crumble', got 'Wedding Cake'",
+   "claimed": "Wedding Cake",
+   "status": "answered",
+   "expected": "Blistered Parsnip Crumble",
+   "cost_usd": 0.005742
+  }
+ ]
+}

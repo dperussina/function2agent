@@ -1,0 +1,12 @@
+R1-tuned mechanism ablation (totals pooled over all 7 configurations)
+
+none-disabled              predicted= 324 tp= 324 min_precision=1.0000 min_recall=1.0000 unresolvable=  0 max_false_incl=0.0000 PASS
+off-M1_class_dispatch      predicted=   0 tp=   0 min_precision=0.0000 min_recall=0.0000 unresolvable=  0 max_false_incl=0.0000 MISS
+off-M2_kwarg_flow          predicted=   2 tp=   2 min_precision=0.0000 min_recall=0.0000 unresolvable=  0 max_false_incl=0.0000 MISS
+off-M3_attribute_flow      predicted= 321 tp= 321 min_precision=1.0000 min_recall=0.9565 unresolvable= 14 max_false_incl=0.0000 PASS
+off-M4_membership          predicted= 321 tp= 321 min_precision=1.0000 min_recall=0.9565 unresolvable=  4 max_false_incl=0.0000 PASS
+off-M5_optional_import     predicted= 324 tp= 324 min_precision=1.0000 min_recall=1.0000 unresolvable=  0 max_false_incl=0.0000 PASS
+off-M6_explicit_presence   predicted= 312 tp= 312 min_precision=1.0000 min_recall=0.9385 unresolvable= 12 max_false_incl=0.0000 PASS
+off-M7_class_attrs         predicted= 321 tp= 321 min_precision=1.0000 min_recall=0.9565 unresolvable=  0 max_false_incl=0.0000 PASS
+off-M8_comprehension       predicted= 321 tp= 321 min_precision=1.0000 min_recall=0.9565 unresolvable=  4 max_false_incl=0.0000 PASS
+all-disabled               predicted=   0 tp=   0 min_precision=0.0000 min_recall=0.0000 unresolvable=  0 max_false_incl=0.0000 MISS

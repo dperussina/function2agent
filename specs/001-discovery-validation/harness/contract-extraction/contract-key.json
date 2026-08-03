@@ -1,0 +1,2520 @@
+{
+  "operations": {
+    "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "delete_session_apps__app_name__users__user_id__sessions__session_id__delete",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "delete_artifact_apps__app_name__users__user_id__sessions__session_id__artifacts__artifact_name__delete",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "DELETE /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "delete_eval_dev_apps__app_name__eval_sets__eval_set_id__eval_cases__eval_case_id__delete",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "DELETE /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "delete_eval_dev_apps__app_name__eval_sets__eval_set_id__evals__eval_case_id__delete",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "DELETE /dev/apps/{app_name}/tests/{test_name}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "test_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "delete_test_dev_apps__app_name__tests__test_name__delete",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Delete Test Dev Apps  App Name  Tests  Test Name  Delete",
+        "type": "object"
+      }
+    },
+    "GET /": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "redirect_root_to_dev_ui__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "GET /apps/{app_name}/app-info": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_adk_app_info_apps__app_name__app_info_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "AppInfo",
+        "type": "object"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_sessions_apps__app_name__users__user_id__sessions_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Sessions Apps  App Name  Users  User Id  Sessions Get",
+        "type": "array[object]"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_session_apps__app_name__users__user_id__sessions__session_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Session",
+        "type": "object"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_artifact_names_apps__app_name__users__user_id__sessions__session_id__artifacts_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Artifact Names Apps  App Name  Users  User Id  Sessions  Session Id  Artifacts Get",
+        "type": "array[string]"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "version",
+          "required": false,
+          "type": "integer"
+        }
+      ],
+      "operation_id": "load_artifact_apps__app_name__users__user_id__sessions__session_id__artifacts__artifact_name__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Load Artifact Apps  App Name  Users  User Id  Sessions  Session Id  Artifacts  Artifact Name  Get",
+        "type": "object"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_artifact_versions_apps__app_name__users__user_id__sessions__session_id__artifacts__artifact_name__versions_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Artifact Versions Apps  App Name  Users  User Id  Sessions  Session Id  Artifacts  Artifact Name  Versions Get",
+        "type": "array[integer]"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_artifact_versions_metadata_apps__app_name__users__user_id__sessions__session_id__artifacts__artifact_name__versions_metadata_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Artifact Versions Metadata Apps  App Name  Users  User Id  Sessions  Session Id  Artifacts  Artifact Name  Versions Metadata Get",
+        "type": "array[object]"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "version_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "load_artifact_version_apps__app_name__users__user_id__sessions__session_id__artifacts__artifact_name__versions__version_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Load Artifact Version Apps  App Name  Users  User Id  Sessions  Session Id  Artifacts  Artifact Name  Versions  Version Id  Get",
+        "type": "object"
+      }
+    },
+    "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "artifact_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "version_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_artifact_version_metadata_apps__app_name__users__user_id__sessions__session_id__artifacts__artifact_name__versions__version_id__metadata_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "ArtifactVersion",
+        "type": "object"
+      }
+    },
+    "GET /builder/app/{app_name}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "file_path",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "type": "boolean"
+        }
+      ],
+      "operation_id": "get_agent_builder_builder_app__app_name__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "string"
+      }
+    },
+    "GET /config/telemetry": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "get_telemetry_consent_config_telemetry_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Get Telemetry Consent Config Telemetry Get",
+        "type": "object"
+      }
+    },
+    "GET /dev-ui": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "redirect_dev_ui_add_slash_dev_ui_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "GET /dev-ui/config": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "get_ui_config_dev_ui_config_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "GET /dev/apps/{app_name}/build_graph": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_app_info_dev_apps__app_name__build_graph_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Get App Info Dev Apps  App Name  Build Graph Get",
+        "type": "unknown"
+      }
+    },
+    "GET /dev/apps/{app_name}/build_graph_image": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "dark_mode",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "location": "query",
+          "name": "node",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_app_info_image_dev_apps__app_name__build_graph_image_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Get App Info Image Dev Apps  App Name  Build Graph Image Get",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/builder": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "file_path",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "type": "boolean"
+        }
+      ],
+      "operation_id": "get_agent_builder_dev_apps__app_name__builder_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "string"
+      }
+    },
+    "GET /dev/apps/{app_name}/debug/trace/session/{session_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_session_trace_dev_apps__app_name__debug_trace_session__session_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Get Session Trace Dev Apps  App Name  Debug Trace Session  Session Id  Get",
+        "type": "unknown"
+      }
+    },
+    "GET /dev/apps/{app_name}/debug/trace/{event_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "event_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_trace_dict_dev_apps__app_name__debug_trace__event_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Get Trace Dict Dev Apps  App Name  Debug Trace  Event Id  Get",
+        "type": "unknown"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval-results": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_eval_results_dev_apps__app_name__eval_results_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "ListEvalResultsResponse",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval-results/{eval_result_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_result_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_eval_result_dev_apps__app_name__eval_results__eval_result_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "EvalResult",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval-sets": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_eval_sets_dev_apps__app_name__eval_sets_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "ListEvalSetsResponse",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_eval_dev_apps__app_name__eval_sets__eval_set_id__eval_cases__eval_case_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "EvalCase",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval_results": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_eval_results_legacy_dev_apps__app_name__eval_results_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Eval Results Legacy Dev Apps  App Name  Eval Results Get",
+        "type": "array[string]"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval_results/{eval_result_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_result_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_eval_result_legacy_dev_apps__app_name__eval_results__eval_result_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "EvalSetResult",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval_sets": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_eval_sets_legacy_dev_apps__app_name__eval_sets_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Eval Sets Legacy Dev Apps  App Name  Eval Sets Get",
+        "type": "array[string]"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_evals_in_eval_set_dev_apps__app_name__eval_sets__eval_set_id__evals_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Evals In Eval Set Dev Apps  App Name  Eval Sets  Eval Set Id  Evals Get",
+        "type": "array[string]"
+      }
+    },
+    "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_eval_dev_apps__app_name__eval_sets__eval_set_id__evals__eval_case_id__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "EvalCase",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/graph": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "dark_mode",
+          "required": false,
+          "type": "boolean"
+        }
+      ],
+      "operation_id": "get_app_graph_dot_dev_apps__app_name__graph_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Get App Graph Dot Dev Apps  App Name  Graph Get",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/metrics-info": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_metrics_info_dev_apps__app_name__metrics_info_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "ListMetricsInfoResponse",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/tests": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "list_tests_dev_apps__app_name__tests_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Tests Dev Apps  App Name  Tests Get",
+        "type": "array[string]"
+      }
+    },
+    "GET /dev/apps/{app_name}/tests/{test_name}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "test_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_test_content_dev_apps__app_name__tests__test_name__get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Get Test Content Dev Apps  App Name  Tests  Test Name  Get",
+        "type": "object"
+      }
+    },
+    "GET /dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "event_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "get_event_graph_dev_apps__app_name__users__user_id__sessions__session_id__events__event_id__graph_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "GET /health": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "health_health_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Health Health Get",
+        "type": "object"
+      }
+    },
+    "GET /list-apps": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "query",
+          "name": "detailed",
+          "required": false,
+          "type": "boolean"
+        }
+      ],
+      "operation_id": "list_apps_list_apps_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response List Apps List Apps Get",
+        "type": "union[array[string]|object]"
+      }
+    },
+    "GET /version": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "version_version_get",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Version Version Get",
+        "type": "object"
+      }
+    },
+    "PATCH /apps/{app_name}/users/{user_id}/memory": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "patch_memory_apps__app_name__users__user_id__memory_patch",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "stateDelta",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "operation_id": "update_session_apps__app_name__users__user_id__sessions__session_id__patch",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Session",
+        "type": "object"
+      }
+    },
+    "POST /agent-identity/finalize": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "body",
+          "name": "connectorName",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "userIdValidationState",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "consentNonce",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "finalize_agent_identity_credentials_agent_identity_finalize_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Finalize Agent Identity Credentials Agent Identity Finalize Post",
+        "type": "object"
+      }
+    },
+    "POST /api/reasoning_engine": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "query_api_reasoning_engine_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "POST /api/stream_reasoning_engine": {
+      "declared_status_codes": [
+        "200"
+      ],
+      "inputs": [],
+      "operation_id": "stream_query_api_stream_reasoning_engine_post",
+      "response": {
+        "code": "200",
+        "has_schema": false,
+        "title": null,
+        "type": null
+      }
+    },
+    "POST /apps/{app_name}/trigger/eventarc": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "data",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "source",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "type",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "id",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "time",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "specversion",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "message",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "subscription",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "operation_id": "trigger_eventarc_apps__app_name__trigger_eventarc_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "TriggerResponse",
+        "type": "object"
+      }
+    },
+    "POST /apps/{app_name}/trigger/pubsub": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "message",
+          "required": true,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "subscription",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "operation_id": "trigger_pubsub_apps__app_name__trigger_pubsub_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "TriggerResponse",
+        "type": "object"
+      }
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "sessionId",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "state",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "events",
+          "required": false,
+          "type": "array[object]"
+        }
+      ],
+      "operation_id": "create_session_apps__app_name__users__user_id__sessions_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Session",
+        "type": "object"
+      }
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "__body__",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "create_session_with_id_apps__app_name__users__user_id__sessions__session_id__post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Session",
+        "type": "object"
+      }
+    },
+    "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "user_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "session_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "filename",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "artifact",
+          "required": true,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "customMetadata",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "save_artifact_apps__app_name__users__user_id__sessions__session_id__artifacts_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "ArtifactVersion",
+        "type": "object"
+      }
+    },
+    "POST /builder/app/{app_name}/cancel": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "builder_cancel_builder_app__app_name__cancel_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Builder Cancel Builder App  App Name  Cancel Post",
+        "type": "boolean"
+      }
+    },
+    "POST /builder/save": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "location": "body",
+          "name": "files",
+          "required": true,
+          "type": "array[string]"
+        }
+      ],
+      "operation_id": "builder_build_builder_save_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Builder Build Builder Save Post",
+        "type": "boolean"
+      }
+    },
+    "POST /config/telemetry": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "body",
+          "name": "telemetry",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "operation_id": "set_telemetry_consent_config_telemetry_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Set Telemetry Consent Config Telemetry Post",
+        "type": "object"
+      }
+    },
+    "POST /dev/apps/{app_name}/builder/cancel": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "builder_cancel_dev_apps__app_name__builder_cancel_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Builder Cancel Dev Apps  App Name  Builder Cancel Post",
+        "type": "boolean"
+      }
+    },
+    "POST /dev/apps/{app_name}/builder/save": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "tmp",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "location": "body",
+          "name": "files",
+          "required": true,
+          "type": "array[string]"
+        }
+      ],
+      "operation_id": "builder_build_dev_apps__app_name__builder_save_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Builder Build Dev Apps  App Name  Builder Save Post",
+        "type": "boolean"
+      }
+    },
+    "POST /dev/apps/{app_name}/eval-sets": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "evalSet",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "operation_id": "create_eval_set_dev_apps__app_name__eval_sets_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "EvalSet",
+        "type": "object"
+      }
+    },
+    "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "add_session_to_eval_set_dev_apps__app_name__eval_sets__eval_set_id__add_session_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/run": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "evalIds",
+          "required": false,
+          "type": "array[string]"
+        },
+        {
+          "location": "body",
+          "name": "evalCaseIds",
+          "required": false,
+          "type": "array[string]"
+        },
+        {
+          "location": "body",
+          "name": "evalMetrics",
+          "required": true,
+          "type": "array[object]"
+        },
+        {
+          "location": "body",
+          "name": "liveModelConfig",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "userSimulatorConfig",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "run_eval_dev_apps__app_name__eval_sets__eval_set_id__run_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "RunEvalResponse",
+        "type": "object"
+      }
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "create_eval_set_legacy_dev_apps__app_name__eval_sets__eval_set_id__post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "operation_id": "add_session_to_eval_set_dev_apps__app_name__eval_sets__eval_set_id__add_session_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "evalIds",
+          "required": false,
+          "type": "array[string]"
+        },
+        {
+          "location": "body",
+          "name": "evalCaseIds",
+          "required": false,
+          "type": "array[string]"
+        },
+        {
+          "location": "body",
+          "name": "evalMetrics",
+          "required": true,
+          "type": "array[object]"
+        },
+        {
+          "location": "body",
+          "name": "liveModelConfig",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "userSimulatorConfig",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "run_eval_legacy_dev_apps__app_name__eval_sets__eval_set_id__run_eval_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Run Eval Legacy Dev Apps  App Name  Eval Sets  Eval Set Id  Run Eval Post",
+        "type": "array[object]"
+      }
+    },
+    "POST /dev/apps/{app_name}/tests/rebuild": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "test_name",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "operation_id": "rebuild_app_tests_dev_apps__app_name__tests_rebuild_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Rebuild App Tests Dev Apps  App Name  Tests Rebuild Post",
+        "type": "object"
+      }
+    },
+    "POST /dev/apps/{app_name}/tests/run": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "query",
+          "name": "test_name",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "operation_id": "run_app_tests_dev_apps__app_name__tests_run_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "POST /run": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "body",
+          "name": "appName",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "newMessage",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "streaming",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "location": "body",
+          "name": "stateDelta",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "functionCallEventId",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "invocationId",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "customMetadata",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "run_agent_run_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Run Agent Run Post",
+        "type": "array[object]"
+      }
+    },
+    "POST /run_sse": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "body",
+          "name": "appName",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "userId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "sessionId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "newMessage",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "streaming",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "location": "body",
+          "name": "stateDelta",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "functionCallEventId",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "invocationId",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "customMetadata",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "run_agent_sse_run_sse_post",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "conversation",
+          "required": false,
+          "type": "array[object]"
+        },
+        {
+          "location": "body",
+          "name": "conversationScenario",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "sessionInput",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "creationTimestamp",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "location": "body",
+          "name": "rubrics",
+          "required": false,
+          "type": "array[object]"
+        },
+        {
+          "location": "body",
+          "name": "finalSessionState",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "update_eval_dev_apps__app_name__eval_sets__eval_set_id__eval_cases__eval_case_id__put",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_set_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "eval_case_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "evalId",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "conversation",
+          "required": false,
+          "type": "array[object]"
+        },
+        {
+          "location": "body",
+          "name": "conversationScenario",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "sessionInput",
+          "required": false,
+          "type": "object"
+        },
+        {
+          "location": "body",
+          "name": "creationTimestamp",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "location": "body",
+          "name": "rubrics",
+          "required": false,
+          "type": "array[object]"
+        },
+        {
+          "location": "body",
+          "name": "finalSessionState",
+          "required": false,
+          "type": "object"
+        }
+      ],
+      "operation_id": "update_eval_dev_apps__app_name__eval_sets__eval_set_id__evals__eval_case_id__put",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": null,
+        "type": "unknown"
+      }
+    },
+    "PUT /dev/apps/{app_name}/tests/{test_name}": {
+      "declared_status_codes": [
+        "200",
+        "422"
+      ],
+      "inputs": [
+        {
+          "location": "path",
+          "name": "app_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "path",
+          "name": "test_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "location": "body",
+          "name": "sessionData",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "operation_id": "create_test_dev_apps__app_name__tests__test_name__put",
+      "response": {
+        "code": "200",
+        "has_schema": true,
+        "title": "Response Create Test Dev Apps  App Name  Tests  Test Name  Put",
+        "type": "object"
+      }
+    }
+  },
+  "per_config": {
+    "api_server": [
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "GET /apps/{app_name}/app-info",
+      "GET /apps/{app_name}/users/{user_id}/sessions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata",
+      "GET /health",
+      "GET /list-apps",
+      "GET /version",
+      "PATCH /apps/{app_name}/users/{user_id}/memory",
+      "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /agent-identity/finalize",
+      "POST /apps/{app_name}/users/{user_id}/sessions",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "POST /run",
+      "POST /run_sse"
+    ],
+    "enterprise": [
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "GET /apps/{app_name}/app-info",
+      "GET /apps/{app_name}/users/{user_id}/sessions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata",
+      "GET /health",
+      "GET /list-apps",
+      "GET /version",
+      "PATCH /apps/{app_name}/users/{user_id}/memory",
+      "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /agent-identity/finalize",
+      "POST /api/reasoning_engine",
+      "POST /api/stream_reasoning_engine",
+      "POST /apps/{app_name}/users/{user_id}/sessions",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "POST /run",
+      "POST /run_sse"
+    ],
+    "web": [
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "DELETE /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "DELETE /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "DELETE /dev/apps/{app_name}/tests/{test_name}",
+      "GET /",
+      "GET /apps/{app_name}/app-info",
+      "GET /apps/{app_name}/users/{user_id}/sessions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata",
+      "GET /builder/app/{app_name}",
+      "GET /config/telemetry",
+      "GET /dev-ui",
+      "GET /dev-ui/config",
+      "GET /dev/apps/{app_name}/build_graph",
+      "GET /dev/apps/{app_name}/build_graph_image",
+      "GET /dev/apps/{app_name}/builder",
+      "GET /dev/apps/{app_name}/debug/trace/session/{session_id}",
+      "GET /dev/apps/{app_name}/debug/trace/{event_id}",
+      "GET /dev/apps/{app_name}/eval-results",
+      "GET /dev/apps/{app_name}/eval-results/{eval_result_id}",
+      "GET /dev/apps/{app_name}/eval-sets",
+      "GET /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "GET /dev/apps/{app_name}/eval_results",
+      "GET /dev/apps/{app_name}/eval_results/{eval_result_id}",
+      "GET /dev/apps/{app_name}/eval_sets",
+      "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals",
+      "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "GET /dev/apps/{app_name}/graph",
+      "GET /dev/apps/{app_name}/metrics-info",
+      "GET /dev/apps/{app_name}/tests",
+      "GET /dev/apps/{app_name}/tests/{test_name}",
+      "GET /dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph",
+      "GET /health",
+      "GET /list-apps",
+      "GET /version",
+      "PATCH /apps/{app_name}/users/{user_id}/memory",
+      "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /agent-identity/finalize",
+      "POST /apps/{app_name}/users/{user_id}/sessions",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "POST /builder/app/{app_name}/cancel",
+      "POST /builder/save",
+      "POST /config/telemetry",
+      "POST /dev/apps/{app_name}/builder/cancel",
+      "POST /dev/apps/{app_name}/builder/save",
+      "POST /dev/apps/{app_name}/eval-sets",
+      "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session",
+      "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/run",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval",
+      "POST /dev/apps/{app_name}/tests/rebuild",
+      "POST /dev/apps/{app_name}/tests/run",
+      "POST /run",
+      "POST /run_sse",
+      "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "PUT /dev/apps/{app_name}/tests/{test_name}"
+    ],
+    "web_a2a": [
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "DELETE /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "DELETE /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "DELETE /dev/apps/{app_name}/tests/{test_name}",
+      "GET /",
+      "GET /apps/{app_name}/app-info",
+      "GET /apps/{app_name}/users/{user_id}/sessions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata",
+      "GET /builder/app/{app_name}",
+      "GET /config/telemetry",
+      "GET /dev-ui",
+      "GET /dev-ui/config",
+      "GET /dev/apps/{app_name}/build_graph",
+      "GET /dev/apps/{app_name}/build_graph_image",
+      "GET /dev/apps/{app_name}/builder",
+      "GET /dev/apps/{app_name}/debug/trace/session/{session_id}",
+      "GET /dev/apps/{app_name}/debug/trace/{event_id}",
+      "GET /dev/apps/{app_name}/eval-results",
+      "GET /dev/apps/{app_name}/eval-results/{eval_result_id}",
+      "GET /dev/apps/{app_name}/eval-sets",
+      "GET /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "GET /dev/apps/{app_name}/eval_results",
+      "GET /dev/apps/{app_name}/eval_results/{eval_result_id}",
+      "GET /dev/apps/{app_name}/eval_sets",
+      "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals",
+      "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "GET /dev/apps/{app_name}/graph",
+      "GET /dev/apps/{app_name}/metrics-info",
+      "GET /dev/apps/{app_name}/tests",
+      "GET /dev/apps/{app_name}/tests/{test_name}",
+      "GET /dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph",
+      "GET /health",
+      "GET /list-apps",
+      "GET /version",
+      "PATCH /apps/{app_name}/users/{user_id}/memory",
+      "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /agent-identity/finalize",
+      "POST /apps/{app_name}/users/{user_id}/sessions",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "POST /builder/app/{app_name}/cancel",
+      "POST /builder/save",
+      "POST /config/telemetry",
+      "POST /dev/apps/{app_name}/builder/cancel",
+      "POST /dev/apps/{app_name}/builder/save",
+      "POST /dev/apps/{app_name}/eval-sets",
+      "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session",
+      "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/run",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval",
+      "POST /dev/apps/{app_name}/tests/rebuild",
+      "POST /dev/apps/{app_name}/tests/run",
+      "POST /run",
+      "POST /run_sse",
+      "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "PUT /dev/apps/{app_name}/tests/{test_name}"
+    ],
+    "web_triggers": [
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "DELETE /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "DELETE /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "DELETE /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "DELETE /dev/apps/{app_name}/tests/{test_name}",
+      "GET /",
+      "GET /apps/{app_name}/app-info",
+      "GET /apps/{app_name}/users/{user_id}/sessions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/metadata",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}",
+      "GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name}/versions/{version_id}/metadata",
+      "GET /builder/app/{app_name}",
+      "GET /config/telemetry",
+      "GET /dev-ui",
+      "GET /dev-ui/config",
+      "GET /dev/apps/{app_name}/build_graph",
+      "GET /dev/apps/{app_name}/build_graph_image",
+      "GET /dev/apps/{app_name}/builder",
+      "GET /dev/apps/{app_name}/debug/trace/session/{session_id}",
+      "GET /dev/apps/{app_name}/debug/trace/{event_id}",
+      "GET /dev/apps/{app_name}/eval-results",
+      "GET /dev/apps/{app_name}/eval-results/{eval_result_id}",
+      "GET /dev/apps/{app_name}/eval-sets",
+      "GET /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "GET /dev/apps/{app_name}/eval_results",
+      "GET /dev/apps/{app_name}/eval_results/{eval_result_id}",
+      "GET /dev/apps/{app_name}/eval_sets",
+      "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals",
+      "GET /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "GET /dev/apps/{app_name}/graph",
+      "GET /dev/apps/{app_name}/metrics-info",
+      "GET /dev/apps/{app_name}/tests",
+      "GET /dev/apps/{app_name}/tests/{test_name}",
+      "GET /dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph",
+      "GET /health",
+      "GET /list-apps",
+      "GET /version",
+      "PATCH /apps/{app_name}/users/{user_id}/memory",
+      "PATCH /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /agent-identity/finalize",
+      "POST /apps/{app_name}/trigger/eventarc",
+      "POST /apps/{app_name}/trigger/pubsub",
+      "POST /apps/{app_name}/users/{user_id}/sessions",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}",
+      "POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts",
+      "POST /builder/app/{app_name}/cancel",
+      "POST /builder/save",
+      "POST /config/telemetry",
+      "POST /dev/apps/{app_name}/builder/cancel",
+      "POST /dev/apps/{app_name}/builder/save",
+      "POST /dev/apps/{app_name}/eval-sets",
+      "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session",
+      "POST /dev/apps/{app_name}/eval-sets/{eval_set_id}/run",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session",
+      "POST /dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval",
+      "POST /dev/apps/{app_name}/tests/rebuild",
+      "POST /dev/apps/{app_name}/tests/run",
+      "POST /run",
+      "POST /run_sse",
+      "PUT /dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}",
+      "PUT /dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}",
+      "PUT /dev/apps/{app_name}/tests/{test_name}"
+    ]
+  }
+}

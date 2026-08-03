@@ -1,0 +1,6 @@
+endpoints scored: 69
+parameters  agree=69  disagree=0  absent=0  (exact incl. type+required=69)
+return type agree=53  disagree=0  absent=0  no-shape-either-side=16   {'declared_no_payload': 5, 'agree_shape': 30, 'neither_declares': 9, 'agree_named_model': 18, 'declared_untyped': 3, 'response_object': 4}
+exceptions  37/69 endpoints have a raise site; 65/66 HTTPException sites carry a literal status code
+GATE (>=0.80): produced both = 60/69 = 0.8696   validated both = 53/69 = 0.7681
+       restricted to the 53 endpoints where a return contract exists on either side: 53/53 = 1.0000

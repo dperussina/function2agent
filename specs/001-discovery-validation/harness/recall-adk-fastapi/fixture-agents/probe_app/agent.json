@@ -1,0 +1,11 @@
+{
+  "name": "probe_app",
+  "description": "probe agent for route enumeration",
+  "url": "http://localhost:8000/a2a/probe_app",
+  "version": "1.0.0",
+  "protocolVersion": "0.3.0",
+  "capabilities": {"streaming": true},
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": []
+}

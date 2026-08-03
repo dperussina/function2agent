@@ -1,0 +1,4938 @@
+{
+  "configs": {
+    "api_server": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "web": false
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        }
+      ],
+      "entry": "src.google.adk.cli.fast_api.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    },
+    "api_server_pubsub": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/trigger/pubsub"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "trigger_sources": [
+          "pubsub"
+        ],
+        "web": false
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "self.trigger_sources",
+            "'pubsub' in self._trigger_sources"
+          ],
+          "lineno": 411,
+          "method": "POST",
+          "module": "src.google.adk.cli.trigger_routes",
+          "path": "/apps/{app_name}/trigger/pubsub"
+        }
+      ],
+      "entry": "src.google.adk.cli.fast_api.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    },
+    "devserver_no_assets": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/config/telemetry"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph_image"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/builder"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/{event_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/metrics-info"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/config/telemetry"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/cancel"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/save"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/rebuild"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/run"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "web": true,
+        "web_assets_dir": null
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 250,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 255,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 455,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 503,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 511,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 556,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/{event_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 566,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 611,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph_image"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 653,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 667,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/rebuild"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 686,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 748,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 769,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 786,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 809,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 833,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 855,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 868,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 886,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 909,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 918,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 978,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1080,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1178,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1198,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1210,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/metrics-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1234,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1265,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        }
+      ],
+      "entry": "dev_server.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    },
+    "enterprise": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/api/reasoning_engine"
+        ],
+        [
+          "POST",
+          "/api/stream_reasoning_engine"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "gemini_enterprise_app_name": "probe_app",
+        "web": false
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "gemini_enterprise_app_name"
+          ],
+          "lineno": 849,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/api/reasoning_engine"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "gemini_enterprise_app_name"
+          ],
+          "lineno": 892,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/api/stream_reasoning_engine"
+        }
+      ],
+      "entry": "src.google.adk.cli.fast_api.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    },
+    "web": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/builder/app/{app_name}"
+        ],
+        [
+          "GET",
+          "/config/telemetry"
+        ],
+        [
+          "GET",
+          "/dev-ui"
+        ],
+        [
+          "GET",
+          "/dev-ui/config"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph_image"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/builder"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/{event_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/metrics-info"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/builder/app/{app_name}/cancel"
+        ],
+        [
+          "POST",
+          "/builder/save"
+        ],
+        [
+          "POST",
+          "/config/telemetry"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/cancel"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/save"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/rebuild"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/run"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "web": true
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1118,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui/config"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1125,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1129,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 250,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 255,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 455,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 503,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 511,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 556,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/{event_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 566,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 586,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 611,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph_image"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 653,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 667,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/rebuild"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 686,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 748,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 769,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 786,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 809,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 833,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 855,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 868,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 886,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 909,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 918,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 978,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1080,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1178,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1198,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1210,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/metrics-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1234,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1265,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 296,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 353,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 361,
+          "method": "GET",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}"
+        }
+      ],
+      "entry": "src.google.adk.cli.fast_api.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    },
+    "web_a2a": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/builder/app/{app_name}"
+        ],
+        [
+          "GET",
+          "/config/telemetry"
+        ],
+        [
+          "GET",
+          "/dev-ui"
+        ],
+        [
+          "GET",
+          "/dev-ui/config"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph_image"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/builder"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/{event_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/metrics-info"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/builder/app/{app_name}/cancel"
+        ],
+        [
+          "POST",
+          "/builder/save"
+        ],
+        [
+          "POST",
+          "/config/telemetry"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/cancel"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/save"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/rebuild"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/run"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "a2a": true,
+        "web": true
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1118,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui/config"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1125,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1129,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 250,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 255,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 455,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 503,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 511,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 556,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/{event_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 566,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 586,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 611,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph_image"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 653,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 667,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/rebuild"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 686,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 748,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 769,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 786,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 809,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 833,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 855,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 868,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 886,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 909,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 918,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 978,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1080,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1178,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1198,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1210,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/metrics-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1234,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1265,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 296,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 353,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 361,
+          "method": "GET",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}"
+        }
+      ],
+      "entry": "src.google.adk.cli.fast_api.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    },
+    "web_no_multipart": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/builder/app/{app_name}"
+        ],
+        [
+          "GET",
+          "/config/telemetry"
+        ],
+        [
+          "GET",
+          "/dev-ui"
+        ],
+        [
+          "GET",
+          "/dev-ui/config"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph_image"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/builder"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/{event_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/metrics-info"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/builder/app/{app_name}/cancel"
+        ],
+        [
+          "POST",
+          "/builder/save"
+        ],
+        [
+          "POST",
+          "/config/telemetry"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/cancel"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/save"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/rebuild"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/run"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "web": true
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1118,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui/config"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1125,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1129,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 250,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 255,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 455,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 503,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 511,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 556,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/{event_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 566,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 586,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 611,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph_image"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 653,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 667,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/rebuild"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 686,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 748,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 769,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 786,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 809,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 833,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 855,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 868,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 886,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 909,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 918,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 978,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1080,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1178,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1198,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1210,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/metrics-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1234,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1265,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 296,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 353,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 361,
+          "method": "GET",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}"
+        }
+      ],
+      "entry": "src.google.adk.cli.fast_api.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    },
+    "web_triggers": {
+      "certain": [
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "DELETE",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "DELETE",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/app-info"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        ],
+        [
+          "GET",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        ],
+        [
+          "GET",
+          "/builder/app/{app_name}"
+        ],
+        [
+          "GET",
+          "/config/telemetry"
+        ],
+        [
+          "GET",
+          "/dev-ui"
+        ],
+        [
+          "GET",
+          "/dev-ui/config"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/build_graph_image"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/builder"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/debug/trace/{event_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/graph"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/metrics-info"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "GET",
+          "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        ],
+        [
+          "GET",
+          "/health"
+        ],
+        [
+          "GET",
+          "/list-apps"
+        ],
+        [
+          "GET",
+          "/version"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/memory"
+        ],
+        [
+          "PATCH",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/agent-identity/finalize"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/trigger/eventarc"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/trigger/pubsub"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        ],
+        [
+          "POST",
+          "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        ],
+        [
+          "POST",
+          "/builder/app/{app_name}/cancel"
+        ],
+        [
+          "POST",
+          "/builder/save"
+        ],
+        [
+          "POST",
+          "/config/telemetry"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/cancel"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/builder/save"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/rebuild"
+        ],
+        [
+          "POST",
+          "/dev/apps/{app_name}/tests/run"
+        ],
+        [
+          "POST",
+          "/run"
+        ],
+        [
+          "POST",
+          "/run_sse"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        ],
+        [
+          "PUT",
+          "/dev/apps/{app_name}/tests/{test_name}"
+        ],
+        [
+          "WS",
+          "/run_live"
+        ]
+      ],
+      "declared_config": {
+        "trigger_sources": [
+          "pubsub",
+          "eventarc"
+        ],
+        "web": true
+      },
+      "detail": [
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1118,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui/config"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1125,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 1129,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/dev-ui"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1159,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/health"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1163,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/version"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1179,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/agent-identity/finalize"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1255,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/list-apps"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1267,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/app-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1299,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1314,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1333,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1350,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1372,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1383,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1434,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1467,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/metadata"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1485,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1532,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions/{version_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1562,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1573,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}/versions"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1590,
+          "method": "GET",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1611,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/sessions/{session_id}/artifacts/{artifact_name:path}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1622,
+          "method": "PATCH",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/apps/{app_name}/users/{user_id}/memory"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1668,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1734,
+          "method": "POST",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_sse"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1830,
+          "method": "WS",
+          "module": "src.google.adk.cli.api_server",
+          "path": "/run_live"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 250,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 255,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/config/telemetry"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 455,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 503,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 511,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/builder"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 556,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/{event_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 566,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/debug/trace/session/{session_id}"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "web_assets_dir"
+          ],
+          "lineno": 586,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 611,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/build_graph_image"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 653,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 667,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/rebuild"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 686,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 748,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 769,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 786,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/tests/{test_name}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 809,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 833,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 855,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 868,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/run_eval"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 886,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 909,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 918,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/add-session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 938,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/add_session"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 978,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1002,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1030,
+          "method": "PUT",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/eval-cases/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1065,
+          "method": "DELETE",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval_sets/{eval_set_id}/evals/{eval_case_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1080,
+          "method": "POST",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-sets/{eval_set_id}/run"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1178,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results/{eval_result_id}"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1198,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/eval-results"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1210,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/metrics-info"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1234,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 1265,
+          "method": "GET",
+          "module": "src.google.adk.cli.dev_server",
+          "path": "/dev/apps/{app_name}/users/{user_id}/sessions/{session_id}/events/{event_id}/graph"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 296,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/save"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 353,
+          "method": "POST",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}/cancel"
+        },
+        {
+          "certain": true,
+          "guards": [],
+          "lineno": 361,
+          "method": "GET",
+          "module": "src.google.adk.cli.fast_api",
+          "path": "/builder/app/{app_name}"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "self.trigger_sources",
+            "'pubsub' in self._trigger_sources"
+          ],
+          "lineno": 411,
+          "method": "POST",
+          "module": "src.google.adk.cli.trigger_routes",
+          "path": "/apps/{app_name}/trigger/pubsub"
+        },
+        {
+          "certain": true,
+          "guards": [
+            "self.trigger_sources",
+            "'eventarc' in self._trigger_sources"
+          ],
+          "lineno": 477,
+          "method": "POST",
+          "module": "src.google.adk.cli.trigger_routes",
+          "path": "/apps/{app_name}/trigger/eventarc"
+        }
+      ],
+      "entry": "src.google.adk.cli.fast_api.get_fast_api_app",
+      "notes": [],
+      "ok": true,
+      "uncertain": []
+    }
+  },
+  "mechanisms": [
+    "M1_class_dispatch",
+    "M2_kwarg_flow",
+    "M3_attribute_flow",
+    "M4_membership",
+    "M5_optional_import",
+    "M6_explicit_presence",
+    "M7_class_attrs",
+    "M8_comprehension"
+  ],
+  "mode": "interprocedural"
+}

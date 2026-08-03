@@ -1,0 +1,858 @@
+{
+  "django": {
+    "adversarial_probe": {
+      "handlers_invoked": [
+        "F2APROBE /anymethod"
+      ],
+      "note": "outside the candidate set; not scored in the gate",
+      "paths": [
+        "/anymethod"
+      ],
+      "result": {
+        "/anymethod": {
+          "allow": null,
+          "body": "{\"detail\": \"unsupported\"}",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": true,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 400,
+          "url": "/anymethod"
+        }
+      }
+    },
+    "arms": {
+      "P-e14": {
+        "/admin/purge": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/admin/purge"
+        },
+        "/both": {
+          "allow": "GET, POST",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "PUT",
+          "routed": true,
+          "status": 405,
+          "url": "/both"
+        },
+        "/f2a-phantom-alpha": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-alpha"
+        },
+        "/f2a-phantom-delta": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-delta"
+        },
+        "/f2a/phantom/gamma": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a/phantom/gamma"
+        },
+        "/gated": {
+          "allow": "GET",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "PUT",
+          "routed": true,
+          "status": 405,
+          "url": "/gated"
+        },
+        "/health": {
+          "allow": "GET",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/health"
+        },
+        "/items/f2a-phantom-beta": {
+          "allow": null,
+          "body": "{\"detail\": \"Item not found\"}",
+          "handler_ran_calibrated": true,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/items/f2a-phantom-beta"
+        },
+        "/items/special": {
+          "allow": "POST",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": true,
+          "status": 405,
+          "url": "/items/special"
+        },
+        "/items/{name}": {
+          "allow": "GET",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-probe"
+        },
+        "/multi": {
+          "allow": "GET, DELETE",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/multi"
+        }
+      },
+      "P-global": {
+        "/admin/purge": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/admin/purge"
+        },
+        "/both": {
+          "allow": "GET, POST",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/both"
+        },
+        "/f2a-phantom-alpha": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-alpha"
+        },
+        "/f2a-phantom-delta": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-delta"
+        },
+        "/f2a/phantom/gamma": {
+          "allow": null,
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a/phantom/gamma"
+        },
+        "/gated": {
+          "allow": "GET",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/gated"
+        },
+        "/health": {
+          "allow": "GET",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/health"
+        },
+        "/items/f2a-phantom-beta": {
+          "allow": "GET",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-phantom-beta"
+        },
+        "/items/special": {
+          "allow": "POST",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/special"
+        },
+        "/items/{name}": {
+          "allow": "GET",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-probe"
+        },
+        "/multi": {
+          "allow": "GET, DELETE",
+          "body": "",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/multi"
+        }
+      }
+    },
+    "docs_status": 404,
+    "global_verb": "F2APROBE",
+    "handler_log": {
+      "P-e14": [
+        "GET /items/{name} f2a-phantom-beta"
+      ],
+      "P-global": [],
+      "schema-classification": []
+    },
+    "kind": "fixture",
+    "liveness": 404,
+    "ok": true,
+    "router_404": {
+      "probes": [
+        {
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "path": "/f2a-certainly-absent-f2a-probe",
+          "status": 404
+        },
+        {
+          "body": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+          "path": "/f2a/certainly/absent",
+          "status": 404
+        }
+      ],
+      "router_404_bodies": [
+        "<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>"
+      ]
+    },
+    "schema": {
+      "body_prefix": "\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <title>Not Found</title>\n</head>\n<body>\n  <h1>Not Found</h1><p>The requested resource was not found on this server.</p>\n</body>\n</html>\n",
+      "naive_2xx_reading": "not-present",
+      "state": "ABSENT",
+      "status": 404,
+      "url": "http://127.0.0.1:57801/openapi.json"
+    },
+    "target": "django"
+  },
+  "flask": {
+    "adversarial_probe": {
+      "handlers_invoked": [],
+      "note": "outside the candidate set; not scored in the gate",
+      "paths": [
+        "/anymethod"
+      ],
+      "result": {
+        "/anymethod": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/anymethod"
+        }
+      }
+    },
+    "arms": {
+      "P-e14": {
+        "/admin/purge": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/admin/purge"
+        },
+        "/both": {
+          "allow": "OPTIONS, POST, HEAD, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "PUT",
+          "routed": true,
+          "status": 405,
+          "url": "/both"
+        },
+        "/f2a-phantom-alpha": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-alpha"
+        },
+        "/f2a-phantom-delta": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-delta"
+        },
+        "/f2a/phantom/gamma": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a/phantom/gamma"
+        },
+        "/gated": {
+          "allow": "OPTIONS, HEAD, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "PUT",
+          "routed": true,
+          "status": 405,
+          "url": "/gated"
+        },
+        "/health": {
+          "allow": "OPTIONS, HEAD, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/health"
+        },
+        "/items/f2a-phantom-beta": {
+          "allow": null,
+          "body": "{\"detail\":\"Item not found\"}\n",
+          "handler_ran_calibrated": true,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/items/f2a-phantom-beta"
+        },
+        "/items/special": {
+          "allow": null,
+          "body": "{\"detail\":\"Item not found\"}\n",
+          "handler_ran_calibrated": true,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/items/special"
+        },
+        "/items/{name}": {
+          "allow": "OPTIONS, HEAD, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-probe"
+        },
+        "/multi": {
+          "allow": "DELETE, OPTIONS, HEAD, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/multi"
+        }
+      },
+      "P-global": {
+        "/admin/purge": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/admin/purge"
+        },
+        "/both": {
+          "allow": "HEAD, POST, OPTIONS, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/both"
+        },
+        "/f2a-phantom-alpha": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-alpha"
+        },
+        "/f2a-phantom-delta": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-delta"
+        },
+        "/f2a/phantom/gamma": {
+          "allow": null,
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a/phantom/gamma"
+        },
+        "/gated": {
+          "allow": "HEAD, OPTIONS, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/gated"
+        },
+        "/health": {
+          "allow": "HEAD, OPTIONS, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/health"
+        },
+        "/items/f2a-phantom-beta": {
+          "allow": "HEAD, OPTIONS, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-phantom-beta"
+        },
+        "/items/special": {
+          "allow": "HEAD, POST, OPTIONS, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/special"
+        },
+        "/items/{name}": {
+          "allow": "HEAD, OPTIONS, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-probe"
+        },
+        "/multi": {
+          "allow": "DELETE, OPTIONS, HEAD, GET",
+          "body": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/multi"
+        }
+      }
+    },
+    "docs_status": 404,
+    "global_verb": "F2APROBE",
+    "handler_log": {
+      "P-e14": [
+        "GET /items/{name} f2a-phantom-beta",
+        "GET /items/{name} special"
+      ],
+      "P-global": [],
+      "schema-classification": []
+    },
+    "kind": "fixture",
+    "liveness": 404,
+    "ok": true,
+    "router_404": {
+      "probes": [
+        {
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "path": "/f2a-certainly-absent-f2a-probe",
+          "status": 404
+        },
+        {
+          "body": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+          "path": "/f2a/certainly/absent",
+          "status": 404
+        }
+      ],
+      "router_404_bodies": [
+        "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>"
+      ]
+    },
+    "schema": {
+      "body_prefix": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n",
+      "naive_2xx_reading": "not-present",
+      "state": "ABSENT",
+      "status": 404,
+      "url": "http://127.0.0.1:57785/openapi.json"
+    },
+    "target": "flask"
+  },
+  "starlette": {
+    "adversarial_probe": {
+      "handlers_invoked": [],
+      "note": "outside the candidate set; not scored in the gate",
+      "paths": [
+        "/anymethod"
+      ],
+      "result": {
+        "/anymethod": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/anymethod"
+        }
+      }
+    },
+    "arms": {
+      "P-e14": {
+        "/admin/purge": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/admin/purge"
+        },
+        "/both": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "PUT",
+          "routed": true,
+          "status": 405,
+          "url": "/both"
+        },
+        "/f2a-phantom-alpha": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-alpha"
+        },
+        "/f2a-phantom-delta": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-delta"
+        },
+        "/f2a/phantom/gamma": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a/phantom/gamma"
+        },
+        "/gated": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "PUT",
+          "routed": true,
+          "status": 405,
+          "url": "/gated"
+        },
+        "/health": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/health"
+        },
+        "/items/f2a-phantom-beta": {
+          "allow": null,
+          "body": "{\"detail\":\"Item not found\"}",
+          "handler_ran_calibrated": true,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/items/f2a-phantom-beta"
+        },
+        "/items/special": {
+          "allow": null,
+          "body": "{\"detail\":\"Item not found\"}",
+          "handler_ran_calibrated": true,
+          "handler_ran_provable": false,
+          "probe_verb": "GET",
+          "routed": false,
+          "status": 404,
+          "url": "/items/special"
+        },
+        "/items/{name}": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-probe"
+        },
+        "/multi": {
+          "allow": "DELETE, GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "POST",
+          "routed": true,
+          "status": 405,
+          "url": "/multi"
+        }
+      },
+      "P-global": {
+        "/admin/purge": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/admin/purge"
+        },
+        "/both": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/both"
+        },
+        "/f2a-phantom-alpha": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-alpha"
+        },
+        "/f2a-phantom-delta": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a-phantom-delta"
+        },
+        "/f2a/phantom/gamma": {
+          "allow": null,
+          "body": "Not Found",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": false,
+          "status": 404,
+          "url": "/f2a/phantom/gamma"
+        },
+        "/gated": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/gated"
+        },
+        "/health": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/health"
+        },
+        "/items/f2a-phantom-beta": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-phantom-beta"
+        },
+        "/items/special": {
+          "allow": "POST",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/special"
+        },
+        "/items/{name}": {
+          "allow": "GET, HEAD",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/items/f2a-probe"
+        },
+        "/multi": {
+          "allow": "GET, HEAD, DELETE",
+          "body": "Method Not Allowed",
+          "handler_ran_calibrated": false,
+          "handler_ran_provable": false,
+          "probe_verb": "F2APROBE",
+          "routed": true,
+          "status": 405,
+          "url": "/multi"
+        }
+      }
+    },
+    "docs_status": 404,
+    "global_verb": "F2APROBE",
+    "handler_log": {
+      "P-e14": [
+        "GET /items/{name} f2a-phantom-beta",
+        "GET /items/{name} special"
+      ],
+      "P-global": [],
+      "schema-classification": []
+    },
+    "kind": "fixture",
+    "liveness": 404,
+    "ok": true,
+    "router_404": {
+      "probes": [
+        {
+          "body": "Not Found",
+          "path": "/f2a-certainly-absent-f2a-probe",
+          "status": 404
+        },
+        {
+          "body": "Not Found",
+          "path": "/f2a/certainly/absent",
+          "status": 404
+        }
+      ],
+      "router_404_bodies": [
+        "Not Found"
+      ]
+    },
+    "schema": {
+      "body_prefix": "Not Found",
+      "naive_2xx_reading": "not-present",
+      "state": "ABSENT",
+      "status": 404,
+      "url": "http://127.0.0.1:57765/openapi.json"
+    },
+    "target": "starlette"
+  }
+}
