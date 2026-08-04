@@ -1,0 +1,28 @@
+  PASS  ioctl NOTIF_RECV   [0xc0502100]
+  PASS  ioctl NOTIF_SEND   [0xc0182101]
+  PASS  ioctl ID_VALID is _IOW not _IOR   [0x40082102]
+  PASS  ID_VALID differs from the pre-5.9 _IOR form
+  PASS  struct seccomp_notif is 80 bytes
+  PASS  struct seccomp_notif_resp is 24 bytes
+  PASS  landlock syscall numbers are the arch-independent trio
+  PASS  NEW_LISTENER flag is bit 3
+  PASS  USER_NOTIF ret differs from ALLOW
+  PASS  BPF filter is a whole number of 8-byte instructions   [48 bytes]
+  PASS  BPF filter is 6 instructions
+  PASS  BPF filter mentions USER_NOTIF
+  PASS  BPF filter mentions ALLOW
+  PASS  BPF jump targets stay inside the program
+  PASS  arch table refuses an unknown machine
+  PASS  arch table agrees with the running machine or this is not Linux   [arm64]
+  PASS  seccomp(2) numbers differ by arch, so the table is not decoration
+  PASS  audit arch tokens differ by arch
+  PASS  prctl's syscall number is NOT architecture-independent   [157 on x86_64, 167 on aarch64]
+  PASS  no call site passes a hardcoded prctl number to syscall()
+  PASS  no_new_privs goes through libc.prctl
+  PASS  struct.pack refuses the pointer code under an explicit byte order
+  PASS  SockFprog is pointer-aligned and 16 bytes on LP64   [16 bytes]
+  PASS  SockFprog.len survives the round trip
+  PASS  Rule 8 guard (skipped: needs Linux + fork)   [SKIPPED]
+  PASS  cgroup probe reports ABSENT when there is no v2 hierarchy
+
+26 checks, 0 failures

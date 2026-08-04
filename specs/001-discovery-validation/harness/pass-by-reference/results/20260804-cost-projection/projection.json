@@ -1,0 +1,1620 @@
+{
+  "dry_run": true,
+  "model_calls": 0,
+  "spend_usd": 0.0,
+  "corpus_manifest": {
+    "files": {
+      "data/metrics.csv": {
+        "bytes": 1187581,
+        "sha256": "c10542d95b84e1b0fc0f399732d90ec55c343258325244474704f910aa6441c6"
+      },
+      "logs/app.log": {
+        "bytes": 2964781,
+        "sha256": "91bbf5f4fdb89ed8fdb6e837b92af82a2849c4ab9f836caaaf02262310422af5"
+      },
+      "src/core/mod_00.py": {
+        "bytes": 1762,
+        "sha256": "2ba8378566751637486d2266150e7cd03750d1a72484a53cf4c750c78c039a86"
+      },
+      "src/core/mod_02.py": {
+        "bytes": 2361,
+        "sha256": "3a1f3e85c12b05261d1b3a6ab1f9e5381cad2438735359f902cb6d2ea7c12ead"
+      },
+      "src/core/mod_04.py": {
+        "bytes": 899,
+        "sha256": "b6203466a18c22addc105f36e59ee4b4022f5c0ae72a8e528580fef0cd578178"
+      },
+      "src/core/mod_06.py": {
+        "bytes": 2464,
+        "sha256": "fc7710cfab9eea3b451f55ffd1d8cf9ed2ef3e3347f42e825cf28216fde070ce"
+      },
+      "src/core/mod_08.py": {
+        "bytes": 2597,
+        "sha256": "a8c057fdd2f6c27252eee61691b4454e5b92d3dd5252971226704947765235cb"
+      },
+      "src/core/mod_10.py": {
+        "bytes": 2576,
+        "sha256": "0201863a16455226f3eb8dacd30eb50f049abaac5b3d4eef9843b7c3696b410e"
+      },
+      "src/core/mod_12.py": {
+        "bytes": 2347,
+        "sha256": "335660277fa85f38c850143689650ee93aade5ebf3ed14312ca260794629e770"
+      },
+      "src/core/mod_14.py": {
+        "bytes": 734,
+        "sha256": "91a0397ba1b2ab9b3f3ab979c879a5ad98f2a48ea31f0694aa938f5e9e976c99"
+      },
+      "src/core/mod_16.py": {
+        "bytes": 2240,
+        "sha256": "3744a72a8340220df7216a861922d2b142a298f44ca24849cd265eb954be8906"
+      },
+      "src/core/mod_18.py": {
+        "bytes": 2777,
+        "sha256": "6f7b7c9192b3b1721c73abc526a6dd784661419c7d4c3db555200c749bb92632"
+      },
+      "src/core/mod_20.py": {
+        "bytes": 1300,
+        "sha256": "f0a99c3fc86ab09a19211e08b31f90d7efa35c696b5be960657307401ac064bb"
+      },
+      "src/core/mod_22.py": {
+        "bytes": 2281,
+        "sha256": "ad4dd19d093824eecf9487b49d5935c376b7f49fadb9b6e39f4fa55a9ad2afb4"
+      },
+      "src/core/mod_24.py": {
+        "bytes": 2372,
+        "sha256": "5815486b515b886b14847e1ed6a64bd16f58ceb22b27e334e725aa9ff69bc6db"
+      },
+      "src/core/mod_26.py": {
+        "bytes": 1602,
+        "sha256": "8c7a7a806f14c09206baeb8161538fea6c4b9f8d8755af6f73f892bf57883816"
+      },
+      "src/core/mod_28.py": {
+        "bytes": 1509,
+        "sha256": "15998388a6269962f80679c6ff236f1b18b1fbf741166bb595b1ed4aec69466e"
+      },
+      "src/core/mod_30.py": {
+        "bytes": 935,
+        "sha256": "17de512b010cd84c517747bf7c334cb0c69c5338d7bedcbab963bd9f925a5d74"
+      },
+      "src/core/mod_32.py": {
+        "bytes": 1469,
+        "sha256": "8b1b947cf652487d9f08776d84f0e4fa6e3a243d5fb63d16f28370457fa8a27b"
+      },
+      "src/core/mod_34.py": {
+        "bytes": 2813,
+        "sha256": "759e23cfcfc1ee1cd66974ba14e4befba07dea737d4fa02324c9c06c6c6d7aa0"
+      },
+      "src/core/mod_36.py": {
+        "bytes": 2577,
+        "sha256": "cb62a9908117050713b569294435ce098581f40e4605fcd6749195a9aaee2f76"
+      },
+      "src/core/mod_38.py": {
+        "bytes": 1771,
+        "sha256": "46a2abc4b304cc5074cfebf1ca22ec7d82698b5262ef8dd8fc9933a59af482a9"
+      },
+      "src/edge/mod_01.py": {
+        "bytes": 1320,
+        "sha256": "31612b127e03cb3cc92d93f83a5d9734cfacacbb4a5bfee7d39d8bfebab1ad59"
+      },
+      "src/edge/mod_03.py": {
+        "bytes": 2025,
+        "sha256": "53db055a1aabc10682935f39d35407c64e04c53f763f8797c6b04723ad5f2cf8"
+      },
+      "src/edge/mod_05.py": {
+        "bytes": 1193,
+        "sha256": "ffb78aefdd696163224bf46dd33176090842ed36953c13365747afe3d6a3fb16"
+      },
+      "src/edge/mod_07.py": {
+        "bytes": 1100,
+        "sha256": "2c258ee69a3c156c98dfb5bf526181e8bf111843360c064256b2d6bed5401d62"
+      },
+      "src/edge/mod_09.py": {
+        "bytes": 1657,
+        "sha256": "1c9b80b26cf011ea183ca2303b02dc140f18d6d474f83b20a75cdbbaf7a7da59"
+      },
+      "src/edge/mod_11.py": {
+        "bytes": 1573,
+        "sha256": "879166abff12434374e209b922ec102a7dfbc4347e411308040ead9a7e5fd900"
+      },
+      "src/edge/mod_13.py": {
+        "bytes": 2480,
+        "sha256": "cd53d16f8544eb2f7aa6fa88d8b6306d87580272d5061304e86f01487b06cb11"
+      },
+      "src/edge/mod_15.py": {
+        "bytes": 1239,
+        "sha256": "eed7d6b2afc0893ed3aee4dc0f3ede6be549adcc10902d054bf109797ffbf5a0"
+      },
+      "src/edge/mod_17.py": {
+        "bytes": 2576,
+        "sha256": "e64713a3f4138f0995f183164c1825054841e7a220960cc4853d1b402d20a438"
+      },
+      "src/edge/mod_19.py": {
+        "bytes": 2046,
+        "sha256": "3481fadd0a02d6edf7d28bb68d5e335de4cabe2b529a830f6757803b2e4127e8"
+      },
+      "src/edge/mod_21.py": {
+        "bytes": 2717,
+        "sha256": "25c2a474c2041841d4de7c80034b029f34d2e1cd559944e3aa32b295a4dddbee"
+      },
+      "src/edge/mod_23.py": {
+        "bytes": 1600,
+        "sha256": "75e2dd5f3339e8ae92e8cb34ce837d41070be7a02705494823a982795ba385d0"
+      },
+      "src/edge/mod_25.py": {
+        "bytes": 1266,
+        "sha256": "d8d4cae1c6cb14c461fca3effe89dc049a33b7cf88e9030aad03a3e83598064a"
+      },
+      "src/edge/mod_27.py": {
+        "bytes": 1902,
+        "sha256": "d70ed905102bffcef11f85a26ea493c51c77021aa0577635b3fc3a5d11cec1ae"
+      },
+      "src/edge/mod_29.py": {
+        "bytes": 1709,
+        "sha256": "5c6c713010c730d1f94e94fd149e0b51e0fab61b54359d29c6f8c044f9fd9260"
+      },
+      "src/edge/mod_31.py": {
+        "bytes": 1538,
+        "sha256": "07164ce98f10d5e95ff8b4ab9a1da196dfdd2ad855080b3f8c13ce1279d3ec2a"
+      },
+      "src/edge/mod_33.py": {
+        "bytes": 2649,
+        "sha256": "77dc7816df7eb992a2d9906fde4590d069d54e45cb8d31c93657c7122ca9ad85"
+      },
+      "src/edge/mod_35.py": {
+        "bytes": 2475,
+        "sha256": "e09ba52e9ed65e0203056d236665b8b7af0afb2bb4f86ed3b7a302bd8d9833ca"
+      },
+      "src/edge/mod_37.py": {
+        "bytes": 2652,
+        "sha256": "f1ea3a0149f1cf0876ce789003314e4b0c5cf6e4ae23d59ceb5672d445e1488b"
+      },
+      "src/edge/mod_39.py": {
+        "bytes": 1233,
+        "sha256": "5daa3020133c257e338a42776a36a4c588ff4a76833b229f853da0e05e2b9036"
+      }
+    },
+    "file_count": 42,
+    "total_bytes": 4228698
+  },
+  "measurements": {
+    "dry_run": true,
+    "model_calls": 0,
+    "spend_usd": 0.0,
+    "tasks": {
+      "T01": {
+        "family": "log",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "ls -R . | head -40",
+            "stdout_bytes": 326,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "peek",
+            "cmd": "head -20 logs/app.log",
+            "stdout_bytes": 2098,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep ' ERROR ' logs/app.log",
+            "stdout_bytes": 505932,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep ' ERROR ' logs/app.log | cut -d' ' -f1-3",
+            "stdout_bytes": 160481,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -c ' ERROR ' logs/app.log",
+            "stdout_bytes": 5,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 668842,
+        "plan_answer": "4743",
+        "check_answer": "4743",
+        "cross_check": "agree"
+      },
+      "T02": {
+        "family": "log",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -5 logs/app.log",
+            "stdout_bytes": 535,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep -E 'status=5[0-9][0-9]' logs/app.log",
+            "stdout_bytes": 683247,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep -E 'status=5[0-9][0-9]' logs/app.log | awk '{print $3}'",
+            "stdout_bytes": 44120,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "tally",
+            "cmd": "grep -E 'status=5[0-9][0-9]' logs/app.log | awk '{print $3}' | sort | uniq -c | sort -k1,1rn -k2,2",
+            "stdout_bytes": 71,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -E 'status=5[0-9][0-9]' logs/app.log | awk '{print $3}' | sort | uniq -c | sort -k1,1rn -k2,2 | head -1 | awk '{print $2}'",
+            "stdout_bytes": 8,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 727981,
+        "plan_answer": "billing",
+        "check_answer": "billing",
+        "cross_check": "agree"
+      },
+      "T03": {
+        "family": "log",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -5 logs/app.log",
+            "stdout_bytes": 535,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep 'status=503' logs/app.log",
+            "stdout_bytes": 221939,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep 'status=503' logs/app.log | awk '{print $4}'",
+            "stdout_bytes": 29330,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "grep 'status=503' logs/app.log | awk '{print $4}' | sort -u | wc -l | tr -d ' '",
+            "stdout_bytes": 5,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 251809,
+        "plan_answer": "2095",
+        "check_answer": "2095",
+        "cross_check": "agree"
+      },
+      "T04": {
+        "family": "log",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -5 logs/app.log",
+            "stdout_bytes": 535,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep ' WARN ' logs/app.log",
+            "stdout_bytes": 485103,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep ' WARN ' logs/app.log | sed 's/.*dur_ms=//' | cut -d' ' -f1",
+            "stdout_bytes": 21710,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "grep ' WARN ' logs/app.log | sed 's/.*dur_ms=//' | cut -d' ' -f1 | sort -n | tail -1",
+            "stdout_bytes": 5,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 507353,
+        "plan_answer": "3987",
+        "check_answer": "3987",
+        "cross_check": "agree"
+      },
+      "T05": {
+        "family": "log",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "ls -R . | head -40",
+            "stdout_bytes": 326,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep 'T03:' logs/app.log",
+            "stdout_bytes": 123282,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep 'T03:' logs/app.log | awk '{print $2}'",
+            "stdout_bytes": 6227,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -c 'T03:' logs/app.log",
+            "stdout_bytes": 5,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 129840,
+        "plan_answer": "1166",
+        "check_answer": "1166",
+        "cross_check": "agree"
+      },
+      "T06": {
+        "family": "log",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -5 logs/app.log",
+            "stdout_bytes": 535,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "awk '{print $3}' logs/app.log",
+            "stdout_bytes": 191311,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "awk '{print $3}' logs/app.log | sort | uniq -c",
+            "stdout_bytes": 71,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "awk '{print $3}' logs/app.log | sort -u | wc -l | tr -d ' '",
+            "stdout_bytes": 2,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 1,
+        "total_stdout_bytes": 191919,
+        "plan_answer": "6",
+        "check_answer": "6",
+        "cross_check": "agree"
+      },
+      "T07": {
+        "family": "csv",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -3 data/metrics.csv",
+            "stdout_bytes": 142,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "cut -d, -f4 data/metrics.csv",
+            "stdout_bytes": 117149,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f4",
+            "stdout_bytes": 117140,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "awk -F, 'NR>1{s+=$4} END{print s}' data/metrics.csv",
+            "stdout_bytes": 10,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 234441,
+        "plan_answer": "108411406",
+        "check_answer": "108411406",
+        "cross_check": "agree"
+      },
+      "T08": {
+        "family": "csv",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -3 data/metrics.csv",
+            "stdout_bytes": 142,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f2,5",
+            "stdout_bytes": 296049,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "tally",
+            "cmd": "awk -F, 'NR>1{s[$2]+=$5} END{for(k in s) print s[k], k}' data/metrics.csv | sort -k1,1rn -k2,2",
+            "stdout_bytes": 64,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "awk -F, 'NR>1{s[$2]+=$5} END{for(k in s) print s[k], k}' data/metrics.csv | sort -k1,1rn -k2,2 | head -1 | awk '{print $2}'",
+            "stdout_bytes": 8,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 1,
+        "total_stdout_bytes": 296263,
+        "plan_answer": "us-east",
+        "check_answer": "us-east",
+        "cross_check": "agree"
+      },
+      "T09": {
+        "family": "csv",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -3 data/metrics.csv",
+            "stdout_bytes": 142,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f6",
+            "stdout_bytes": 106169,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "awk -F, 'NR>1 && $6>900' data/metrics.csv",
+            "stdout_bytes": 615353,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "awk -F, 'NR>1 && $6>900' data/metrics.csv | wc -l | tr -d ' '",
+            "stdout_bytes": 6,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 721670,
+        "plan_answer": "12321",
+        "check_answer": "12321",
+        "cross_check": "agree"
+      },
+      "T10": {
+        "family": "csv",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -3 data/metrics.csv",
+            "stdout_bytes": 142,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep ',auth,' data/metrics.csv",
+            "stdout_bytes": 187607,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep ',auth,' data/metrics.csv | cut -d, -f5",
+            "stdout_bytes": 13156,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "awk -F, 'NR>1 && $3==\"auth\"{s+=$5} END{print s}' data/metrics.csv",
+            "stdout_bytes": 7,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 200912,
+        "plan_answer": "444140",
+        "check_answer": "444140",
+        "cross_check": "agree"
+      },
+      "T11": {
+        "family": "csv",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -3 data/metrics.csv",
+            "stdout_bytes": 142,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "cut -d, -f2 data/metrics.csv",
+            "stdout_bytes": 215794,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f2 | sort",
+            "stdout_bytes": 215787,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f2 | sort -u | wc -l | tr -d ' '",
+            "stdout_bytes": 2,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 431725,
+        "plan_answer": "4",
+        "check_answer": "4",
+        "cross_check": "agree"
+      },
+      "T12": {
+        "family": "csv",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -3 data/metrics.csv",
+            "stdout_bytes": 142,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f6",
+            "stdout_bytes": 106169,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f6 | sort -n",
+            "stdout_bytes": 106169,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "tail -n +2 data/metrics.csv | cut -d, -f6 | sort -n | tail -1",
+            "stdout_bytes": 5,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 212485,
+        "plan_answer": "1793",
+        "check_answer": "1793",
+        "cross_check": "agree"
+      },
+      "T13": {
+        "family": "src",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "find src -name '*.py' | sort",
+            "stdout_bytes": 760,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep -rn '^def ' src --include='*.py'",
+            "stdout_bytes": 31904,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep -rh '^def ' src --include='*.py'",
+            "stdout_bytes": 21088,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -rh '^def ' src --include='*.py' | wc -l | tr -d ' '",
+            "stdout_bytes": 4,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 2,
+        "total_stdout_bytes": 53756,
+        "plan_answer": "490",
+        "check_answer": "490",
+        "cross_check": "agree"
+      },
+      "T14": {
+        "family": "src",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "find src -name '*.py' | sort",
+            "stdout_bytes": 760,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep -rn 'TODO' src --include='*.py'",
+            "stdout_bytes": 2532,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep -rl 'TODO' src --include='*.py' | sort",
+            "stdout_bytes": 570,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -rl 'TODO' src --include='*.py' | wc -l | tr -d ' '",
+            "stdout_bytes": 3,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 0,
+        "total_stdout_bytes": 3865,
+        "plan_answer": "30",
+        "check_answer": "30",
+        "cross_check": "agree"
+      },
+      "T15": {
+        "family": "src",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "find src -name '*.py' | sort",
+            "stdout_bytes": 760,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep -rn '^def ' src --include='*.py'",
+            "stdout_bytes": 31904,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "tally",
+            "cmd": "grep -rc '^def ' src --include='*.py' | sort -t: -k2,2rn -k1,1",
+            "stdout_bytes": 866,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -rc '^def ' src --include='*.py' | sort -t: -k2,2rn -k1,1 | head -1 | cut -d: -f1",
+            "stdout_bytes": 19,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 1,
+        "total_stdout_bytes": 33549,
+        "plan_answer": "src/core/mod_08.py",
+        "check_answer": "src/core/mod_08.py",
+        "cross_check": "agree"
+      },
+      "T16": {
+        "family": "src",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "find src -name '*.py' | sort",
+            "stdout_bytes": 760,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep -rn '^class ' src --include='*.py'",
+            "stdout_bytes": 3185,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep -rh '^class ' src --include='*.py'",
+            "stdout_bytes": 1437,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -rh '^class ' src --include='*.py' | wc -l | tr -d ' '",
+            "stdout_bytes": 3,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 0,
+        "total_stdout_bytes": 5385,
+        "plan_answer": "81",
+        "check_answer": "81",
+        "cross_check": "agree"
+      },
+      "T17": {
+        "family": "src",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "find src -name '*.py' | sort",
+            "stdout_bytes": 760,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep -rn '^import ' src --include='*.py'",
+            "stdout_bytes": 2520,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "narrow",
+            "cmd": "grep -rh '^import ' src --include='*.py'",
+            "stdout_bytes": 840,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "grep -rh '^import ' src --include='*.py' | wc -l | tr -d ' '",
+            "stdout_bytes": 3,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 0,
+        "total_stdout_bytes": 4123,
+        "plan_answer": "80",
+        "check_answer": "80",
+        "cross_check": "agree"
+      },
+      "T18": {
+        "family": "src",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "ls -R src | head -40",
+            "stdout_bytes": 372,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "broad",
+            "cmd": "grep -rn 'def ' src --include='*.py'",
+            "stdout_bytes": 31904,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": true
+          },
+          {
+            "label": "narrow",
+            "cmd": "find src -name '*.py' | sort",
+            "stdout_bytes": 760,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "find src -name '*.py' | wc -l | tr -d ' '",
+            "stdout_bytes": 3,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 1,
+        "total_stdout_bytes": 33039,
+        "plan_answer": "40",
+        "check_answer": "40",
+        "cross_check": "agree"
+      },
+      "C01": {
+        "family": "control",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -1 data/metrics.csv",
+            "stdout_bytes": 46,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "head -1 data/metrics.csv",
+            "stdout_bytes": 46,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 0,
+        "total_stdout_bytes": 92,
+        "plan_answer": "ts,region,service,requests,errors,latency_p95",
+        "check_answer": "ts,region,service,requests,errors,latency_p95",
+        "cross_check": "agree"
+      },
+      "C02": {
+        "family": "control",
+        "steps": [
+          {
+            "label": "orient",
+            "cmd": "ls src",
+            "stdout_bytes": 10,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "narrow",
+            "cmd": "ls src/core | head -5",
+            "stdout_bytes": 50,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "ls src/core | grep -c '\\.py$'",
+            "stdout_bytes": 3,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 0,
+        "total_stdout_bytes": 63,
+        "plan_answer": "20",
+        "check_answer": "20",
+        "cross_check": "agree"
+      },
+      "C03": {
+        "family": "control",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -1 logs/app.log",
+            "stdout_bytes": 103,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "head -1 logs/app.log | awk '{print $1}'",
+            "stdout_bytes": 21,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 0,
+        "total_stdout_bytes": 124,
+        "plan_answer": "2026-07-01T00:00:00Z",
+        "check_answer": "2026-07-01T00:00:00Z",
+        "cross_check": "agree"
+      },
+      "S00": {
+        "family": "sentinel",
+        "steps": [
+          {
+            "label": "peek",
+            "cmd": "head -3 data/metrics.csv",
+            "stdout_bytes": 142,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          },
+          {
+            "label": "answer",
+            "cmd": "wc -l < data/metrics.csv | tr -d ' '",
+            "stdout_bytes": 6,
+            "stderr_bytes": 0,
+            "returncode": 0,
+            "bulk": false
+          }
+        ],
+        "bulk_steps": 0,
+        "total_stdout_bytes": 148,
+        "plan_answer": "24001",
+        "check_answer": "24001",
+        "cross_check": "agree"
+      }
+    },
+    "cross_check_failures": [],
+    "corpus_root": "/var/folders/67/mrf0wqnd4wz63fj_y5rq3rlh0000gn/T/e17-corpus-20260804",
+    "corpus_total_bytes": 4228698,
+    "corpus_file_count": 42
+  },
+  "arm_a": {
+    "arm": "A",
+    "per_task": {
+      "T01": {
+        "family": "log",
+        "bulk_steps": 2,
+        "max_step_bytes": 505932,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 6,
+          "in": 52232,
+          "out": 800,
+          "peak_in": 18529,
+          "usd": 0.168696
+        },
+        "handle": {
+          "turns": 8,
+          "in": 21956,
+          "out": 1040,
+          "peak_in": 3864,
+          "usd": 0.081468
+        },
+        "pair_usd": 0.250164,
+        "inline_tokens_lost_to_cap": 150604,
+        "projected_token_ratio": 0.43362498114346054
+      },
+      "T02": {
+        "family": "log",
+        "bulk_steps": 2,
+        "max_step_bytes": 683247,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 6,
+          "in": 66428,
+          "out": 800,
+          "peak_in": 18074,
+          "usd": 0.211284
+        },
+        "handle": {
+          "turns": 8,
+          "in": 21056,
+          "out": 1040,
+          "peak_in": 3534,
+          "usd": 0.078768
+        },
+        "pair_usd": 0.290052,
+        "inline_tokens_lost_to_cap": 165842,
+        "projected_token_ratio": 0.3286725769024811
+      },
+      "T03": {
+        "family": "log",
+        "bulk_steps": 2,
+        "max_step_bytes": 221939,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 47004,
+          "out": 680,
+          "peak_in": 17269,
+          "usd": 0.151212
+        },
+        "handle": {
+          "turns": 7,
+          "in": 17506,
+          "out": 920,
+          "peak_in": 3396,
+          "usd": 0.066318
+        },
+        "pair_usd": 0.21753,
+        "inline_tokens_lost_to_cap": 47485,
+        "projected_token_ratio": 0.3864189245868635
+      },
+      "T04": {
+        "family": "log",
+        "bulk_steps": 2,
+        "max_step_bytes": 485103,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 43194,
+          "out": 680,
+          "peak_in": 15364,
+          "usd": 0.13978200000000002
+        },
+        "handle": {
+          "turns": 7,
+          "in": 17506,
+          "out": 920,
+          "peak_in": 3396,
+          "usd": 0.066318
+        },
+        "pair_usd": 0.2061,
+        "inline_tokens_lost_to_cap": 113276,
+        "projected_token_ratio": 0.41997538405433743
+      },
+      "T05": {
+        "family": "log",
+        "bulk_steps": 2,
+        "max_step_bytes": 123282,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 35244,
+          "out": 680,
+          "peak_in": 11441,
+          "usd": 0.11593200000000001
+        },
+        "handle": {
+          "turns": 7,
+          "in": 17194,
+          "out": 920,
+          "peak_in": 3344,
+          "usd": 0.065382
+        },
+        "pair_usd": 0.181314,
+        "inline_tokens_lost_to_cap": 22821,
+        "projected_token_ratio": 0.5042311546598375
+      },
+      "T06": {
+        "family": "log",
+        "bulk_steps": 1,
+        "max_step_bytes": 191311,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 32373,
+          "out": 680,
+          "peak_in": 9953,
+          "usd": 0.107319
+        },
+        "handle": {
+          "turns": 6,
+          "in": 13197,
+          "out": 800,
+          "peak_in": 2743,
+          "usd": 0.051591
+        },
+        "pair_usd": 0.15891,
+        "inline_tokens_lost_to_cap": 39828,
+        "projected_token_ratio": 0.42347139442713216
+      },
+      "T07": {
+        "family": "csv",
+        "bulk_steps": 2,
+        "max_step_bytes": 117149,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 47947,
+          "out": 680,
+          "peak_in": 17839,
+          "usd": 0.15404099999999998
+        },
+        "handle": {
+          "turns": 7,
+          "in": 16919,
+          "out": 920,
+          "peak_in": 3299,
+          "usd": 0.064557
+        },
+        "pair_usd": 0.218598,
+        "inline_tokens_lost_to_cap": 42573,
+        "projected_token_ratio": 0.3668538054990026
+      },
+      "T08": {
+        "family": "csv",
+        "bulk_steps": 1,
+        "max_step_bytes": 296049,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 31978,
+          "out": 680,
+          "peak_in": 9854,
+          "usd": 0.106134
+        },
+        "handle": {
+          "turns": 6,
+          "in": 12704,
+          "out": 800,
+          "peak_in": 2644,
+          "usd": 0.050112000000000004
+        },
+        "pair_usd": 0.156246,
+        "inline_tokens_lost_to_cap": 66013,
+        "projected_token_ratio": 0.41349745850940045
+      },
+      "T09": {
+        "family": "csv",
+        "bulk_steps": 2,
+        "max_step_bytes": 615353,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 47946,
+          "out": 680,
+          "peak_in": 17838,
+          "usd": 0.154038
+        },
+        "handle": {
+          "turns": 7,
+          "in": 16918,
+          "out": 920,
+          "peak_in": 3298,
+          "usd": 0.064554
+        },
+        "pair_usd": 0.218592,
+        "inline_tokens_lost_to_cap": 164382,
+        "projected_token_ratio": 0.36684078476535187
+      },
+      "T10": {
+        "family": "csv",
+        "bulk_steps": 2,
+        "max_step_bytes": 187607,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 38524,
+          "out": 680,
+          "peak_in": 13127,
+          "usd": 0.125772
+        },
+        "handle": {
+          "turns": 7,
+          "in": 16918,
+          "out": 920,
+          "peak_in": 3298,
+          "usd": 0.064554
+        },
+        "pair_usd": 0.190326,
+        "inline_tokens_lost_to_cap": 38902,
+        "projected_token_ratio": 0.45500459136822774
+      },
+      "T11": {
+        "family": "csv",
+        "bulk_steps": 2,
+        "max_step_bytes": 215794,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 47945,
+          "out": 680,
+          "peak_in": 17837,
+          "usd": 0.15403499999999998
+        },
+        "handle": {
+          "turns": 7,
+          "in": 16917,
+          "out": 920,
+          "peak_in": 3297,
+          "usd": 0.064551
+        },
+        "pair_usd": 0.21858599999999997,
+        "inline_tokens_lost_to_cap": 91896,
+        "projected_token_ratio": 0.36682776349614393
+      },
+      "T12": {
+        "family": "csv",
+        "bulk_steps": 2,
+        "max_step_bytes": 106169,
+        "set": "cap_binding",
+        "inline": {
+          "turns": 5,
+          "in": 47946,
+          "out": 680,
+          "peak_in": 17838,
+          "usd": 0.154038
+        },
+        "handle": {
+          "turns": 7,
+          "in": 16918,
+          "out": 920,
+          "peak_in": 3298,
+          "usd": 0.064554
+        },
+        "pair_usd": 0.218592,
+        "inline_tokens_lost_to_cap": 37086,
+        "projected_token_ratio": 0.36684078476535187
+      },
+      "T13": {
+        "family": "src",
+        "bulk_steps": 2,
+        "max_step_bytes": 31904,
+        "set": "cap_clearing",
+        "inline": {
+          "turns": 5,
+          "in": 43033,
+          "out": 680,
+          "peak_in": 15239,
+          "usd": 0.139299
+        },
+        "handle": {
+          "turns": 7,
+          "in": 17841,
+          "out": 920,
+          "peak_in": 3451,
+          "usd": 0.067323
+        },
+        "pair_usd": 0.206622,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 0.42918582572690045
+      },
+      "T14": {
+        "family": "src",
+        "bulk_steps": 0,
+        "max_step_bytes": 2532,
+        "set": "cap_clearing",
+        "inline": {
+          "turns": 5,
+          "in": 10746,
+          "out": 680,
+          "peak_in": 2767,
+          "usd": 0.042438000000000003
+        },
+        "handle": {
+          "turns": 5,
+          "in": 10647,
+          "out": 680,
+          "peak_in": 2654,
+          "usd": 0.042141
+        },
+        "pair_usd": 0.084579,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 0.9913355504988622
+      },
+      "T15": {
+        "family": "src",
+        "bulk_steps": 1,
+        "max_step_bytes": 31904,
+        "set": "cap_clearing",
+        "inline": {
+          "turns": 5,
+          "in": 32927,
+          "out": 680,
+          "peak_in": 10188,
+          "usd": 0.108981
+        },
+        "handle": {
+          "turns": 6,
+          "in": 13879,
+          "out": 800,
+          "peak_in": 3002,
+          "usd": 0.053637000000000004
+        },
+        "pair_usd": 0.16261799999999998,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 0.43678400333263906
+      },
+      "T16": {
+        "family": "src",
+        "bulk_steps": 0,
+        "max_step_bytes": 3185,
+        "set": "cap_clearing",
+        "inline": {
+          "turns": 5,
+          "in": 11672,
+          "out": 680,
+          "peak_in": 3148,
+          "usd": 0.045216
+        },
+        "handle": {
+          "turns": 5,
+          "in": 11081,
+          "out": 680,
+          "peak_in": 2871,
+          "usd": 0.043443
+        },
+        "pair_usd": 0.088659,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 0.9521534974093264
+      },
+      "T17": {
+        "family": "src",
+        "bulk_steps": 0,
+        "max_step_bytes": 2520,
+        "set": "cap_clearing",
+        "inline": {
+          "turns": 5,
+          "in": 10871,
+          "out": 680,
+          "peak_in": 2831,
+          "usd": 0.042813000000000004
+        },
+        "handle": {
+          "turns": 5,
+          "in": 10781,
+          "out": 680,
+          "peak_in": 2721,
+          "usd": 0.042543
+        },
+        "pair_usd": 0.085356,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 0.9922084667994113
+      },
+      "T18": {
+        "family": "src",
+        "bulk_steps": 1,
+        "max_step_bytes": 31904,
+        "set": "cap_clearing",
+        "inline": {
+          "turns": 5,
+          "in": 32481,
+          "out": 680,
+          "peak_in": 10060,
+          "usd": 0.107643
+        },
+        "handle": {
+          "turns": 6,
+          "in": 13336,
+          "out": 800,
+          "peak_in": 2874,
+          "usd": 0.052008
+        },
+        "pair_usd": 0.159651,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 0.42628388769940595
+      },
+      "C01": {
+        "family": "control",
+        "bulk_steps": 0,
+        "max_step_bytes": 46,
+        "set": "null_control",
+        "inline": {
+          "turns": 3,
+          "in": 4356,
+          "out": 440,
+          "peak_in": 1584,
+          "usd": 0.019667999999999998
+        },
+        "handle": {
+          "turns": 3,
+          "in": 4716,
+          "out": 440,
+          "peak_in": 1704,
+          "usd": 0.020748000000000003
+        },
+        "pair_usd": 0.040416,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 1.0750625521267723
+      },
+      "C02": {
+        "family": "control",
+        "bulk_steps": 0,
+        "max_step_bytes": 50,
+        "set": "null_control",
+        "inline": {
+          "turns": 4,
+          "in": 6036,
+          "out": 560,
+          "peak_in": 1697,
+          "usd": 0.026507999999999997
+        },
+        "handle": {
+          "turns": 4,
+          "in": 6516,
+          "out": 560,
+          "peak_in": 1817,
+          "usd": 0.027948
+        },
+        "pair_usd": 0.054456,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 1.0727713765918738
+      },
+      "C03": {
+        "family": "control",
+        "bulk_steps": 0,
+        "max_step_bytes": 103,
+        "set": "null_control",
+        "inline": {
+          "turns": 3,
+          "in": 4378,
+          "out": 440,
+          "peak_in": 1592,
+          "usd": 0.019734
+        },
+        "handle": {
+          "turns": 3,
+          "in": 4738,
+          "out": 440,
+          "peak_in": 1712,
+          "usd": 0.020814
+        },
+        "pair_usd": 0.040548,
+        "inline_tokens_lost_to_cap": 0,
+        "projected_token_ratio": 1.074719800747198
+      }
+    },
+    "over_context_window": [],
+    "context_window_tokens": 200000,
+    "cap_sensitivity": {
+      "2000": {
+        "median_projected_ratio": 0.9576958178987491,
+        "battery_pair_usd": 2.3066310000000003,
+        "max_inline_peak_input_tokens": 6529,
+        "fits_context_window": true
+      },
+      "8000": {
+        "median_projected_ratio": 0.42918582572690045,
+        "battery_pair_usd": 3.447915,
+        "max_inline_peak_input_tokens": 18529,
+        "fits_context_window": true
+      },
+      "32000": {
+        "median_projected_ratio": 0.16040789899643898,
+        "battery_pair_usd": 6.676907999999999,
+        "max_inline_peak_input_tokens": 66529,
+        "fits_context_window": true
+      }
+    },
+    "battery_pair_usd": 3.447915,
+    "sentinel_usd": 0.019782,
+    "n_sentinels": 9,
+    "stage1_usd": 3.447915,
+    "stage2_usd": 6.89583,
+    "sentinels_usd": 0.178038,
+    "subtotal_usd": 10.521783000000001,
+    "contingency_usd": 3.447915,
+    "total_usd": 13.969698000000001,
+    "irreducible_usd": 10.521783,
+    "margin_usd": 3.447915,
+    "pairs_stage1": 21,
+    "pairs_stage2": 42,
+    "hard_ceiling_usd": 16.0,
+    "budget_usd": 17.0
+  },
+  "arm_b": {
+    "arm": "B",
+    "inprocess": {
+      "in": 73150,
+      "out": 2300,
+      "usd": 0.25395
+    },
+    "sandbox": {
+      "in": 99450,
+      "out": 2700,
+      "usd": 0.33885
+    },
+    "pair_usd": 0.5928,
+    "n_pairs": 24,
+    "subtotal_usd": 14.2272,
+    "contingency_usd": 2.13408,
+    "total_usd": 16.36128,
+    "hard_ceiling_usd": 16.5,
+    "budget_usd": 17.0,
+    "status": "not recommended for authorization"
+  }
+}

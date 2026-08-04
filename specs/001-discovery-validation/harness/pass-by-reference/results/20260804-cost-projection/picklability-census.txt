@@ -1,0 +1,66 @@
+E17 arm B' — which result shapes cross a fork boundary (dry run, $0.00)
+==========================================================================
+python 3.14.6, pickle protocol 5
+predicate: pickle.dumps in try/except — NOOA's is_picklable, reproduced verbatim
+
+shape                            category               crosses
+int                              plain data             yes
+str                              plain data             yes
+bytes                            plain data             yes
+list[dict]                       plain data             yes
+nested dict                      plain data             yes
+set                              plain data             yes
+frozenset                        plain data             yes
+tuple                            plain data             yes
+datetime                         plain data             yes
+Decimal                          plain data             yes
+pathlib.Path                     plain data             yes
+deque                            plain data             yes
+namedtuple (module level)        plain data             yes
+dataclass (module level)         plain data             yes
+enum member                      plain data             yes
+exception instance               plain data             yes
+class instance (module level)    plain data             yes
+open file object                 live resource handle   NO
+socket                           live resource handle   NO
+sqlite3 connection               live resource handle   NO
+sqlite3 cursor                   live resource handle   NO
+threading.Lock                   live resource handle   NO
+threading.Thread                 live resource handle   NO
+subprocess.Popen                 live resource handle   NO
+io.BytesIO                       live resource handle   yes
+io.StringIO                      live resource handle   yes
+generator                        lazy sequence          NO
+map object                       lazy sequence          yes
+filter object                    lazy sequence          yes
+zip object                       lazy sequence          yes
+itertools.chain                  lazy sequence          NO
+dict_keys view                   lazy sequence          NO
+memoryview                       lazy sequence          NO
+range                            plain data             yes
+lambda                           callable               NO
+module-level function            callable               yes
+closure                          callable               NO
+partial of module function       callable               yes
+partial of lambda                callable               NO
+bound method (module class)      callable               yes
+locally defined class            locally defined        NO
+locally defined instance         locally defined        NO
+module object                    runtime object         NO
+re.Match                         runtime object         NO
+compiled regex                   runtime object         yes
+traceback                        runtime object         NO
+weakref                          runtime object         NO
+ctypes pointer                   runtime object         NO
+ctypes CDLL                      runtime object         NO
+
+category                 crosses   of   blocked
+plain data                    18   18   -
+live resource handle           2    9   open file object, socket, sqlite3 connection, sqlite3 cursor, threading.Lock, threading.Thread, subprocess.Popen
+lazy sequence                  3    7   generator, itertools.chain, dict_keys view, memoryview
+callable                       3    6   lambda, closure, partial of lambda
+locally defined                0    2   locally defined class, locally defined instance
+runtime object                 1    7   module object, re.Match, traceback, weakref, ctypes pointer, ctypes CDLL
+
+27 of 49 shapes cross; 22 of 49 do not.
+model calls: 0    spend: $0.00

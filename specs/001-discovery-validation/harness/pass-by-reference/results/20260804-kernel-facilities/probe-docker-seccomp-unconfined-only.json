@@ -1,0 +1,77 @@
+{
+  "cgroup_v2": {
+    "cgroup_freeze_present": true,
+    "cgroup_kill_present": true,
+    "controllers": [
+      "cpuset",
+      "cpu",
+      "io",
+      "memory",
+      "hugetlb",
+      "pids",
+      "rdma"
+    ],
+    "delegation": "read-only (EROFS)",
+    "mountpoint": "/sys/fs/cgroup",
+    "sub_cgroup_kill_present": null,
+    "v2": true,
+    "verdict": "PRESENT"
+  },
+  "context": {
+    "CapBnd": "00000000a80425fb",
+    "CapEff": "00000000a80425fb",
+    "NoNewPrivs": "0",
+    "Seccomp": "0",
+    "Seccomp_filters": "0",
+    "arch": "aarch64",
+    "config_gz": true,
+    "euid": 0,
+    "kernel_config": {
+      "CONFIG_CGROUPS": "CONFIG_CGROUPS=y",
+      "CONFIG_LSM": "CONFIG_LSM=\"yama,loadpin,safesetid,integrity,bpf,landlock\"",
+      "CONFIG_SECCOMP_FILTER": "CONFIG_SECCOMP_FILTER=y",
+      "CONFIG_SECURITYFS": "CONFIG_SECURITYFS=y",
+      "CONFIG_SECURITY_LANDLOCK": "CONFIG_SECURITY_LANDLOCK=y",
+      "CONFIG_USER_NS": "CONFIG_USER_NS=y"
+    },
+    "kernel_release": "6.12.76-linuxkit",
+    "python": "3.12.13",
+    "securityfs_lsm": null,
+    "securityfs_lsm_error": "ENOENT",
+    "uname": "Linux ae6ffec736c2 6.12.76-linuxkit #1 SMP Fri Apr 17 14:56:37 UTC 2026 aarch64 "
+  },
+  "cost_usd": 0.0,
+  "dry_run": true,
+  "invocation": "docker run --rm --security-opt seccomp=unconfined -v \"$PWD\":/w -w /w python:3.12-slim python3 /w/kernel_probe.py --json",
+  "landlock": {
+    "abi": {
+      "abi_version": 6,
+      "available": true,
+      "errno": null,
+      "reason": null
+    },
+    "child_status": 0,
+    "post_restriction_open": "EACCES",
+    "pre_restriction_open": "ok",
+    "stage": "post",
+    "verdict": "ENFORCED",
+    "victim_path": "/etc/hostname"
+  },
+  "model_calls": 0,
+  "probe": "E17 kernel facility probe",
+  "seccomp_user_notif": {
+    "arch": "aarch64",
+    "expected_nr": 173,
+    "id_valid_ioctl": "ok",
+    "listener_fd": true,
+    "notif_pid": 11,
+    "recv": true,
+    "send": true,
+    "trapped_syscall_nr": 173,
+    "verdict": "ENFORCED"
+  },
+  "user_namespaces": {
+    "max_user_namespaces": "31337",
+    "unshare_CLONE_NEWUSER": "ok"
+  }
+}

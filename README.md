@@ -149,11 +149,11 @@ agent claiming success it did not achieve.
 | Path | What it is |
 |---|---|
 | [`specs/`](specs/) | `001-discovery-validation` is closed: the spec, the experiment ladder, the findings, one committed harness per experiment position that ran, and the [closing verdict](specs/001-discovery-validation/VERDICT.md). |
-| [`research/`](research/) | 14 research documents + an index with reading paths. The evidence base. |
+| [`research/`](research/) | 15 research documents + an index with reading paths. The evidence base. |
 | [`.specify/`](.specify/) | GitHub Spec Kit 0.15.1 scaffolding. Contains the ratified [constitution](.specify/memory/constitution.md). |
 | [`.cursor/skills/`](.cursor/skills/) | 18 project skills encoding the research as decision procedures, plus 10 Spec Kit phase prompts. See the [roster](.cursor/skills/README.md). |
 | [`docs/spec-kit-workflow.md`](docs/spec-kit-workflow.md) | How to drive the spec process. |
-| `examples/` | Git-ignored. Eight vendored reference repos (codegraph, spec-kit, Google ADK, Anthropic SDK/cookbooks). Read-only. |
+| `examples/` | Git-ignored. Nine vendored reference repos (codegraph, spec-kit, Google ADK, Anthropic SDK/cookbooks, NVIDIA OO Agents). Read-only. |
 
 ## Where to start
 

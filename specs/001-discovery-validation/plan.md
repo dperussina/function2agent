@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ **twenty-three** owner decisions
-(OD-01 through OD-23, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ **twenty-five** owner decisions
+(OD-01 through OD-25, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -33,8 +33,15 @@ propagation pass — the note struck under OD-20 said exactly that on the day, a
 subsequently gave it. **Extended once again 2026-08-03 with OD-22 and OD-23**, two owner answers to
 the two questions the production specification had left open at its Clarifications section. These two
 are additions and not corrections, they are contemporaneous records rather than retroactive ones, and
-**OD-22 is the third constitution amendment in this register**, joining OD-03 and OD-13.)*
-~~**The last twelve**~~ **The last fourteen
+**OD-22 is the third constitution amendment in this register**, joining OD-03 and OD-13. **Extended
+once more 2026-08-04 with OD-24 and OD-25**, and the two are different in kind from each other:
+**OD-24 is written already revised**, because the decision it records was taken before it was written
+and the measurements that falsified its wording landed in between — so its struck text never stood
+here as a live row, which is a first for this register and is stated in the entry rather than left to
+be inferred; and **OD-25 is a contemporaneous record** of the disposition the production
+specification's FR-058 carries. **OD-24 is also the first entry here that adopts a model and defers
+its build in the same act**, which is why it says so in a banner rather than in a clause.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ **The last sixteen
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -53,7 +60,13 @@ than a propagation one**, **OD-22 amends Principle VI so the traced unit is tier
 rather than by record**, and **OD-23 admits FR-024's request-declared precision rung ~~as a ratchet,
 only where it tightens~~ only where no artifact source supplies any precision — the one decision here
 that was ~~recorded as costing something it was expected to preserve~~ *taken, verified inert against
-the census, and revised the same day to the variant its own record named*.**
+the census, and revised the same day to the variant its own record named*,** **OD-24 corrects the
+workload's privilege model — the workload is unprivileged outside its user namespace, the supervisor is
+not, `CLONE_NEWPID` is mandatory and the `setuid` drop is retained — and adopts it while deferring a
+13–20 day build, so it is the register's first adopt-and-defer entry and must not be read as a
+decline**, and **OD-25 makes bounded-and-referenced v1's default disposition for tool output at a bound
+deliberately below where the token saving is large, settling U-50's token limb by argument and killing
+the experiment on both limbs.**
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -2645,6 +2658,244 @@ note gains the confirmation. The sites citing FR-024 for its *source-sharing* cl
 [`plan.md`](../002-spec-aware-agent-runtime/plan.md) and
 [`checklists/requirements.md`](../002-spec-aware-agent-runtime/checklists/requirements.md) — were
 checked and are **untouched**, because none of them cites the precision ladder.
+
+### OD-24 — the workload's privilege model: ~~an unprivileged user namespace via `CLONE_NEWUSER`, root inside and unprivileged outside~~ **the workload is root inside a user namespace mapped to a dedicated per-session kernel uid range, in its own pid namespace, dropping to a second mapped uid once the mount tree is built; the supervisor is not unprivileged** *(revised 2026-08-04; the corrected model is adopted and its implementation is deferred)*
+
+> #### ⚠️ REVISED 2026-08-04, the day the measurements landed — the wording does not resolve, and the word that fails is **"unprivileged" applied to the supervisor**. *Revised, not reversed, and emphatically not a kill.*
+>
+> **Struck, not deleted, and the reason is unusual enough to state.** This entry is the **first** record
+> of a decision taken earlier and never written down, so the struck text below never stood in this
+> register as a live row. It is recorded and struck anyway rather than quietly replaced with the
+> correct model, for two reasons. **A committed finding was written against the original wording and
+> its central verdict is about that wording** — [finding 023](../002-spec-aware-agent-runtime/findings/023-user-namespace-privilege-model.md)
+> measures the model *as worded*, concludes it is not buildable in that form, and carries the token in
+> code spans throughout precisely because this row did not yet exist — so a register recording only the
+> corrected model would leave that verdict pointing at nothing. And the falsification
+> is the entry's evidence: what makes the corrected model the right one is exactly which three
+> properties the original was assumed to deliver and does not.
+>
+> **The three results, each observed in a container rather than argued from documentation.**
+>
+> 1. **The user namespace closes neither of [finding 021](../002-spec-aware-agent-runtime/findings/021-openat2-audit-gap-and-two-authority-gaps.md)'s
+>    two authority gaps.** Both reproduce identically inside it, because the workload holds
+>    in-namespace root and in-namespace root owns the `tmpfs` it has just mounted. With the workload at
+>    in-namespace uid 0, `mkdir` at an undeclared path in the session root returned `ok`; only after a
+>    drop to a second mapped uid did it return `EACCES`.
+> 2. **A single-entry self-map has no uid to drop to.** `setuid(65534)` inside a namespace mapping only
+>    uid 0 returns `EINVAL`, so finding 021's closure requires a **multi-line** map — and a multi-line
+>    map is `EPERM` for an unprivileged writer, `ok` for a writer holding `CAP_SETUID`.
+> 3. **Under a self-map the workload can `SIGKILL` its own supervisor**, observed at status 9, because
+>    in-namespace root maps to the supervisor's own kernel uid and same-uid is the whole of what the
+>    signal check asks. A distinct map returns `EPERM`; `CLONE_NEWPID` with the workload forked *after*
+>    the unshare returns `ESRCH`.
+>
+> **Nothing in this corpus ever stated the constraint that fails.** No document requires the supervisor
+> to be unprivileged; the requirement that bears on it points the other way. **FR-049 requires processor
+> and memory bounds *"enforced from outside the environment"*, and its 2026-08-03 pre-exec-barrier
+> extension requires the session cgroup created and every bound written before the workload process
+> exists** — so the supervisor is already the party that writes into the cgroup hierarchy before
+> anything else runs. **That is a tension rather than a flat contradiction, and this entry says so
+> rather than overstating it**: FR-049's clause constrains *where* enforcement sits, not what authority
+> the enforcer holds, and an operator who delegates a cgroup subtree to the supervisor by unit file
+> satisfies it with a supervisor holding no capability at all. What is a flat contradiction is result 2
+> — writing a multi-line uid map needs `CAP_SETUID` in the writer, with no delegation route measured or
+> looked for. **The map, not the cgroup, is what makes an unprivileged supervisor unbuildable.**
+>
+> **What survives untouched is the half that mattered.** *Unprivileged* was always a property worth
+> having of the **workload**, and it is delivered in full: no authority on the host, and a better
+> identity to drop to than the plain drop offers.
+
+**Decided 2026-08-04**, answering what privilege model the three mechanisms of the production
+specification's **FR-048**, **FR-049** and **FR-050** run under — a question the specification
+deliberately withheld and
+[feature 002's `plan.md`](../002-spec-aware-agent-runtime/plan.md) answered only at the level of
+*mount namespace, cgroup v2, four-layer credential construction*. **Revised 2026-08-04**, on the same
+question, after seven probes measured the proposed model against the kernel before any of
+[`src/supervisor/`](../../src/supervisor/)'s three modules was changed for it
+([finding 023](../002-spec-aware-agent-runtime/findings/023-user-namespace-privilege-model.md)).
+**The decision and its revision are recorded in one act because the original was never recorded at
+all** — the finding declined to write it, on the ground that recording an owner decision is an owner
+act, which is **OD-21**'s precedent, and on the ground that an entry reading *"root inside,
+unprivileged outside"* would have needed revising the day it was written.
+
+**~~The decision as first taken~~ — superseded, and kept because the revision is only legible against
+it.** ~~The workload runs under an unprivileged user namespace entered with `CLONE_NEWUSER`: **root
+inside, unprivileged outside**. The namespace was chosen over the plain `setuid(65534)` drop finding
+021 used to close its two authority gaps, on the understanding that in-namespace root with no host
+authority delivers the same closure with a better identity model and asks nothing of the supervisor.~~
+
+**The decision as revised.** The **workload** is root inside a user namespace and unprivileged outside
+it, mapped to a **dedicated per-session kernel uid range that is not the supervisor's**, in a **pid
+namespace of its own** with the workload forked after the unshare, and it **drops to a second mapped
+uid once the mount tree is built**. The **supervisor is not unprivileged**: it holds `CAP_SETUID` and
+`CAP_SETGID` long enough to write the multi-line map — or delegates that to a `newuidmap` helper — and
+holds enough authority over the cgroup root to `chown` the four-path delegation set. Three differences
+from the wording, and none is a retreat from it:
+
+- **"Unprivileged" describes the workload, not the supervisor.** The property the choice was made for
+  is delivered whole; the property nobody asked for is given up.
+- **The `setuid` drop is retained.** The namespace **complements** it rather than replacing it. What
+  the namespace changes is what the drop lands on: not the host's shared `nobody`, but a kernel uid
+  belonging to this session alone.
+- **`CLONE_NEWPID` is mandatory**, and it was absent from the original wording. It is the only
+  measured mitigation for result 3 that holds regardless of the map.
+
+**Why the plain `setuid` drop is not simply reinstated, given that it closes both gaps and needs
+nothing.** Because the namespace buys something the drop cannot — per-session kernel uid isolation
+instead of an identity shared with everything else on the box — and because the mount-tree control it
+provides is real. The fallback remains available and is named rather than hidden: **if the supervisor
+genuinely cannot hold `CAP_SETUID`, the answer is the plain drop with no namespace**, which closes both
+authority gaps and gives up both of those gains. That constraint is stated by no document in this
+repository, which is why it is a fallback rather than the decision.
+
+> #### ⚠️ IMPLEMENTATION IS NOT SCHEDULED BY THIS DECISION, AND A DEFERRAL IS NOT A DECLINE
+>
+> **The corrected model is adopted. Only the build is gated.** This corpus has been bitten before by a
+> deferral read later as a refusal, so the distinction is stated as the entry's whole content: nothing
+> below withdraws the model, reopens the choice, or licenses a design that contradicts it. What is
+> deferred is a **13–20 engineer-day** build, sized per task from task shape in
+> [finding 023](../002-spec-aware-agent-runtime/findings/023-user-namespace-privilege-model.md) with
+> every row anchored to a measured result, whose largest row — 3–4 days — is the uid/gid map plumbing
+> and the `CAP_SETUID` decision, and which is a design decision before it is code.
+>
+> **Two grounds, and the entry must state both because either alone would be weaker.**
+>
+> **① The margin over the plain drop is real but is not what closes the gaps, and the thing that
+> closes them has already landed.** The repairs now in [`src/supervisor/mounts.py`](../../src/supervisor/mounts.py)
+> — `MS_RDONLY` on the session root once the namespace is built, and the read-only remount applied to
+> **every** mount the recursive bind copied rather than only the outermost — close finding 021's two
+> authority gaps by mount flag. **Mount flags are indifferent to privilege**, so those repairs hold
+> under every privilege model in play, including the plain drop and including doing nothing. What the
+> namespace adds on top is **per-session kernel uid isolation instead of the host's shared `nobody`**.
+> That is a genuine gain and it is not a gap closure, and a build justified as a gap closure would be
+> justified on a premise this decision's own evidence removes.
+>
+> **② The deployment surface may not permit the mechanism at all, and the schedule waits on
+> establishing it.** Docker's default seccomp profile blocks `unshare(CLONE_NEWUSER)` outright: a
+> supervisor running in a container under that profile cannot create a user namespace, and every
+> unprivileged probe behind this decision needed `--security-opt seccomp=unconfined` to run. **This is
+> a deployment constraint and not a probe artefact**, and it lands squarely on **OD-08**'s self-hosted
+> model, where what the operator's container runtime permits is not ours to choose. A concurrent pass
+> has taken the first empirical reading — `unshare(CLONE_NEWUSER)` is `EPERM` under Docker's defaults
+> and `ok` with that one filter removed, while Landlock, seccomp user-notification and cgroup
+> delegation all live under a smaller privilege set — at
+> [`harness/pass-by-reference/results/20260804-kernel-facilities/`](./harness/pass-by-reference/results/20260804-kernel-facilities/README.md).
+> **That is one kernel, one architecture and one container runtime**, so it establishes the constraint
+> exists rather than how wide it is. **The schedule waits on the wider reading**, and this is a
+> sequencing statement rather than a condition on the model: the model is settled either way, and what
+> the surface decides is whether the fallback ships instead.
+
+**What this decision does not license.**
+- **Not** a claim that the namespace closes an authority gap. It closes neither, measured, and the
+  entry exists partly to stop that claim being made from the model's adoption.
+- **Not** a relaxation of the `setuid` drop, of finding 021's closure, or of the landed mount repairs.
+  Every one of them survives this decision and none is conditional on it.
+- **Not** a kernel-floor change. The floor stays **Linux 5.14**, still bound by `cgroup.kill`, still
+  **DERIVED and NOT TESTED**. The model adds no facility above it. What does change is that two of the
+  three things **T205**'s own text names as having moved across the intervening releases — cgroup
+  delegation semantics and `pivot_root` in a user namespace — are now both on the critical path, so
+  the value of running that boot matrix goes up while its urgency does not.
+- **Not** a decision that the mount and seccomp test batteries move off `sudo -E`. That is the honest
+  end state under this model and it is a build item, not a record: moving them changes what they
+  prove, and the removal proofs behind them were written against the privileged path.
+
+**Propagated to** [feature 002's `plan.md`](../002-spec-aware-agent-runtime/plan.md) at the
+**Target Platform** line, which named user namespaces as a platform requirement without saying which
+privilege model they are entered under. **No requirement text changes and none should**: FR-048,
+FR-049 and FR-050 state properties, this decision states the mechanism they are delivered by, and
+[finding 023](../002-spec-aware-agent-runtime/findings/023-user-namespace-privilege-model.md) records
+four downstream statements it bears on for the passes that own those documents.
+
+### OD-25 — bounded-and-referenced is v1's default disposition for tool output, and the bound is set below the region where the token saving is large
+
+**Decided 2026-08-04**, answering what governs the size of a result the agent's general-purpose
+capabilities return — the question [`14`](../../research/14-architecture-synthesis.md) **U-50** opened
+on 2026-08-04 and which no requirement had ever answered, leaving *inline whatever the call printed*
+as an operative default nobody chose. The production specification's **FR-058** is the answer's text.
+
+**The decision.** **Bounded-and-referenced is v1's default disposition for tool output**: every result
+either of **FR-004**'s two capabilities returns is bounded before it enters the model's context, and a
+result that reaches the bound is returned as a **bounded preview together with a reference the agent's
+next call on the same surface can name** — not as a silent truncation. The bound is stated in **tokens
+of the model in force**, is required configuration under FR-033 with **no default stated at all**, and
+**may not be configured above one twentieth of the context window**. And the bound is **deliberately
+set below the region where the token saving is large** — the useful operating region is the low
+thousands, well under the ten thousand tokens that ceiling permits on a 200,000-token window.
+
+**Why bounded-and-referenced rather than a truncation rule, and the argument is a correctness one
+rather than an economic one.** At a low bound the token saving a reference buys over plain truncation
+is small. What a low bound without a reference does is **destroy data the agent cannot re-request**:
+the bytes are gone, the agent has no name for them, and an answer composed from a silently shortened
+result is a wrong answer carrying no signal that it is one. A reference makes a cheap result a
+*filterable* one rather than a lossy one, and that is available on a bytes-returning surface — the
+withheld bytes written inside FR-048's declared set, the reference being the path, the next command
+filtering or counting or searching it without the bytes entering the transcript at all.
+
+**Three limbs, and each is a real commitment rather than a consequence of the first.**
+
+- **It commits build work no cost measurement justifies.** A retention area inside FR-048's declared
+  set carrying **a declared bound of its own**, a preview format, and a trace field on FR-038's
+  `tool_call` span. At the chosen bound the token saving does not pay for any of it. **This is
+  recorded as a build accepted on a correctness argument, not as one the economics carry** — the
+  distinction matters because a later reader pricing the mechanism will find the economics thin and
+  should not conclude the decision was mistaken.
+- **It forecloses by requirement the exact configuration at which the planned experiment would have
+  shown its largest effect.** The saving a reference buys is almost entirely a function of where the
+  alternative truncates — large at a high bound, near zero at a low one — and the highest setting the
+  planned sensitivity analysis prices sits **above the ceiling FR-058 permits** on the window it
+  prices against. So this is **a decision about what the product will not measure, taken before
+  measuring**, and it is stated as one. The reason it is the right way round is that setting a high
+  bound in order to make the mechanism measurable would be designing the instrument to produce a
+  result, which is a failure this project has a standing rule against and has caught in its own
+  artifacts more than once.
+- **It changes what the experiment is worth buying, and the change is a subtraction on both limbs.**
+  U-50 opened two: what inlining costs, and whether an agent handed a reference answers as often
+  correctly as one handed the bytes. **The token limb is now settled by argument at zero cost** — its
+  answer follows from a requirement rather than from a run, and a run priced against a bound v1
+  forbids would price a setting v1 cannot ship. **Only the task-success limb could still move a
+  decision**, and that limb's own harness predicts it **voids at stage one**: its pre-registration
+  states in its own words that this is the most likely single outcome, because every task is a
+  deterministic shell question a competent model gets right, so a turn budget is the only calibration
+  knob and without one the design almost certainly voids. That is the saturated-calibration failure
+  **U-45** records costing the ceiling test an entire family, arriving before any money is spent rather
+  than after. **So the experiment is dead on both limbs** — one
+  answered, one unable to answer — and that, rather than the requirement, is the useful output for
+  anyone deciding where to spend next.
+
+**Why this is not the ceiling being smuggled in as a default.** Nothing ships at one twentieth,
+because nothing ships without an operator's value: an unset bound makes startup fail loudly. The
+fraction is a bound on **configuration**, derived from an argument about what a transcript has to hold
+and from nothing else, and it belongs on the list of figures this product states with no measurement
+behind it, beside the kernel floor. **This is FR-005's treatment and not FR-047's**, on FR-005's
+grounds: an unset per-result bound is not a number nobody has checked, it is an unbounded liability.
+
+**Why the projected sensitivity ratios are not quoted here, and the omission is deliberate rather than
+an oversight.** They are dry-run projections against a synthetic corpus in which no model was called;
+they **move with the bound**; and a ratio without the bound it was taken at is not a result. The pass
+that wrote FR-058 kept them out for those reasons and this entry does the same, so that no downstream
+document can acquire them by citing the register.
+
+**This decision depends on OD-09 and would not be load-bearing without it.** OD-09 repositioned the
+product claim onto **cost**, which is what turns an ungoverned inlining default from untidy into a
+gap sitting directly on the thesis. It composes with **OD-10** without touching it — a bounded result
+is a disposition of a read, and v1 performs no writes.
+
+**It partly settles U-50, and only partly.** The token limb no longer needs an experiment. The
+task-success limb stays open and nothing in this corpus bears on it, so U-50 stays **open** rather
+than closing — which is the intended behaviour of that register and not an omission.
+
+**Authorises** the production specification's **FR-058** in full, including its three obligations, its
+unit rule and the byte-proxy restriction; the notes recording FR-004 as **extended** by it and FR-005
+as **neither extended nor narrowed** by it; and feature 002's `plan.md` **Complexity Tracking** row
+recording the split between the two U-50 limbs.
+
+**Propagated to** [feature 002's `plan.md`](../002-spec-aware-agent-runtime/plan.md) at the
+Complexity Tracking row for FR-058, which stated the determination and had no authorising decision to
+point at, and at the Technical Context note recording FR-058's ceiling as a figure with no measurement
+behind it. **FR-058's own text is unchanged** — what it lacked was a decision to cite, not a decision.
+[`14`](../../research/14-architecture-synthesis.md)'s **U-50** row needs a dated annotation recording
+that its token limb is settled by requirement and its task-success limb is not; that document was not
+free at this pass and the annotation is reported for routing rather than written.
 
 ## Open items this plan does not resolve
 

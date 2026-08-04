@@ -134,7 +134,7 @@ specify workflow run speckit --input spec="<description>" --input integration=cu
 
 | Feature | State |
 |---|---|
-| **001 — discovery and validation** | **Closed.** Fifteen numbered experiments, nine ladder positions reached, eight run. The adjudication is [`../specs/001-discovery-validation/VERDICT.md`](../specs/001-discovery-validation/VERDICT.md); the binding scope decisions are **OD-01** through ~~**OD-14**~~ ~~**OD-20**~~ **OD-21** in [`../specs/001-discovery-validation/plan.md`](../specs/001-discovery-validation/plan.md) |
+| **001 — discovery and validation** | **Closed.** Fifteen numbered experiments, nine ladder positions reached, eight run. The adjudication is [`../specs/001-discovery-validation/VERDICT.md`](../specs/001-discovery-validation/VERDICT.md); the binding scope decisions are **OD-01** through ~~**OD-14**~~ ~~**OD-20**~~ ~~**OD-21**~~ **OD-25** in [`../specs/001-discovery-validation/plan.md`](../specs/001-discovery-validation/plan.md) |
 | **002 — spec-aware agent runtime** | ~~**Specify phase complete.**~~ **Clarify and plan phases complete.** [`../specs/002-spec-aware-agent-runtime/spec.md`](../specs/002-spec-aware-agent-runtime/spec.md), its quality checklist, and [`plan.md`](../specs/002-spec-aware-agent-runtime/plan.md) with its research, data model, contracts and quickstart. ~~Three `[NEEDS CLARIFICATION]` markers await the owner~~ |
 
 > **Both rows corrected 2026-08-03 — stale, not wrong when written.** The OD range
@@ -150,6 +150,13 @@ specify workflow run speckit --input spec="<description>" --input integration=cu
 > configured staleness ceiling — was the one decision of that session still
 > carried as prose rather than as a record. It is now **OD-21**, so all four of
 > the clarify session's answers are citable and this row's range covers them.
+>
+> **Advanced again 2026-08-04: the range now ends at OD-25.** Four entries landed
+> after OD-21 — **OD-22** and **OD-23** on 2026-08-03, the owner's answers to the
+> two questions the production specification left open at its Clarifications
+> section; and **OD-24** and **OD-25** on 2026-08-04, the workload's privilege
+> model and the default disposition for tool output. This row states the
+> register's extent and nothing narrower, so all four are inside it.
 
 ~~**The next command is `/speckit-plan`**, once the three markers are resolved —
 or `/speckit-clarify` first if the owner prefers to resolve them through the

@@ -1,0 +1,317 @@
+{
+  "dry_run": true,
+  "model_calls": 0,
+  "spend_usd": 0.0,
+  "python": "3.14.6",
+  "pickle_protocol": 5,
+  "predicate": "pickle.dumps in try/except \u2014 NOOA's is_picklable, reproduced verbatim",
+  "n_shapes": 49,
+  "n_cross": 27,
+  "n_blocked": 22,
+  "rows": [
+    {
+      "shape": "int",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "str",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "bytes",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "list[dict]",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "nested dict",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "set",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "frozenset",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "tuple",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "datetime",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "Decimal",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "pathlib.Path",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "deque",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "namedtuple (module level)",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "dataclass (module level)",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "enum member",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "exception instance",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "class instance (module level)",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "open file object",
+      "category": "live resource handle",
+      "crosses": false
+    },
+    {
+      "shape": "socket",
+      "category": "live resource handle",
+      "crosses": false
+    },
+    {
+      "shape": "sqlite3 connection",
+      "category": "live resource handle",
+      "crosses": false
+    },
+    {
+      "shape": "sqlite3 cursor",
+      "category": "live resource handle",
+      "crosses": false
+    },
+    {
+      "shape": "threading.Lock",
+      "category": "live resource handle",
+      "crosses": false
+    },
+    {
+      "shape": "threading.Thread",
+      "category": "live resource handle",
+      "crosses": false
+    },
+    {
+      "shape": "subprocess.Popen",
+      "category": "live resource handle",
+      "crosses": false
+    },
+    {
+      "shape": "io.BytesIO",
+      "category": "live resource handle",
+      "crosses": true
+    },
+    {
+      "shape": "io.StringIO",
+      "category": "live resource handle",
+      "crosses": true
+    },
+    {
+      "shape": "generator",
+      "category": "lazy sequence",
+      "crosses": false
+    },
+    {
+      "shape": "map object",
+      "category": "lazy sequence",
+      "crosses": true
+    },
+    {
+      "shape": "filter object",
+      "category": "lazy sequence",
+      "crosses": true
+    },
+    {
+      "shape": "zip object",
+      "category": "lazy sequence",
+      "crosses": true
+    },
+    {
+      "shape": "itertools.chain",
+      "category": "lazy sequence",
+      "crosses": false
+    },
+    {
+      "shape": "dict_keys view",
+      "category": "lazy sequence",
+      "crosses": false
+    },
+    {
+      "shape": "memoryview",
+      "category": "lazy sequence",
+      "crosses": false
+    },
+    {
+      "shape": "range",
+      "category": "plain data",
+      "crosses": true
+    },
+    {
+      "shape": "lambda",
+      "category": "callable",
+      "crosses": false
+    },
+    {
+      "shape": "module-level function",
+      "category": "callable",
+      "crosses": true
+    },
+    {
+      "shape": "closure",
+      "category": "callable",
+      "crosses": false
+    },
+    {
+      "shape": "partial of module function",
+      "category": "callable",
+      "crosses": true
+    },
+    {
+      "shape": "partial of lambda",
+      "category": "callable",
+      "crosses": false
+    },
+    {
+      "shape": "bound method (module class)",
+      "category": "callable",
+      "crosses": true
+    },
+    {
+      "shape": "locally defined class",
+      "category": "locally defined",
+      "crosses": false
+    },
+    {
+      "shape": "locally defined instance",
+      "category": "locally defined",
+      "crosses": false
+    },
+    {
+      "shape": "module object",
+      "category": "runtime object",
+      "crosses": false
+    },
+    {
+      "shape": "re.Match",
+      "category": "runtime object",
+      "crosses": false
+    },
+    {
+      "shape": "compiled regex",
+      "category": "runtime object",
+      "crosses": true
+    },
+    {
+      "shape": "traceback",
+      "category": "runtime object",
+      "crosses": false
+    },
+    {
+      "shape": "weakref",
+      "category": "runtime object",
+      "crosses": false
+    },
+    {
+      "shape": "ctypes pointer",
+      "category": "runtime object",
+      "crosses": false
+    },
+    {
+      "shape": "ctypes CDLL",
+      "category": "runtime object",
+      "crosses": false
+    }
+  ],
+  "by_category": {
+    "plain data": {
+      "n": 18,
+      "crosses": 18,
+      "blocked": []
+    },
+    "live resource handle": {
+      "n": 9,
+      "crosses": 2,
+      "blocked": [
+        "open file object",
+        "socket",
+        "sqlite3 connection",
+        "sqlite3 cursor",
+        "threading.Lock",
+        "threading.Thread",
+        "subprocess.Popen"
+      ]
+    },
+    "lazy sequence": {
+      "n": 7,
+      "crosses": 3,
+      "blocked": [
+        "generator",
+        "itertools.chain",
+        "dict_keys view",
+        "memoryview"
+      ]
+    },
+    "callable": {
+      "n": 6,
+      "crosses": 3,
+      "blocked": [
+        "lambda",
+        "closure",
+        "partial of lambda"
+      ]
+    },
+    "locally defined": {
+      "n": 2,
+      "crosses": 0,
+      "blocked": [
+        "locally defined class",
+        "locally defined instance"
+      ]
+    },
+    "runtime object": {
+      "n": 7,
+      "crosses": 1,
+      "blocked": [
+        "module object",
+        "re.Match",
+        "traceback",
+        "weakref",
+        "ctypes pointer",
+        "ctypes CDLL"
+      ]
+    }
+  }
+}

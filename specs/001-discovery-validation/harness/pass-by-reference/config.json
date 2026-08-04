@@ -1,0 +1,160 @@
+{
+  "_comment": "SPIKE HARNESS - E17 pass-by-reference. Every value here is pinned before any provider call and hashed into the harness fingerprint. Do not import from product code. Delete after 2026-11-30.",
+  "harness_version": "1.0.0",
+  "preregistration": "PREREGISTRATION.md",
+  "experiment": "E17",
+
+  "corpus": {
+    "seed": 20260804,
+    "_seed_note": "Fixed here, in the committed config, before any task was selected or any command was measured. Changing it after any projection is quoted is an amendment. The corpus is generated, not committed: corpus.py from this seed reproduces it byte-for-byte and manifest.json carries the per-file SHA-256, so SC-005 reproduction by a stranger needs this file and nothing else.",
+    "expected_total_bytes": 4228698,
+    "expected_file_count": 42,
+    "_size_note": "PINNED, not aspirational. The generator's line counts are constants, so the tree has exactly one size; selftest.py regenerates and asserts these two numbers. An earlier draft carried a 6 MiB `target_bytes` the generator never produced — a declared target and a produced artefact disagreeing by a third, in a config whose whole job is to be the thing a stranger reproduces from. Recorded here because the dry run is what caught it."
+  },
+
+  "treatments": {
+    "inline": {
+      "name": "A-inline",
+      "description": "run_command returns stdout and stderr in the tool result, truncated at the cap with an elision marker and nothing else. This is v1's implicit default made runnable: FR-004 gives the agent command execution, no requirement governs result size, so everything the command printed enters the transcript up to the point where it cannot. The truncated bytes are simply gone — there is no handle to recover them.",
+      "cap_tokens": 8000,
+      "data_reachable_after_cap": false,
+      "extra_turn_per_bulk_step": 0,
+      "static_prefix_tokens": 1200
+    },
+    "handle": {
+      "name": "A-handle",
+      "description": "run_command writes stdout to the session filesystem and returns a bounded preview (head lines, tail lines, byte count, line count, SHA-256) plus the path. A follow-up command processes the file without its bytes entering context.",
+      "cap_tokens": 400,
+      "data_reachable_after_cap": true,
+      "extra_turn_per_bulk_step": 1,
+      "static_prefix_tokens": 1320
+    },
+    "_cap_note": "THE INLINE ARM IS CAPPED, AND THE FIRST DRAFT OF THIS FILE DID NOT CAP IT. Uncapped, the measured battery projects a 726,766-token inline transcript for T02 — three and a half times this model's context window. That arm cannot run, so the comparison would have been a completed handle run against an inline run that could not physically exist, and the projected token ratio came out at 0.030, a 97% saving that is an artefact of charging for an impossible transcript. Every real command-execution surface truncates; an uncapped one is not the default, it is a bug. The cap is the honest baseline and the dry run is what forced it.",
+    "_what_the_cap_changes": "With both arms capped, the factor under test is no longer `bounded vs unbounded`. It is `bounded and the bytes are gone` vs `bounded and the bytes are still reachable by name` — which is the actual product question, and which is why limb 2 can move against limb 1: the inline arm loses data irrecoverably and should fail tasks the handle arm completes.",
+    "_effect_scales_with_the_cap": "The measured ratio is conditional on cap_tokens and there is no cap-free number to report. 8.6 requires the ratio to be recomputed at every cap in cost.cap_sensitivity from the same measured bytes, at no extra spend, and all of them published together. A single ratio quoted without its cap is not a result.",
+    "_static_prefix_note": "The two tool descriptions differ, and they must: A-handle has to document the preview envelope and the handle path or the model cannot use it. That delta is a necessary co-variant, not an accident. It is declared here at an estimated +120 tokens, it is measured exactly by the provider tokenizer in the pre-flight before the first call, and 8.3 of the preregistration requires both the gross and the prefix-net token ratio to be reported. A saving that disappears once the prefix delta is removed is not a saving.",
+    "_extra_turn_note": "A-handle buys its token saving by spending turns: the model sees a preview, then issues a second command to filter the file it cannot read. One extra turn per bulk step is charged to the handle arm in the projection so the projection cannot flatter the treatment. Whether one is enough is exactly what the run measures."
+  },
+
+  "turn_budget": {
+    "turns": 8,
+    "retunes_permitted": 1,
+    "retune_turns": 5,
+    "_why": "THE CALIBRATION KNOB, and the honest answer to the biggest risk in this design. Every task in the battery is a deterministic shell question that a competent model will get right given enough turns, in BOTH arms — which is E7's defect exactly: its tool arm pinned at 1.00 on 27 of 41 tasks and D-19 concedes that two of its three task families support no conclusion. Without a turn budget the most likely outcome here is a pooled success rate near 1.00, a missed band, and a voided run.",
+    "_mechanism": "A turn budget is what makes the two limbs able to move in opposite directions, and it is the mechanism the product cares about. The inline arm spends turns recovering from truncation and fills its context faster; under a budget it runs out. The handle arm keeps the bytes addressable and spends one cheap turn filtering them. If neither arm ever runs out of turns, the design measures token cost and nothing else, and the second limb is decorative.",
+    "_retune_rule": "Exactly one retune is permitted, from 8 turns to 5, and only if stage 1 misses the band. It is declared here BEFORE stage 1 runs, so it is not a rule invented after seeing the numbers. A retune re-runs stage 1 in full and costs a full stage 1; that money is the contingency line in the projection, not a percentage. If the retuned stage 1 also misses the band, the run is void, and the void is reported as the result — not quietly repaired."
+  },
+
+  "turn_model": {
+    "task_prompt_tokens": 120,
+    "output_tokens_per_working_turn": 120,
+    "output_tokens_final_turn": 200,
+    "small_result_tokens": 150,
+    "bulk_threshold_bytes": 4096,
+    "_note": "A step is BULK when the oracle plan's measured stdout exceeds bulk_threshold_bytes; bulk is the only class the treatment touches. Small results are identical in both arms by construction and are charged identically."
+  },
+
+  "model": {
+    "name": "sonnet-primary",
+    "provider": "anthropic",
+    "id": "claude-sonnet-4-5-20250929",
+    "temperature": 0.0,
+    "price_usd_per_mtok": { "input": 3.0, "output": 15.0 },
+    "_id_note": "The same dated snapshot and the same list prices already pinned by E8's config for its arm (b). Reusing it means the projection is comparable to a projection this corpus has already authorized and settled, and means no price in this harness was invented by the harness."
+  },
+
+  "cost": {
+    "bytes_per_token": 4.0,
+    "context_window_tokens": 200000,
+    "cap_sensitivity": [2000, 8000, 32000],
+    "_context_window_note": "The model's context window, recorded so the harness can refuse rather than discover. Any projected run whose accumulated input exceeds it is a run that cannot happen; cost.py checks every projected task against it and names the offenders instead of quietly projecting a price for an impossible transcript.",
+    "_bytes_per_token_note": "E8's divisor, reused so the two projections are on one basis. It is an estimate, not a tokenizer. The live accumulator bills measured usage off the API response and never the estimate; using an estimation divisor to bill would launder an estimate into an accounting figure.",
+    "contingency_policy": "one_stage1_retune",
+    "_contingency_note": "The contingency is ONE STAGE 1, not a percentage. A percentage is a number about how nervous the author was; the retune is the one thing this design is actually likely to need, its price is known exactly, and turn_budget._retune_rule is the only thing it may be spent on. Anything else is a new authorization.",
+    "arm_a_hard_ceiling_usd": 16.0,
+    "arm_a_budget_usd": 17.0,
+    "_arm_a_ceiling_note": "Set AFTER the measured projection, not before it. The first draft carried $24.00/$25.00 from a hand estimate that put a task pair at $0.34; the measured battery put the uncapped pair at $11.84 and the capped pair at $3.45, so the hand estimate was wrong in both directions and by more than an order of magnitude each time. A ceiling chosen before the projection is a number about the author's intuition. $16.00 sits about 15% above the $13.97 projection. A second draft set it at $14.00, which left three cents of headroom over a projection that already contains a retune — a ceiling that tight converts any surprise at all into an aborted run.",
+    "arm_b_hard_ceiling_usd": 16.5,
+    "arm_b_budget_usd": 17.0,
+    "_ceiling_note": "Checked BEFORE each call against the running ledger, never after. A ceiling that can be exceeded is not a ceiling. The two arms carry separate ceilings because 12 requires them to be separately authorizable."
+  },
+
+  "analysis_sets": {
+    "cap_binding": ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08", "T09", "T10", "T11", "T12"],
+    "cap_clearing": ["T13", "T14", "T15", "T16", "T17", "T18"],
+    "null_control": ["C01", "C02", "C03"],
+    "primary_sets": ["cap_binding", "cap_clearing"],
+    "null_control_expected_ratio_band": [1.0, 1.15],
+    "_split_note": "Assigned by MEASUREMENT against the two caps, not by taste. Let M be the largest stdout any step of a task's oracle plan produces. M <= handle cap (400 tok ~ 1,600 B) is null_control: neither arm acts. M <= inline cap (8,000 tok ~ 32,000 B) is cap_clearing: the handle arm saves tokens and the inline arm loses nothing. Above that is cap_binding: the handle arm saves tokens AND the inline arm loses bytes it cannot recover. measure.py computes M at $0.00; selftest.py asserts these three lists still match what it computes, so the split cannot drift away from the corpus it describes.",
+    "_two_primary_strata_note": "The split is not cosmetic and it is where the two limbs come apart. On cap_clearing tasks the handle arm should save tokens at NO success cost — the inline arm never lost anything. On cap_binding tasks the inline arm is missing data, so the handle arm should if anything succeed MORE often. If the success limb moves against the handle arm on cap_clearing tasks, the loss is not caused by missing data and the mechanism is failing for some other reason. 8.5 makes that stratified reading binding, because the unstratified average would hide it.",
+    "_control_note": "C01-C03 are the negative control and the dry run is why they exist. The battery had none: T14/T16/T17 were labelled controls on the grounds that no step passed the 4,096-byte 'bulk' threshold, but the handle preview binds at 1,600 bytes, so their 2.5-3.2 KB steps are still elided and they still project a real 5% saving. A control carrying a treatment effect is worse than no control, because it is read as evidence the instrument is clean. C01-C03 keep every step under 1,600 bytes and project 1.073-1.075 — above 1.00, because the handle arm pays the larger static prefix and gets nothing back. A control that comes out below 1.00 means the instrument is saving tokens somewhere the mechanism cannot reach, and the primary result is not readable."
+  },
+
+  "design": {
+    "tasks": 21,
+    "primary_tasks": 18,
+    "null_control_tasks": 3,
+    "replicates_per_task": 3,
+    "calibration_stage": "replicate_1_full_battery",
+    "_calibration_stage_note": "The calibration block IS replicate 1 of the full battery, not a separate purchase. Two reasons. It calibrates the exact task set that will be analysed rather than a sample standing in for it; and if the gate passes, nothing was spent twice. The double use is confined to the pooled success rate, which is not the estimand — the estimand is the paired within-task contrast — so it does not bias what the run is for. If the gate fails, replicate 1 is the entire loss.",
+    "sentinels_per_session": 3,
+    "sessions_planned": 3,
+    "_replicate_note": "Three, not one. This corpus measured a deterministic task swinging 2.55x across sessions for reasons never established; with one replicate there is no within-task variance estimate at all and no way to tell a treatment effect from that swing."
+  },
+
+  "calibration": {
+    "pooled_success_band": [0.25, 0.85],
+    "max_fraction_pinned_at_1": 0.25,
+    "max_fraction_pinned_at_0": 0.25,
+    "on_miss": "void",
+    "_band_note": "0.25-0.85 is E7's own pre-registered band, reused deliberately. E7 missed it: its tool arm pinned at 1.00 on 27 of 41 tasks, and D-19 concedes two of three task families support no conclusion as a result. The two pinning caps are the part E7 did not have - a set can sit inside a pooled band while most individual tasks are saturated, and a saturated task discriminates nothing however the pool averages out.",
+    "_pooled_note": "Pooled over BOTH treatments. Calibrating per-arm would bake the effect being measured into the instrument that is supposed to detect it."
+  },
+
+  "decision": {
+    "token_ratio_recommend_at_or_below": 0.75,
+    "token_ratio_no_benefit_at_or_above": 0.95,
+    "success_noninferiority_margin_pp": -10.0,
+    "success_recommend_against_point_pp": -10.0,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260804,
+    "_margin_note": "-10 pp, not -5 pp. At 54 pairs a paired bootstrap CI on a success-rate difference has a half-width near 13 pp under a plausible discordance rate, so a 5 pp margin would be a margin the design cannot see. 9.2 of the preregistration states what N a 5 pp decision would need and what it would cost."
+  },
+
+  "drift_sentinel": {
+    "tolerance_fraction": 0.15,
+    "_note": "One fixed deterministic task run at the start, middle and end of every session under A-inline. If its total token count moves by more than +/-15% within a session, the session is flagged and every pair in it is reported separately. This is the detector for the cross-session confound appearing WITHIN a session, where pairing would not cancel it."
+  },
+
+  "exclusions": {
+    "unit": "pair",
+    "terminal_statuses": ["ok", "void_calibration", "error_harness", "error_provider", "refused", "budget_stop"],
+    "_unit_note": "The unit of analysis is the PAIR. If either limb is not `ok` the whole pair is excluded and both limbs go with it. Every ratio this harness prints carries its own denominator on the same line. Pairing a numerator defined over completed pairs with a denominator counting attempts is the defect found at eleven sites in this corpus on 2026-08-03."
+  },
+
+  "arm_b": {
+    "status": "not recommended for authorization",
+    "_status_note": "See 11 of the preregistration. Established by reading NOOA's source at $0.00: under execution_backend='sandbox' a brokered self.* result is pickled across the fork and RECONSTITUTED AS A LIVE OBJECT in the worker namespace, and the transcript is built from stdout/stderr/returned_value exactly as it is in-process. The sandbox boundary costs object identity, not transcript bytes. The arm cannot measure what it was commissioned to measure.",
+    "if_authorized_anyway": {
+      "tasks": 12,
+      "replicates_per_task": 2,
+      "static_prefix_tokens_inprocess": 3000,
+      "sandbox_context_block_tokens": 300,
+      "working_turns_inprocess": 10,
+      "working_turns_sandbox": 12,
+      "output_tokens_per_working_turn": 200,
+      "output_tokens_final_turn": 300,
+      "result_tokens_per_turn": 500,
+      "task_prompt_tokens": 150,
+      "_extra_turns_note": "Two extra turns are charged to the sandbox arm for CellSerializationError recovery. That charge is itself a confound admission: the turns exist because the arms differ in more than the factor of interest."
+    }
+  },
+
+  "credentials": {
+    "resolution": "F2A_ENV_ROOT or --env-root, per ../provider-credentials/envroot.py; the process environment is consulted first",
+    "required_names": ["ANTHROPIC_API_KEY"],
+    "known_working_names": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY", "GEMINI_API_KEY_2"],
+    "known_dead_names": ["GEMINI_API_KEY"],
+    "_note": "NAMES ONLY. No value is read into anything that outlives the line that parsed it, printed, logged or written. Finding 002 is the source for which names authenticate; GEMINI_API_KEY is listed as dead because on the tree finding 002 probed it was one of ten non-authenticating Google-shaped credentials and GEMINI_API_KEY_2 was the one that worked."
+  }
+}

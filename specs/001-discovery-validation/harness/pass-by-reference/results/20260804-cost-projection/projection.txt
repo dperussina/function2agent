@@ -1,0 +1,89 @@
+E17 pass-by-reference — cost projection (dry run; no model was called)
+==============================================================================
+generated       : 2026-08-04T14:59:21.459510+00:00
+model           : anthropic/claude-sonnet-4-5-20250929 @ $3.0/M in, $15.0/M out
+divisor         : 4.0 bytes/token (estimate, not a tokenizer)
+corpus          : 42 files, 4,228,698 bytes, seed 20260804
+model calls made by this script: 0    spend by this script: $0.00
+
+ARM A — inline vs handle+preview on a command-execution surface
+------------------------------------------------------------------------------
+inline cap 8,000 tok/result (bytes past it are LOST); handle cap 400 tok/result (bytes past it stay on disk)
+task   stratum        max step B  inline in  handle in   ratio  lost tok    pair $
+C01    null_control           46      4,356      4,716   1.075         0    0.0404
+C02    null_control           50      6,036      6,516   1.073         0    0.0545
+C03    null_control          103      4,378      4,738   1.075         0    0.0405
+T01    cap_binding       505,932     52,232     21,956   0.434   150,604    0.2502
+T02    cap_binding       683,247     66,428     21,056   0.329   165,842    0.2901
+T03    cap_binding       221,939     47,004     17,506   0.386    47,485    0.2175
+T04    cap_binding       485,103     43,194     17,506   0.420   113,276    0.2061
+T05    cap_binding       123,282     35,244     17,194   0.504    22,821    0.1813
+T06    cap_binding       191,311     32,373     13,197   0.423    39,828    0.1589
+T07    cap_binding       117,149     47,947     16,919   0.367    42,573    0.2186
+T08    cap_binding       296,049     31,978     12,704   0.413    66,013    0.1562
+T09    cap_binding       615,353     47,946     16,918   0.367   164,382    0.2186
+T10    cap_binding       187,607     38,524     16,918   0.455    38,902    0.1903
+T11    cap_binding       215,794     47,945     16,917   0.367    91,896    0.2186
+T12    cap_binding       106,169     47,946     16,918   0.367    37,086    0.2186
+T13    cap_clearing       31,904     43,033     17,841   0.429         0    0.2066
+T14    cap_clearing        2,532     10,746     10,647   0.991         0    0.0846
+T15    cap_clearing       31,904     32,927     13,879   0.437         0    0.1626
+T16    cap_clearing        3,185     11,672     11,081   0.952         0    0.0887
+T17    cap_clearing        2,520     10,871     10,781   0.992         0    0.0854
+T18    cap_clearing       31,904     32,481     13,336   0.426         0    0.1597
+strata          : cap_binding=12, cap_clearing=6, null_control=3
+
+context window : every projected run fits 200,000 tokens
+
+cap sensitivity (same measured bytes, repriced; costs nothing)
+  inline cap  2,000 tok -> median projected ratio 0.958, battery pair $2.3066, peak inline input 6,529 (fits)
+  inline cap  8,000 tok -> median projected ratio 0.429, battery pair $3.4479, peak inline input 18,529 (fits)
+  inline cap 32,000 tok -> median projected ratio 0.160, battery pair $6.6769, peak inline input 66,529 (fits)
+
+one full battery pair-pass (21 pairs)        = $3.4479
+stage 1 (replicate 1, and the calibration gate)  = $3.4479
+stage 2 (replicates 2-3, 42 pairs)            = $6.8958
+drift sentinels (9 x $0.0198)                    = $0.1780
+                                                   ----------
+subtotal                                         = $10.5218
+contingency (one permitted stage-1 retune)       = $3.4479
+                                                   ----------
+ARM A TOTAL                                      = $13.9697
+   hard ceiling $16.00, budget $17.00
+
+   irreducible minimum for a readable result   = $10.5218
+     = stage 1 (gate + replicate 1) + replicate 2 + sentinels + one retune
+   buys statistical margin only                = $3.4479
+     = replicate 3
+
+ARM B — NOOA inprocess vs sandbox
+------------------------------------------------------------------------------
+status: not recommended for authorization — see 11 of the preregistration
+  inprocess run : in=73,150  out=2,300  $0.2540
+  sandbox run   : in=99,450  out=2,700  $0.3388
+  pair          : $0.5928 x 24 pairs = $14.2272
+  contingency   : $2.1341
+  ARM B TOTAL   : $16.3613   (ceiling $16.50, budget $17.00)
+
+ARITHMETIC WALKTHROUGH
+------------------------------------------------------------------------------
+per-call accumulation for T09 (step stdout bytes: [142, 106169, 615353, 6])
+
+  A-inline: prefix=1320 (static 1200 + prompt 120)
+    call  1: in=   1320  out= 120  result=     36  acc=    156
+    call  2: in=   1476  out= 120  result=   8000  acc=   8276
+    call  3: in=   9596  out= 120  result=   8000  acc=  16396
+    call  4: in=  17716  out= 120  result=      2  acc=  16518
+    call  5: in=  17838  out= 200  (answer)
+    totals: in=47,946  out=680  = 47,946x3.0/1e6 + 680x15.0/1e6 = $0.154038
+
+  A-handle: prefix=1440 (static 1320 + prompt 120)
+    call  1: in=   1440  out= 120  result=     36  acc=    156
+    call  2: in=   1596  out= 120  result=    400  acc=    676
+    call  3: in=   2116  out= 120  result=    150  acc=    946
+    call  4: in=   2386  out= 120  result=    400  acc=   1466
+    call  5: in=   2906  out= 120  result=    150  acc=   1736
+    call  6: in=   3176  out= 120  result=      2  acc=   1858
+    call  7: in=   3298  out= 200  (answer)
+    totals: in=16,918  out=920  = 16,918x3.0/1e6 + 920x15.0/1e6 = $0.064554
+

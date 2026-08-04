@@ -33,6 +33,7 @@ ever**, and say so at the top of their own README.
 | [`reachability-without-schema`](./reachability-without-schema/) | E15 — reachability without a published schema | [011](../findings/011-reachability-without-schema.md) | $0.00 | committed at the time | yes |
 | [`provider-credentials`](./provider-credentials/) | (outside the ladder) — live credential probe | [002](../findings/002-provider-credentials.md) | $0.00 | **recovered from `/tmp` 2026-08-02** | **no — one person's credentials** |
 | [`provider-sdk-roundtrip`](./provider-sdk-roundtrip/) | E16 — opaque-state round-trip through each vendor's own SDK | [016](../findings/016-provider-sdk-roundtrip.md) | 25,214 tokens; **no dollar total** — one arm measured at $0.001860, [see below](#the-e16-row-added-2026-08-03) | committed at the time | yes — with your own credentials |
+| [`pass-by-reference`](./pass-by-reference/) | E17 — inlined command output vs a bounded preview plus a filesystem handle | none yet — **pre-registered, not run** | **$0.00** — no model has been called | committed at the time | yes for everything committed; the paid arm does not exist |
 
 `runtime-provider-agnosticism` and `graph-loop-primitives` are the harnesses behind
 **OD-01** (adopt Google ADK for graph execution, build our own safety layer) and **OD-02**
