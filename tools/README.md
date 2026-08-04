@@ -939,6 +939,39 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
 - **Prose that contradicts an adjacent table.** `finding 010`'s prose named one
   mechanism while its own committed table showed two. Both halves are internally
   valid.
+
+  **Widened 2026-08-04 to one cell against another inside a single row**, which is
+  the same hole one level down and is the harder half to see, because the two
+  halves are adjacent rather than separated by a document. `7063b32` corrected the
+  middle column of `specs/002-spec-aware-agent-runtime/plan.md`'s Linux-only
+  Complexity Tracking row from *all three mechanisms are kernel facilities* to
+  *each of the four depends on a kernel facility*, and left the next column of the
+  same row reading *two of the three mechanisms are absent*. Nothing here could
+  object: the row's cell count is right and its pipes balance, so
+  `table-integrity` is satisfied; both cells are well-formed prose; and what they
+  disagree about is a bare integer, which the *figures with no distinctive shape*
+  entry below records as not extracted at all.
+
+  **The reason it survived is worth more than the instance, because no check will
+  ever cover it.** Two commits swept that file for the framing after the clause
+  landed, `7063b32` and `c48332f`, and each enumerated what it believed was the
+  complete list. Both sweeps were `rg`-shaped and **the pattern matched both
+  columns** — so this was not a search that missed a site. The site was found, the
+  match was read, one cell was fixed, and the row was recorded as done. **The unit
+  of work was the match and the unit of correctness was the row**, and wherever
+  those two differ a sweep reports a completeness it does not have.
+
+  So the question to ask on a propagation pass is not *did I visit every match*
+  but *did I finish every unit the claim lives in* — the row for a table, the whole
+  bullet for a bullet, every site that states **or implies** a figure for a
+  corrected count. A grep hit inside a structure whose other parts make the same
+  claim is a place to start reading and not a place to stop editing. This is
+  recorded here rather than in a skill because it is a claim about sweep
+  completeness rather than about evidence, and because it belongs beside the
+  residue it explains: the `register-range` entry below, whose six hand-maintained
+  OD-range sites are held by a standing obligation on a human, is the same shape —
+  a gap this tool has decided not to close, with the failure mode written down
+  where the gap is recorded rather than somewhere else.
 - **Figures with no distinctive shape.** Integer counts — "69 endpoints", "eight
   configurations", "three routers" — carry no marker separating a measurement
   from a quantity, so they are not extracted at all.
