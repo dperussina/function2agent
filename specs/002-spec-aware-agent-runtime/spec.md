@@ -854,6 +854,17 @@ which it is repeatedly mistaken for. Append-only applies to it too.
     a span carrying only what was admitted describes a result that never existed. This is a field
     obligation on the `tool_call` span of FR-038 and does not add a span kind; FR-038's set is closed.
 
+  **The authorising decision is OD-25**, recorded 2026-08-04 in
+  [`plan.md`](../001-discovery-validation/plan.md). It authorises this requirement in full — the three
+  obligations above, the unit rule, the byte-proxy restriction and the ceiling — together with the
+  notes recording **FR-004** as extended by it and **FR-005** as neither extended nor narrowed by it.
+  *(Citation added 2026-08-04. This requirement's text is unchanged: what it lacked was a decision to
+  point at, not a decision.)* **OD-25's propagation list originally routed to
+  [`plan.md`](./plan.md) alone and is amended there to record this site**, on the precedent FR-047
+  sets below: OD-21 carried the same sentence about its requirement's text being unchanged and the
+  citation was nonetheless written into the requirement, because the sentence says the normative text
+  did not move, not that the authority should stay unnamed where it applies.
+
   > **Added 2026-08-04. Why a session ceiling does not supply this, why the number is a ceiling rather
   > than a default, and the one thing the argument deliberately does not do.**
   >

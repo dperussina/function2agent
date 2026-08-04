@@ -2892,7 +2892,18 @@ recording the split between the two U-50 limbs.
 **Propagated to** [feature 002's `plan.md`](../002-spec-aware-agent-runtime/plan.md) at the
 Complexity Tracking row for FR-058, which stated the determination and had no authorising decision to
 point at, and at the Technical Context note recording FR-058's ceiling as a figure with no measurement
-behind it. **FR-058's own text is unchanged** — what it lacked was a decision to cite, not a decision.
+behind it. ~~**FR-058's own text is unchanged** — what it lacked was a decision to cite, not a
+decision.~~ **Extended 2026-08-04: the citation is now carried in FR-058 itself, in
+[`spec.md`](../002-spec-aware-agent-runtime/spec.md), and this list records it.** The struck sentence
+is kept rather than deleted because it is true and was misread as an instruction. **It says the
+requirement's normative text did not move; it does not say the authority should go unnamed at the
+requirement.** The two readings are separable and the corpus has already separated them: **OD-21**
+above carries the same sentence almost verbatim — *"This requirement's text is unchanged: what it
+lacked was a decision to point at, not a decision"* — and that sentence sits **inside FR-047**, next
+to the citation it qualifies, with the same construction at **FR-001**, **FR-030**, **FR-031** and
+**FR-002**. Leaving FR-058 uncited would have made it the only requirement in that specification
+authorised by an entry in this register and naming none, which is the defect **OD-18** through
+**OD-21** were minted to close. Nothing about the decision changes and no requirement text changes.
 [`14`](../../research/14-architecture-synthesis.md)'s **U-50** row needs a dated annotation recording
 that its token limb is settled by requirement and its task-success limb is not; that document was not
 free at this pass and the annotation is reported for routing rather than written.
