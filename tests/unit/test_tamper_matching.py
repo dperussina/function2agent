@@ -31,6 +31,7 @@ Go toolchain, a Linux kernel and root, and is therefore not.
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -38,7 +39,24 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parent.parent.parent
+PROOF_FILE = REPO / "tests" / "removal_proofs.sh"
+CHECKER = REPO / "tools" / "check_tampers.py"
 sys.path.insert(0, str(REPO / "tools"))
+
+#: The proof set as it stands. Pinned rather than bounded, in the shape
+#: `tools/selftest.py` pins `GEN_EXPECTED`: a number no tool can derive from
+#: the file it is reading, held in the one place that knows which revision
+#: this is.
+#:
+#: `check_tampers.py` carries the constant-free half of the floor — zero
+#: extracted proofs is an error, and a declaration-shaped line that produced
+#: no proof is an error — and deliberately carries no minimum count, because
+#: `--proofs` exists to score older revisions that legitimately declare fewer.
+#: This is the half that needs to know the number, so it lives here.
+#:
+#: Changing the proof set is meant to edit this line. That coupling is the
+#: mechanism and not an inconvenience: a silent drop from 64 to 63 is the rot.
+EXPECTED_PROOFS = 64
 
 from tamper import (  # noqa: E402
     AMBIGUOUS,
@@ -184,7 +202,7 @@ def test_every_declared_removal_proof_still_names_a_live_site_and_a_live_test():
     on the same push that causes the rot.
     """
     result = subprocess.run(
-        [sys.executable, str(REPO / "tools" / "check_tampers.py"), "--root", str(REPO)],
+        [sys.executable, str(CHECKER), "--root", str(REPO)],
         capture_output=True,
         text=True,
     )
@@ -193,3 +211,77 @@ def test_every_declared_removal_proof_still_names_a_live_site_and_a_live_test():
         + result.stdout
         + result.stderr
     )
+
+
+def test_the_declared_proof_count_is_what_it_is_expected_to_be():
+    """The half of the floor that needs a number, kept where the number is known.
+
+    Everything above is per-proof, so the whole file's verdict is only as
+    strong as the number of proofs that reached it. `check_tampers.py` refuses
+    zero and refuses a declaration it could not read, and neither of those
+    notices a proof being *deleted*. This does.
+    """
+    import check_tampers
+
+    proofs = check_tampers.extract(PROOF_FILE.read_text())
+    assert len(proofs) == EXPECTED_PROOFS, (
+        f"the proof set moved from {EXPECTED_PROOFS} to {len(proofs)}. If a "
+        "proof was added or removed on purpose, update EXPECTED_PROOFS in the "
+        "same commit; if not, extraction has degraded and the proofs that "
+        "went missing are being reported as no news."
+    )
+
+
+def _indented_except_first(text: str) -> str:
+    """The realistic degradation: declarations wrapped in a loop or a function.
+
+    `_INVOCATION` is anchored at `^` and allows no leading whitespace, so two
+    spaces are the whole of it. One declaration is left at column zero so the
+    result reads as *partial* loss — the all-but-one case, which a bare
+    `if not proofs` floor would wave through. Written without the count on
+    purpose: `EXPECTED_PROOFS` is the one place that knows it, and a second
+    copy here would rot every time the proof set moves.
+    """
+    seen = False
+    out = []
+    for line in text.splitlines(keepends=True):
+        if re.match(r"^(go_)?proof \"", line):
+            if seen:
+                out.append("  " + line)
+                continue
+            seen = True
+        out.append(line)
+    return "".join(out)
+
+
+@pytest.mark.parametrize(
+    "build,expect_in_output",
+    [
+        (lambda _: "", "no proof declarations could be extracted"),
+        (_indented_except_first, "declaration-shaped lines"),
+    ],
+    ids=["nothing-extractable", "one-of-many-extractable"],
+)
+def test_the_gate_fails_on_a_proofs_file_it_cannot_read(
+    tmp_path, build, expect_in_output
+):
+    """A guard against vacuity that is itself unverified proves nothing.
+
+    Until 2026-08-04 both of these exited 0 with `0 errors, 0 warnings`, which
+    is a gate reporting success for having checked nothing. Both directions of
+    the floor are asserted here because they catch different faults: the empty
+    file reaches only the zero-check, and the indented file reaches only the
+    declaration cross-check once one proof survives to keep the count non-zero.
+    """
+    degraded = tmp_path / "removal_proofs.sh"
+    degraded.write_text(build(PROOF_FILE.read_text()))
+
+    result = subprocess.run(
+        [sys.executable, str(CHECKER), "--root", str(REPO), "--proofs", str(degraded)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0, (
+        "the gate passed a proofs file it could not read:\n" + result.stdout
+    )
+    assert expect_in_output in result.stdout, result.stdout

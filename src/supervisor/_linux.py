@@ -81,6 +81,11 @@ _SYSCALL_NUMBERS = {
         "truncate": 76,
         "chmod": 90,
         "fchmodat": 268,
+        # See the note under the aarch64 table.
+        "renameat": 264,
+        "symlinkat": 266,
+        "linkat": 265,
+        "utimensat": 280,
     },
     "aarch64": {
         "seccomp": 277,
@@ -97,6 +102,27 @@ _SYSCALL_NUMBERS = {
         "chdir": 49,
         "truncate": 45,
         "fchmodat": 53,
+        # These four are what `os.rename`, `os.symlink`, `os.link` and
+        # `os.utime` issue — measured with `strace -e trace=%file` under
+        # CPython 3.12 on `6.12.76-linuxkit`/`aarch64`, and the reason finding
+        # 021 saw four ordinary writes produce no `filesystem_decision` at all.
+        # Now watched: `fs_decisions.WRITE_SYSCALLS` names all four, which is
+        # the precondition, because a watched write the classifier cannot
+        # classify is recorded as an *allow* rather than as silence. See
+        # `seccomp.check_watch_set_is_wired`, which refuses that state.
+        #
+        # Numbers derived from one authoritative header per architecture —
+        # `/usr/include/asm-generic/unistd.h` here and
+        # `/usr/include/x86_64-linux-gnu/asm/unistd_64.h` there — never by
+        # concatenating several, which is how an aarch64 probe once read 94 as
+        # `lchown` when it was `exit_group`. `renameat` sits behind
+        # `#ifdef __ARCH_WANT_RENAMEAT` in the generic header;
+        # `/usr/include/aarch64-linux-gnu/asm/unistd.h` defines it, so it is
+        # present on this architecture.
+        "renameat": 38,
+        "symlinkat": 36,
+        "linkat": 37,
+        "utimensat": 88,
     },
 }
 _SYSCALL_NUMBERS["arm64"] = _SYSCALL_NUMBERS["aarch64"]
@@ -153,6 +179,15 @@ def path_taking_syscalls() -> dict[str, int]:
     declared location set. `open`/`stat`/`lstat` and friends do not exist on
     `aarch64` (glibc uses `openat`/`newfstatat`), so the set is derived from
     the architecture's own table rather than assumed uniform.
+
+    **This is a named subset of the path-taking syscalls, not all of them, and
+    the omissions are deliberate rather than overlooked.** Finding 021 counted
+    twelve write-capable path-taking syscalls that are wired and unwatched on
+    `aarch64`; `tests/unit/test_watch_set_wiring.py` lists every one with the
+    reason it is not here, and fails if a listed name is later watched without
+    the list being updated. The name tuple below is therefore the statement,
+    and the table above is only the numbers — a name present in the table and
+    absent here is unwatched on purpose.
     """
     table = _SYSCALL_NUMBERS.get(machine())
     if table is None:
@@ -162,6 +197,11 @@ def path_taking_syscalls() -> dict[str, int]:
         "unlink", "unlinkat", "rename", "renameat2", "mkdir", "mkdirat",
         "readlink", "readlinkat", "access", "faccessat", "faccessat2",
         "chdir", "truncate", "chmod", "fchmodat",
+        # The four ordinary Python writes finding 021 measured producing no
+        # record at all. Watched only now that `fs_decisions.WRITE_SYSCALLS`
+        # names them; watched earlier they would have recorded an `allow`
+        # against a read-only declaration, which is worse than the silence.
+        "renameat", "symlinkat", "linkat", "utimensat",
     )
     return {n: table[n] for n in names if n in table}
 

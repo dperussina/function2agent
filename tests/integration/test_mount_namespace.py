@@ -11,6 +11,18 @@ So these tests assert **the errno**, not merely that the open failed. A test
 that asserted only failure would pass against a permissions scheme, which is
 the design FR-048 rejects.
 
+**"Absent" is half the property, and this file only ever measured that half.**
+The contract's sentence was *"a location outside the set is absent … so there
+is nothing at it to open"*, and the second clause holds only for a path the
+workload cannot **create**. Every test here asks whether something declared is
+reachable or something undeclared is unreachable; none asks whether the
+workload can put a file somewhere it was never given. Finding 021 measured that
+it could — in the session root, and inside any submount of a declared
+`mode="ro"` source. Those two questions are
+`tests/integration/test_mount_authority.py`, and they belong next to these
+rather than inside them because they are a different question about the same
+mechanism.
+
 The removal proof is `test_without_pivot_root_the_host_is_visible`: it runs the
 same body with the namespace step omitted and asserts the host root *is*
 reachable. Without it, every assertion here would also pass on a machine where

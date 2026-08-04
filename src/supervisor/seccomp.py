@@ -4,11 +4,24 @@ attempt *before the kernel performs it*.
 
 **Why this exists at all, given T097 already enforces.** A mount namespace with
 an empty root enforces FR-048 perfectly and records *nothing*: an undeclared
-path is absent, the syscall returns `ENOENT` inside the container, and the
-supervisor never hears about it. FR-048's recording clause and **SC-022**'s 100%
-both need a `filesystem_decision` emitted for every refusal, so something has to
-observe the attempt. That is this file. **Enforcement and recording are two
-mechanisms here, not one**, and they are deliberately not collapsed.
+path is not present in the session's root, the syscall returns `ENOENT` inside
+the container, and the supervisor never hears about it. FR-048's recording
+clause and **SC-022**'s 100% both need a `filesystem_decision` emitted for every
+refusal, so something has to observe the attempt. That is this file.
+**Enforcement and recording are two mechanisms here, not one**, and they are
+deliberately not collapsed.
+
+**The watch set is a named subset, and `openat2` is not the exception.**
+Finding 021 counted twelve write-capable path-taking syscalls that were wired
+and unwatched, four of which ordinary Python reaches without trying —
+`os.rename`, `os.symlink`, `os.link` and `os.utime` produced no record at all
+inside a declared read-only location. Those four (`renameat`, `symlinkat`,
+`linkat`, `utimensat`) are now watched; the rest, `openat2` among them, are
+not. Every remaining omission and its reason is listed in
+`tests/unit/test_watch_set_wiring.py`, which fails if a listed name is later
+watched without the list being updated. `check_watch_set_is_wired` below refuses
+a watch set that has been enlarged without the two other tables that have to
+move with it.
 
 **The division of labour, stated because getting it backwards is a real
 vulnerability.** `SECCOMP_USER_NOTIF_FLAG_CONTINUE` is documented as unsafe for
@@ -75,12 +88,58 @@ _PATH_ARG = {
     "open": 0, "openat": 1,
     "stat": 0, "lstat": 0, "newfstatat": 1, "statx": 1,
     "unlink": 0, "unlinkat": 1,
-    "rename": 0, "renameat2": 1,
+    "rename": 0, "renameat": 1, "renameat2": 1,
     "mkdir": 0, "mkdirat": 1,
     "readlink": 0, "readlinkat": 1,
     "access": 0, "faccessat": 1, "faccessat2": 1,
     "chdir": 0, "truncate": 0, "chmod": 0, "fchmodat": 1,
+    # Two-path syscalls. The index names the path whose *location* the
+    # decision is about, and the two families choose differently on purpose:
+    #
+    #   renameat(olddirfd, oldpath, newdirfd, newpath)     -> 1, oldpath
+    #   linkat(olddirfd, oldpath, newdirfd, newpath, flag) -> 3, newpath
+    #
+    # A rename removes `oldpath`, so the source location is modified and index
+    # 1 matches the entry `renameat2` already had. A hard link does not touch
+    # `oldpath` at all — it only reads it — so recording index 1 for `linkat`
+    # would name a location that was not written to and miss the one that was.
+    #
+    #   symlinkat(target, newdirfd, linkpath)              -> 2, linkpath
+    #
+    # Index 0 is the symlink's *contents*, a string the kernel stores and never
+    # resolves at this call. Recording it would name a path nothing happened at.
+    "linkat": 3, "symlinkat": 2,
+    #
+    #   utimensat(dirfd, pathname, times[2], flags)        -> 1, pathname
+    #
+    # **`utimensat` is the one watched syscall whose path argument may legally
+    # be NULL.** `futimens(fd, times)` is `utimensat(fd, NULL, times, 0)`, and
+    # it operates on the descriptor. `read_target_path` returns None for a null
+    # pointer, so `decide()` records FS-005 `path_unreadable_at_notification`.
+    # Measured on `6.12.76-linuxkit`/`aarch64`, and pinned by
+    # `test_a_null_path_utimensat_is_recorded_as_unreadable`.
+    #
+    # Left as FS-005 rather than given a rule of its own. The disposition is
+    # `deny`, which is the conservative direction and is what SC-022 counts;
+    # what is imprecise is the *reason*, which says the path could not be read
+    # when there was no path to read. Naming that difference needs a new rule
+    # identifier, and rule identifiers are stable strings every emitted record
+    # carries — an owner decision, not a wiring fix. Recorded here so the next
+    # reader finds it stated rather than rediscovers it.
+    "utimensat": 1,
 }
+
+# Watched syscalls that cannot modify anything, so `fs_decisions` needs no
+# write-set entry for them. Enumerated rather than derived by subtracting the
+# write set from the watch set: subtraction would silently classify a
+# *forgotten* write syscall as read-only, which is the exact failure
+# `check_watch_set_is_wired` exists to prevent.
+NON_MODIFYING_SYSCALLS = frozenset({
+    "stat", "lstat", "newfstatat", "statx",
+    "readlink", "readlinkat",
+    "access", "faccessat", "faccessat2",
+    "chdir",
+})
 
 # Which argument holds the open flag word, per syscall. Separate from
 # `_PATH_ARG` because most watched syscalls have no such argument, and an entry
@@ -126,6 +185,93 @@ def notif_sizes() -> NotifSizes:
     buf = (ctypes.c_uint16 * 3)()
     _linux.seccomp(_linux.SECCOMP_GET_NOTIF_SIZES, 0, buf)
     return NotifSizes(notif=buf[0], resp=buf[1], data=buf[2])
+
+
+def check_watch_set_is_wired(
+    syscalls: dict[str, int],
+    *,
+    path_arg: dict[str, int] | None = None,
+) -> None:
+    """Refuse a watch set that would produce a record nobody should believe.
+
+    ── WHY THIS IS A RUNTIME CHECK AND NOT A TEST ──────────────────────────
+
+    The watch set is a *parameter*. `spawn_with_listener(..., syscalls=...)`
+    and `install_filter(syscalls)` both accept an arbitrary one, and that
+    parameter is how finding 021's counterfactual arm added `openat2` without
+    editing a source file. A caller can therefore reach a misreporting state at
+    runtime with no source edit for a static test to notice.
+
+    ── WHAT IT PREVENTS, MEASURED ──────────────────────────────────────────
+
+    Three tables have to agree before a watched syscall records anything true,
+    and they live in three files. Measured against the real listener on
+    `6.12.76-linuxkit`/`aarch64`, adding `renameat` to the watch set and
+    nothing else:
+
+    ==================================  =================================
+    state                               what `decide()` recorded
+    ==================================  =================================
+    as shipped (unwatched)              nothing at all
+    watched, no `_PATH_ARG` entry       ``deny FS-005``
+                                        ``path_unreadable_at_notification``
+    watched, `_PATH_ARG` entry, no      ``allow  rule_id=None  mode='ro'``
+    `fs_decisions.WRITE_SYSCALLS` entry
+    ==================================  =================================
+
+    Both partial states are **worse than the silence they replace**. FS-005
+    asserts the path could not be read out of the target, about a path the
+    listener never went looking for. The `allow` asserts that a rename against
+    a read-only declaration was permitted — which is defect X4, the one
+    `is_write_open` exists to have fixed, resurrected for a different syscall.
+
+    So the correct disposition for a half-wired watch set is to refuse the
+    session, not to record something misleading in it. This is the same
+    fail-closed direction as a dead listener making the sandbox unable to touch
+    the filesystem at all.
+    """
+    table = _PATH_ARG if path_arg is None else path_arg
+
+    unmapped = sorted(n for n in syscalls if n not in table)
+    if unmapped:
+        raise SeccompError(
+            f"watched syscalls with no path-argument index: {unmapped}. "
+            "Add each to `_PATH_ARG` in this file, with the index taken from "
+            "the kernel's own signature. Without it the listener builds an "
+            "Attempt with path=None and `decide()` records FS-005 "
+            "`path_unreadable_at_notification` — which says the path could "
+            "not be read out of the target, about a path never looked for."
+        )
+
+    known = (fs_decisions.WRITE_SYSCALLS | fs_decisions.OPEN_SYSCALLS
+             | NON_MODIFYING_SYSCALLS)
+    unclassifiable = sorted(n for n in syscalls if n not in known)
+    if unclassifiable:
+        raise SeccompError(
+            f"watched syscalls the classifier cannot classify: "
+            f"{unclassifiable}. Each must appear in "
+            "`fs_decisions.WRITE_SYSCALLS` (it modifies), in "
+            "`fs_decisions.OPEN_SYSCALLS` (its direction is in its flag word), "
+            "or in `NON_MODIFYING_SYSCALLS` in this file (it cannot modify). "
+            "Without one of the three, `decide()` computes modifies=False and "
+            "records an *allow* with rule_id=None for a write — which states "
+            "that the write was permitted."
+        )
+
+    unflagged = sorted(
+        n for n in syscalls
+        if n in fs_decisions.OPEN_SYSCALLS
+        and n not in _FLAGS_ARG and n not in _IMPLIED_FLAGS
+    )
+    if unflagged:
+        raise SeccompError(
+            f"watched open-family syscalls with no flag word: {unflagged}. "
+            "An open whose direction cannot be read is recorded as FS-006, "
+            "which is a refusal of the question rather than of the location. "
+            "Add an index to `_FLAGS_ARG` or an implied value to "
+            "`_IMPLIED_FLAGS`; `openat2` can have neither, which is why it is "
+            "not watched."
+        )
 
 
 def build_filter(syscalls: dict[str, int]) -> ctypes.Array:
@@ -176,6 +322,7 @@ def install_filter(syscalls: dict[str, int] | None = None) -> int:
     watched = _linux.path_taking_syscalls() if syscalls is None else syscalls
     if not watched:
         raise SeccompError("empty watch set: the filter would record nothing")
+    check_watch_set_is_wired(watched)
 
     class SockFprog(ctypes.Structure):
         _fields_ = [("len", ctypes.c_uint16),
@@ -213,6 +360,14 @@ def spawn_with_listener(
     looks exactly like a slow start.
     """
     import socket
+
+    # Checked here as well as inside `install_filter`, and before the fork.
+    # `install_filter` runs in the child, whose only way to report a failure is
+    # `os._exit(126)` — the parent then sees "the child did not hand over a
+    # notification fd" and the actual reason is gone.
+    check_watch_set_is_wired(
+        _linux.path_taking_syscalls() if syscalls is None else syscalls
+    )
 
     parent_sock, child_sock = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
     pid = os.fork()
@@ -283,12 +438,22 @@ def read_target_path(pid: int, address: int) -> str | None:
     ── WHY IT IS NOT AN ACCESS-CONTROL HOLE ────────────────────────────────
 
     **The mount namespace is the enforcement; this function is the recorder.**
-    An undeclared location is *absent* from the session's root — there is no
-    file at it to open, whatever string the kernel ends up resolving. So a
-    workload that wins this race changes which path an audit entry names and
-    gains no reach whatsoever. Nothing in the system reads the recorded path to
-    decide anything; `fs_decisions.decide` runs on the string read here, but
-    its output is a record and never a permission.
+    An undeclared location is not present in the session's root, and — since
+    the root is remounted `MS_RDONLY` and every mount the recursive bind copied
+    carries its declaration's flags — the workload cannot put one there either.
+    So whatever string the kernel ends up resolving, a workload that wins this
+    race changes which path an audit entry names and gains no reach whatsoever.
+    Nothing in the system reads the recorded path to decide anything;
+    `fs_decisions.decide` runs on the string read here, but its output is a
+    record and never a permission.
+
+    **The second clause used to be assumed and was false.** The argument above
+    was originally written as *"there is nothing at it to open"*, which holds
+    only for a path the workload cannot create. Finding 021 measured a workload
+    creating files and directories directly in the session root as uid 0,
+    because the root `tmpfs` carried no `MS_RDONLY`. `mounts.enter()` now
+    establishes the uncreatable half; this paragraph depends on it and says so
+    rather than assuming it.
 
     ── WHAT THE RECORD THEREFORE CLAIMS ────────────────────────────────────
 
@@ -332,6 +497,9 @@ class NotificationListener:
         self.fd = fd
         self.on_attempt = on_attempt
         watched = _linux.path_taking_syscalls() if syscalls is None else syscalls
+        # The listener is constructible independently of `install_filter`, so
+        # the wiring check is repeated here rather than assumed to have run.
+        check_watch_set_is_wired(watched)
         self._names = {number: name for name, number in watched.items()}
         self._path_arg = {
             number: _PATH_ARG[name]

@@ -127,11 +127,27 @@ def test_the_toctou_is_documented_where_it_occurs() -> None:
     Asserted rather than trusted, because the next reader of
     `read_target_path` is the person who would otherwise add a
     'the path is verified' comment.
+
+    **This test used to require the word "absent" and that requirement was
+    wrong.** The docstring's argument was *"an undeclared location is absent —
+    there is nothing at it to open"*, and finding 021 falsified the second
+    clause: as uid 0 a workload created files directly in the session root,
+    because the root `tmpfs` carried no `MS_RDONLY`. A path a workload can
+    create is a path there is something at. Pinning the old word would have
+    held the docstring to the false version, so the phrases below pin the two
+    halves the argument actually needs — that the namespace refuses, and that
+    nothing can be created at an undeclared path — rather than the wording
+    that happened to be there when the test was written.
     """
     from src.supervisor import seccomp
 
     doc = seccomp.read_target_path.__doc__ or ""
-    for phrase in ["TOCTOU", "mount namespace is the enforcement", "absent"]:
+    for phrase in [
+        "TOCTOU",
+        "mount namespace is the enforcement",
+        "not present in the session's root",
+        "cannot put one there",
+    ]:
         assert phrase in doc, (
             f"read_target_path's docstring no longer explains {phrase!r}; the "
             "race is undocumented where it occurs"

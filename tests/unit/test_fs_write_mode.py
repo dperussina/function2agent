@@ -14,8 +14,14 @@ whose record is wrong. An operator reading the trace of a session that tried to
 overwrite the analyzed application sees a successful read.
 
 It also left FS-002 `write_to_readonly_location` unreachable — a rule whose own
-description says it "fires on the whole write set" and which had never fired
-once. A registry entry no path reaches is documentation, not a rule.
+description then claimed it "fires on the whole write set" and which had never
+fired once. A registry entry no path reaches is documentation, not a rule.
+
+That description outlived the reordering that made the rule reachable and was
+false from the moment it did: the write set at a declared *writable* location
+is FS-003 and at an undeclared path is FS-001. It was corrected on 2026-08-04,
+along with FS-003's. Nothing anywhere reads `Rule.description` — not this file,
+not the runtime — which is why both strings went stale with every test green.
 """
 
 from __future__ import annotations
@@ -107,8 +113,9 @@ def test_fs_002_is_reachable_at_all() -> None:
         _decide("openat", "/workspace/main.py", flags=LINUX["O_WRONLY"]).rule_id,
     }
     assert "FS-002" in reached, (
-        "FS-002 write_to_readonly_location is unreachable. Its own "
-        "description claims it 'fires on the whole write set'."
+        "FS-002 write_to_readonly_location is unreachable. Its description "
+        "claimed it 'fires on the whole write set' for the entire period it "
+        "fired on nothing."
     )
 
 

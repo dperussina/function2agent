@@ -42,6 +42,40 @@
 #
 # `tools/check_tampers.py` is the same reasoning applied statically, and costs
 # under a second with no pytest, no Go and no privileges. Run that first.
+#
+# ---------------------------------------------------------------------------
+# THE MACHINE-READABLE RECORD, AND WHY THE STDOUT BELOW IS NOT ENOUGH
+#
+# Every line this script prints is recoverable only for as long as somebody is
+# looking at the terminal it printed to. In CI it is not even that: the first
+# run of this job on GitHub Actions (30919927355) was green, and `gh run view
+# --job ... --log` returned zero bytes, because the job's name carried a `?`
+# that GitHub strips from the log archive's paths and `gh` matches those paths
+# by job name. The output existed; nothing that anyone reached for could find
+# it. The job's exit status was the entire retrievable signal, and an exit
+# status cannot distinguish 61 proved from 57 proved with 4 arms skipped.
+#
+# So the run also writes a JSON record: one entry per proof with its title,
+# target file, target test and outcome, the totals, and the environment the
+# totals are a property of. `tests/batteries/results/seccomp-overhead.json` is
+# the convention it follows, and the reason is the same one the workflow gives
+# for that file — a CI figure and a laptop figure are different measurements.
+# Here the kernel release is the load-bearing part of that identity: four arms
+# are attempted on Linux and skipped on Darwin, so `61 proved` and `57 proved,
+# 4 skipped` are one instrument reporting over two different populations.
+#
+# **The record is not a gate and must never become one.** The exit status is
+# still computed from $FAIL by the last line of this file and by nothing else.
+# Two ways the record could have become a new way to pass are closed here
+# deliberately, and both are the shape this harness already exists to prevent:
+#
+#   - it is written only AFTER every proof has run, never before, so it cannot
+#     describe arms that were not attempted;
+#   - on the baseline abort path it is written with `"status": "aborted"` and
+#     with NO `totals` key and NO `proofs` key at all. A consumer asking
+#     `totals.unproven == 0` raises rather than passing. A summary that reads
+#     as success in an environment the harness refused to measure in would be
+#     the 48-proved-having-tested-nothing failure with a JSON extension.
 
 set -uo pipefail
 
@@ -57,9 +91,55 @@ TAMPER="$SRC/tools/tamper.py"
 BASELINE_PY="$WORK/.baseline-pytest.txt"
 BASELINE_GO="$WORK/.baseline-go.txt"
 
+# One line per proof, tab separated, in the order they ran. Lives in $WORK so an
+# interrupted run cannot leave a partial file behind that looks like a result.
+RECORDS="$WORK/.summary-records"
+: >"$RECORDS"
+
+# Gitignored by `tests/batteries/results/*.latest.json`, and named to say so:
+# this is the record of the run that just happened, never a committed figure.
+SUMMARY="${REMOVAL_PROOFS_SUMMARY:-$SRC/tests/batteries/results/removal-proofs.latest.json}"
+
 PASS=0
 FAIL=0
 SKIP=0
+HAVE_GO=0
+
+# The proof currently running. `_record` reads them so the call sites stay one
+# line each; every terminal branch in `proof` and `go_proof` calls it exactly
+# once, which is what makes proved+unproven+skipped == entries checkable below.
+_P_NAME=""
+_P_FILE=""
+_P_TEST=""
+_P_DRIFTED=no
+
+_record () {
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$1" "$2" "$_P_NAME" "$_P_FILE" "$_P_TEST" "$_P_DRIFTED" >>"$RECORDS"
+}
+
+# _write_summary <complete|aborted> [reason]
+#
+# Called from exactly two places: the baseline abort, and after the last proof.
+# It never touches $PASS/$FAIL/$SKIP and never influences the exit status — a
+# failure to write the record leaves the verdict exactly as it was.
+_write_summary () {
+  mkdir -p "$(dirname "$SUMMARY")" 2>/dev/null
+  F2A_STATUS="$1" \
+  F2A_ABORT_REASON="${2:-}" \
+  F2A_RECORDS="$RECORDS" \
+  F2A_PASS="$PASS" F2A_FAIL="$FAIL" F2A_SKIP="$SKIP" \
+  F2A_PY_TOTAL="${_py_total:-}" F2A_PY_FAILED="${_py_failed:-}" \
+  F2A_GO_TOTAL="${_go_total:-}" F2A_GO_FAILED="${_go_failed:-}" \
+  F2A_HAVE_GO="$HAVE_GO" \
+  F2A_EUID="$(id -u)" \
+  python3 "$SRC/tools/removal_proofs_summary.py" "$SUMMARY" || {
+    echo "  WARNING: the run completed but its JSON record could not be written."
+    return 0
+  }
+  chmod 0644 "$SUMMARY" 2>/dev/null
+  echo "record     $SUMMARY"
+}
 
 echo "Removal proofs"
 echo
@@ -77,6 +157,10 @@ if ! grep -qE ' (PASSED|FAILED|SKIPPED|ERROR|XFAIL|XPASS)' "$BASELINE_PY"; then
   echo "  scored as proved. Refusing to report a number. Install the pinned"
   echo "  dependencies (pip install --require-hashes -r requirements.lock) or run"
   echo "  inside the dev image."
+  # Written with no totals and no proofs. See the header: a record that reads as
+  # a clean result here would reinstate the exact defect the abort exists for.
+  _write_summary aborted \
+    "pytest produced no test outcomes at all in this environment, so every arm would have exited non-zero for that reason and been scored as proved"
   exit 2
 fi
 _py_total=$(grep -cE ' (PASSED|FAILED|SKIPPED|ERROR|XFAIL|XPASS)' "$BASELINE_PY")
@@ -85,7 +169,16 @@ _py_failed=$(grep -cE ' (FAILED|ERROR)' "$BASELINE_PY")
 HAVE_GO=0
 if command -v go >/dev/null 2>&1; then
   HAVE_GO=1
-  (cd "$WORK/src/proxy" && go test -v ./...) >"$BASELINE_GO" 2>&1
+  # `-count=1`, for the same reason the pytest baseline above carries
+  # `-p no:cacheprovider`: a baseline is a reading of THIS environment, and Go
+  # will happily supply one from another. Confirmed on 2026-08-04 rather than
+  # assumed — `go test -v` caches, and a cached result **replays all 223
+  # `--- PASS:` lines**, so `_go_total` below would count outcomes from a run
+  # that did not happen. In practice the `mktemp` copy usually defeats the
+  # cache, because the absolute paths the tests open are part of the key; that
+  # is an accident of $WORK and not a guard, and a baseline whose validity
+  # rests on an accident is the thing this harness exists to refuse.
+  (cd "$WORK/src/proxy" && go test -v -count=1 ./...) >"$BASELINE_GO" 2>&1
   _go_total=$(grep -cE '^ *--- (PASS|FAIL|SKIP): ' "$BASELINE_GO")
   _go_failed=$(grep -cE '^ *--- FAIL: ' "$BASELINE_GO")
   echo "  baseline   ${_py_total} python outcomes (${_py_failed} not passing), ${_go_total} go outcomes (${_go_failed} not passing)"
@@ -141,12 +234,15 @@ report_unrunnable () {
   case "$verdict" in
     ABSENT)
       echo "  NO TEST   $name — $test matched nothing in the baseline; the test was renamed or removed"
+      _record unproven test-absent
       FAIL=$((FAIL+1)); return 0 ;;
     FAILED)
       echo "  UNUSABLE  $name — $test already fails before the tamper, so its failure after proves nothing"
+      _record unproven test-already-failing
       FAIL=$((FAIL+1)); return 0 ;;
     SKIPPED)
       echo "  SKIPPED   $name — the test did not run here (privilege or platform)"
+      _record skipped test-skipped-in-baseline
       SKIP=$((SKIP+1)); return 0 ;;
   esac
   return 1
@@ -156,25 +252,32 @@ report_unrunnable () {
 # Returns 0 on success. `tools/tamper.py` owns the matching rules; see its
 # docstring for why a match may be whitespace-insensitive and must be unique.
 apply_tamper () {
-  local name="$1" file="$2" snippet="$3" mode status
+  local name="$1" file="$2" snippet="$3" mode status reason
   cp "$file" "$file.orig"
   mode=$(python3 "$TAMPER" "$file" "$snippet" 2>"$WORK/.tamper-err")
   status=$?
   if [ "$status" -ne 0 ]; then
     case "$status" in
-      3) echo "  NO-OP     $name — the tamper matched nothing; the source moved under this proof" ;;
-      4) echo "  AMBIGUOUS $name — the tamper matches more than one site; it does not name a mechanism" ;;
-      5) echo "  NO-OP     $name — the tamper ran and changed nothing" ;;
-      7) echo "  BROKEN    $name — the tampered source does not parse; the test would fail for the wrong reason" ;;
-      *) echo "  BROKEN    $name — the tamper script failed to run" ;;
+      3) echo "  NO-OP     $name — the tamper matched nothing; the source moved under this proof"
+         reason=tamper-matched-nothing ;;
+      4) echo "  AMBIGUOUS $name — the tamper matches more than one site; it does not name a mechanism"
+         reason=tamper-ambiguous ;;
+      5) echo "  NO-OP     $name — the tamper ran and changed nothing"
+         reason=tamper-changed-nothing ;;
+      7) echo "  BROKEN    $name — the tampered source does not parse; the test would fail for the wrong reason"
+         reason=tampered-source-unparseable ;;
+      *) echo "  BROKEN    $name — the tamper script failed to run"
+         reason=tamper-script-failed ;;
     esac
     sed 's/^/            /' "$WORK/.tamper-err" | head -2
+    _record unproven "$reason"
     FAIL=$((FAIL+1))
     mv "$file.orig" "$file"
     return 1
   fi
   if [ "$mode" = OK_NORMALIZED ]; then
     echo "  drifted   $name — the tamper matched only after whitespace normalization (a formatter moved this site)"
+    _P_DRIFTED=yes
   fi
   return 0
 }
@@ -182,6 +285,7 @@ apply_tamper () {
 proof () {
   local name="$1" file="$2" test="$3" python_edit="$4"
   local verdict
+  _P_NAME="$name"; _P_FILE="$file"; _P_TEST="$test"; _P_DRIFTED=no
   verdict=$(baseline_py "$test")
   if report_unrunnable "$verdict" "$name" "$test"; then return; fi
 
@@ -192,13 +296,16 @@ proof () {
   status=$?
   if [ "$status" -eq 0 ]; then
     echo "  UNPROVEN  $name — the test still passes with the mechanism removed"
+    _record unproven still-passes-without-the-mechanism
     FAIL=$((FAIL+1))
   elif echo "$output" | grep -qE '^(ERROR|INTERNALERROR)' && ! echo "$output" | grep -qE '[0-9]+ failed'; then
     # The test did not run: an import or collection error, not an assertion.
     echo "  BROKEN    $name — the tamper broke collection rather than the mechanism"
+    _record unproven tamper-broke-collection
     FAIL=$((FAIL+1))
   else
     echo "  proved    $name"
+    _record proved ""
     PASS=$((PASS+1))
   fi
   mv "$file.orig" "$file"
@@ -209,10 +316,25 @@ proof "FR-048 mount namespace — pivot_root removed" \
   "tests/integration/test_mount_namespace.py::test_an_undeclared_location_is_absent_not_denied" \
   's = s.replace("    _linux.pivot_root(mount_plan.new_root, old)", "    return")'
 
+# The three FR-048 mount-authority proofs below cover three distinct mechanisms in
+# `mounts.py`, and the second and third exist because the first passed while two
+# writable holes were open (finding 021). The first removes the remount *pass*, the
+# second the root seal, the third the *recursion* — and only the third distinguishes
+# "the outermost mount is read-only" from "every mount the bind copied is".
 proof "FR-048 read-only bind — the MS_REMOUNT pass removed" \
   src/supervisor/mounts.py \
   "tests/integration/test_mount_namespace.py::test_a_read_only_declaration_is_actually_read_only" \
-  's = s.replace("        _linux.mount(None, dest, None,\n                     _linux.MS_REMOUNT | _linux.MS_BIND | _flags_for(loc))", "        pass")'
+  's = s.replace("    _remount_tree(dest, _flags_for(loc))", "    pass")'
+
+proof "FR-048 session root — the read-only seal removed" \
+  src/supervisor/mounts.py \
+  "tests/integration/test_mount_authority.py::test_the_root_listing_is_unchanged_by_a_write_attempt" \
+  's = s.replace("    _seal_root()", "    pass")'
+
+proof "FR-048 read-only bind — the remount made non-recursive" \
+  src/supervisor/mounts.py \
+  "tests/integration/test_mount_authority.py::test_a_submount_inside_a_read_only_location_refuses_a_write" \
+  's = s.replace("    for point in mount_points_under(dest):", "    for point in [dest]:")'
 
 proof "FR-049 pids.max — the bound not written" \
   src/supervisor/bounds.py \
@@ -277,8 +399,10 @@ proof "Q-10 no-default bounds — a default added" \
 
 go_proof () {
   local name="$1" file="$2" test="$3" python_edit="$4"
+  _P_NAME="$name"; _P_FILE="$file"; _P_TEST="$test"; _P_DRIFTED=no
   if [ "$HAVE_GO" -eq 0 ]; then
     echo "  SKIPPED   $name — no Go toolchain on PATH"
+    _record skipped no-go-toolchain
     SKIP=$((SKIP+1))
     return
   fi
@@ -288,19 +412,27 @@ go_proof () {
 
   apply_tamper "$name" "$file" "$python_edit" || return
 
+  # `-count=1` here too. A tampered file normally forces a cache miss on its
+  # own, but that holds only while no two arms share both a tamper and a `-run`
+  # pattern — and two of the FR-017 arms already share a tamper and differ only
+  # in the pattern. One future arm reusing both would be served the previous
+  # arm's verdict, which is a proof reporting a result it did not take.
   local output
-  output=$(cd "$WORK/src/proxy" && go test -run "$test" ./... 2>&1)
+  output=$(cd "$WORK/src/proxy" && go test -count=1 -run "$test" ./... 2>&1)
   local status=$?
   if [ "$status" -eq 0 ]; then
     echo "  UNPROVEN  $name — the test still passes with the mechanism removed"
+    _record unproven still-passes-without-the-mechanism
     FAIL=$((FAIL+1))
   elif echo "$output" | grep -q 'build failed'; then
     # A package that will not compile fails every test in it, which is not the
     # same claim as the test noticing the mechanism is gone.
     echo "  BROKEN    $name — the tampered package does not build; no test ran"
+    _record unproven tampered-package-does-not-build
     FAIL=$((FAIL+1))
   else
     echo "  proved    $name"
+    _record proved ""
     PASS=$((PASS+1))
   fi
   mv "$file.orig" "$file"
@@ -572,6 +704,22 @@ proof "FR-048 — the listener stops reading the open flag word" \
   "tests/unit/test_fs_write_mode.py::test_every_open_syscall_has_a_flags_argument_index" \
   's = s.replace("_FLAGS_ARG = {\x22open\x22: 1, \x22openat\x22: 2}", "_FLAGS_ARG = {\x22open\x22: 1}")'
 
+# The watch-set guard has three call sites and this is the third. It is here rather
+# than on the watch-set *completion* — the four names added to WRITE_SYSCALLS — and
+# the reason is measured. Tampering the completion instead trips
+# `check_watch_set_is_wired` at session start, so 9 tests fail and 4 error across
+# `test_seccomp_recording.py` and the overhead battery, and none of them records the
+# `allow` such a proof would claim to demonstrate; the failure names the guard doing
+# its job, not the classifier. Tampering the `install_filter` call site is worse than
+# unhelpful: with the guard gone the test installs a USER_NOTIF filter on the pytest
+# process itself and blocks forever in `seccomp_do_user_notification` with nobody
+# holding the descriptor — observed on `6.12.76-linuxkit`/`aarch64`, and `proof()`
+# has no timeout, so that arm hangs the harness rather than reporting anything.
+proof "FR-048 watch-set guard — the listener stops consulting it" \
+  src/supervisor/seccomp.py \
+  "tests/unit/test_watch_set_wiring.py::test_the_listener_asks_the_guard_before_reading_any_notification" \
+  's = s.replace("        check_watch_set_is_wired(watched)\n        self._names", "        self._names")'
+
 proof "T038 accrual — the ledger is written once instead of as it accrues" \
   src/runtime/trace_budget.py \
   "tests/contract/test_budget_journal.py::test_the_ledger_survives_a_kill_with_no_flush" \
@@ -613,4 +761,8 @@ if [ "$SKIP" -gt 0 ]; then
 else
   echo "$PASS proved, $FAIL unproven"
 fi
+# After the last proof and before the verdict, so the record can only ever
+# describe arms that actually ran. It reports; it decides nothing — the line
+# below is still the only thing that carries the exit status.
+_write_summary complete
 [ "$FAIL" -eq 0 ]

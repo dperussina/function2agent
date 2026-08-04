@@ -94,13 +94,19 @@ UNDECLARED_LOCATION = Rule(
 )
 WRITE_TO_READONLY = Rule(
     "FS-002", "write_to_readonly_location",
-    "a write-mode syscall against a location declared read-only. v1 is "
-    "read-only end to end (OD-10), so this fires on the whole write set.",
+    "a modifying syscall against a location that is declared, and declared "
+    "read-only. Not the whole write set in either direction: location "
+    "resolution runs first, so the same syscall is FS-001 at an undeclared "
+    "path and FS-003 at a declared writable one, and an open-family syscall "
+    "reaches this rule too whenever is_write_open() holds of its flags.",
 )
 WRITE_PATH_ABSENT = Rule(
     "FS-003", "write_path_not_shipped",
-    "a write syscall at all. OD-10: no write path ships in v1, so the "
-    "disposition does not depend on which location was named.",
+    "a modifying syscall against a location declared writable, refused only "
+    "because OD-10 ships no write path in v1 — which is now the only thing "
+    "this rule says. The declared mode is resolved before this branch and is "
+    "what selects between this rule and FS-002; the deny is common to both, "
+    "the identifier and the recorded mode are not.",
 )
 ESCAPING_PATH = Rule(
     "FS-004", "path_escapes_declared_root",
@@ -130,9 +136,22 @@ RULES_BY_ID = {rule.rule_id: rule for rule in RULES}
 # Syscalls that would modify by their name alone. Under OD-10 every one of
 # these is refused regardless of location, and the rule identifier says which
 # clause did it.
+#
+# The second line is what `os.rename`, `os.symlink`, `os.link` and `os.utime`
+# issue, and until they were named here they could not safely be watched:
+# `decide()` computes `modifies` from this set, so a watched write absent from
+# it is recorded as an *allow* with `rule_id=None` — defect X4's shape, for a
+# syscall whose direction is not in doubt. `seccomp.check_watch_set_is_wired`
+# now refuses that state rather than trusting this set to keep pace, so the
+# two move together or the session does not start.
+#
+# `utimensat` earns its place on metadata: it changes mtime/atime and a
+# read-only mount answers `EROFS`, so it modifies even though it writes no
+# file content.
 WRITE_SYSCALLS = frozenset({
     "unlink", "unlinkat", "rename", "renameat2", "mkdir", "mkdirat",
     "truncate", "chmod", "fchmodat",
+    "renameat", "symlinkat", "linkat", "utimensat",
 })
 
 # Syscalls whose direction is *not* in the name. This set is the whole of the

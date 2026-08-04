@@ -15,8 +15,9 @@ requirements it discharges, and the tests owed.
 |---|---|---|
 | [`configuration.md`](./configuration.md) | how configuration reaches the runtime, what is required, and what fails loudly | FR-032, FR-033, FR-036, FR-043, FR-049, FR-050, FR-053 |
 | [`egress-policy.md`](./egress-policy.md) | exactly what the single enforcement point accepts and denies, and how a denial is recorded | FR-008–FR-019, FR-021, FR-046, FR-050 |
+| [`filesystem-decision.md`](./filesystem-decision.md) | what the syscall supervisor's classifier decides about a path-taking syscall, and the record it writes before the kernel acts | FR-011, FR-013, FR-038, FR-048, FR-054 |
 | [`result-record.md`](./result-record.md) | the caller-visible verification contract | FR-022–FR-026, FR-045, FR-047, FR-052 |
-| [`trace-record.md`](./trace-record.md) | span shape, and the pinning terms a measurement artifact must carry | FR-005, FR-006, FR-011, ~~FR-030~~ **FR-038**, FR-053 |
+| [`trace-record.md`](./trace-record.md) | span shape, the fields FR-058's per-result output bound adds to `tool_call`, and the pinning terms a measurement artifact must carry | FR-005, FR-006, FR-011, ~~FR-030~~ **FR-038**, FR-039–FR-042, FR-053, **FR-058** |
 | [`artifact-versioning.md`](./artifact-versioning.md) | canonical form, content addressing, rollback | FR-027, FR-028, FR-034, FR-054, **FR-055** |
 
 > **This index was audited against each contract's own header on 2026-08-03 and four of the five rows
@@ -29,7 +30,7 @@ requirements it discharges, and the tests owed.
 > same audit, for the same reason and by the same route — its canonical-form section had no
 > requirement behind it either.
 
-**Two properties are common to all five and are not restated in each.**
+**Two properties are common to all six and are not restated in each.**
 
 **Fail loudly, never silently.** Malformed or missing required configuration terminates startup with
 a named reason (FR-033). No contract has a permissive fallback.

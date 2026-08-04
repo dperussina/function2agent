@@ -78,10 +78,15 @@ def test_every_denial_path_produces_a_rule_id(
 def test_every_declared_rule_is_reachable_from_decide() -> None:
     """A registry entry no branch reaches is prose wearing a rule identifier.
 
-    FS-002 `write_to_readonly_location` sat in the registry unreached, with a
-    description asserting it "fires on the whole write set". Nothing in the
+    FS-002 `write_to_readonly_location` sat in the registry unreached, under a
+    description that asserted it "fires on the whole write set". Nothing in the
     suite noticed, because every test asked "does this denial carry *a* rule
     id" and none asked "does every rule carry a denial".
+
+    This test closes the reachability half. The description half stayed open —
+    that string survived the fix and was corrected only on 2026-08-04 — and it
+    is not closable the same way: `Rule.description` has no reader, so there is
+    nothing to assert against but the prose itself.
     """
     location_set = _location_set(locations=[
         {"source": "/srv/app", "target": "/workspace", "mode": "ro",
