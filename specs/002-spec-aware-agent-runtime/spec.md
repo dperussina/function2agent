@@ -73,10 +73,39 @@ and it is the single most important input to this document.
 **The verifier case needs a distinction kept intact, because both collapses of it have already been
 made in this corpus.** Its mechanism is demonstrated and was not fitted to the corpus: the
 postcondition arm detected all nine numeric value errors, including all three sub-1% near-misses,
-with zero false alarms across 220 clean positives — *the offline full-corpus sweep; the
-`FPR_c2 = 0/60` quoted elsewhere is the judge-scored sample and a smaller population, and the two
-must never be merged ([14](../../research/14-architecture-synthesis.md) §3.2)* — through a six-rung
-precision ladder committed before any derivation was written that contains no numeric constant. Those figures come from a trace
+over the eligible negatives — and, **separately and over a different population**,
+~~with zero false alarms across 220 clean positives~~ **raised zero false alarms on the 96 attested
+clean positives, 93 of them compared** — *the offline sweep restricted to records whose own run
+manifest declares the battery under test. There are **three** populations here and no two of them may
+be merged: the attested 96; the pooled 220, of which the arm actually compared 175; and the
+`FPR_c2 = 0/60` judge-scored sample, smaller again
+([14](../../research/14-architecture-synthesis.md) §3.2)* — through a six-rung
+precision ladder committed before any derivation was written that contains no numeric constant.
+
+> **Corrected 2026-08-03 — superseded rather than wrong, and this is the site where the rule binds
+> hardest.** The struck figure was accurate and is not a rate:
+> [finding 018](../001-discovery-validation/findings/018-verifier-false-alarm-attested-denominator.md)
+> re-ran the census and found that **45 of those 220 records were ones the arm declined as
+> `unverifiable`**, and a record the detector never compared cannot raise a false alarm. *0 of 220* is
+> therefore a true statement about coverage and not a false-alarm rate; the pooled rate is 0 of 175
+> compared, and the narrow attested rate is separately zero, so the mechanism claim comes out of the
+> correction stronger rather than weaker. **The second half of the defect was the word *with*.** A
+> detection count computed over the eligible negatives was joined to a false-alarm count computed over
+> the clean positives as though the two were one measurement. Restricted to one shared population the
+> sentence reads *2 of the 2 false successes flagged, 0 false alarms on 96 positives* — **the detection
+> count is 2, not 10**, because attestation is cheap on the false-alarm side and expensive on the
+> detection side.
+>
+> **The register entry for this class is U-49, and it is named here rather than cited in passing
+> because this document is where it applies.** Its rule is that every false-alarm rate quotes the count of records the instrument
+> actually returned a verdict on beside its denominator, and that a numerator and a denominator drawn
+> from different populations are either restated over one population or labelled separately. The
+> register entry is non-blocking for the figure it corrects and **binding on the drift and verifier
+> measurements this specification defines** — FR-039, FR-040, FR-042, SC-005 and SC-015 are the next
+> false-alarm and detection rates this project will publish, and each of them inherits the rule as
+> stated, not as reconstructed later.
+
+Those figures come from a trace
 corpus whose freeze pinned the traces and not the prompts they answered, so they are recomputed
 detection rates on a corpus with a known defect rather than clean experimental output
 ([finding 015](../001-discovery-validation/findings/015-verifier-vs-judge-not-run.md)) — which

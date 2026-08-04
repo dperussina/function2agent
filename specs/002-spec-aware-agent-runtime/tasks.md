@@ -428,6 +428,14 @@ badly as one per 3,000 underestimated.** The working split:
 | **~1 per 500** | anything crossing a storage or serialization boundary — persisted records, cross-process handoffs, canonical form, redaction, ledgers and journals, and **any instrument whose output is a measurement** | The failure is a plausible wrong value, and nothing outside the code checks it. All five Phase 2 defects are here |
 | **~1 per 3,000** | code the kernel checks for you — namespaces, cgroups, `seccomp`, capabilities, file descriptors | A wrong call fails at the syscall with a named errno, so the defect surfaces on first execution rather than at review |
 
+> **This table is reasoned from one phase and is not a measurement — quote it with this sentence
+> attached.** One rate was observed; the other is the prior it was measured against, carried forward
+> on an argument about failure modes rather than on any count of kernel-mechanism code in this
+> repository. The observed side is itself denominator-sensitive: two of the five defects sit outside
+> the line count that produced *one per 460*, and on the one population containing all five the rate
+> is one per 1,247.
+> [Finding 019](./findings/019-phase-2-defect-density.md) is the anchor and states both.
+
 **Classifying the remaining phases against that split, because the point of an anchor is that
 somebody can use it.** Phase 4 is the one that matters and it is **mixed, not predominantly either**:
 
@@ -467,13 +475,23 @@ the specific place to start when someone re-derives with a cost per defect in ha
 
 **Two outstanding items this creates**, both flagged rather than resolved:
 
-- **The measurement has no findings document.** Five defects in roughly 2,300 lines is a
+- ~~**The measurement has no findings document.** Five defects in roughly 2,300 lines is a
   measurement of this project's own output and it currently lives only in this section and in the
   implementation pass that produced it. Feature 002 has no `findings/` directory, so filing it is a
-  structural act rather than a propagation one.
+  structural act rather than a propagation one.~~ **Discharged 2026-08-03 —
+  [`findings/`](./findings/) was opened as the corpus's second authority namespace, continuing
+  feature 001's numbering rather than restarting it, and the measurement is filed as
+  [finding 019](./findings/019-phase-2-defect-density.md).** The line count is recomputed there from
+  the Phase 2 commit with the counting rule stated, and comes to **2,337** — *roughly 2,300* above is
+  that figure rounded, not a different measurement. The finding also records a defect in the
+  measurement this section did not catch: **two of the five defects lie outside the 2,337 lines**, so
+  the numerator and the denominator describe different populations, which is exactly the pairing
+  **U-49** was opened for.
 - **The classification is reasoned, not measured.** One phase produced the split. Whether kernel
   code really is six times cleaner, or whether Phase 2 was simply the harder phase, is not
-  established by a single phase, and the next phase to complete is the one that tests it.
+  established by a single phase, and the next phase to complete is the one that tests it. *(Still
+  outstanding. [Finding 019](./findings/019-phase-2-defect-density.md) states it as its headline
+  limitation rather than resolving it, and proposes it for a register entry of its own.)*
 
 ### Nothing else in this task list is sized, and that is a statement rather than an omission
 
