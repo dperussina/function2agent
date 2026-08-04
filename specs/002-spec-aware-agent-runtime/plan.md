@@ -172,9 +172,19 @@ full and which no restatement may be weaker than.
 > at its first syscall on a kernel that has every facility. Four conditions follow, none of them a
 > research question, and the first two are files in the bundle rather than requests to the operator:
 >
-> - **The bundle ships its own seccomp profile.** Docker's own default plus one added
->   `SCMP_ACT_ALLOW` rule — 426 allow-listed syscall names becoming 427 — is enough to run the whole
->   sequence to `pivot_root` at uid 1000 under `--cap-drop=ALL`. **The choice was never the default
+> - **The bundle ships its own seccomp profile.** Docker's own default, widened by **eight names**,
+>   runs the whole sequence to `pivot_root` at uid 1000 under `--cap-drop=ALL`. **Corrected
+>   2026-08-04 — the count and the mechanism are different claims and only the second builds a
+>   working profile** ([finding 025](./findings/025-preflight-unshare-pair-measured.md) §*what was
+>   wrong*): the allow list does go from 426 names to 427, and the one new name is `pivot_root`, but
+>   `pivot_root` is **not** what unblocks the mechanism. `unshare` was already among the 426, sitting
+>   inside the 26-name rule gated on `CAP_SYS_ADMIN`; what permits it is **seven names moved out of
+>   that gate**, which changes no count at all. A profile built to the arithmetic — default plus
+>   `pivot_root` and nothing else — would reproduce 427 and still refuse `unshare` at the first
+>   syscall; that follows deductively from A1, where `unshare` is `EPERM` at `CapEff=0` under the
+>   unmodified default, but **no arm ran it**, so it is derived rather than measured. What *was*
+>   measured is the isolating control (finding 025 NC-3): the appended rule alone, with the `clone`
+>   argument mask left in place, permits both arms. **The choice was never the default
 >   profile versus `seccomp=unconfined`, and that framing must not be reproduced anywhere**: it
 >   presents an operator with the loss of the entire filter as the price of the mechanism, when the
 >   price is a named eight-syscall widening with `keyctl`, `add_key`, `userfaultfd`, `kexec_*`,

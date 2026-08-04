@@ -46,6 +46,17 @@ number was taken mid-pass.
 > default profile carries an `SCMP_ACT_ALLOW` rule for **426** syscall names; the custom profile
 > carries **427**. `seccomp=unconfined` carries none, because it installs no filter at all.
 >
+> > **Dated note, 2026-08-04 — this headline understates the change, and the understatement is
+> > load-bearing for anyone building the profile.** Every figure above reproduces, and the cost table
+> > in §*The operator's options* below already carries the missing half — *"one added syscall name
+> > **and seven moved out of the capability gate**"*. But the headline as written names only the
+> > added name, and **the added name is not what unblocks the mechanism**: `unshare` was already
+> > among the 426, inside the 26-name rule gated on `CAP_SYS_ADMIN`, so what makes the custom profile
+> > permit it is the seven names becoming reachable without that capability — a change that moves no
+> > count. Re-measured through our own preflight in
+> > [finding 025](./025-preflight-unshare-pair-measured.md), which isolates it with a control (NC-3).
+> > Nothing measured here is withdrawn; the omission is a cause, not a number.
+>
 > **2. The mechanism the brief was most worried about was never blocked.** Seccomp
 > user-notification — which the brief calls FR-050 and which is in fact FR-048's — **works under
 > Docker's unmodified default profile**, at uid 1000 with `--cap-drop=ALL`. `seccomp` is name 0 of
