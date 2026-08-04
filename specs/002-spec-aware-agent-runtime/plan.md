@@ -53,10 +53,11 @@ read the same three findings and drew the further conclusion that the fourth lim
 justify the dependency. The three findings are unchanged; only the disposition is. See the banner
 below.)*
 
-The plan also supplies the three mechanisms the specification deliberately withheld — a per-session
-mount namespace for FR-048, cgroup v2 for FR-049, and a four-layer construction for FR-050 in which
-**revocation is the default and continuation is the thing that requires work**, so that a crash
-revokes without any cleanup code running. It builds instrumentation for all three unmeasured
+The plan also supplies the mechanisms the specification deliberately withheld — a per-session
+mount namespace for FR-048 that enforces its boundary and a `seccomp` user-notification listener
+that records attempts against it, cgroup v2 for FR-049, and a four-layer construction for FR-050
+in which **revocation is the default and continuation is the thing that requires work**, so that a
+crash revokes without any cleanup code running. It builds instrumentation for all three unmeasured
 capabilities rather than the capabilities alone, and it reports two places where a success criterion
 is not reachable as written instead of softening it.
 
