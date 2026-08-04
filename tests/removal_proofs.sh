@@ -497,20 +497,80 @@ proof "Principle VI — bounds.check stops recording the inputs it did not match
   "tests/unit/test_state_transition.py" \
   's = s.replace("        readings=readings,", "        readings=readings[:1],")'
 
-proof "FR-038 ordering — two spans may share a position" \
+proof "FR-049 preflight — the cgroup.kill probe reads the root cgroup" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_kernel_floor.py::test_the_kill_probe_reads_a_child_cgroup_and_not_the_root" \
+  's = s.replace("    probe = root / CGROUP_KILL_PROBE", "    probe = root")'
+
+proof "FR-038 ordering — the span position has no unique index" \
   src/runtime/trace.py \
-  "tests/contract/test_trace_spans.py::test_two_spans_cannot_occupy_one_position" \
-  's = s.replace("            if span.position in self._written:", "            if False:")'
+  "tests/contract/test_trace_spans.py::test_two_writers_over_one_repository_cannot_share_a_position" \
+  's = s.replace("}, unique=[(\x22session_id\x22, \x22turn\x22, \x22ordinal\x22)])", "})")'
+
+proof "FR-038 ordering — a resumed writer restarts its ordinals at zero" \
+  src/runtime/trace.py \
+  "tests/contract/test_trace_spans.py::test_a_resumed_writer_does_not_reissue_an_ordinal" \
+  's = s.replace("            ordinal = self._highest_written(session_id, turn) + 1", "            ordinal = 0")'
 
 proof "FR-036 trace — a Secret may reach a span" \
   src/runtime/trace.py \
   "tests/contract/test_trace_redaction.py::test_a_secret_cannot_be_placed_in_a_span_at_all" \
-  's = s.replace("        _refuse_secrets(self.detail, \x22detail\x22)", "        pass")'
+  's = s.replace("        _refuse_secrets_anywhere(self)", "        pass")'
+
+# The two below are the specific narrowings that produced defect X3. The proof
+# above only establishes that *a* scan runs; these establish that it covers the
+# whole type and descends through the structured fields, which is the part that
+# was one-sixth of what its test name claimed.
+proof "FR-036 trace — the Secret scan covers only detail again" \
+  src/runtime/trace.py \
+  "tests/contract/test_trace_spans.py::test_a_secret_nested_in_any_carrier_field_is_refused" \
+  's = s.replace("    for f in fields(span):\n        _refuse_secrets(getattr(span, f.name), f.name)", "    _refuse_secrets(span.detail, \x22detail\x22)")'
+
+proof "FR-036 trace — the Secret scan stops at a nested dataclass" \
+  src/runtime/trace.py \
+  "tests/contract/test_trace_spans.py::test_a_secret_nested_in_any_carrier_field_is_refused" \
+  's = s.replace("    elif is_dataclass(value) and not isinstance(value, type):", "    elif False:")'
 
 proof "T038 journal location — a ledger inside the session root is accepted" \
   src/runtime/trace_budget.py \
   "tests/contract/test_budget_journal.py" \
   's = s.replace("    if journal == root or root in journal.parents:", "    if False:")'
+
+# Distinct from the proof above: that one removes the *check*, this one removes
+# the constructor's *call* to it, which is the shape defect X2 actually had —
+# the check was correct and simply never ran for the construction every caller
+# makes.
+proof "T038 journal location — the constructor stops running the check" \
+  src/runtime/trace_budget.py \
+  "tests/contract/test_budget_journal.py::test_the_journal_constructor_enforces_the_location" \
+  's = s.replace("        assert_outside_session_root(repository.path, session_root)", "        pass")'
+
+# --- FR-048 / SC-022: the write-mode classification (defect X4) -------------
+
+proof "FS-002 — an open for writing is classified by syscall name alone" \
+  src/supervisor/fs_decisions.py \
+  "tests/unit/test_fs_write_mode.py::test_an_open_for_writing_at_a_readonly_location_is_denied" \
+  's = s.replace("    modifies = syscall in WRITE_SYSCALLS or (", "    modifies = syscall in WRITE_SYSCALLS and (")'
+
+proof "FS-002 — a truncating open counts as a read" \
+  src/supervisor/fs_decisions.py \
+  "tests/unit/test_fs_write_mode.py::test_the_modifying_flags_are_writes_even_without_o_wronly" \
+  's = s.replace("WRITE_OPEN_FLAGS = O_CREAT | O_TRUNC | O_APPEND", "WRITE_OPEN_FLAGS = 0")'
+
+proof "FS-002 — a write to a declared location records the wrong mode" \
+  src/supervisor/fs_decisions.py \
+  "tests/unit/test_fs_write_mode.py::test_the_audit_record_names_the_declared_mode_it_violated" \
+  's = s.replace("            return built(DENY, location.mode, WRITE_TO_READONLY)", "            return built(DENY, \x22absent\x22, WRITE_TO_READONLY)")'
+
+proof "FS-006 — an open with no flag word is assumed to be a read" \
+  src/supervisor/fs_decisions.py \
+  "tests/unit/test_fs_write_mode.py::test_a_flagless_open_is_not_assumed_to_be_a_read" \
+  's = s.replace("    if syscall in OPEN_SYSCALLS and flags is None:", "    if False:")'
+
+proof "FR-048 — the listener stops reading the open flag word" \
+  src/supervisor/seccomp.py \
+  "tests/unit/test_fs_write_mode.py::test_every_open_syscall_has_a_flags_argument_index" \
+  's = s.replace("_FLAGS_ARG = {\x22open\x22: 1, \x22openat\x22: 2}", "_FLAGS_ARG = {\x22open\x22: 1}")'
 
 proof "T038 accrual — the ledger is written once instead of as it accrues" \
   src/runtime/trace_budget.py \
@@ -530,7 +590,7 @@ proof "OD-17 kernel floor — an unparseable release is assumed new enough" \
 proof "OD-17 floor marking — the derived-not-tested caveat dropped" \
   src/supervisor/preflight.py \
   "tests/unit/test_kernel_floor.py::test_the_floor_is_marked_as_derived_and_not_tested" \
-  's = s.replace("        \x22DERIVED from documented feature introduction and NOT TESTED on that \x22\n        \x22kernel; every run to date was on 6.12\x22", "        \x22established\x22")'
+  's = s.replace("        \x22DERIVED from documented feature introduction and NOT TESTED on that \x22\n        \x22kernel; every run to date was on 6.12 or 6.17\x22", "        \x22established\x22")'
 
 proof "FR-049 kill_all — the racy per-pid fallback restored" \
   src/supervisor/cgroup.py \

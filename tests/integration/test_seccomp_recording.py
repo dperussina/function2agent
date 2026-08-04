@@ -120,7 +120,7 @@ def test_the_record_is_emitted_before_the_kernel_acts(tmp_path: Path) -> None:
             order.append("recorded")
             sink.emit(decide(
                 location_set, session_id="s-1", syscall=attempt.syscall_name,
-                path=attempt.path, pid=attempt.pid,
+                path=attempt.path, pid=attempt.pid, flags=attempt.flags,
             ))
 
     marker = tmp_path / "after.txt"
@@ -151,7 +151,7 @@ def test_an_undeclared_path_is_recorded_with_a_rule_id(tmp_path: Path) -> None:
         if attempt.path == "/etc/shadow":
             sink.emit(decide(
                 location_set, session_id="s-1", syscall=attempt.syscall_name,
-                path=attempt.path, pid=attempt.pid,
+                path=attempt.path, pid=attempt.pid, flags=attempt.flags,
             ))
 
     _run(

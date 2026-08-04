@@ -48,30 +48,71 @@ def test_an_empty_string_is_not_a_rule_id() -> None:
 
 
 @pytest.mark.parametrize(
-    "syscall,path",
+    "syscall,path,flags",
     [
-        ("openat", "/etc/shadow"),
-        ("openat", "/workspace/../etc/shadow"),
-        ("unlinkat", "/workspace/file"),
-        ("openat", None),
-        ("newfstatat", "/proc/self/environ"),
+        ("openat", "/etc/shadow", 0),
+        ("openat", "/workspace/../etc/shadow", 0),
+        ("unlinkat", "/workspace/file", None),
+        ("openat", None, 0),
+        ("newfstatat", "/proc/self/environ", None),
+        # The write-mode arms. `openat` with O_WRONLY at a declared read-only
+        # location used to be an *allow*, so this parametrization covered
+        # every deny path except the one that was missing.
+        ("openat", "/workspace/main.py", 0o1),
+        ("openat", "/workspace/main.py", 0o1000),
+        ("openat", "/workspace/main.py", None),
     ],
 )
-def test_every_denial_path_produces_a_rule_id(syscall: str, path: str | None) -> None:
+def test_every_denial_path_produces_a_rule_id(
+    syscall: str, path: str | None, flags: int | None
+) -> None:
     decision = decide(
         _location_set(), session_id="s1", syscall=syscall, path=path,
-        pid=7, now=0.0,
+        pid=7, flags=flags, now=0.0,
     )
     assert decision.disposition == DENY
     assert decision.rule_id in RULES_BY_ID
     assert decision.reason == RULES_BY_ID[decision.rule_id].reason
 
 
+def test_every_declared_rule_is_reachable_from_decide() -> None:
+    """A registry entry no branch reaches is prose wearing a rule identifier.
+
+    FS-002 `write_to_readonly_location` sat in the registry unreached, with a
+    description asserting it "fires on the whole write set". Nothing in the
+    suite noticed, because every test asked "does this denial carry *a* rule
+    id" and none asked "does every rule carry a denial".
+    """
+    location_set = _location_set(locations=[
+        {"source": "/srv/app", "target": "/workspace", "mode": "ro",
+         "rule_id": "FS-DECL-001", "justification": "the analyzed application"},
+        {"source": "/var/scratch", "target": "/scratch", "mode": "rw",
+         "rule_id": "FS-DECL-003", "justification": "mode branch coverage"},
+    ])
+    attempts = [
+        ("openat", "/etc/shadow", 0),              # FS-001
+        ("openat", "/workspace/main.py", 0o1),     # FS-002
+        ("unlinkat", "/scratch/x", None),          # FS-003
+        ("openat", "/workspace/../etc/x", 0),      # FS-004
+        ("openat", None, 0),                       # FS-005
+        ("openat", "/workspace/main.py", None),    # FS-006
+    ]
+    fired = {
+        decide(location_set, session_id="s1", syscall=s, path=p, pid=7,
+               flags=f, now=0.0).rule_id
+        for s, p, f in attempts
+    }
+    unreached = sorted(set(RULES_BY_ID) - fired)
+    assert unreached == [], (
+        f"rules in the registry that no decide() branch produces: {unreached}"
+    )
+
+
 def test_an_allowed_path_is_allowed_so_the_check_is_not_vacuous() -> None:
     """A decide() that denied everything would pass the test above trivially."""
     decision = decide(
         _location_set(), session_id="s1", syscall="openat",
-        path="/workspace/src/main.py", pid=7, now=0.0,
+        path="/workspace/src/main.py", pid=7, flags=0, now=0.0,
     )
     assert decision.disposition == ALLOW
     assert decision.rule_id is None
@@ -189,6 +230,6 @@ def test_sink_reports_the_invariant_over_a_batch() -> None:
     location_set = _location_set()
     for path in ("/etc/passwd", "/workspace/ok.py", "/var/run/secret"):
         sink.emit(decide(location_set, session_id="s1", syscall="openat",
-                         path=path, pid=7, now=0.0))
+                         path=path, pid=7, flags=0, now=0.0))
     assert sink.all_denials_carry_rule_id()
     assert len(list(sink.denials())) == 2

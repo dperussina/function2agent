@@ -45,7 +45,7 @@ import threading
 from dataclasses import dataclass
 from typing import Callable
 
-from src.supervisor import _linux
+from src.supervisor import _linux, fs_decisions
 
 # --- BPF ------------------------------------------------------------------
 BPF_LD_W_ABS = 0x20
@@ -81,6 +81,26 @@ _PATH_ARG = {
     "access": 0, "faccessat": 1, "faccessat2": 1,
     "chdir": 0, "truncate": 0, "chmod": 0, "fchmodat": 1,
 }
+
+# Which argument holds the open flag word, per syscall. Separate from
+# `_PATH_ARG` because most watched syscalls have no such argument, and an entry
+# of `None` would be indistinguishable from a syscall somebody forgot.
+#
+# The direction of an open is not in its name — `openat` is a read syscall or a
+# write syscall depending on this word — so a listener that does not read it
+# hands the classifier a question it cannot answer. Defect X4 was exactly that.
+#
+#   open(path, flags, mode)                → 1
+#   openat(dirfd, path, flags, mode)       → 2
+#   creat(path, mode)                      → no flag word; O_WRONLY|O_CREAT|
+#                                            O_TRUNC by definition
+#   openat2(dirfd, path, how *, size)      → `how` is a *pointer* to
+#                                            struct open_how, not a flag word
+_FLAGS_ARG = {"open": 1, "openat": 2}
+
+# Syscalls whose flag word is implied by the syscall itself rather than passed.
+_IMPLIED_FLAGS = {"creat": fs_decisions.O_WRONLY | fs_decisions.O_CREAT
+                  | fs_decisions.O_TRUNC}
 
 PATH_MAX = 4096
 
@@ -234,6 +254,12 @@ class Attempt:
     # False when the path could not be read — the target exited, or the pointer
     # was not readable. Recorded as such rather than as an empty path.
     path_readable: bool
+    # The open-family flag word, or None for a syscall that has none. Unlike
+    # `path` this is not read out of the target's memory: it is a register
+    # value the kernel copied into `seccomp_data.args`, so there is no TOCTOU
+    # on it and no way for it to be unreadable. A `None` here for an open means
+    # the listener is not wired for that syscall, not that the target raced.
+    flags: int | None = None
 
 
 def read_target_path(pid: int, address: int) -> str | None:
@@ -312,6 +338,16 @@ class NotificationListener:
             for name, number in watched.items()
             if name in _PATH_ARG
         }
+        self._flags_arg = {
+            number: _FLAGS_ARG[name]
+            for name, number in watched.items()
+            if name in _FLAGS_ARG
+        }
+        self._implied_flags = {
+            number: _IMPLIED_FLAGS[name]
+            for name, number in watched.items()
+            if name in _IMPLIED_FLAGS
+        }
         self.sizes = notif_sizes()
         self._recv = _ioc(_IOC_READ | _IOC_WRITE, 0, self.sizes.notif)
         self._send = _ioc(_IOC_READ | _IOC_WRITE, 1, self.sizes.resp)
@@ -332,6 +368,15 @@ class NotificationListener:
         name = self._names.get(nr, f"syscall_{nr}")
         index = self._path_arg.get(nr)
         path = None if index is None else read_target_path(pid, args[index])
+        flags_index = self._flags_arg.get(nr)
+        if flags_index is not None:
+            # Truncated to 32 bits: the flag word is an `int` in the ABI and
+            # `args[]` is a `__u64`, so the upper half is sign extension or
+            # register residue. Masking keeps a negative-looking flag word from
+            # setting every bit and classifying every open as a write.
+            flags = args[flags_index] & 0xFFFFFFFF
+        else:
+            flags = self._implied_flags.get(nr)
         return (
             Attempt(
                 notif_id=notif_id,
@@ -340,6 +385,7 @@ class NotificationListener:
                 syscall_name=name,
                 path=path,
                 path_readable=path is not None,
+                flags=flags,
             ),
             notif_id,
         )

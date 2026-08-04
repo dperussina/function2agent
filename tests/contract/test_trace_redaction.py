@@ -96,19 +96,53 @@ def test_no_credential_shaped_value_reaches_storage(writer) -> None:
 
 def test_a_secret_cannot_be_placed_in_a_span_at_all(writer) -> None:
     """The structural half. FR-036's `Secret` has no serializer, and the span
-    writer refuses one outright so it never gets as far as rendering."""
-    with pytest.raises(SpanError, match="Secret"):
-        _write(writer, kind=trace.MODEL_CALL, outcome=trace.OUTCOME_OK,
-               detail={"auth": Secret(TEST_CREDENTIAL, name="F2A_MODEL_KEY")})
+    writer refuses one outright so it never gets as far as rendering.
 
-    # Nested, because the first thing anyone does is put it one level down.
+    **"at all" is now what this test checks.** It exercised `detail` three
+    times — flat, nested and inside a list — and the span type's other five
+    fields not once, while carrying a name that claimed the type. The guard
+    matched: it scanned `detail` and nothing else. Two artifacts agreeing on
+    the same gap is not corroboration.
+    """
+    def secret() -> Secret:
+        return Secret(TEST_CREDENTIAL, name="F2A_MODEL_KEY")
+
+    # `detail`, at three depths.
     with pytest.raises(SpanError, match="Secret"):
         _write(writer, kind=trace.MODEL_CALL, outcome=trace.OUTCOME_OK,
-               detail={"request": {"headers": {"authorization":
-                                               Secret(TEST_CREDENTIAL, name="k")}}})
+               detail={"auth": secret()})
     with pytest.raises(SpanError, match="Secret"):
         _write(writer, kind=trace.MODEL_CALL, outcome=trace.OUTCOME_OK,
-               detail={"chain": [{"auth": Secret(TEST_CREDENTIAL, name="k")}]})
+               detail={"request": {"headers": {"authorization": secret()}}})
+    with pytest.raises(SpanError, match="Secret"):
+        _write(writer, kind=trace.MODEL_CALL, outcome=trace.OUTCOME_OK,
+               detail={"chain": [{"auth": secret()}]})
+
+    # The five the name always claimed. `tests/contract/test_trace_spans.py`
+    # parametrizes over `dataclasses.fields(Span)` so a seventh field is
+    # covered without anyone editing a list; these are here because this is
+    # the file whose test name made the claim.
+    with pytest.raises(SpanError, match="Secret"):
+        _write(writer, kind=trace.EGRESS_DECISION, outcome=trace.OUTCOME_DENIED,
+               decision=DecisionFields(rule_id="EG-001",
+                                       resolved_tier="read_only",
+                                       matched={"authorization": secret()}))
+    with pytest.raises(SpanError, match="Secret"):
+        _write(writer, kind=trace.VERIFICATION, outcome=trace.OUTCOME_OK,
+               pre={"token": secret()}, post={"state": "verified"})
+    with pytest.raises(SpanError, match="Secret"):
+        _write(writer, kind=trace.VERIFICATION, outcome=trace.OUTCOME_OK,
+               pre={"reachability": "passed"}, post={"token": secret()})
+    with pytest.raises(SpanError, match="Secret"):
+        _write(writer, kind=trace.MODEL_CALL, outcome=trace.OUTCOME_OK,
+               terminal_state=secret())
+    with pytest.raises(SpanError, match="Secret"):
+        writer.write(Span(
+            session_id="sess-1", turn=0, ordinal=0, at=1.0,
+            kind=trace.MODEL_CALL, outcome=trace.OUTCOME_OK,
+            attempt_kind=trace.ATTEMPT_FIRST, cost=COST,
+            versions=ArtifactVersions(tenant_id="t-1", deployment_id="d-1",
+                                      by_kind={"egress_policy": secret()})))
 
     assert writer.spans("sess-1") == [], "a refused span was written anyway"
 

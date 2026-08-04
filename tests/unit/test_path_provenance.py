@@ -19,13 +19,17 @@ from src.supervisor import fs_decisions as fs
 from tests.fixtures.locations import location_set
 
 
-def _decide(path: str | None, syscall: str = "openat"):
+def _decide(path: str | None, syscall: str = "openat", flags: int | None = 0):
     return fs.decide(
         location_set(),
         session_id="sess-1",
         syscall=syscall,
         path=path,
         pid=1234,
+        # O_RDONLY. Provenance is orthogonal to the read/write classification,
+        # so these cases pick the read direction and hold it fixed rather than
+        # letting the direction vary underneath a provenance assertion.
+        flags=flags,
         now=1_760_000_000.0,
     )
 

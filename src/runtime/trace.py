@@ -31,17 +31,20 @@ obligation is the one implemented.
 
 *Ordering without a clock.* FR-038 asks for position sufficient to order every
 span in a session **totally, without reference to a clock**. A timestamp is
-carried as data, and the ordinal is what ordering uses. `SpanWriter` allocates
-ordinals monotonically and refuses a duplicate, so two spans cannot tie.
+carried as data, and the ordinal is what ordering uses. The total order is held
+by a **unique index on the table**, not by a writer: `SpanWriter` allocates
+ordinals monotonically and seeds its counter from the store, but what makes two
+spans unable to tie is the index, because the claim has to hold across two
+writers over one repository and across the crash a resumed session survives.
 """
 
 from __future__ import annotations
 
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any, Mapping
 
-from src.contracts.repository import Repository
+from src.contracts.repository import Repository, UniquenessError
 from src.contracts.secret import Secret
 from src.contracts.terminal import is_terminal
 from src.contracts.transition import StateTransition
@@ -204,6 +207,12 @@ class Span:
     detail: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        # FR-036 first, and over every field, because the credential question
+        # has to be answered before any other refusal can pre-empt it: a span
+        # with a Secret in `pre` and a misspelled `kind` should be reported as
+        # the credential it is, not as the typo.
+        _refuse_secrets_anywhere(self)
+
         if self.kind not in KINDS:
             raise SpanError(
                 f"{self.kind!r} is not one of FR-038's seven declared span "
@@ -265,8 +274,6 @@ class Span:
                 "taxonomy"
             )
 
-        _refuse_secrets(self.detail, "detail")
-
     @property
     def position(self) -> tuple[str, int, int]:
         """Total order within a session, with no clock in it."""
@@ -303,12 +310,35 @@ class Span:
         return record
 
 
+def _refuse_secrets_anywhere(span: Span) -> None:
+    """FR-036 over the whole span, derived from the type rather than a list.
+
+    **Why this is not six calls to `_refuse_secrets`.** It was one call, on
+    `detail`, under a test named as though it covered the type. Writing the
+    other five out would fix today's gap and rebuild the mechanism that
+    produced it: the seventh field would arrive, its author would not know
+    there was a list to extend, and the guard would silently narrow again.
+
+    Enumerating `dataclasses.fields(span)` means the guard's coverage is the
+    type's shape. A field cannot be added without being scanned, because
+    nobody has to remember anything for that to happen.
+    """
+    for f in fields(span):
+        _refuse_secrets(getattr(span, f.name), f.name)
+
+
 def _refuse_secrets(value: Any, path: str) -> None:
     """FR-036: a Secret must never reach a trace.
 
     `Secret` has no serializer, so it would render as a redaction marker rather
     than a credential — but a marker in a trace is a field somebody will later
     "fix" by unwrapping. Refusing it here means the credential never gets close.
+
+    Descends through mappings, sequences and **nested dataclasses**, the last
+    because a span's credential-bearing fields are mostly not raw mappings:
+    `decision.matched`, `transition.predicate_inputs[].value` and
+    `versions.by_kind` are each one dataclass hop from the span, and a scan
+    that stopped at the first object walked past all three.
     """
     if isinstance(value, Secret):
         raise SpanError(
@@ -317,7 +347,13 @@ def _refuse_secrets(value: Any, path: str) -> None:
         )
     if isinstance(value, Mapping):
         for key, item in value.items():
+            # Keys too: `{Secret(...): "x"}` is a credential in the record
+            # just as much as a value is.
+            _refuse_secrets(key, f"{path}.<key>")
             _refuse_secrets(item, f"{path}.{key}")
+    elif is_dataclass(value) and not isinstance(value, type):
+        for f in fields(value):
+            _refuse_secrets(getattr(value, f.name), f"{path}.{f.name}")
     elif isinstance(value, (list, tuple)):
         for item in value:
             _refuse_secrets(item, f"{path}[]")
@@ -330,7 +366,6 @@ class SpanWriter:
         self.repo = repository
         self._lock = threading.Lock()
         self._next: dict[tuple[str, int], int] = {}
-        self._written: set[tuple[str, int, int]] = set()
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
@@ -345,28 +380,45 @@ class SpanWriter:
             "terminal_state": "text",
             "at": "real not null",
             "payload": "text not null",
-        })
+        }, unique=[("session_id", "turn", "ordinal")])
 
     def next_ordinal(self, session_id: str, turn: int) -> int:
+        """The next free position in `turn`, seeded from the store.
+
+        Seeded rather than started at zero, because a `SpanWriter` is
+        constructed once per process and a session outlives one. FR-049's
+        memory bound kills a session with no unwind, and the runtime that
+        resumes it builds a new writer over the same store — a counter that
+        began at zero would hand out positions the table already holds.
+        """
         with self._lock:
             key = (session_id, turn)
-            ordinal = self._next.get(key, 0)
+            ordinal = self._next.get(key)
+            if ordinal is None:
+                ordinal = self._highest_written(session_id, turn) + 1
             self._next[key] = ordinal + 1
             return ordinal
 
+    def _highest_written(self, session_id: str, turn: int) -> int:
+        """The largest ordinal already at `(session_id, turn)`, or -1."""
+        rows = self.repo.select(
+            TABLE, where={"session_id": session_id, "turn": turn},
+            order_by="ordinal", descending=True, limit=1)
+        return rows[0]["ordinal"] if rows else -1
+
     def write(self, span: Span) -> None:
+        """Persist one span. The store refuses a duplicate position.
+
+        **The uniqueness check is the index and not a set held here.** A
+        per-instance set is a property of this object: a second writer over the
+        same repository, or a writer built after a crash, agrees with it about
+        nothing. It also could not be unwound — a position was claimed before
+        the insert and kept whatever the insert did, so a write that failed in
+        the encoder spent a position permanently and refused the retry.
+        """
         from src.contracts.canonical import dumps
 
-        with self._lock:
-            if span.position in self._written:
-                raise SpanError(
-                    f"a span already occupies position {span.position}. "
-                    "FR-038 requires positions sufficient to order a session "
-                    "totally, and two spans at one position is a tie."
-                )
-            self._written.add(span.position)
-
-        self.repo.insert(TABLE, {
+        record = {
             "session_id": span.session_id,
             "turn": span.turn,
             "ordinal": span.ordinal,
@@ -377,7 +429,15 @@ class SpanWriter:
             "terminal_state": span.terminal_state,
             "at": span.at,
             "payload": dumps(span.to_record()).decode(),
-        })
+        }
+        try:
+            self.repo.insert(TABLE, record)
+        except UniquenessError as exc:
+            raise SpanError(
+                f"a span already occupies position {span.position}. "
+                "FR-038 requires positions sufficient to order a session "
+                "totally, and two spans at one position is a tie."
+            ) from exc
 
     def spans(self, session_id: str) -> list[dict[str, Any]]:
         rows = self.repo.select(

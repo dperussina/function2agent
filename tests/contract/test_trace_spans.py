@@ -7,6 +7,8 @@ the total-ordering claim is tested over a trace with more than one turn.
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 from src.contracts import transition as tr
@@ -175,13 +177,105 @@ def test_the_session_orders_totally_without_a_clock(writer) -> None:
     assert sorted((r["turn"], r["ordinal"]) for r in scrambled) == positions
 
 
+def _span(session_id: str = "s", turn: int = 0, ordinal: int = 0, **kwargs) -> Span:
+    return Span(kind=trace.MODEL_CALL, session_id=session_id, turn=turn,
+                ordinal=ordinal, outcome=trace.OUTCOME_OK,
+                attempt_kind=trace.ATTEMPT_FIRST, versions=VERSIONS,
+                cost=_cost(), at=1.0, **kwargs)
+
+
 def test_two_spans_cannot_occupy_one_position(writer) -> None:
-    span = Span(kind=trace.MODEL_CALL, session_id="s", turn=0, ordinal=0,
-                outcome=trace.OUTCOME_OK, attempt_kind=trace.ATTEMPT_FIRST,
-                versions=VERSIONS, cost=_cost(), at=1.0)
+    span = _span()
     writer.write(span)
     with pytest.raises(SpanError, match="already occupies position"):
         writer.write(span)
+
+
+def test_two_writers_over_one_repository_cannot_share_a_position(tmp_path) -> None:
+    """Uniqueness has to live in the store, not in one writer's memory.
+
+    A per-instance Python set is a property of one object in one process.
+    FR-038 asks for "position sufficient to order every span in a session
+    totally", which is a property of the *data*, and two `SpanWriter`s over one
+    `Repository` — a construction this suite performs in
+    `test_a_trace_scan_over_a_full_session_is_clean` — each hold their own set.
+    """
+    repo = Repository(tmp_path / "trace.sqlite3", role="runtime",
+                      tenant_id="t-1", deployment_id="d-1")
+    try:
+        first, second = SpanWriter(repo), SpanWriter(repo)
+        first.write(_span())
+        with pytest.raises(SpanError, match="already occupies position"):
+            second.write(_span())
+        positions = [(r["turn"], r["ordinal"]) for r in first.spans("s")]
+        assert positions == [(0, 0)], (
+            f"two spans landed at one position: {positions}. The total order "
+            "FR-038 requires is not a property of this table."
+        )
+    finally:
+        repo.close()
+
+
+def test_a_resumed_writer_does_not_reissue_an_ordinal(tmp_path) -> None:
+    """The crash the budget journal three files away exists to survive.
+
+    A session resumed after a `memory.oom.group` kill constructs a new
+    `SpanWriter` over the same store. An ordinal counter that starts at zero
+    hands out a position that is already occupied.
+    """
+    repo = Repository(tmp_path / "trace.sqlite3", role="runtime",
+                      tenant_id="t-1", deployment_id="d-1")
+    try:
+        before = SpanWriter(repo)
+        for _ in range(3):
+            before.write(_span(ordinal=before.next_ordinal("s", 0)))
+
+        resumed = SpanWriter(repo)
+        assert resumed.next_ordinal("s", 0) == 3, (
+            "a resumed writer re-issued an ordinal the store already holds"
+        )
+        resumed.write(_span(ordinal=3))
+        assert [(r["turn"], r["ordinal"]) for r in resumed.spans("s")] == [
+            (0, 0), (0, 1), (0, 2), (0, 3)]
+    finally:
+        repo.close()
+
+
+def test_a_refused_insert_does_not_burn_the_position(writer) -> None:
+    """A position recorded before the insert, and never unwound, is spent.
+
+    The write below fails in the canonical encoder, after the position was
+    claimed and before any row landed. A legitimate retry at the same position
+    is then rejected for a collision with a span that does not exist.
+    """
+    from src.contracts.canonical import NonCanonicalValue
+
+    with pytest.raises(NonCanonicalValue):
+        writer.write(_span(detail={"latency": float("nan")}))
+    assert writer.spans("s") == [], "the failed write left a row behind"
+
+    writer.write(_span(detail={"latency": 0.5}))
+    assert [(r["turn"], r["ordinal"]) for r in writer.spans("s")] == [(0, 0)]
+
+
+def test_one_position_per_tenant_not_per_table(tmp_path) -> None:
+    """Uniqueness is scoped the way every other query on this table is.
+
+    Every read goes through the repository's tenant and deployment predicate,
+    so an index that ignored the scope columns would refuse a second tenant's
+    first span for colliding with a row that tenant cannot see.
+    """
+    path = tmp_path / "trace.sqlite3"
+    first = Repository(path, role="runtime", tenant_id="t-1", deployment_id="d-1")
+    second = Repository(path, role="runtime", tenant_id="t-2", deployment_id="d-1")
+    try:
+        SpanWriter(first).write(_span())
+        SpanWriter(second).write(_span())
+        assert len(SpanWriter(first).spans("s")) == 1
+        assert len(SpanWriter(second).spans("s")) == 1
+    finally:
+        first.close()
+        second.close()
 
 
 def test_a_state_transition_span_carries_its_predicate_inputs(writer) -> None:
@@ -277,6 +371,67 @@ def test_a_secret_in_a_span_detail_is_refused() -> None:
              outcome=trace.OUTCOME_OK, attempt_kind=trace.ATTEMPT_FIRST,
              versions=VERSIONS, cost=_cost(), at=1.0,
              detail={"headers": {"authorization": Secret("sk-live-abc", name="k")}})
+
+
+@pytest.mark.parametrize("field_name", [f.name for f in dataclasses.fields(Span)])
+def test_no_field_of_a_span_may_hold_a_secret(field_name: str) -> None:
+    """FR-036 over the whole type, and the parametrization is the point.
+
+    The predecessor of this test scanned `detail` three times and the other
+    five fields not at all, while being named as though it covered the type.
+    The list of cases here is `dataclasses.fields(Span)`, so a seventh field
+    is a seventh case the day it is declared and there is no list to forget
+    to update. That is the only version of this test that cannot quietly stop
+    covering the type.
+    """
+    kwargs = dict(kind=trace.MODEL_CALL, session_id="s", turn=0, ordinal=0,
+                  outcome=trace.OUTCOME_OK, attempt_kind=trace.ATTEMPT_FIRST,
+                  versions=VERSIONS, cost=_cost(), at=1.0)
+    kwargs[field_name] = Secret("sk-live-abc", name="k")
+    with pytest.raises(SpanError, match="Secret"):
+        Span(**kwargs)
+
+
+def test_a_secret_nested_in_any_carrier_field_is_refused() -> None:
+    """The five fields the `detail`-only guard walked straight past.
+
+    Each of these is a real place a credential arrives: a matched request
+    header on an egress decision, a predicate input on a transition, a
+    verification result that echoed what it checked.
+    """
+    s = Secret("sk-live-abc", name="k")
+    base = dict(session_id="s", turn=0, ordinal=0, outcome=trace.OUTCOME_OK,
+                attempt_kind=trace.ATTEMPT_FIRST, versions=VERSIONS,
+                cost=_cost(), at=1.0)
+
+    with pytest.raises(SpanError, match="decision.*Secret|Secret"):
+        Span(kind=trace.EGRESS_DECISION, decision=DecisionFields(
+            rule_id="EG-001", resolved_tier="read_only",
+            matched={"authorization": s}), **base)
+
+    with pytest.raises(SpanError, match="Secret"):
+        Span(kind=trace.STATE_TRANSITION, transition=tr.StateTransition(
+            session_id="s", from_state=tr.STATE_RUNNING,
+            to_state=tr.STATE_TERMINATED,
+            terminal_state="terminated.capability_lapsed",
+            deciding_rule=tr.ST_CAPABILITY_LAPSED.rule_id, at=1.0,
+            predicate_inputs=(tr.PredicateInput(
+                name="lease_token", observed=s, declared=None,
+                matched=True),)), **base)
+
+    with pytest.raises(SpanError, match="Secret"):
+        Span(kind=trace.VERIFICATION, pre={"token": s},
+             post={"state": "verified"}, **base)
+
+    with pytest.raises(SpanError, match="Secret"):
+        Span(kind=trace.VERIFICATION, pre={"reachability": "passed"},
+             post={"token": s}, **base)
+
+    with pytest.raises(SpanError, match="Secret"):
+        Span(kind=trace.MODEL_CALL,
+             versions=ArtifactVersions(tenant_id="t-1", deployment_id="d-1",
+                                       by_kind={"egress_policy": s}),
+             **{k: v for k, v in base.items() if k != "versions"})
 
 
 def test_the_span_table_is_the_runtimes_to_write(tmp_path) -> None:

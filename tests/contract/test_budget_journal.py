@@ -26,9 +26,15 @@ from src.runtime.trace_budget import (
 
 @pytest.fixture()
 def journal(tmp_path):
-    repo = Repository(tmp_path / "budget.sqlite3", role="runtime",
+    """The real deployment shape: the ledger in supervisor state, beside — not
+    inside — the session's root."""
+    root = tmp_path / "session-root"
+    root.mkdir()
+    state = tmp_path / "supervisor-state"
+    state.mkdir()
+    repo = Repository(state / "budget.sqlite3", role="runtime",
                       tenant_id="t-1", deployment_id="d-1")
-    yield BudgetJournal(repo)
+    yield BudgetJournal(repo, session_root=root)
     repo.close()
 
 
@@ -49,9 +55,11 @@ def test_consumption_is_journalled_as_it_accrues_not_at_turn_end(journal) -> Non
 
 def test_the_ledger_survives_a_kill_with_no_flush(tmp_path) -> None:
     """The property U-30 and finding 006 are about."""
+    root = tmp_path / "session-root"
+    root.mkdir()
     db = tmp_path / "budget.sqlite3"
     repo = Repository(db, role="runtime", tenant_id="t-1", deployment_id="d-1")
-    journal = BudgetJournal(repo)
+    journal = BudgetJournal(repo, session_root=root)
     for i in range(3):
         journal.accrue(_c(i, spend=0.25))
 
@@ -61,7 +69,7 @@ def test_the_ledger_survives_a_kill_with_no_flush(tmp_path) -> None:
 
     reader = Repository(db, role="runtime", tenant_id="t-1", deployment_id="d-1")
     try:
-        recovered = BudgetJournal(reader).totals("sess-1")
+        recovered = BudgetJournal(reader, session_root=root).totals("sess-1")
         assert recovered.spend_usd == pytest.approx(0.75), (
             f"the ledger lost spend across the kill: {recovered.spend_usd} of 0.75"
         )
@@ -99,14 +107,76 @@ def test_the_location_check_is_not_fooled_by_a_relative_path(tmp_path) -> None:
 
 
 def test_the_journal_constructor_enforces_the_location(tmp_path) -> None:
+    """The ledger's own file is inside the session root, so this must refuse.
+
+    The prior version of this test passed an explicit `journal_path` that was
+    not the repository's file, so it exercised only the branch where both
+    optional arguments were supplied — and both defaulted to `None`, which is
+    the construction every real caller makes.
+    """
     root = tmp_path / "session-root"
     root.mkdir()
-    inside = root / "budget.sqlite3"
-    repo = Repository(tmp_path / "elsewhere.sqlite3", role="runtime",
+    repo = Repository(root / "budget.sqlite3", role="runtime",
                       tenant_id="t-1", deployment_id="d-1")
     try:
+        with pytest.raises(JournalLocationError, match="inside the session root"):
+            BudgetJournal(repo, session_root=root)
+    finally:
+        repo.close()
+
+
+def test_the_location_check_cannot_be_skipped_by_omitting_an_argument(tmp_path) -> None:
+    """The defect: the check ran only when the caller opted into it.
+
+    `BudgetJournal(repo)` built a ledger inside the session root without
+    complaint, because both arguments to the check defaulted to `None` and the
+    check was guarded on both being supplied. A safety property that is off
+    unless asked for is not a property of the module.
+    """
+    root = tmp_path / "session-root"
+    root.mkdir()
+    repo = Repository(root / "budget.sqlite3", role="runtime",
+                      tenant_id="t-1", deployment_id="d-1")
+    try:
+        with pytest.raises(TypeError, match="session_root"):
+            BudgetJournal(repo)  # type: ignore[call-arg]
+    finally:
+        repo.close()
+
+
+def test_the_check_reads_the_repositorys_own_file(tmp_path) -> None:
+    """A caller must not be able to satisfy the check by naming another path.
+
+    The ledger is written to the repository's file. A `journal_path` supplied
+    separately is an assertion about where that is, and an assertion the
+    constructor cannot check is one that will eventually be wrong — the prior
+    signature accepted a path with no relationship to the repository at all.
+    """
+    root = tmp_path / "session-root"
+    root.mkdir()
+    repo = Repository(root / "budget.sqlite3", role="runtime",
+                      tenant_id="t-1", deployment_id="d-1")
+    try:
+        assert repo.path == (root / "budget.sqlite3").resolve()
         with pytest.raises(JournalLocationError):
-            BudgetJournal(repo, session_root=root, journal_path=inside)
+            BudgetJournal(repo, session_root=root)
+    finally:
+        repo.close()
+
+
+def test_a_journal_outside_the_session_root_still_constructs(tmp_path) -> None:
+    """The positive control. A check that refused everything would pass the
+    three above and be useless."""
+    root = tmp_path / "session-root"
+    root.mkdir()
+    state = tmp_path / "supervisor-state"
+    state.mkdir()
+    repo = Repository(state / "budget.sqlite3", role="runtime",
+                      tenant_id="t-1", deployment_id="d-1")
+    try:
+        journal = BudgetJournal(repo, session_root=root)
+        journal.accrue(_c(0))
+        assert journal.totals("sess-1").spend_usd == pytest.approx(0.25)
     finally:
         repo.close()
 
@@ -157,15 +227,17 @@ def test_entries_order_without_a_clock(journal) -> None:
 def test_the_ledger_is_the_runtimes_to_write(tmp_path) -> None:
     from src.contracts.ownership import OwnershipError
 
+    root = tmp_path / "session-root"
+    root.mkdir()
     repo = Repository(tmp_path / "b.sqlite3", role="runtime",
                       tenant_id="t-1", deployment_id="d-1")
-    BudgetJournal(repo)
+    BudgetJournal(repo, session_root=root)
     repo.close()
 
     analysis = Repository(tmp_path / "b.sqlite3", role="analysis",
                           tenant_id="t-1", deployment_id="d-1")
     try:
         with pytest.raises(OwnershipError):
-            BudgetJournal(analysis)
+            BudgetJournal(analysis, session_root=root)
     finally:
         analysis.close()

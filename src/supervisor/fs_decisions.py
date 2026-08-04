@@ -113,19 +113,60 @@ UNREADABLE_PATH = Rule(
     "time. Recorded rather than assumed benign — SC-022 counts records, and "
     "an unreadable attempt is still an attempt.",
 )
+OPEN_FLAGS_ABSENT = Rule(
+    "FS-006", "open_flags_unreadable",
+    "an open-family syscall arrived without its flag word, so whether it was "
+    "a read or a write is unknown. Refused rather than assumed benign: "
+    "assuming read is exactly the classification defect this rule exists to "
+    "stop coming back silently.",
+)
 
 RULES: tuple[Rule, ...] = (
     UNDECLARED_LOCATION, WRITE_TO_READONLY, WRITE_PATH_ABSENT,
-    ESCAPING_PATH, UNREADABLE_PATH,
+    ESCAPING_PATH, UNREADABLE_PATH, OPEN_FLAGS_ABSENT,
 )
 RULES_BY_ID = {rule.rule_id: rule for rule in RULES}
 
-# Syscalls that would modify. Under OD-10 every one of these is refused
-# regardless of location, and the rule identifier says which clause did it.
+# Syscalls that would modify by their name alone. Under OD-10 every one of
+# these is refused regardless of location, and the rule identifier says which
+# clause did it.
 WRITE_SYSCALLS = frozenset({
     "unlink", "unlinkat", "rename", "renameat2", "mkdir", "mkdirat",
     "truncate", "chmod", "fchmodat",
 })
+
+# Syscalls whose direction is *not* in the name. This set is the whole of the
+# defect X4 fixed: `openat` appears in neither WRITE_SYSCALLS nor any read
+# list, because it is both, and the classifier that only had the name had no
+# way to tell which. It needs the flag word.
+OPEN_SYSCALLS = frozenset({"open", "openat", "openat2", "creat"})
+
+# The bits that make an open a write. `O_RDONLY` is 0, so a flag word cannot
+# be tested for "is a read" — only for the absence of every write bit.
+#
+# `O_TRUNC` and `O_APPEND` are here alongside the access modes deliberately:
+# `open(path, O_RDONLY | O_TRUNC)` has read access mode and truncates the
+# file, so a classifier that masked with `O_ACCMODE` alone would call a
+# destructive open a read. `O_CREAT` likewise creates.
+O_ACCMODE = 0o3
+O_WRONLY = 0o1
+O_RDWR = 0o2
+O_CREAT = 0o100
+O_TRUNC = 0o1000
+O_APPEND = 0o2000
+WRITE_OPEN_FLAGS = O_CREAT | O_TRUNC | O_APPEND
+
+
+def is_write_open(flags: int) -> bool:
+    """Whether an open-family flag word requests any modification.
+
+    The constants are spelled out above rather than taken from `os` because
+    this runs in the supervisor and classifies a *target's* syscall: the two
+    processes agree on the ABI, not on a Python module, and on a host where
+    they differed silently the wrong answer here is a wrong audit record.
+    """
+    return bool((flags & O_ACCMODE) in (O_WRONLY, O_RDWR)
+                or flags & WRITE_OPEN_FLAGS)
 
 
 @dataclass(frozen=True)
@@ -204,6 +245,7 @@ def decide(
     syscall: str,
     path: str | None,
     pid: int,
+    flags: int | None,
     now: float | None = None,
     path_provenance: str = PATH_SUPERVISOR_READ,
 ) -> FilesystemDecision:
@@ -213,6 +255,15 @@ def decide(
     the mount namespace has already made it absent. The two are not redundant:
     the namespace is the enforcement, this is SC-022's record, and neither
     substitutes for the other.
+
+    **`flags` has no default, and that is the fix for X4.** The classifier used
+    to decide read-versus-write from the syscall name, which works for
+    `unlinkat` and is meaningless for `openat` — so `openat(O_WRONLY)` against
+    a read-only location was recorded as an *allow*. Giving `flags` a default
+    of `None` would leave every existing call site compiling unchanged and
+    classifying unchanged, which is the defect with a parameter added. Making
+    it required means a caller that cannot answer "was this a write" has to say
+    so at the call site.
     """
     moment = time.time() if now is None else now
 
@@ -232,8 +283,12 @@ def decide(
 
     if path is None:
         return built(DENY, "absent", UNREADABLE_PATH)
-    if syscall in WRITE_SYSCALLS:
-        return built(DENY, "absent", WRITE_PATH_ABSENT)
+    if syscall in OPEN_SYSCALLS and flags is None:
+        # Not reachable from a correctly wired listener — `_FLAGS_ARG` covers
+        # every watched open, and an invariant test holds it to that. Recorded
+        # rather than raised because SC-022 counts attempts, and an exception
+        # here would drop the record for the one attempt nobody could classify.
+        return built(DENY, "absent", OPEN_FLAGS_ABSENT)
     if ".." in path.split("/"):
         # Not normalized. Normalizing an untrusted path and then matching is
         # the standard way a traversal check is defeated; refusing the form
@@ -244,9 +299,29 @@ def decide(
     # makes this reachable", and there is deliberately no second implementation
     # of that question here — two matchers that disagree is how a path becomes
     # allowed by the recorder and absent to the kernel, or worse, the reverse.
+    #
+    # This now runs *before* the write branch, where it used to run after.
+    # Ordering is the whole of FS-002's reachability: the old code denied every
+    # write as FS-003 `absent` without ever asking which location was named, so
+    # the rule that names the declared mode could not fire and the record could
+    # not say a declared location had been written to.
     location = location_set.declaring(path)
     if location is None:
         return built(DENY, "absent", UNDECLARED_LOCATION)
+
+    modifies = syscall in WRITE_SYSCALLS or (
+        syscall in OPEN_SYSCALLS and is_write_open(flags or 0)
+    )
+    if modifies:
+        # The mode goes on the record. A write to a read-only declaration is a
+        # different fact from a write to a path that is not there, and FS-002
+        # recorded with `mode="absent"` would be indistinguishable from FS-001.
+        if location.mode == "ro":
+            return built(DENY, location.mode, WRITE_TO_READONLY)
+        # A declared-writable location, which OD-10 means v1 does not ship.
+        # FS-003 is the clause that says "no write path exists at all", and it
+        # is now the only thing it says.
+        return built(DENY, location.mode, WRITE_PATH_ABSENT)
     return built(ALLOW, location.mode, None)
 
 

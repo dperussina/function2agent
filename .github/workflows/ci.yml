@@ -53,7 +53,19 @@ jobs:
       - name: Confirm the Linux facilities are present
         # OD-17 has no degraded mode. If the runner lacks a facility the run
         # fails here rather than silently skipping the tests that need it.
-        run: python -m src.supervisor.preflight
+        #
+        # **Privileged, and it has to be.** Two of these checks create a child
+        # cgroup under /sys/fs/cgroup — `cgroup_delegation` because FR-049
+        # requires the bound to be set from outside the environment, so the
+        # supervisor owns the session cgroup before the container starts, and
+        # `cgroup_kill` because the kernel puts `cgroup.kill` in non-root
+        # cgroups only. The cgroup root is root-owned on an ordinary Linux
+        # host, so both fail with EACCES for an unprivileged process.
+        # Confirmed locally against a `--cgroupns=host` container running as
+        # uid 1000: both report `Permission denied`. Running the gate
+        # unprivileged therefore asserts a capability the supervisor does not
+        # run with, which is the wrong question in the other direction.
+        run: sudo -E env "PATH=$PATH" python -m src.supervisor.preflight
       - name: Unprivileged suite
         run: python -m pytest tests -q -m "not privileged"
       - name: Privileged suite — FR-048, FR-049, FR-050

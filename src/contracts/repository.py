@@ -51,6 +51,16 @@ class ScopeError(RepositoryError):
     """A row that would be written without, or against, its declared scope."""
 
 
+class UniquenessError(RepositoryError):
+    """A row that would duplicate a key the table declares unique.
+
+    Typed here rather than left as the engine's own exception, because the
+    module docstring's second obligation is that no caller sees engine-specific
+    SQL — and a caller catching `sqlite3.IntegrityError` is a caller that has
+    to be edited when the substrate moves.
+    """
+
+
 def _quote_identifier(name: str) -> str:
     """The one place an identifier reaches SQL.
 
@@ -94,6 +104,11 @@ class Repository:
         self.role = role
         self.tenant_id = tenant_id
         self.deployment_id = deployment_id
+        # Resolved and kept, so a caller that has to reason about *where* the
+        # store is can ask the store rather than being told. `BudgetJournal`'s
+        # location check took the path as an argument, which made it a check on
+        # what the caller asserted rather than on where the rows go.
+        self.path = Path(path).resolve()
         # Reentrant, because `transaction()` holds the lock across the writes
         # inside it. A plain Lock deadlocks the moment a caller writes two rows
         # in one transaction, which is the shape every FR-054 ref move has.
@@ -113,11 +128,26 @@ class Repository:
 
     # -- schema ------------------------------------------------------------
 
-    def create_table(self, table: str, columns: Mapping[str, str]) -> None:
+    def create_table(
+        self,
+        table: str,
+        columns: Mapping[str, str],
+        *,
+        unique: Sequence[Sequence[str]] = (),
+    ) -> None:
         """Create `table` with the scope columns prepended.
 
         The scope columns are added here rather than being the caller's job, so
         that a table cannot exist without them.
+
+        `unique` declares key groups the **store** enforces. A caller that
+        guards uniqueness in its own process guards one object in one process:
+        a second instance over the same file, or a resumed one after a crash,
+        shares nothing with the first. Every group is indexed **with the scope
+        columns prepended**, because every read on this table already goes
+        through the tenant and deployment predicate — an index that ignored
+        them would refuse a second tenant's row for colliding with one that
+        tenant cannot see.
         """
         require_write(table, self.role)
         for name in columns:
@@ -140,7 +170,45 @@ class Repository:
                 f"ON {_quote_identifier(table)} "
                 f"({_quote_identifier(TENANT_COLUMN)}, {_quote_identifier(DEPLOYMENT_COLUMN)})"
             )
+            for group in unique:
+                self._create_unique_index(table, group)
             self._commit_if_outermost()
+
+    def _create_unique_index(self, table: str, group: Sequence[str]) -> None:
+        """One unique index, or a refusal naming the rows that prevent it.
+
+        This runs against a table that may already hold rows, so it is the
+        closest thing in this layer to a migration. SQLite will not build a
+        unique index over data that violates it, and the failure it raises
+        names neither the table nor the duplicates. Reporting it as-is would
+        leave an operator with `UNIQUE constraint failed` and nowhere to go;
+        skipping the index on failure would be worse, because the table would
+        then be silently back to enforcing nothing.
+        """
+        if not group:
+            raise RepositoryError(
+                f"{table}: an empty unique group constrains nothing")
+        name = f"{table}_unique_" + "_".join(group)
+        columns = ", ".join(
+            _quote_identifier(c) for c in (*SCOPE_COLUMNS, *group))
+        try:
+            self._conn.execute(
+                f"CREATE UNIQUE INDEX IF NOT EXISTS {_quote_identifier(name)} "
+                f"ON {_quote_identifier(table)} ({columns})"
+            )
+        except sqlite3.IntegrityError as exc:
+            keys = ", ".join((*SCOPE_COLUMNS, *group))
+            raise UniquenessError(
+                f"{table}: cannot declare ({keys}) unique because rows "
+                f"already in the table duplicate it ({exc}). The duplicates "
+                f"predate the constraint, so reconcile them before opening "
+                f"this table again:\n"
+                f"  SELECT {keys}, count(*) FROM {table} "
+                f"GROUP BY {keys} HAVING count(*) > 1;\n"
+                "The index is not skipped on this failure: a table that "
+                "silently went back to enforcing nothing is the defect the "
+                "constraint was added for."
+            ) from None
 
     # -- writes ------------------------------------------------------------
 
@@ -161,7 +229,10 @@ class Repository:
         placeholders = ", ".join("?" for _ in scoped)
         sql = f"INSERT INTO {_quote_identifier(table)} ({columns}) VALUES ({placeholders})"
         with self._lock:
-            self._conn.execute(sql, tuple(scoped.values()))
+            try:
+                self._conn.execute(sql, tuple(scoped.values()))
+            except sqlite3.IntegrityError as exc:
+                raise UniquenessError(f"{table}: {exc}") from None
             self._commit_if_outermost()
 
     def update(

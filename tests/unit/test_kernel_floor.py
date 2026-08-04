@@ -104,13 +104,89 @@ def test_the_kernel_check_runs_before_the_facility_checks(monkeypatch) -> None:
     assert names.index("kernel_version") < names.index("seccomp_user_notification")
 
 
-def test_cgroup_kill_is_a_preflight_check() -> None:
-    check = preflight._check_cgroup_kill()
-    assert check.requirement == "FR-049"
-    assert "fork" in check.detail, (
+def _cgroup_tree(tmp_path, *, at_root: bool, in_child: bool):
+    """A directory shaped like a cgroup v2 hierarchy.
+
+    The kernel's documented shape is `in_child=True, at_root=False`:
+    `cgroup.kill` is "a write-only single value file which exists in non-root
+    cgroups". `at_root=True` is the shape a process sees inside a private
+    cgroup namespace, where the namespace root is itself a non-root cgroup —
+    which is the only reason the check ever passed on a developer host.
+    """
+    root = tmp_path / "cgroup"
+    root.mkdir(parents=True)
+    if at_root:
+        (root / "cgroup.kill").write_text("")
+    if in_child:
+        child = root / preflight.CGROUP_KILL_PROBE
+        child.mkdir()
+        (child / "cgroup.kill").write_text("")
+    return root
+
+
+def test_cgroup_kill_is_a_preflight_check(tmp_path) -> None:
+    """Both directions. A check nothing ever asserts `ok` on is not a check.
+
+    The prior version of this test read `requirement` and `detail` and never
+    `ok`, so it passed just as well for a probe that can never succeed — which
+    is what the probe was.
+    """
+    present = preflight._check_cgroup_kill(
+        _cgroup_tree(tmp_path / "present", at_root=False, in_child=True))
+    assert present.ok, present.detail
+    assert present.requirement == "FR-049"
+    assert "fork" in present.detail, (
         "the check does not say why cgroup.kill matters, so an operator who "
         "hits it will look for a way to skip it"
     )
+
+    absent = preflight._check_cgroup_kill(
+        _cgroup_tree(tmp_path / "absent", at_root=False, in_child=False))
+    assert not absent.ok, (
+        "the check passed on a hierarchy with no cgroup.kill anywhere in it, "
+        "so it is not reading what it claims to read"
+    )
+
+
+def test_the_kill_probe_reads_a_child_cgroup_and_not_the_root(tmp_path) -> None:
+    """The kernel puts `cgroup.kill` in non-root cgroups only.
+
+    A probe pointed at the root asks a question whose answer is `absent` on
+    every correctly-mounted host, so it fails on the bare Linux hosts OD-17
+    supports and passes only under the private cgroup namespace a container
+    gets. Confirmed both ways on 6.12.76-linuxkit: present with the default
+    namespace, absent under `--cgroupns=host`.
+
+    So the two shapes must give opposite answers, and the root-only one must
+    be the failure.
+    """
+    root_only = preflight._check_cgroup_kill(
+        _cgroup_tree(tmp_path / "root-only", at_root=True, in_child=False))
+    assert not root_only.ok, (
+        "the probe is reading the root cgroup. The kernel documents "
+        "cgroup.kill as existing in non-root cgroups, so a root that has it "
+        "is a private-namespace artifact and a root that lacks it is the "
+        "ordinary case — reading either one answers the wrong question."
+    )
+
+    child_only = preflight._check_cgroup_kill(
+        _cgroup_tree(tmp_path / "child-only", at_root=False, in_child=True))
+    assert child_only.ok, child_only.detail
+
+
+def test_the_kill_probe_cannot_report_a_facility_it_never_looked_for(tmp_path) -> None:
+    """An unprobeable hierarchy fails, and says so rather than saying ABSENT.
+
+    `preflight()` has no degraded mode, so every failure it reports is going
+    to be read by an operator looking for a way around it. "I could not create
+    a child cgroup" and "this kernel has no cgroup.kill" call for different
+    responses, and a check that reports the second when it means the first
+    sends the operator to look for a kernel upgrade they do not need.
+    """
+    missing = tmp_path / "not-a-cgroup-mount"
+    check = preflight._check_cgroup_kill(missing)
+    assert not check.ok
+    assert "cannot create a child cgroup" in check.detail
 
 
 def test_kill_all_refuses_rather_than_degrading(tmp_path) -> None:

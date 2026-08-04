@@ -57,8 +57,11 @@ REQUIRED_CGROUP_CONTROLLERS = ("memory", "cpu", "pids")
 # process bound is what stops a fork bomb, so a silent fallback to the racy path
 # on an old kernel weakens the bound the operator believes they configured.
 #
-# **This floor is DERIVED, NOT TESTED.** Everything here was run on 6.12
-# (`6.12.76-linuxkit` locally, `ubuntu-latest` in CI). Nothing was run on 5.14,
+# **This floor is DERIVED, NOT TESTED.** Everything here has run on 6.12
+# (`6.12.76-linuxkit`, locally) and on 6.17 (`6.17.0-1020-azure`, the
+# `ubuntu-latest` runner, first observed 2026-08-04). An earlier version of this
+# comment asserted the runner was also 6.12; that was written before CI had ever
+# run and the first run falsified it. Nothing was run on 5.14,
 # and "the facility exists in 5.14" is a weaker claim than "this code works on
 # 5.14" — semantics around cgroup delegation, `pivot_root` in a user namespace,
 # and seccomp notification lifetimes have all changed within the 5.x series in
@@ -107,7 +110,7 @@ def _check_kernel_version() -> Check:
     floor = f"{MINIMUM_KERNEL[0]}.{MINIMUM_KERNEL[1]}"
     provenance = (
         "DERIVED from documented feature introduction and NOT TESTED on that "
-        "kernel; every run to date was on 6.12"
+        "kernel; every run to date was on 6.12 or 6.17"
     )
     if parsed < MINIMUM_KERNEL:
         return Check(
@@ -124,18 +127,69 @@ def _check_kernel_version() -> Check:
     )
 
 
-def _check_cgroup_kill() -> Check:
-    """`cgroup.kill` must exist rather than fall back to the racy loop."""
-    path = CGROUP2_ROOT / "cgroup.kill"
-    present = path.exists()
-    return Check(
-        "cgroup_kill", present,
-        f"{path} {'present' if present else 'ABSENT'}. Without it, killing a "
-        "session means iterating cgroup.procs and signalling each pid, which "
-        "loses the race against a process forking between the listing and the "
-        "kill — the race FR-049's process bound exists to lose safely.",
-        "FR-049",
-    )
+CGROUP_KILL_PROBE = ".f2a-preflight-kill-probe"
+
+_WHY_CGROUP_KILL = (
+    "Without it, killing a session means iterating cgroup.procs and "
+    "signalling each pid, which loses the race against a process forking "
+    "between the listing and the kill — the race FR-049's process bound "
+    "exists to lose safely."
+)
+
+
+def _check_cgroup_kill(root: Path | None = None) -> Check:
+    """`cgroup.kill` must exist rather than fall back to the racy loop.
+
+    **Probed in a child cgroup, because the root is where the kernel documents
+    it as absent.** cgroup v2 calls `cgroup.kill` "a write-only single value
+    file which exists in non-root cgroups", so reading `CGROUP2_ROOT /
+    "cgroup.kill"` asks a question whose answer is ABSENT on every correctly
+    mounted host. It answered `present` on a developer machine only because a
+    container gets a private cgroup namespace, in which the namespace root is
+    itself a non-root cgroup — confirmed both ways on `6.12.76-linuxkit`. The
+    root half has since been confirmed independently on 6.17: CI run
+    30919271659 still carried the pre-fix probe, which read the root and
+    reported ABSENT on the `ubuntu-latest` runner, where the cgroup namespace is
+    the host's. That is the failure this probe exists to avoid, observed on a
+    second kernel.
+
+    So the probe creates a child cgroup, the same way `_check_cgroup_delegation`
+    does, and that is also the *kind* of cgroup FR-049's bound is set on and
+    that `kill_all` writes to. The check now asks about the cgroup the
+    mechanism actually uses.
+
+    A hierarchy that cannot be probed reports the mkdir failure rather than
+    ABSENT: `preflight()` has no degraded mode, so a failure here is read by an
+    operator looking for a way past it, and "no cgroup.kill on this kernel"
+    sends them after an upgrade they may not need.
+    """
+    root = CGROUP2_ROOT if root is None else root
+    probe = root / CGROUP_KILL_PROBE
+    try:
+        probe.mkdir(exist_ok=True)
+    except OSError as exc:
+        return Check(
+            "cgroup_kill", False,
+            f"cannot create a child cgroup at {probe} to probe for "
+            f"cgroup.kill: {exc}. The file exists only in non-root cgroups, so "
+            "there is nowhere else to look for it, and this is reported as a "
+            f"failed probe rather than as an absent facility. {_WHY_CGROUP_KILL}",
+            "FR-049",
+        )
+    try:
+        path = probe / "cgroup.kill"
+        present = path.exists()
+        return Check(
+            "cgroup_kill", present,
+            f"{path} {'present' if present else 'ABSENT'} in a probe child "
+            f"cgroup under {root}. {_WHY_CGROUP_KILL}",
+            "FR-049",
+        )
+    finally:
+        try:
+            probe.rmdir()
+        except OSError:
+            pass
 
 
 @dataclass(frozen=True)

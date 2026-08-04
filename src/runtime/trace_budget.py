@@ -95,10 +95,24 @@ def assert_outside_session_root(journal_path: str | Path, session_root: str | Pa
 class BudgetJournal:
     """Append-only consumption ledger, outside the container."""
 
-    def __init__(self, repository: Repository, *, session_root: str | Path | None = None,
-                 journal_path: str | Path | None = None) -> None:
-        if session_root is not None and journal_path is not None:
-            assert_outside_session_root(journal_path, session_root)
+    def __init__(self, repository: Repository, *, session_root: str | Path) -> None:
+        """Build the ledger, refusing one the session's own kill would take.
+
+        **`session_root` is required, and the journal path is not a parameter
+        at all.** Both were optional and defaulted to `None`, and the check ran
+        only when both were supplied — so the construction every caller makes,
+        `BudgetJournal(repo)`, skipped the check this module names in its own
+        first paragraph. An opt-in safety property is not one.
+
+        The journal path now comes from the repository, because that is where
+        the rows actually go. Taking it as an argument made the check an
+        assertion about the caller's belief, and the two can differ.
+
+        There is no argument that turns this off. A caller that cannot name the
+        session root cannot establish the property, and the honest answer to
+        that is a refusal rather than a default.
+        """
+        assert_outside_session_root(repository.path, session_root)
         self.repo = repository
         self._lock = threading.Lock()
         self.repo.create_table(TABLE, {
