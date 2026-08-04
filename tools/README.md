@@ -965,7 +965,19 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   but *did I finish every unit the claim lives in* — the row for a table, the whole
   bullet for a bullet, every site that states **or implies** a figure for a
   corrected count. A grep hit inside a structure whose other parts make the same
-  claim is a place to start reading and not a place to stop editing. This is
+  claim is a place to start reading and not a place to stop editing.
+
+  **A second failure mode, found by the pass that fixed the first, and it is the
+  more expensive one: a correctly-judged non-instance can be a pointer.**
+  `plan.md`'s Phase 0 row reads *the three mechanisms* as a label for
+  `research.md` §3's subsection structure. Three passes each judged it a
+  non-instance and each was right — but all three stopped there, and §3 itself
+  asserted twice that *all three are Linux kernel facilities*, the exact sentence
+  `7063b32` had corrected in the two `plan.md` lines derived from it. **Declining
+  to edit a citation is not the same as declining to follow it**, and a label
+  ruled out as a claim is still a route to the document it names. Where a sweep
+  finds a non-instance that *cites* something, the cited unit joins the list.
+  This is
   recorded here rather than in a skill because it is a claim about sweep
   completeness rather than about evidence, and because it belongs beside the
   residue it explains: the `register-range` entry below, whose six hand-maintained
