@@ -141,6 +141,23 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     # sentence never has, and which therefore had no site in the real corpus.
     ("inventory-count", "README.md", 28, "claims 9"),
     ("inventory-count", "README.md", 28, "rule findings"),
+    # A prose count of a register against the specification that defines it.
+    # Three rows, and the third is the one that matters.
+    #
+    # An ordinary stale count: the spec defines three success criteria and the
+    # tasks header says four. Any comparison catches this.
+    ("definition-count", "specs/001-fixture/tasks.md", 3, "claims 4"),
+    # The extractor is blind — those FR bullets lost their bold markers — so the
+    # truth it computes is 0 against a claim of 9. An implementation copying
+    # `inventory-count`'s `if actual == 0: skip` reports this file clean.
+    ("definition-count", "specs/001-fixture/tasks.md", 3, "no FR definition was found"),
+    # The negative control, and the only row here a bare *equality* test also
+    # passes: the claim is 0, the computed truth is 0, and they agree because
+    # nothing was read. Drop the zero guard and this row goes quiet while the
+    # two rows above keep passing, which is exactly how a vacuous check looks
+    # from the outside.
+    ("definition-count", "specs/001-fixture/tasks.md", 17, "no FR definition was found"),
+    ("definition-count", "specs/001-fixture/tasks.md", 17, "means 'not found', not 'none exist'"),
     ("catalog-line-count", "research/README.md", 8, "14-fixture-synthesis.md"),
     ("catalog-line-count", "research/README.md", 13, "01-fixture-metrics.md"),
     ("catalog-line-count", "research/README.md", 13, "listed at 40 lines"),

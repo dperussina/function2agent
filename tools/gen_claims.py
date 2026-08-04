@@ -401,14 +401,43 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if stale else 0
 
     if args.check:
+        found = {name: 0 for name in only}
+        for s in sites:
+            found[s.generator] = found.get(s.generator, 0) + 1
+        silent = sorted(name for name, count in found.items() if count == 0)
+
         print(f"{len(sites)} generated claim(s); {len(stale)} stale ({len(manual)} needing a human)")
+        for name in sorted(found):
+            print(f"  {found[name]:>4}  {name}")
         _report(stale, verbose=False)
+
+        # A generator that matches nothing reports nothing stale, and "0 stale"
+        # is what a clean tree also prints. The two are indistinguishable in the
+        # total, so the totals are broken out above and a silent generator is an
+        # error here. This is not hypothetical: the sites are found by a regex
+        # over prose, and renaming a marker or reflowing a table takes a
+        # generator to zero without touching this file. There is no threshold
+        # to tune — the floor is one, because a generator with no sites is
+        # either dead or looking in the wrong place, and both are defects.
+        if silent:
+            print()
+            for name in silent:
+                print(
+                    f"ERROR: the {name!r} generator matched no sites. It cannot "
+                    "report a stale claim it cannot find, so its 0 above means "
+                    "'not looked at', not 'correct'."
+                )
+            print(
+                "\nEither its marker syntax changed, or the documents it reads "
+                "moved. Run --list to see what is still matching."
+            )
+
         if manual:
             print("\nMANUAL sites sit in a correction record. The digits are half the claim:")
             print("update the range *and* the dated note beside it, then re-run --check.")
         if stale:
             print("\nrun `python3 tools/gen_claims.py` to write the rest")
-        return 1 if stale else 0
+        return 1 if (stale or silent) else 0
 
     changed = rewrite(root, sites)
     for relpath, (_, after) in sorted(changed.items()):

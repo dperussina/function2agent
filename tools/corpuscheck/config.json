@@ -174,5 +174,27 @@
       "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten))\\s+vendored\\s+reference\\s+repos(?:itories)?",
       "glob": "examples/*/"
     }
+  ],
+
+  "_comment_definition_counts": "Prose claims about how many members of a register a *specification* defines — '58 functional requirements'. The sibling of inventory_rules, and the difference is where the truth comes from: an inventory rule counts files against a glob, this one counts identifier definitions inside one document, using the same definition rule `identifier-resolution` uses. `namespace` names which identifier_namespaces entry the claim is about; the target is the `definition_count_target` sitting in the claiming document's own `specs/<feature>/` directory, which is how a plan or a tasks file finds the spec it quotes. Scoping matters for the same reason it does for inventory: these words in a research document are prose, not a count of a register. A target yielding zero definitions is an ERROR rather than a comparison, because zero is what a blind extractor returns and it also matches a claim of zero.",
+  "definition_count_target": "spec.md",
+  "definition_count_files": [
+    "specs/*/plan.md",
+    "specs/*/tasks.md",
+    "specs/*/spec.md",
+    "specs/*/VERDICT.md",
+    "specs/*/checklists/*.md"
+  ],
+  "definition_count_rules": [
+    {
+      "name": "functional-requirements",
+      "namespace": "FR",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\\s+functional\\s+requirements"
+    },
+    {
+      "name": "success-criteria",
+      "namespace": "SC",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\\s+success\\s+criteria"
+    }
   ]
 }

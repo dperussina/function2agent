@@ -41,8 +41,15 @@ def _namespaces(config: dict) -> dict[str, re.Pattern]:
     }
 
 
-def _collect_definitions(corpus: Corpus, patterns: dict[str, re.Pattern]) -> dict[str, set[str]]:
-    """Map namespace -> set of identifiers the corpus defines."""
+def definitions_in(doc, patterns: dict[str, re.Pattern]) -> dict[str, set[str]]:
+    """Map namespace -> identifiers *this one document* defines.
+
+    The single definition of "defines" in this tool. `_collect_definitions`
+    unions it over the corpus and `definition-count` asks it about one file;
+    both have to agree about the three shapes below, and a second copy of the
+    rule would drift from the first, which is the failure class this directory
+    exists to prevent.
+    """
     defined: dict[str, set[str]] = {ns: set() for ns in patterns}
 
     def note(text: str) -> None:
@@ -50,31 +57,39 @@ def _collect_definitions(corpus: Corpus, patterns: dict[str, re.Pattern]) -> dic
             for m in rx.finditer(text):
                 defined[ns].add(m.group(0))
 
+    for i, line in enumerate(doc.lines):
+        if i in doc.fenced:
+            continue
+
+        hm = _HEADING.match(line)
+        if hm:
+            note(hm.group(1))
+            continue
+
+        bm = _BULLET_DEF.match(line)
+        if bm:
+            note(bm.group(1))
+            continue
+
+        if line.lstrip().startswith("|"):
+            cells = split_row(line)
+            if cells:
+                head = _DECOR.sub("", cells[0])
+                # Only an exact first-cell match defines; a cell of prose
+                # that happens to mention D-17 does not.
+                for ns, rx in patterns.items():
+                    m = rx.fullmatch(head)
+                    if m:
+                        defined[ns].add(m.group(0))
+    return defined
+
+
+def _collect_definitions(corpus: Corpus, patterns: dict[str, re.Pattern]) -> dict[str, set[str]]:
+    """Map namespace -> set of identifiers the corpus defines."""
+    defined: dict[str, set[str]] = {ns: set() for ns in patterns}
     for doc in corpus.markdown():
-        for i, line in enumerate(doc.lines):
-            if i in doc.fenced:
-                continue
-
-            hm = _HEADING.match(line)
-            if hm:
-                note(hm.group(1))
-                continue
-
-            bm = _BULLET_DEF.match(line)
-            if bm:
-                note(bm.group(1))
-                continue
-
-            if line.lstrip().startswith("|"):
-                cells = split_row(line)
-                if cells:
-                    head = _DECOR.sub("", cells[0])
-                    # Only an exact first-cell match defines; a cell of prose
-                    # that happens to mention D-17 does not.
-                    for ns, rx in patterns.items():
-                        m = rx.fullmatch(head)
-                        if m:
-                            defined[ns].add(m.group(0))
+        for ns, ids in definitions_in(doc, patterns).items():
+            defined[ns] |= ids
     return defined
 
 

@@ -8,6 +8,7 @@ the tool needs to change.
 from . import (  # noqa: F401
     catalog,
     crossrefs,
+    definition_counts,
     dry_run_verdict,
     findings_numbering,
     identifiers,

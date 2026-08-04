@@ -33,6 +33,43 @@ exits **4**, which the harness reads as a non-zero exit and therefore as
 Runs in well under a second against the whole proof set, so it belongs in a
 pre-commit hook and in every CI job, not only in the one that can afford the
 harness.
+
+---------------------------------------------------------------------------
+THE FLOOR, AND WHY A ZERO-CHECK ALONE WOULD NOT BE ONE
+
+This is a gate, and until 2026-08-04 it had the defect it exists to prevent.
+Handed a proofs file it could extract nothing from, it printed `0 proofs
+declared`, `0 errors, 0 warnings`, and exited 0 — green while checking
+nothing. That is Rule 8 in `.cursor/skills/experiment-design/SKILL.md` read
+from the other end: the reading a *pass* produces here is "no finding", and
+every way extraction can break produces exactly that reading.
+
+So zero extracted proofs is an error. That much is obvious and it is not
+sufficient, because **extraction degrading from 61 proofs to 1 is the same
+defect as degrading to 0**, and a zero-check waves it through. The concrete
+route is not hypothetical: `_INVOCATION` is anchored at `^` and tolerates no
+leading whitespace, so wrapping the declarations in a `for` loop or a
+function — indenting them by two spaces — drops every one of them and is an
+ordinary-looking refactor.
+
+Two guards, because they fail in different directions and neither covers the
+other:
+
+  - **the vacuity floor** — zero extracted proofs is an error, unconditionally.
+    A proofs file declaring no proofs is the wrong file or a broken extractor,
+    and there is no third reading under which reporting success is honest.
+  - **the declaration cross-check** — every declaration-shaped line in the file
+    must have produced a proof. It carries **no constant**, which is what lets
+    it travel to the older revisions `--proofs` and `--root` exist to score,
+    and it is deliberately *looser* than `_INVOCATION` rather than a second
+    strict implementation of it. A stricter second opinion would report rot it
+    had invented, which is the failure this file is about.
+
+The absolute count is pinned where the revision is known: `EXPECTED_PROOFS` in
+`tests/unit/test_tamper_matching.py`, in the shape `tools/selftest.py` uses for
+`GEN_EXPECTED`. It does not belong here, because a hard minimum in the tool
+would fail the documented cross-revision workflow, where an older proofs file
+legitimately declares fewer.
 """
 
 from __future__ import annotations
@@ -60,6 +97,19 @@ PROOF_FILE = "tests/removal_proofs.sh"
 GO_DIR = "src/proxy"
 
 _INVOCATION = re.compile(r"^(go_)?proof\s+\"")
+
+# The cross-check's own pattern, and every difference from `_INVOCATION` above
+# is deliberate slack rather than a second opinion. Leading whitespace is
+# allowed, the `go_` prefix is generalised to any prefix, and the opening quote
+# is not required — so this matches a superset of what extraction reads, and
+# the only signal it can produce is "a line that looks like a declaration did
+# not become a proof". A pattern that were *stricter* anywhere could report rot
+# that is not there, which is the mistake this whole file is written against.
+#
+# The negative lookahead drops the two definitions, `proof () {` and
+# `go_proof () {`. `\b` is what keeps `proof_count=3` and similar out: `\w*`
+# cannot end at `proof` when a word character follows it.
+_DECLARATION_SHAPED = re.compile(r"^\s*\w*proof\b(?!\s*\(\))", re.M)
 
 
 class Proof:
@@ -138,9 +188,36 @@ def check(
     if not proof_path.is_file():
         return [("error", PROOF_FILE, "no proof file at this root")]
 
-    proofs = extract(proof_path.read_text())
+    proof_text = proof_path.read_text()
+    proofs = extract(proof_text)
     go_names = _go_test_names(root)
     findings: list[tuple[str, str, str]] = []
+
+    # The floor. See the module docstring: a run that extracted nothing, or
+    # extracted less than the file declares, has checked correspondingly less
+    # and must not be able to report success.
+    shaped = [m.group(0).strip() for m in _DECLARATION_SHAPED.finditer(proof_text)]
+    if not proofs:
+        findings.append((
+            "error", proof_path.name,
+            f"no proof declarations could be extracted from {proof_path}. "
+            f"{len(shaped)} line(s) in it are declaration-shaped. Refusing to "
+            "report success: every check below is per-proof, so zero proofs "
+            "means zero checks and a clean exit would say the opposite. Either "
+            "this is not the proofs file, or the declaration syntax has moved "
+            "away from the `^proof \"` / `^go_proof \"` form extraction reads.",
+        ))
+    elif len(shaped) > len(proofs):
+        missed = ", ".join(sorted(set(shaped))[:5])
+        findings.append((
+            "error", proof_path.name,
+            f"extraction read {len(proofs)} proofs from {len(shaped)} "
+            f"declaration-shaped lines, so {len(shaped) - len(proofs)} "
+            "declaration(s) are being skipped silently and whatever they prove "
+            "is unchecked. `_INVOCATION` is anchored at the start of the line "
+            "and allows no leading whitespace, so indenting a declaration is "
+            f"the usual cause. Leading tokens seen: {missed}.",
+        ))
 
     for proof in proofs:
         target = root / proof.path

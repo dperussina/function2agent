@@ -70,13 +70,14 @@ threshold** before you write any edit-and-restore loop of your own.
 | `tamper.py` | The matcher `tests/removal_proofs.sh` edits source with. Exact first, whitespace-tolerant second, unique always. See [Removal-proof rot](#removal-proof-rot--tamperpy-and-check_tamperspy). |
 | `check_tampers.py` | Static rot check over every removal proof: does each tamper still name one live site, and does each test still exist? No pytest, no Go, no privileges. |
 | `proof_attribution.py` | **Not a check.** For each removal proof, the test that actually fails once its tamper lands — the reading a human does to decide whether a proof proves what it claims. |
+| `removal_proofs_summary.py` | **Not a check either.** Writes the harness's JSON record — one entry per proof, plus the kernel, privilege and toolchains the totals are a property of — and renders it for a CI run page. It exists because a green job is one bit, and one bit cannot separate a run where every arm fired from one where the kernel arms all skipped. On the harness's abort path it deliberately emits no totals at all: a record that reads as success out of a run that measured nothing is the defect, not the fix. |
 | `selftest.py` | Proof that each check fires, that none fires on well-formed input, and that the generator writes digits and nothing else. |
 | `threshold_probe.py` | Proof that each numeric threshold is pinned: moves every tolerance, window, bound and distance by one unit and requires the self-test to break. |
 | `fixtures/` | The two miniature corpora. See `fixtures/README.md`. |
 
 ## The check set
 
-Fifteen checks in nine families. Severity is **error** when the finding is
+Sixteen checks in nine families. Severity is **error** when the finding is
 almost certainly a defect, **warning** when it is a defect *or* a judgement call
 the author may have made deliberately.
 
@@ -94,17 +95,60 @@ the author may have made deliberately.
 | `findings-numbering` | error / warning | Duplicate numeric prefixes in `findings/` (**error**), a citation of a finding number that does not exist (**error**), and a gap in the sequence (**warning**). |
 | `register-range` | warning | A prose summary of a register — `(D-01 … D-19)` — that stops short of the register's real last entry. **`gen_claims.py` now writes the standalone ones**; this rule is what fires when it has not been run, and is the *only* mechanism at the narrated sites the generator refuses. |
 | `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: "five committed harnesses" when there are eight. Six rules; the `findings` one had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`. |
+| `definition-count` | error / warning | A prose count of a *register* — "58 functional requirements" — against the definitions in the specification it describes. **error** when the target yields zero definitions, unconditionally; **warning** on an ordinary mismatch, because a deliberately historical figure is a real case and the strike convention is its escape. See [Why zero definitions is an error](#why-zero-definitions-is-an-error-and-not-a-comparison). |
 | `catalog-line-count` | warning | A `Lines` column, or an inline `(N lines)`, that has drifted from the file it describes. **`gen_claims.py` writes these**; this rule is what fires when it has not been run. Exact since 2026-08-03 — the previous ±2 tolerance was concealing a live 2-line drift. |
 | `toc-coverage` | warning | A `##` section missing from its document's own table of contents, and therefore unreachable from the top of an 800-line file. |
 | `dry-run-verdict` | error | An outcome claim inside a run directory whose own manifest says `dry_run: true`: a gate cleared, a hypothesis confirmed, one method materially better than another, a line labelled `VERDICT:`. A run that called no model produced no evidence, so every such claim was computed against stub output. See below for why the disclosure has to be on the same line. |
 
-Three of these name failure classes nobody had named before: `register-range`,
-`inventory-count` and `catalog-line-count`. All three share one shape — **a
-claim about the corpus that lives in a different file from the thing it
-describes**, so no reviewer of the change that invalidated it ever sees it.
-Two of the three are now *generated* rather than only checked; see
+Four of these name failure classes nobody had named before: `register-range`,
+`inventory-count`, `catalog-line-count` and `definition-count`. All four share
+one shape — **a claim about the corpus that lives in a different file from the
+thing it describes**, so no reviewer of the change that invalidated it ever sees
+it. Two of the four are now *generated* rather than only checked; see
 [Generated claims](#generated-claims--gen_claimspy) for what that changed and
 why both rules were nonetheless kept.
+
+`definition-count` is the fourth, added 2026-08-04, and it was added because
+both of its live sites were stale and neither had ever been read: `plan.md`
+claimed *54 functional requirements, 28 success criteria* against an actual 57
+and 30 — wrong by three and by two **before** FR-058 landed — and `tasks.md`
+claimed 55 against 58. `check_corpus.py` ran its other fifteen checks at 0
+errors the whole time. It is a check rather than a generator for a reason worth
+knowing before reaching for one: both live sites are *correction records* — a
+struck figure, a live figure and a dated note on one line — which is exactly the
+shape `gen_claims.py` classifies `MANUAL` and refuses to write, and the house
+strike-and-advance convention guarantees every future site will be one too.
+
+### Why zero definitions is an error and not a comparison
+
+**This is the sharpest negative control written for this directory, and the
+reasoning matters more than the rule's name.** A count check is unusually
+exposed to the vacuity failure, because **the number it computes when its
+extractor is blind is `0` — and `0` is also a number a document may legitimately
+claim.** The two readings are indistinguishable to an equality test.
+
+`tools/fixtures/known-bad/specs/001-fixture/` pins it with a specification whose
+requirement bullets lost their bold markers, so the extractor reads none of
+them, under a tasks file carrying two claims about that same blind reading:
+
+- **A claim of nine against a computed zero.** A bare equality check *does* fire
+  here — and it fires with the wrong finding. It reports an arithmetic mismatch
+  and names `0` as the expected value, when what actually happened is that
+  nothing was read. A reader who trusts it edits the nine down to zero and makes
+  the document worse.
+- **A claim of zero against a computed zero.** A bare equality check passes,
+  silently. The claim and the computed truth agree exactly, both are zero, and
+  the agreement is worthless. An implementation that copied `inventory-count`'s
+  `if actual == 0: skip` passes *both* sites.
+
+So the check errors on **the extractor's blindness rather than on the
+arithmetic**: a target yielding no definitions of the claimed kind is an error
+whatever was claimed, including where the claim is itself zero and the two
+therefore agree. **Equality is not verification when one side is the absence of
+a reading.** That is the same sentence as the vacuity floor in
+[`check_tampers.py`](#the-vacuity-floor-and-the-declaration-cross-check),
+reached from a different direction, and four instruments in this repository were
+hardened in one week for the same defect.
 
 `dry-run-verdict` names a fourth, and its shape is different: **a claim that is
 arithmetically correct, correctly transcribed, and computed from inputs that do
@@ -147,7 +191,7 @@ the lowercased line, which opened two holes and both are now closed:
 
 ## Generated claims — `gen_claims.py`
 
-Two of the fifteen checks were guarding **hand-written summaries of facts that
+Two of the sixteen checks were guarding **hand-written summaries of facts that
 are machine-readable from an artifact sitting right beside them.** Guarding is
 the wrong shape of solution for a fact nobody should be transcribing, and the
 catch history says so: `catalog-line-count` has been tripped and hand-repaired
@@ -165,12 +209,12 @@ python3 tools/gen_claims.py --list     # every site and its status
 python3 tools/gen_claims.py --only line-count   # one generator; repeatable
 ```
 
-`--root` and `--config` mirror `check_corpus.py`. Two generators, **38 sites in
-five files** as of 2026-08-03:
+`--root` and `--config` mirror `check_corpus.py`. Two generators, **39 sites in
+five files** as of 2026-08-04:
 
 | Generator | Sites | Files it writes |
 |---|---|---|
-| `line-count` | 32 | `.cursor/skills/README.md` (18 inline `(N lines)`), `research/README.md` (14 `Lines` cells) |
+| `line-count` | 33 | `.cursor/skills/README.md` (18 inline `(N lines)`), `research/README.md` (15 `Lines` cells) |
 | `register-range` | 6 | `README.md`, `specs/001-discovery-validation/VERDICT.md`, `specs/001-discovery-validation/plan.md` |
 
 ### It rewrites the number and nothing else
@@ -537,6 +581,42 @@ exactly the alignment class and nothing else.
 site. Zero is `NO_MATCH`; two or more is `AMBIGUOUS` unless the tamper declares its multiplicity with
 an explicit count. And a normalized match is reported rather than swallowed — the harness prints
 `drifted`, the check emits a warning, and the string is a repair waiting to be made.
+
+### The vacuity floor and the declaration cross-check
+
+**Until 2026-08-04 this gate had the defect it exists to prevent.** Handed a
+proofs file it could extract nothing from, `check_tampers.py` printed `0 proofs
+declared`, `0 errors, 0 warnings`, and exited 0 — green while checking nothing.
+Every check it makes is per-proof, so zero proofs is zero checks, and a clean
+exit says the opposite.
+
+**A bare zero-floor would not have sufficed, and the negative control that
+establishes this is worth stating rather than summarising.** Extraction
+degrading from 61 proofs to *one* is the same defect as degrading to zero, and a
+zero-check waves it through: a file with **61 declaration-shaped lines and one
+extractable proof exited 0** before this landed. The route is not hypothetical —
+`_INVOCATION` is anchored at `^` and tolerates no leading whitespace, so
+wrapping the declarations in a `for` loop or a function, indenting them by two
+spaces, drops every one of them and is an ordinary-looking refactor.
+
+Two guards, because they fail in different directions and neither covers the
+other:
+
+- **the vacuity floor** — zero extracted proofs is an error, unconditionally.
+  There is no third reading under which reporting success is honest.
+- **the declaration cross-check** — every declaration-shaped line in the file
+  must have produced a proof. It carries **no constant**, which is what lets it
+  travel to the older revisions `--proofs` and `--root` exist to score, and it is
+  deliberately *looser* than `_INVOCATION` rather than a second strict
+  implementation of it. A stricter second opinion would report rot it had
+  invented, which is the failure this whole file is written against.
+
+The absolute count is pinned where the revision is known — `EXPECTED_PROOFS` in
+`tests/unit/test_tamper_matching.py`, in the shape `selftest.py` uses for
+`GEN_EXPECTED`. It does not belong in the tool, because a hard minimum there
+would fail the documented cross-revision workflow, where an older proofs file
+legitimately declares fewer. Neither floor notices a proof being *deleted*;
+`EXPECTED_PROOFS` is what does.
 
 ### The rot check runs in the ordinary suite, and that is the point
 
@@ -1053,3 +1133,78 @@ python3 tools/check_corpus.py || {
 Warnings do not fail the build. Add `--warnings-as-errors` once the current
 warning set is cleared, or the hook will be bypassed on the first commit that
 touches an unrelated file.
+
+## Which of these run in CI, and the one that deliberately does not
+
+Until 2026-08-04 **none** of them did. Every corpus claim in this repository
+rested on somebody having remembered to run them, which is the same standing as
+no gate at all. `.github/workflows/ci.yml` now has a `corpus` job holding four,
+in this order, and the order is the argument:
+
+| step | why it is where it is |
+|---|---|
+| `selftest.py` | **First.** A validator whose regex stopped matching passes everything, so `check_corpus.py` going green proves nothing until something has shown the checks still fire. This runs the whole set against a corpus where every check must fire and one where none may. |
+| `threshold_probe.py` | A green self-test shows each check *fires*, not that the constant it fires at is the right one — `catalog-line-count` carried `TOLERANCE = 2` for its whole life and the self-test could not tell it from `0`. Wired **because it was measured**: 34 perturbations, 5.2 s. A sweep that costs five seconds does not need a schedule. |
+| `check_corpus.py` | Errors only. `--warnings-as-errors` is deliberately not set — the warning classes that actually fire are line counts and register ranges, which go stale for the minutes between an edit and `gen_claims.py`. A gate that flaps gets worked around. A second step prints the full report, warnings included, to the run page and cannot fail. |
+| `gen_claims.py --check` | The only thing that notices that window. |
+
+`cite_advisor.py` is **not** wired, and leaving it out is the decision rather
+than an oversight. It has no threshold and no finding it makes changes its exit
+code — by design, because the gate rule underneath it was built, measured
+against 184 ablated clean cases, and rejected. Wiring an advisory into a gate
+rebuilds exactly that rejected rule. Running it ungated on every push emits a
+permanent listing a reader learns to scroll past, which is how its one true
+positive gets lost. It stays a human-run audit aid.
+
+### `gen_claims.py --check` reports per generator, and zero is an error
+
+`--check` used to print one total. A generator that matched **nothing** printed
+`0 stale`, which is also what a clean tree prints — the two were
+indistinguishable, so a marker rename or a reflowed table could take
+`register-range` to zero and `--check` would stay green over six claims it was
+no longer reading. It now breaks the count out per generator and exits 1 when
+any requested generator matched no sites. There is no threshold to tune: the
+floor is one, because a generator with no sites is either dead or looking in
+the wrong place.
+
+## Reading a pytest run back — `pytest_outcomes.py`
+
+`436 passed, 1 skipped` names no skip, and a privileged test that skipped for
+want of a kernel facility is indistinguishable in that sentence from one that
+ran. The CI pytest job therefore runs with `-rs` (names skips in the log) and
+`--junitxml` (names them durably, in an artifact — the log for run
+30919927355 turned out to be unreachable through `gh`, so a reason that exists
+only there is a reason nobody can read). This renders those reports.
+
+```sh
+python3 tools/pytest_outcomes.py \
+  --collected pytest-collected.txt \
+  unprivileged=pytest-unprivileged.xml \
+  privileged=pytest-privileged.xml
+```
+
+It exits non-zero for the three things a pytest exit status cannot express:
+
+- **A missing or unreadable report.** The suite claimed to run and left no
+  record of what.
+- **A half that collected nothing.** Usually a marker expression that stopped
+  selecting.
+- **A half that collected work and skipped all of it.** Measured on macOS on
+  2026-08-04: `pytest -m privileged` reported `44 skipped, 461 deselected` and
+  **exited 0**. Forty-four kernel-mechanism tests were collected, declined, and
+  scored as a pass. OD-17 has no degraded mode, so that is a failure.
+
+It also takes a third reading the two halves cannot take about themselves.
+The suite is run as two disjoint halves and the pair is taken for the whole,
+and nothing verified that it is: a marker expression that stopped selecting a
+file leaves those tests in *neither* half, and both halves stay green because
+each is internally complete. `--collect-only` over the undivided suite gives
+the denominator, and the renderer says so explicitly either way.
+
+`--collected` is optional and the partition line is simply omitted without it.
+
+One deliberate refusal: if the interpreter cannot build an XML parser, every
+report reads as unreadable for a reason that has nothing to do with the
+reports. It exits **2** with `CANNOT RUN` rather than reporting findings it did
+not earn. This is not hypothetical — the system `python3` on the development
+host has no `expat`, exactly as it has no `pytest`.
