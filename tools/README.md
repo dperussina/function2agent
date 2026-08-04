@@ -980,24 +980,50 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   the sentence as a claim about *provenance* rather than about *extent* and left it
   alone on that reading. **`checklists/requirements.md` is deliberately frozen at
   the fourteenth entry**, because it records what a dated validation run read and
-  advancing it would claim coverage that run did not have. So of the corpus's five
-  OD-range sites, **four are current, one is deliberately frozen, and none is
-  stale** — the residue is a hole, not a live defect.
-  **All four unread sites fail at the same place, and it is earlier than this entry
-  first said.** Verified 2026-08-03 by running `_RANGE` and
-  `_is_whole_register_claim` over all five raw lines: the three struck-and-advanced
+  advancing it would claim coverage that run did not have. So of the corpus's ~~five~~
+  **seven** OD-range sites, ~~**four are current**~~ **six are current**, one is
+  deliberately frozen, and none is
+  stale — the residue is a hole, not a live defect.
+  **Recounted 2026-08-04, and the undercount was this entry's own.** It missed
+  `docs/spec-kit-workflow.md:137` and
+  `specs/002-spec-aware-agent-runtime/plan.md:11`, both of which carry the same
+  struck-and-advanced range as the three it did name. The full seven are
+  `docs/spec-kit-workflow.md`, `specs/002/spec.md` **twice**, `specs/002/plan.md`,
+  `specs/002/research.md`, `specs/002/checklists/requirements.md` (the frozen one),
+  and `specs/001-discovery-validation/plan.md`. **Undercounting matters more here
+  than anywhere else in this file**, for the reason under the next paragraph: this
+  entry is the corpus's only record of how wide the unguarded surface is, so a
+  count that is short understates the residue by exactly the sites it forgot.
+  ~~**All four unread sites**~~ **All six unread sites fail at the same place, and it is earlier than this entry
+  first said.** Verified 2026-08-03 and re-run 2026-08-04 by executing `_RANGE` and
+  `_is_whole_register_claim` over all seven raw lines: the five struck-and-advanced
   sites and the frozen one **all return zero regex matches**, because `_RANGE`
   requires the second identifier to follow the separator immediately and **any
   markup sitting between them breaks it** — `~~` at the advanced sites, `**` at the
-  frozen one. The whole-register test is never reached at any of the four, so an
+  frozen one. The whole-register test is never reached at any of the six, so an
   earlier reading of this entry that attributed the frozen site to that test was
   wrong. The one site that *is* read is `plan.md`'s parenthesised
-  `(OD-01 through OD-21, …)`, which matches and is judged a whole-register claim —
+  `(OD-01 through OD-25, …)` *(advanced from `OD-21` as the register grew; the
+  generator writes this one)*, which matches and is judged a whole-register claim —
   which is why the OD register is guarded at all. A future site written as plain
   prose, unparenthesised and with no markup between the bounds, would be caught by
   neither the regex path nor the guard. Dropping the parenthesised-or-listed
   requirement was measured — it reports nothing on the current corpus — but it is
   free only because that U-01 counterexample happens to be struck.
+
+  **These six sites are hand-maintained by decision, not by oversight, and this
+  entry is the only place that says so.** The owner has settled that
+  `register-range` stays as it is rather than being widened to read them, on
+  measured grounds: relaxing `_RANGE` to tolerate markup between the bounds catches
+  **zero** stale sites on the current corpus — all six are already advanced or
+  deliberately frozen — while false-positiving on the one site that must stay
+  frozen, `checklists/requirements.md`, which records what a dated validation run
+  read and whose whole point is that it does not advance. So the regex change buys
+  nothing and costs a permanent false alarm at the one place a false alarm would be
+  most misleading. **The consequence is a standing obligation on a human**: when the
+  OD register grows, six sites advance by hand and nothing anywhere will say if one
+  is missed. That is the residue, it is accepted rather than unnoticed, and the
+  count above is how wide it is.
 - **A lone pipe row far from any table.** `table-no-delimiter` needs two
   consecutive pipe rows, and the orphan rule needs the row within two blank lines
   of a real table. A single stray `| a | b |` outside both windows is caught by
