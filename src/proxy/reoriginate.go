@@ -42,13 +42,20 @@ type PinnedDialer struct {
 	// Addr is the pinned ip:port from F2A_PROXY_UPSTREAM_ADDR.
 	Addr string
 
+	// exempt is the one declared-origin exemption, handed in at construction. It is
+	// unexported and has no setter: the only way this dialer excuses an RFC1918 address is if
+	// whoever built it derived the exemption from the declared upstream (FR-017).
+	exempt pinnedExemption
+
 	inner *net.Dialer
 }
 
-// NewPinnedDialer builds a dialer locked to addr.
-func NewPinnedDialer(addr string, timeout time.Duration) *PinnedDialer {
+// NewPinnedDialer builds a dialer locked to addr, honouring at most the one exemption derived
+// from the declared origin.
+func NewPinnedDialer(addr string, exempt pinnedExemption, timeout time.Duration) *PinnedDialer {
 	return &PinnedDialer{
-		Addr: addr,
+		Addr:   addr,
+		exempt: exempt,
 		inner: &net.Dialer{
 			Timeout: timeout,
 			Resolver: &net.Resolver{
@@ -65,7 +72,7 @@ func NewPinnedDialer(addr string, timeout time.Duration) *PinnedDialer {
 // re-checked against the denied classes here, on the value the kernel will receive, rather than
 // only on the value the operator typed (FR-017).
 func (d *PinnedDialer) DialContext(ctx context.Context, network, _ string) (net.Conn, error) {
-	if err := checkDialAddress(d.Addr); err != nil {
+	if err := checkDialAddress(d.Addr, d.exempt); err != nil {
 		return nil, err
 	}
 	if network != "tcp" && network != "tcp4" && network != "tcp6" {

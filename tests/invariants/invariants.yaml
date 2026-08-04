@@ -21,7 +21,7 @@
 # supposed to depend on it, and reports UNPROVEN for any test that still passes.
 
 schema_version: "1.0.0"
-version: "1.1.0"
+version: "1.2.0"
 updated: "2026-08-03"
 
 invariants:
@@ -134,5 +134,24 @@ invariants:
       Four, all in tests/removal_proofs.sh — change capability_digest to hash
       the decoded bytes on either side, rename capability_sha256 in the proxy's
       query, or make stage 1 check only the lease and not the state.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-009
+    discharges: FR-035, FR-054, data-model.md
+    statement: >
+      Every logical table has exactly one writing role, every row carries the
+      tenant and deployment scope, and the scope comes from the repository
+      rather than the caller. The structural arm reads the ownership map; the
+      concurrent arm opens one database from several roles at once and asserts
+      a non-owner's write is refused rather than serialised behind the owner's.
+      A separate arm scans src/ for engine-specific SQL above the repository
+      layer, because a single raw statement is how the single-writer rule and
+      the scope columns both get bypassed at the same time.
+    test: tests/invariants/test_writer_ownership.py
+    removal_proof: >
+      Two, both in tests/removal_proofs.sh — make require_write a no-op in
+      src/contracts/ownership.py, or drop the scope-column guard from
+      Repository.insert so a caller can supply its own tenant_id.
     runtime: milliseconds
     model_in_loop: false

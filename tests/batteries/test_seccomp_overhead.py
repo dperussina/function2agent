@@ -194,9 +194,18 @@ def measurement() -> dict:
         ],
     }
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "seccomp-overhead.json").write_text(
-        json.dumps(record, indent=2, sort_keys=True) + "\n"
-    )
+    serialized = json.dumps(record, indent=2, sort_keys=True) + "\n"
+
+    # The committed record is Q-09's *recorded* measurement. Overwriting it on
+    # every privileged run replaced a deliberate figure with whichever run
+    # happened last — so a reviewer could not tell an intentional
+    # re-measurement from a suite that ran in CI, and a real regression would
+    # arrive as ordinary run-to-run noise in a file nobody reads twice.
+    # Re-recording is now something you ask for.
+    if os.environ.get("F2A_RECORD_MEASUREMENTS") == "1":
+        (RESULTS / "seccomp-overhead.json").write_text(serialized)
+    else:
+        (RESULTS / "seccomp-overhead.latest.json").write_text(serialized)
     return record
 
 

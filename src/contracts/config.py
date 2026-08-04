@@ -32,6 +32,7 @@ from enum import Enum
 from typing import Any, Callable, Mapping
 
 from src.contracts.secret import Secret
+from src.contracts.unvalidated import Unvalidated, mark
 
 
 class Kind(Enum):
@@ -165,6 +166,13 @@ SUPERVISOR_KEYS: tuple[Key, ...] = (
         "how often the supervisor renews the session lease; the residual "
         "window after a crash is one of these",
         default="5.0", unvalidated=True),
+    Key("STALENESS_CEILING_SECONDS", Kind.FLOAT, "FR-047",
+        "how old a served-operation set may be before it is refused. FR-047 "
+        "states the default, says it is one, and binds it to FR-043",
+        default="3600.0", unvalidated=True),
+    Key("DRIFT_CHECK_INTERVAL_SECONDS", Kind.FLOAT, "FR-028",
+        "how often the drift check runs against the deployment clock",
+        default="300.0", unvalidated=True),
 )
 
 
@@ -185,6 +193,26 @@ class Config:
     def is_unvalidated(self, name: str) -> bool:
         """FR-043 — must be answerable by every surface that emits the value."""
         return name in self.unvalidated
+
+    def raw(self, name: str) -> Any:
+        """The bare value, marking stripped. An explicit, greppable act.
+
+        Every FR-043 value comes out of `__getitem__` wrapped, so a surface
+        that emits `config[name]` emits it marked. Reaching the underlying
+        number is possible — these are configuration and have to be compared —
+        but it is written down, which is the whole difference between an
+        omission and a decision.
+        """
+        value = self[name]
+        return value.value if isinstance(value, Unvalidated) else value
+
+    def marked_values(self) -> dict[str, Any]:
+        """Every FR-043 value, in the shape an external surface emits."""
+        return {
+            name: self.values[name].marked_record()
+            for name in self.unvalidated
+            if isinstance(self.values[name], Unvalidated)
+        }
 
 
 def load(keys: tuple[Key, ...], env: Mapping[str, str] | None = None) -> Config:
@@ -219,6 +247,10 @@ def load(keys: tuple[Key, ...], env: Mapping[str, str] | None = None) -> Config:
                 continue
         if key.unvalidated:
             unvalidated.append(key.name)
+            # FR-043: the marking travels WITH the value, not beside it in a
+            # list a surface has to remember to consult. `Config.raw()` is the
+            # explicit way to get the bare number.
+            resolved[key.name] = mark(key.name, resolved[key.name])
 
     if missing or invalid:
         raise ConfigError(_report(missing, invalid))

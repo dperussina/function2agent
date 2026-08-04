@@ -19,6 +19,19 @@ from typing import Any, NoReturn
 REDACTED = "<redacted:Secret>"
 
 
+def _marker(name: str) -> str:
+    """The redaction marker, naming the configuration key and not the value.
+
+    A bare `<redacted:Secret>` is safe and useless: an operator reading a
+    redacted trace of a session that used three credentials cannot tell which
+    one was involved, so the marking makes the record unusable for the
+    diagnosis it was kept for. The key *name* is not a credential — it is the
+    environment variable an operator set — so carrying it costs nothing and
+    recovers the diagnosis. Found by T040's marker test.
+    """
+    return f"<redacted:Secret {name}>" if name else REDACTED
+
+
 class SecretSerializationError(TypeError):
     """Something tried to serialize a credential. That is always a defect."""
 
@@ -28,9 +41,9 @@ class Secret:
 
     >>> s = Secret("hunter2", name="F2A_TARGET_CREDENTIAL")
     >>> str(s)
-    '<redacted:Secret>'
+    '<redacted:Secret F2A_TARGET_CREDENTIAL>'
     >>> f"{s}"
-    '<redacted:Secret>'
+    '<redacted:Secret F2A_TARGET_CREDENTIAL>'
     >>> s.reveal()
     'hunter2'
     """
@@ -73,13 +86,16 @@ class Secret:
 
     # --- every implicit path is closed -----------------------------------
     def __str__(self) -> str:
-        return REDACTED
+        return _marker(self._name)
 
     def __repr__(self) -> str:
-        return REDACTED
+        return _marker(self._name)
 
     def __format__(self, spec: str) -> str:
-        return REDACTED
+        # The spec is discarded deliberately: `f"{secret:.4}"` would otherwise
+        # truncate the marker, and a truncated marker is a marker that stops
+        # looking like one.
+        return _marker(self._name)
 
     def _refuse(self, *_a: Any, **_k: Any) -> NoReturn:
         raise SecretSerializationError(

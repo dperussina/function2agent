@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/netip"
 	"os"
 	"reflect"
 	"regexp"
@@ -282,7 +283,9 @@ func TestConfigRejectsBadValues(t *testing.T) {
 		{"addr_is_a_name", func(e map[string]string) { e[envUpstreamAddr] = "api.example.com:443" }, "literal IP"},
 		{"addr_no_port", func(e map[string]string) { e[envUpstreamAddr] = "203.0.113.10" }, "ip:port"},
 		{"addr_loopback", func(e map[string]string) { e[envUpstreamAddr] = "127.0.0.1:443" }, "loopback"},
-		{"addr_rfc1918", func(e map[string]string) { e[envUpstreamAddr] = "10.1.2.3:443" }, "rfc1918_private"},
+		// addr_rfc1918 is deliberately absent: an RFC1918 target origin is now PERMITTED
+		// under the owner's 2026-08-03 decision, and TestDeclaredRFC1918OriginStarts below
+		// asserts it starts. The class stays denied for every other address.
 		{"addr_metadata", func(e map[string]string) { e[envUpstreamAddr] = "169.254.169.254:80" }, "cloud_metadata"},
 		{"addr_ipv6_ula", func(e map[string]string) { e[envUpstreamAddr] = "[fd00::1]:443" }, "unique_local"},
 		{"listen_not_hostport", func(e map[string]string) { e[envListen] = "8080" }, envListen},
@@ -304,6 +307,27 @@ func TestConfigRejectsBadValues(t *testing.T) {
 				t.Fatal("config error leaked the credential")
 			}
 		})
+	}
+}
+
+// TestDeclaredRFC1918OriginStarts is the other half of the decision: the co-located topology OD-08
+// makes the default must actually come up, and the running proxy must carry an exemption for
+// exactly the address that was declared.
+func TestDeclaredRFC1918OriginStarts(t *testing.T) {
+	env := fullEnv()
+	env[envUpstreamAddr] = "10.1.2.3:443"
+	cfg, err := LoadConfig(getenvFrom(env))
+	if err != nil {
+		t.Fatalf("a declared RFC1918 target origin must start (OD-08): %v", err)
+	}
+	if !cfg.AddressExemption.exempts(netip.MustParseAddr("10.1.2.3")) {
+		t.Fatal("the loaded config does not exempt the address it was pinned to")
+	}
+	if cfg.AddressExemption.exempts(netip.MustParseAddr("10.1.2.4")) {
+		t.Fatal("the loaded config exempts an address that was never declared")
+	}
+	if strings.Contains(cfg.String(), "exempt") {
+		t.Log("note: Config.String mentions the exemption; check it discloses no more than the address")
 	}
 }
 

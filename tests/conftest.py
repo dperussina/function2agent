@@ -19,6 +19,19 @@ import pytest
 
 _skipped_privileged = 0
 _skipped_linux = 0
+_vacuous_invariants: dict[str, str] = {}
+
+
+def note_vacuous_invariant(invariant_id: str, reason: str) -> None:
+    """Record an invariant that passed over nothing.
+
+    An invariant with no subject is *true*, and pytest reports true the same way
+    whether it was earned or free. That is exactly how a check gets quietly
+    switched off: the tree it scans is renamed, the assertion keeps passing, and
+    the green run is read as coverage. Vacuity gets its own summary block so a
+    reader sees it without having to know which skip line to look for.
+    """
+    _vacuous_invariants[invariant_id] = reason
 
 
 def _has_cap_sys_admin() -> bool:
@@ -68,4 +81,12 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
             "  This run is NOT evidence that FR-048, FR-049 or FR-050 hold. "
             "Those requirements are\n"
             "  discharged only by a privileged Linux run."
+        )
+    if _vacuous_invariants:
+        terminalreporter.write_sep("=", "invariants that passed over nothing")
+        for invariant_id, reason in sorted(_vacuous_invariants.items()):
+            terminalreporter.write_line(f"  {invariant_id}: {reason}")
+        terminalreporter.write_line(
+            "  A vacuous invariant is true and carries no weight. It is listed "
+            "here so a green\n  run is not mistaken for coverage of it."
         )

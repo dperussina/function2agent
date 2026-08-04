@@ -250,13 +250,24 @@ class SessionCgroup:
         return [int(p) for p in raw]
 
     def kill_all(self) -> None:
-        """`cgroup.kill` — the kernel kills the group as a unit."""
+        """`cgroup.kill` — the kernel kills the group as a unit.
+
+        There is no fallback. Signalling each pid from `cgroup.procs` in a loop
+        loses the race `cgroup.kill` exists to close: a process forks between
+        the listing and the kill and the child survives the round, which under
+        a workload that is forking — the case FR-049's process bound is for —
+        means the session does not die. Degrading to that loop would leave the
+        operator with a bound they configured and the system does not hold, so
+        the absence is an error. `preflight._check_cgroup_kill` catches it at
+        startup; this is the second line, for a cgroup mounted since.
+        """
         path = self.paths.session / "cgroup.kill"
-        if path.is_file():
-            _write(path, "1")
-            return
-        for pid in self.live_pids():
-            try:
-                os.kill(pid, 9)
-            except ProcessLookupError:
-                pass
+        if not path.is_file():
+            raise CgroupError(
+                f"{path} is absent, so this session cannot be killed as a "
+                "unit. The per-pid fallback loses the fork race and would "
+                "leave FR-049's process bound unenforceable; refusing rather "
+                "than reporting a kill that did not happen. Requires Linux "
+                "5.14 or later."
+            )
+        _write(path, "1")

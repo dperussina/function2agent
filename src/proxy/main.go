@@ -97,6 +97,12 @@ type Config struct {
 	DecisionDBPath   string
 	CredentialHeader string
 	TargetCredential Secret
+
+	// AddressExemption is derived from UpstreamAddr by validatePinnedAddr and is never read
+	// from configuration. There is no environment variable that sets it: an operator can move
+	// the exemption only by moving the declared target, which is the property that keeps it
+	// from becoming a toggle (FR-017, owner decision 2026-08-03).
+	AddressExemption pinnedExemption
 }
 
 // String keeps a whole-struct print safe even if a future field is added carelessly.
@@ -149,9 +155,11 @@ func LoadConfig(getenv func(string) string) (Config, error) {
 	// FR-016: the pinned address is a literal ip:port fixed at configuration time. FR-017: it
 	// must not be in a denied class. Checked here so a proxy pinned into a denied class does
 	// not start, and again in the dialer on the address actually dialled.
-	if err := validatePinnedAddr(cfg.UpstreamAddr); err != nil {
+	exempt, err := validatePinnedAddr(cfg.UpstreamAddr)
+	if err != nil {
 		return Config{}, err
 	}
+	cfg.AddressExemption = exempt
 
 	if !isHTTPToken(cfg.CredentialHeader) {
 		return Config{}, fmt.Errorf("config: %s=%q is not a valid HTTP header field name", envCredentialHeader, cfg.CredentialHeader)
@@ -195,23 +203,37 @@ func parsePinnedOrigin(raw string) (PinnedOrigin, error) {
 	return PinnedOrigin{Scheme: "https", Host: host, Port: port}, nil
 }
 
-func validatePinnedAddr(addr string) error {
+// validatePinnedAddr checks the declared upstream and returns the one exemption this process will
+// honour for it (FR-017, owner decision 2026-08-03).
+//
+// The exemption is derived HERE, from the declared address, and nowhere else. It is returned
+// rather than stored in a package variable so that every consumer has to be handed it explicitly.
+func validatePinnedAddr(addr string) (pinnedExemption, error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		return fmt.Errorf("config: %s=%q is not a valid ip:port: %w", envUpstreamAddr, addr, err)
+		return noExemption, fmt.Errorf("config: %s=%q is not a valid ip:port: %w", envUpstreamAddr, addr, err)
 	}
-	if _, err := netip.ParseAddr(host); err != nil {
-		return fmt.Errorf(
+	parsed, err := netip.ParseAddr(host)
+	if err != nil {
+		return noExemption, fmt.Errorf(
 			"config: %s=%q must contain a literal IP address; names are never resolved (FR-016)",
 			envUpstreamAddr, addr)
 	}
 	if port == "" {
-		return fmt.Errorf("config: %s=%q must contain a port (FR-016)", envUpstreamAddr, addr)
+		return noExemption, fmt.Errorf("config: %s=%q must contain a port (FR-016)", envUpstreamAddr, addr)
 	}
-	if err := checkDialAddress(addr); err != nil {
-		return fmt.Errorf("config: %s=%q rejected: %w", envUpstreamAddr, addr, err)
+
+	// Build the exemption first. For a public origin this is empty; for an RFC1918 origin it
+	// names that one address; for link-local, the metadata service, loopback or unique-local it
+	// is an error, and the proxy does not start.
+	exempt, err := exemptionForPinnedOrigin(parsed)
+	if err != nil {
+		return noExemption, fmt.Errorf("config: %s=%q rejected: %w", envUpstreamAddr, addr, err)
 	}
-	return nil
+	if err := checkDialAddress(addr, exempt); err != nil {
+		return noExemption, fmt.Errorf("config: %s=%q rejected: %w", envUpstreamAddr, addr, err)
+	}
+	return exempt, nil
 }
 
 // Proxy is the assembled enforcement point.
@@ -259,7 +281,7 @@ func BuildProxy(cfg Config) (*Proxy, error) {
 		Origin:           cfg.UpstreamOrigin,
 		CredentialHeader: cfg.CredentialHeader,
 		Credential:       cfg.TargetCredential,
-		Dialer:           NewPinnedDialer(cfg.UpstreamAddr, 15*time.Second),
+		Dialer:           NewPinnedDialer(cfg.UpstreamAddr, cfg.AddressExemption, 15*time.Second),
 	})
 
 	pipeline := NewPipeline(

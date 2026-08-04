@@ -237,6 +237,46 @@ class Attempt:
 
 
 def read_target_path(pid: int, address: int) -> str | None:
+    """Read a NUL-terminated path out of the notifying process's own memory.
+
+    ── THE TOCTOU LIVES HERE, AND THIS IS THE WHOLE OF IT ──────────────────
+
+    The address below is a pointer into `pid`'s address space, and `pid` is
+    suspended in the syscall but its *other threads are not*. A second thread
+    can rewrite the bytes at `address` between this `read` and the kernel's own
+    resolution of the same pointer after `CONTINUE`. When that happens the
+    string returned here is a path the kernel never resolved: the record is
+    WRONG, not merely imprecise.
+
+    Re-reading and comparing would not close it — that is two races instead of
+    one. Copying the path and having the kernel use the copy is what
+    `SECCOMP_RET_ERRNO` with a supervisor-supplied answer would buy, and that
+    is a different FR-048 design; FR-048 keeps `CONTINUE` (owner decision,
+    2026-08-03).
+
+    ── WHY IT IS NOT AN ACCESS-CONTROL HOLE ────────────────────────────────
+
+    **The mount namespace is the enforcement; this function is the recorder.**
+    An undeclared location is *absent* from the session's root — there is no
+    file at it to open, whatever string the kernel ends up resolving. So a
+    workload that wins this race changes which path an audit entry names and
+    gains no reach whatsoever. Nothing in the system reads the recorded path to
+    decide anything; `fs_decisions.decide` runs on the string read here, but
+    its output is a record and never a permission.
+
+    ── WHAT THE RECORD THEREFORE CLAIMS ────────────────────────────────────
+
+    SC-022 is narrowed to the record's *existence*, which is exact: the calling
+    thread is suspended in `SECCOMP_IOCTL_NOTIF_RECV` when the record is
+    written, so an attempt cannot escape being counted. The path is carried
+    with `path_provenance = supervisor_read_unverified` and
+    `path_is_authoritative == False`. See the provenance note in
+    `fs_decisions.py` for why that marking is applied on the hazard rather than
+    on a claim that Principle I compels it.
+
+    Returns None when the pointer is null, unreadable, or not NUL-terminated
+    within PATH_MAX — recorded as FS-005 rather than treated as benign.
+    """
     if address == 0:
         return None
     try:

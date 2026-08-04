@@ -51,6 +51,31 @@ jobs:
       - name: Privileged suite — FR-048, FR-049, FR-050
         run: sudo -E env "PATH=$PATH" python -m pytest tests -q -m privileged
 
+  removal-proofs:
+    name: removal proofs (do the tests catch removal?)
+    runs-on: ubuntu-latest
+    # A passing suite says the code works. It does not say the tests would
+    # notice if a mechanism were deleted, and that is the property this
+    # repository's rules actually require. Left out of CI, the proofs rot
+    # silently as the source moves under their tamper strings — thirteen of them
+    # had drifted by the end of Phase 2 and every one reported as a gap in the
+    # tests rather than as a broken proof. The harness now fails a tamper that
+    # matches nothing, which is what makes this job worth running.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.3"
+          cache-dependency-path: src/proxy/go.sum
+      - run: pip install --require-hashes -r requirements.lock
+      - name: Prove the tests fail when the mechanism is removed
+        # Privileged so the kernel-mechanism arms are attempted rather than
+        # skipped; a skipped proof is reported as skipped and not as proved.
+        run: sudo -E env "PATH=$PATH" bash tests/removal_proofs.sh
+
   go:
     name: go test (the enforcement point)
     runs-on: ubuntu-latest

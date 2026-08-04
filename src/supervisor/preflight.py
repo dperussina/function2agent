@@ -30,6 +30,113 @@ SECCOMP_GET_NOTIF_SIZES = 3
 # and are not required.
 REQUIRED_CGROUP_CONTROLLERS = ("memory", "cpu", "pids")
 
+# ---------------------------------------------------------------------------
+# The minimum kernel, and how it was arrived at.
+#
+# **OD-17 says Linux and names no version.** The floor below is derived from the
+# documented introduction of the facilities this code actually calls, not from a
+# kernel anybody here ran. Each entry names the facility, the release, and the
+# call site, so a future reader can re-derive it instead of trusting it.
+#
+#   5.0   seccomp user notification: SECCOMP_RET_USER_NOTIF,
+#         SECCOMP_FILTER_FLAG_NEW_LISTENER, SECCOMP_GET_NOTIF_SIZES.
+#   5.5   SECCOMP_USER_NOTIF_FLAG_CONTINUE — FR-048's whole design. Without it
+#         the supervisor can only permit or deny, not observe-and-continue.
+#   5.9   SECCOMP_IOCTL_NOTIF_ID_VALID's ioctl number was corrected from _IOR to
+#         _IOW. `seccomp.py` defines the corrected number, so on 5.5–5.8 that
+#         ioctl returns EINVAL. The kernel keeps an alias for the old number, so
+#         this is a property of *our* definition and not of the kernel; it is
+#         recorded because it is invisible at the call site.
+#   5.14  `cgroup.kill` — atomic group kill. `cgroup.kill` is the binding
+#         constraint and the reason the floor is not 5.9.
+#
+# **Why cgroup.kill is required rather than optional.** `CgroupSession.kill_all`
+# falls back to iterating `cgroup.procs` and signalling each pid. That loop has
+# exactly the fork race `cgroup.kill` was added to close: a process can fork
+# between the listing and the kill and the child survives the round. FR-049's
+# process bound is what stops a fork bomb, so a silent fallback to the racy path
+# on an old kernel weakens the bound the operator believes they configured.
+#
+# **This floor is DERIVED, NOT TESTED.** Everything here was run on 6.12
+# (`6.12.76-linuxkit` locally, `ubuntu-latest` in CI). Nothing was run on 5.14,
+# and "the facility exists in 5.14" is a weaker claim than "this code works on
+# 5.14" — semantics around cgroup delegation, `pivot_root` in a user namespace,
+# and seccomp notification lifetimes have all changed within the 5.x series in
+# ways this list does not capture. Establishing a *tested* floor needs boots of
+# 5.14, 5.15 LTS, 6.1 LTS and 6.6 LTS, which is a CI matrix and not something
+# derivable by reading. Until that runs, the floor is a lower bound on what
+# could work, not a statement that 5.14 does.
+MINIMUM_KERNEL = (5, 14)
+MINIMUM_KERNEL_BASIS = (
+    "cgroup.kill (Linux 5.14). Binding over "
+    "SECCOMP_USER_NOTIF_FLAG_CONTINUE (5.5) and the corrected "
+    "SECCOMP_IOCTL_NOTIF_ID_VALID ioctl number (5.9)."
+)
+MINIMUM_KERNEL_IS_TESTED = False
+
+
+def _parse_release(release: str) -> tuple[int, int] | None:
+    """`6.12.76-linuxkit` -> (6, 12). None if it does not parse.
+
+    Deliberately refuses to guess: a release string this cannot parse produces
+    a failed check naming the string, rather than a default that lets an
+    unknown kernel through.
+    """
+    head = release.split("-", 1)[0]
+    parts = head.split(".")
+    if len(parts) < 2:
+        return None
+    try:
+        return (int(parts[0]), int(parts[1]))
+    except ValueError:
+        return None
+
+
+def _check_kernel_version() -> Check:
+    release = platform.release()
+    parsed = _parse_release(release)
+    if parsed is None:
+        return Check(
+            "kernel_version", False,
+            f"could not parse a version out of release={release!r}. Refusing "
+            "to assume it is new enough; the floor is "
+            f"{MINIMUM_KERNEL[0]}.{MINIMUM_KERNEL[1]} because of "
+            f"{MINIMUM_KERNEL_BASIS}",
+            "OD-17, FR-048, FR-049",
+        )
+    floor = f"{MINIMUM_KERNEL[0]}.{MINIMUM_KERNEL[1]}"
+    provenance = (
+        "DERIVED from documented feature introduction and NOT TESTED on that "
+        "kernel; every run to date was on 6.12"
+    )
+    if parsed < MINIMUM_KERNEL:
+        return Check(
+            "kernel_version", False,
+            f"kernel {release} is below the {floor} floor. Basis: "
+            f"{MINIMUM_KERNEL_BASIS} ({provenance})",
+            "OD-17, FR-048, FR-049",
+        )
+    return Check(
+        "kernel_version", True,
+        f"kernel {release} >= {floor}. Floor basis: {MINIMUM_KERNEL_BASIS} "
+        f"({provenance})",
+        "OD-17, FR-048, FR-049",
+    )
+
+
+def _check_cgroup_kill() -> Check:
+    """`cgroup.kill` must exist rather than fall back to the racy loop."""
+    path = CGROUP2_ROOT / "cgroup.kill"
+    present = path.exists()
+    return Check(
+        "cgroup_kill", present,
+        f"{path} {'present' if present else 'ABSENT'}. Without it, killing a "
+        "session means iterating cgroup.procs and signalling each pid, which "
+        "loses the race against a process forking between the listing and the "
+        "kill — the race FR-049's process bound exists to lose safely.",
+        "FR-049",
+    )
+
 
 @dataclass(frozen=True)
 class Check:
@@ -203,8 +310,10 @@ def run_checks() -> list[Check]:
     """Every check, always all of them, so one failure does not hide another."""
     checks = [_check_platform()]
     if checks[0].ok:
+        checks.append(_check_kernel_version())
         checks.append(_check_cgroup_v2())
         checks.append(_check_cgroup_delegation())
+        checks.append(_check_cgroup_kill())
         checks.append(_check_namespaces())
         if _SECCOMP_NR < 0:
             checks.append(

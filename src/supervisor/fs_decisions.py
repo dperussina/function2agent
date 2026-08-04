@@ -19,6 +19,10 @@ the process, which are the ones worth having.
 and no empty string. A refusal that cannot name its rule is a defect the
 invariant suite fails on, and constructing one here is impossible rather than
 discouraged.
+
+**The `path` is not a fact, and the record says so.** See `path_provenance`
+below and the TOCTOU note in `seccomp.py`. SC-022 counts records; the record's
+*existence* is exact and the path string in it is best-effort.
 """
 
 from __future__ import annotations
@@ -32,6 +36,44 @@ from src.supervisor.location_set import LocationSet
 
 ALLOW = "allow"
 DENY = "deny"
+
+# ---------------------------------------------------------------------------
+# Path provenance (owner decision 2026-08-03, narrowing SC-022 to the record's
+# existence).
+#
+# WHY THIS FIELD EXISTS. The supervisor reads the path argument out of the
+# notifying process's own memory. A second thread in that process can rewrite
+# that memory between the supervisor's read and the kernel's resolution, so the
+# path recorded can be a path the kernel never resolved. The record is then
+# *wrong*, not merely imprecise.
+#
+# WHY IT IS NOT AN ACCESS-CONTROL HOLE. The mount namespace is the enforcement
+# and the supervisor is only the recorder. An undeclared path is ABSENT — there
+# is nothing at it to open — so a workload that wins this race misattributes an
+# audit entry and gains no reach it did not already have. Nothing reads this
+# field to decide anything.
+#
+# WHETHER PRINCIPLE I's VALIDATE-OR-MARK-PROVISIONAL RULE REACHES IT. By its
+# terms, no: the clause governs a *derived verifier* — something that decides
+# whether a thing succeeded — and this field verifies nothing and gates nothing.
+# The rule's stated hazard does reach it exactly, though: "complete and wrong is
+# indistinguishable from correct at the point of use" is true of an auditor
+# reading a path. So the marking is applied on the hazard and NOT on a claim
+# that the principle compels it. Recording the distinction because claiming
+# principle coverage where there is none is its own kind of error.
+PATH_SUPERVISOR_READ = "supervisor_read_unverified"
+PATH_KERNEL_RESOLVED = "kernel_resolved"
+
+# Every provenance a record may carry. `kernel_resolved` is declared but v1
+# never emits it: it would require `SECCOMP_RET_ERRNO` with the supervisor
+# supplying the answer, which is a different FR-048 design. It is here so that
+# the field has a meaningful contrast and so the day someone builds that, the
+# schema does not have to move.
+PATH_PROVENANCES = frozenset({PATH_SUPERVISOR_READ, PATH_KERNEL_RESOLVED})
+
+# The provenances under which the path may be read as fact. Exactly one, and it
+# is not the one v1 emits.
+AUTHORITATIVE_PATH_PROVENANCES = frozenset({PATH_KERNEL_RESOLVED})
 
 
 @dataclass(frozen=True)
@@ -100,6 +142,12 @@ class FilesystemDecision:
     pid: int
     at: float
 
+    # No default. A writer must state where the path came from, because the
+    # honest answer for v1 is "read out of the target's memory and never
+    # confirmed", and a default would let a future call site omit the caveat
+    # by accident rather than by decision.
+    path_provenance: str = None  # type: ignore[assignment]
+
     def __post_init__(self) -> None:
         # The invariant, enforced at construction rather than checked later:
         # a deny with no rule identifier cannot be built.
@@ -111,6 +159,24 @@ class FilesystemDecision:
             )
         if self.disposition not in (ALLOW, DENY):
             raise ValueError(f"unknown disposition {self.disposition!r}")
+        if self.path_provenance not in PATH_PROVENANCES:
+            raise ValueError(
+                f"path_provenance must be one of {sorted(PATH_PROVENANCES)}, "
+                f"got {self.path_provenance!r}. There is no default: the path "
+                "on a filesystem decision is read out of another process's "
+                "memory and is best-effort, and a record that does not say so "
+                "presents a guess as a fact."
+            )
+
+    @property
+    def path_is_authoritative(self) -> bool:
+        """Whether a reader may treat `path` as what the kernel resolved.
+
+        False for everything v1 emits. Exposed as a property rather than left
+        for each reader to work out from the provenance string, so there is one
+        place to change if the enforcement design ever moves.
+        """
+        return self.path_provenance in AUTHORITATIVE_PATH_PROVENANCES
 
     def to_record(self) -> dict[str, Any]:
         return {
@@ -119,6 +185,7 @@ class FilesystemDecision:
             "disposition": self.disposition,
             "syscall": self.syscall,
             "path": self.path,
+            "path_provenance": self.path_provenance,
             "mode": self.mode,
             "rule_id": self.rule_id,
             "reason": self.reason,
@@ -138,6 +205,7 @@ def decide(
     path: str | None,
     pid: int,
     now: float | None = None,
+    path_provenance: str = PATH_SUPERVISOR_READ,
 ) -> FilesystemDecision:
     """Resolve one attempt. Every branch returns a record; none returns `None`.
 
@@ -159,6 +227,7 @@ def decide(
             reason=None if rule is None else rule.reason,
             pid=pid,
             at=moment,
+            path_provenance=path_provenance,
         )
 
     if path is None:

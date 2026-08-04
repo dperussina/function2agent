@@ -94,23 +94,24 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 
 ### Shared schemas and the canonical form
 
-- [ ] T009 Define schemas for the eight artifact kinds **FR-054** enumerates, each carrying `schema_version`, in `src/contracts/schemas.py` (FR-034, FR-054)
-- [ ] T010 Implement the one canonical serializer — sorted keys with deterministic collation, fixed locale-independent numeric formatting, `LF`, `UTF-8` without a byte-order mark — in `src/contracts/canonical.py` (**FR-055**, T-12)
+- [X] T009 Define schemas for the eight artifact kinds **FR-054** enumerates, each carrying `schema_version`, in `src/contracts/schemas.py` (FR-034, FR-054)
+- [X] T010 Implement the one canonical serializer — sorted keys with deterministic collation, fixed locale-independent numeric formatting, `LF`, `UTF-8` without a byte-order mark — in `src/contracts/canonical.py` (**FR-055**, T-12)
   - **PARTIAL** — the canonical serializer is implemented and used for content addressing. FR-055's full envelope and the eight artifact schemas are **not**.
-- [ ] T011 Implement the envelope that holds every value varying between two runs over the same input — timestamps, filesystem paths, hostnames — **beside** the hash and never underneath it, in `src/contracts/envelope.py` (FR-055)
-- [ ] T012 Determinism test: analyse one committed fixture twice and compare **payload bytes**, not content addresses, in `tests/contract/test_canonical_determinism.py` (**SC-029** first clause; comparing addresses would hide a serializer stable only within a process)
-- [ ] T013 [P] Round-trip test: every one of the eight artifact kinds through the canonical serializer unchanged, in `tests/contract/test_canonical_roundtrip.py`
-- [ ] T014 Schema-version migration framework with one migration exercised from the first commit, in `src/contracts/migrations/`
-- [ ] T015 [P] CI gate: a breaking change to a consumed or produced schema is a MAJOR bump, in `tests/contract/test_schema_versions.py` (FR-034, Principle VIII)
+- [X] T011 Implement the envelope that holds every value varying between two runs over the same input — timestamps, filesystem paths, hostnames — **beside** the hash and never underneath it, in `src/contracts/envelope.py` (FR-055)
+- [X] T012 Determinism test: analyse one committed fixture twice and compare **payload bytes**, not content addresses, in `tests/contract/test_canonical_determinism.py` (**SC-029** first clause; comparing addresses would hide a serializer stable only within a process)
+- [X] T013 [P] Round-trip test: every one of the eight artifact kinds through the canonical serializer unchanged, in `tests/contract/test_canonical_roundtrip.py`
+- [X] T014 Schema-version migration framework with one migration exercised from the first commit, in `src/contracts/migrations/`
+- [X] T015 [P] CI gate: a breaking change to a consumed or produced schema is a MAJOR bump, in `tests/contract/test_schema_versions.py` (FR-034, Principle VIII)
 
 ### Storage, addressing and rollback
 
-- [ ] T016 Repository interface over SQLite in WAL mode, every row carrying `tenant_id` and `deployment_id`, with no engine-specific SQL above the connection layer, in `src/contracts/repository.py` (T-06, FR-035, **OD-08**)
-- [ ] T017 Encode [`data-model.md`](./data-model.md)'s single-writer-per-table ownership map as data the repository enforces, in `src/contracts/ownership.py`
-- [ ] T018 Invariant test for writer ownership across the three processes, in `tests/invariants/test_writer_ownership.py` — finding 006 explicitly did not test its session service under concurrent writers, and T-06's narrowing records that v1's store now has **no** observed substrate rather than one
-- [ ] T019 Content-addressed `objects/<sha256>` payload store with `Artifact` immutable and `ArtifactRef` keyed `(deployment_id, kind)` with retained history, in `src/analysis/artifact_store.py` (FR-054)
-- [ ] T020 Rollback as a ref move, plus the restoration record naming the operator, the version restored from and the version restored to, in `src/analysis/rollback.py` (FR-054, FR-019)
-- [ ] T021 [P] Rollback contract test: one operator action, zero hand-edits, zero runtime restarts, and the restored deployment produces the artifact hashes it produced before, in `tests/contract/test_rollback.py` (**SC-028**)
+- [X] T016 Repository interface over SQLite in WAL mode, every row carrying `tenant_id` and `deployment_id`, with no engine-specific SQL above the connection layer, in `src/contracts/repository.py` (T-06, FR-035, **OD-08**)
+- [X] T017 Encode [`data-model.md`](./data-model.md)'s single-writer-per-table ownership map as data the repository enforces, in `src/contracts/ownership.py`
+- [X] T018 Invariant test for writer ownership across the three processes, in `tests/invariants/test_writer_ownership.py` — finding 006 explicitly did not test its session service under concurrent writers, and T-06's narrowing records that v1's store now has **no** observed substrate rather than one
+- [X] T019 Content-addressed `objects/<sha256>` payload store with `Artifact` immutable and `ArtifactRef` keyed `(deployment_id, kind)` with retained history, in `src/analysis/artifact_store.py` (FR-054)
+- [X] T020 Rollback as a ref move, plus the restoration record naming the operator, the version restored from and the version restored to, in `src/analysis/rollback.py` (FR-054, FR-019)
+- [X] T021 [P] Rollback contract test: one operator action, zero hand-edits, zero runtime restarts, and the restored deployment produces the artifact hashes it produced before, in `tests/contract/test_rollback.py` (**SC-028**)
+  - **AMBIGUITY IN FR-054, IMPLEMENTED LITERALLY** — "the immediately prior version" makes a second rollback a *toggle* between the last two unique versions, not a walk backwards through history. Implemented and tested as the toggle; the test names the reading. If walking back was intended, FR-054 needs a word for it and this becomes a behaviour change rather than a bug fix.
 
 ### The invariants file, and the four invariants the plan named
 
@@ -118,8 +119,8 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 - [X] T023 Invariant runner executing the whole set on every change, in milliseconds and with no model in it, in `tests/invariants/runner.py`, wired into T005's CI
 - [X] T024 [P] Invariant: **no code path constructs a caller-visible result without a verification outcome**, in `tests/invariants/test_result_constructor.py` (FR-025)
 - [X] T025 [P] Invariant: **import-graph — the result-record and gate-decision modules do not import the judge module**, in `tests/invariants/test_import_graph.py` (**FR-052**, constitution Principle I; this is what keeps the model-judge boundary structural rather than a policy)
-- [ ] T026 [P] Invariant: **no HTTP client in the sandbox image can reach any address but the enforcement point**, in `tests/invariants/test_sandbox_reachability.py` (FR-014)
-  - **VACUOUS-BUT-PRESENT** — the static arm is implemented and its removal proof fires on a planted destination, but `src/sandbox/` and `src/runtime/drift/` contain no modules yet, so it scans an empty set and says so. The topological arm is what carries FR-014 until then.
+- [X] T026 [P] Invariant: **no HTTP client in the sandbox image can reach any address but the enforcement point**, in `tests/invariants/test_sandbox_reachability.py` (FR-014)
+  - **VACUOUS-BUT-PRESENT** — the static arm is implemented and its removal proof fires on a planted destination, but `src/sandbox/` and `src/runtime/drift/` contain no modules yet, so it scans an empty set and says so. The topological arm is what carries FR-014 until then. Phase 2 added no sandbox-side module, so it is still vacuous; it is now reported in a terminal-summary block rather than as one skip line, the declared roots are asserted to exist so a rename cannot switch the scan off silently, and an empty `__init__.py` does not count as coverage.
 - [X] T027 [P] Invariant: **every deny disposition carries a rule identifier**, in `tests/invariants/test_rule_id_present.py` (FR-011; a disposition with no rule identifier fails the suite, because FR-011 makes the rule part of the record and not an annotation on it)
 - [X] T028 [P] Invariant: every session terminal state is a named member of the declared taxonomy, in `tests/invariants/test_terminal_taxonomy.py` (FR-006 — this is the check that stops a generic failure being introduced later)
 
@@ -128,18 +129,19 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 - [X] T029 Declared configuration schema with environment injection at process start and startup failing loudly on any missing or invalid required value, in `src/contracts/config.py` (FR-033, [`contracts/configuration.md`](./contracts/configuration.md))
 - [X] T030 **Fail closed when FR-049's bounds are unset** — `SANDBOX_MEMORY_MAX`, `SANDBOX_CPU_MAX`, `SANDBOX_CPU_TOTAL` are required with no default, and startup names the missing one (**Q-10**, accepted as recommended)
 - [X] T031 **Fail closed when any of FR-005's four ceilings is unset** — spend, tokens, wall-clock, turns — naming which is missing and treating none as unbounded or defaulted (FR-005, **SC-030** first clause; the same treatment as Q-10, extended to the ceilings the day the specification was extended)
-- [ ] T032 [P] Fail-loud contract tests: each required key unset in turn, then malformed in turn, asserting startup fails, names the key, and starts nothing, in `tests/contract/test_configuration_failloud.py`
-- [ ] T033 [P] Marking machinery for every configured value with no measurement behind it — `STALENESS_CEILING`, `DRIFT_CHECK_INTERVAL`, `CAPABILITY_LEASE_INTERVAL` — in `src/contracts/unvalidated.py` (FR-043)
-- [ ] T034 [P] Contract test: every FR-043-marked value appears marked on every external surface that emits it, in `tests/contract/test_unvalidated_marking.py`
+- [X] T032 [P] Fail-loud contract tests: each required key unset in turn, then malformed in turn, asserting startup fails, names the key, and starts nothing, in `tests/contract/test_configuration_failloud.py`
+- [X] T033 [P] Marking machinery for every configured value with no measurement behind it — `STALENESS_CEILING`, `DRIFT_CHECK_INTERVAL`, `CAPABILITY_LEASE_INTERVAL` — in `src/contracts/unvalidated.py` (FR-043)
+- [X] T034 [P] Contract test: every FR-043-marked value appears marked on every external surface that emits it, in `tests/contract/test_unvalidated_marking.py`
 - [X] T035 A `Secret` type with **no serializer**, so a credential cannot be logged by a code path that forgets to redact — redaction structural rather than a filter, in `src/contracts/secret.py` (FR-036)
 
 ### Tracing, from the first shipped capability
 
-- [ ] T036 Span writer for the seven span kinds — `model_call`, `tool_call`, `egress_decision`, `filesystem_decision`, `state_transition`, `verification`, `drift_check` — carrying inputs, outputs, timing, cost, and the artifact versions in force, in `src/runtime/trace.py` (FR-030, FR-031, Principle VI)
-- [ ] T037 Required `rule_id` on `egress_decision` and `filesystem_decision` spans, enforced by T023's suite (FR-011, FR-048)
-- [ ] T038 Budget spans written **as consumption accrues** and journalled outside the container, so a cgroup kill loses no accounting, in `src/runtime/trace_budget.py` (FR-049, **U-30**)
-- [ ] T039 [P] Trace contract test: every span kind emitted on a full session and no decision span missing its `rule_id`, in `tests/contract/test_trace_spans.py`
-- [ ] T040 [P] Trace scan test: no credential-shaped value and no readable `provider_state` in any trace, in `tests/contract/test_trace_redaction.py` (FR-036, FR-037)
+- [X] T036 Span writer for the seven span kinds — `model_call`, `tool_call`, `egress_decision`, `filesystem_decision`, `state_transition`, `verification`, `drift_check` — carrying inputs, outputs, timing, cost, and the artifact versions in force, in `src/runtime/trace.py` (FR-030, FR-031, Principle VI)
+- [X] T037 Required `rule_id` on `egress_decision` and `filesystem_decision` spans, enforced by T023's suite (FR-011, FR-048)
+- [X] T038 Budget spans written **as consumption accrues** and journalled outside the container, so a cgroup kill loses no accounting, in `src/runtime/trace_budget.py` (FR-049, **U-30**)
+  - The append-per-increment property and the survives-without-a-flush property are both tested. "Outside the container" is enforced as a resolved-path check against the session root and tested against relative-path evasion, but it has **not** been exercised against a live session whose mount namespace is up — that arm belongs with the integration battery, not here.
+- [X] T039 [P] Trace contract test: every span kind emitted on a full session and no decision span missing its `rule_id`, in `tests/contract/test_trace_spans.py`
+- [X] T040 [P] Trace scan test: no credential-shaped value and no readable `provider_state` in any trace, in `tests/contract/test_trace_redaction.py` (FR-036, FR-037)
 
 **Checkpoint**: the substrate exists, the invariants suite runs, and configuration fails closed.
 Phase 3 can begin.

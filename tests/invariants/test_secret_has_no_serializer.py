@@ -29,7 +29,32 @@ def secret() -> Secret:
 
 def test_str_does_not_contain_the_value(secret: Secret) -> None:
     assert PLAINTEXT not in str(secret)
-    assert str(secret) == REDACTED
+    assert str(secret).startswith(REDACTED[:-1])
+
+
+def test_the_marker_names_the_key_it_stands_for(secret: Secret) -> None:
+    """A bare marker is safe and useless.
+
+    An operator reading a redacted trace of a session that used three
+    credentials cannot tell which one was involved, so the marking destroys the
+    diagnosis it was kept for. The key *name* is the environment variable the
+    operator set, not a credential, so it costs nothing to carry. Found by
+    T040's marker test.
+    """
+    assert "F2A_TARGET_CREDENTIAL" in str(secret)
+    assert "F2A_TARGET_CREDENTIAL" in repr(secret)
+    assert "F2A_TARGET_CREDENTIAL" in f"{secret}"
+    assert PLAINTEXT not in str(secret)
+
+
+def test_a_format_spec_cannot_truncate_the_marker(secret: Secret) -> None:
+    """`f"{secret:.4}"` would otherwise render `<red`, which stops looking
+    like a redaction and starts looking like a value."""
+    for spec in (".4", ">4", "<8", ".1s"):
+        rendered = format(secret, spec)
+        assert rendered.startswith("<redacted:Secret")
+        assert rendered.endswith(">")
+        assert PLAINTEXT not in rendered
 
 
 def test_repr_does_not_contain_the_value(secret: Secret) -> None:

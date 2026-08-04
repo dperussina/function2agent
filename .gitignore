@@ -154,3 +154,7 @@ export.zip
 
 # Vendored reference repos — read-only, not ours to track
 examples/
+# Re-measurement output. The committed measurement is written only with
+# F2A_RECORD_MEASUREMENTS=1; an ordinary privileged run writes .latest.json so
+# it cannot silently replace a recorded figure.
+tests/batteries/results/*.latest.json
