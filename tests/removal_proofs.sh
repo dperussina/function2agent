@@ -866,6 +866,14 @@ proof "FR-058 retention bound — the location accepts bytes past its declared b
   "tests/unit/test_result_bound.py::test_the_retention_location_carries_its_own_declared_bound" \
   's = s.replace("        if self.bytes_held + len(payload) > self.max_bytes:", "        if False:")'
 
+# T041. The three load-bearing lines of the loop, one proof each. The turn-index
+# one is finding 006's measurement in miniature: the number a ceiling reads has
+# to come off the journal, and `len(turns)` is this attempt's count.
+proof "T041 turn index — the loop numbers turns from this attempt rather than the journal" \
+  src/runtime/loop.py \
+  "tests/unit/test_runner.py::test_turn_indexes_continue_across_attempts" \
+  's = s.replace("            turn_index = self.budget.totals(self.session_id).turns", "            turn_index = len(turns)")'
+
 # FR-037 and T-02. The opaque state is round-tripped; a loop that drops it still
 # produces plausible answers, which is why the arm asserts the bytes.
 proof "T041 opaque state — the provider state is not carried into the next turn" \
@@ -879,6 +887,32 @@ proof "T042 prompt refusal — an over-budget prompt is trimmed instead of refus
   src/runtime/context.py \
   "tests/unit/test_context.py::test_a_prompt_that_alone_exceeds_the_budget_is_refused_not_trimmed" \
   's = s.replace("        if head_tokens > self.budget_tokens:\n            raise ContextError(", "        if False:\n            raise ContextError(")'
+
+# T046. Teardown on the unplanned path. Without the `finally` the session is left
+# RUNNING with a live lease on the first unhandled exception, and the enforcement
+# point keeps honouring a capability whose owner is gone.
+proof "T046 teardown — the session is stood down only on the paths that returned" \
+  src/runtime/runner.py \
+  "tests/unit/test_runner.py::test_a_fault_in_the_loop_still_stands_the_session_down" \
+  's = s.replace("        finally:\n            self._stand_down(loop, session_id, outcome)", "        finally:\n            if outcome is not None:\n                self._stand_down(loop, session_id, outcome)")'
+
+# T047. Cancellation is not termination. Naming a terminal state for it would
+# either invent a member of a closed taxonomy or borrow one no operator caused.
+proof "T047 cancellation — a cancelled run is terminated rather than interrupted" \
+  src/runtime/runner.py \
+  "tests/unit/test_cancellation.py::test_a_cancelled_session_is_resumable_and_a_completed_one_is_not" \
+  's = s.replace("            if outcome is not None and outcome.cancelled:\n                transition = self.machine.interrupt(\n                    session_id, at=self.clock())", "            if outcome is not None and outcome.cancelled:\n                transition = self.machine.terminate(session_id, terminal_state=terminal.OPERATOR_TERMINATED.name, at=self.clock())")'
+
+# T046. **Not a proof of the terminated refusal.** That guard was tried here and
+# the tamper was vacuous: removing it drops the caller through to the "no edge
+# out of {state}" branch, which is also a RunnerError also naming TERMINATED, so
+# the arm passed on the fallback. Two guards, one property — and a proof that
+# cannot tell them apart proves neither. The resume edge is the mechanism with a
+# single site, so it is the one under proof.
+proof "T046 attach — the resume edge is not taken and the loop runs unauthorised" \
+  src/runtime/runner.py \
+  "tests/unit/test_runner.py::test_attach_resumes_an_interrupted_session_and_keeps_its_ceilings" \
+  's = s.replace("        if row.state == STATE_INTERRUPTED:\n            transition = self.machine.resume(", "        if False:\n            transition = self.machine.resume(")'
 
 echo
 if [ "$SKIP" -gt 0 ]; then

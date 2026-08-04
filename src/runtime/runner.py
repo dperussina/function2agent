@@ -1,0 +1,399 @@
+"""T046 — session start and attach, loop invocation, cancellation, and the
+teardown handshake with the supervisor.
+
+**Why this is not a wrapper around the loop.** The loop knows how to run a turn
+and nothing about a session's beginning or its end. Admission, the capability
+handle, the lease and standing the session down are the supervisor's. The runner
+is the only component that holds both, which makes it the only place that can
+guarantee the property that matters:
+
+> **the session is stood down on every exit path**, including the one nobody
+> planned for.
+
+A runner that tears down on the happy path is indistinguishable from a correct
+one until the first unhandled exception, at which point the session is left
+`RUNNING` with a live lease and the enforcement point keeps honouring a
+capability whose owner is gone. So the teardown is in a `finally`, it reads the
+row back, and a failure *inside* the teardown never replaces the exception that
+caused it — the first exception is the diagnosis.
+
+**Cancellation interrupts; it does not terminate.** `data-model.md` §2.1 has an
+`interrupted ─▶ RUNNING` edge and FR-006's taxonomy has no cancellation member,
+so a cancelled run records no terminal state: nothing ended, and FR-007 resumes
+the same session. Naming a terminal state for a cancellation would either invent
+a taxonomy member or borrow `operator_terminated` for an event no operator
+caused.
+
+> **Underspecified, and read rather than decided.** No requirement states what a
+> cancelled session's recorded state is. The reading above is the one that
+> violates nothing: it needs no new member of a closed taxonomy, it uses a
+> declared edge, and `SessionRow.honoured_at` already refuses a non-`RUNNING`
+> session, so the capability stops being honoured either way. If the owner wants
+> cancellation to be terminal, that is a taxonomy addition and an owner
+> decision, and this module is where it lands.
+
+**What is not here.** Resume *reconstruction* — replaying the journal to rebuild
+the turns an interrupted attempt had already produced — is T052's. `attach()`
+takes the resume edge and starts the next attempt against the same journal, so
+the ceilings and the turn numbering carry; the transcript of the earlier attempt
+does not come back yet, and the docstring says so rather than leaving a caller to
+discover it.
+"""
+
+from __future__ import annotations
+
+import sys
+import threading
+from dataclasses import dataclass
+from typing import Callable, Mapping
+
+from src.contracts import terminal
+from src.contracts.transition import (
+    STATE_INTERRUPTED,
+    STATE_RUNNING,
+    STATE_STARTING,
+    STATE_TERMINATED,
+)
+from src.runtime.context import ContextAssembler
+from src.runtime.dispatch import ToolCall
+from src.runtime.loop import AgentLoop, LoopOutcome, ModelClient, TurnRecord
+from src.runtime.result_bound import ResultBound, RetentionStore
+from src.runtime.session_state import SessionStateMachine
+from src.runtime.session_store import Ceilings, LifecycleGateway, SessionStore
+from src.runtime.state_merge import MergePolicy
+from src.runtime.trace import ArtifactVersions, SpanWriter
+from src.runtime.trace_budget import BudgetJournal
+from src.supervisor.session_table import capability_digest
+
+
+class RunnerError(RuntimeError):
+    """A session that cannot be started, attached to, or torn down."""
+
+
+class CancelToken:
+    """A one-way flag a consumer sets and the loop reads at turn boundaries.
+
+    One way on purpose: there is no `uncancel`. A token that could be cleared
+    would let a race between the consumer going away and the loop checking the
+    flag produce a run that continued after cancellation, which is the state a
+    consumer cancelled to avoid.
+
+    Thread-safe because the consumer and the loop are not the same thread — a
+    plain attribute would work on CPython today and is the kind of assumption
+    that stops being true quietly.
+    """
+
+    __slots__ = ("_event",)
+
+    def __init__(self) -> None:
+        self._event = threading.Event()
+
+    def cancel(self) -> None:
+        self._event.set()
+
+    def is_cancelled(self) -> bool:
+        return self._event.is_set()
+
+    def __call__(self) -> bool:
+        return self._event.is_set()
+
+
+@dataclass(frozen=True)
+class RunOutcome:
+    """What one `start()` or `attach()` produced.
+
+    `terminal_state` is `None` exactly when `cancelled` is true. The two are
+    separate fields rather than one nullable name because a caller asking "did
+    this end?" and a caller asking "why did it end?" are asking different
+    questions, and collapsing them is how a cancellation gets reported as a
+    completion with a missing name.
+    """
+
+    session_id: str
+    turns: tuple[TurnRecord, ...]
+    terminal_state: str | None
+    text: str
+    cancelled: bool
+    merged_state: Mapping[str, object]
+
+
+class Runner:
+    """Starts and attaches sessions, drives the loop, and tears down."""
+
+    def __init__(
+        self,
+        *,
+        store: SessionStore,
+        lifecycle: LifecycleGateway,
+        machine: SessionStateMachine,
+        budget: BudgetJournal,
+        spans: SpanWriter,
+        bound: ResultBound,
+        retention: Callable[[str], RetentionStore],
+        versions: ArtifactVersions,
+        tenant_id: str,
+        deployment_id: str,
+        clock: Callable[[], float],
+        lease_interval_seconds: float,
+        assembler: ContextAssembler | None = None,
+        merge_policy: MergePolicy | None = None,
+    ) -> None:
+        self.store = store
+        self.lifecycle = lifecycle
+        self.machine = machine
+        self.budget = budget
+        self.spans = spans
+        self.bound = bound
+        # A factory rather than an instance: FR-058 requires the retention
+        # location to be unreadable from another session's environment, and one
+        # shared store handed to every session is the shape that fails that.
+        self.retention = retention
+        self.versions = versions
+        self.tenant_id = tenant_id
+        self.deployment_id = deployment_id
+        self.clock = clock
+        self.lease_interval_seconds = lease_interval_seconds
+        self.assembler = assembler
+        self.merge_policy = merge_policy
+
+    # -- start -------------------------------------------------------------
+
+    def start(
+        self,
+        *,
+        session_id: str,
+        prompt: str,
+        ceilings: Ceilings,
+        capability_handle: str,
+        model: ModelClient,
+        execute: Callable[[ToolCall], str],
+        cancel: CancelToken | None = None,
+        max_turns_this_attempt: int | None = None,
+    ) -> RunOutcome:
+        """Admit a new session and run it.
+
+        The order is deliberate: the ceilings are persisted **before** the
+        session becomes `RUNNING`. A session the enforcement point honours and
+        whose ceilings are not yet on disk is a session running unbounded for as
+        long as that window lasts, and FR-005's whole subject is that the
+        ceilings outlive the process enforcing them.
+        """
+        token = _require_token(cancel)
+        if self.lifecycle.get(session_id) is not None:
+            raise RunnerError(
+                f"{session_id!r} already exists. A second start would either "
+                "overwrite a live session's admission or revive a terminated "
+                "one under its own id; attach() is the resume path."
+            )
+        self.lifecycle.create(
+            session_id=session_id,
+            tenant_id=self.tenant_id,
+            deployment_id=self.deployment_id,
+            capability_sha256=capability_digest(capability_handle),
+            lease_expires_at=self.clock() + self.lease_interval_seconds,
+            now=self.clock(),
+        )
+        self.store.create(session_id=session_id, ceilings=ceilings)
+        transition = self.machine.start(session_id, at=self.clock())
+
+        loop = self._loop(session_id, model, execute, token)
+        loop.write_transition_span(transition)
+        return self._drive(
+            loop, session_id, prompt, token, max_turns_this_attempt)
+
+    # -- attach ------------------------------------------------------------
+
+    def attach(
+        self,
+        *,
+        session_id: str,
+        prompt: str,
+        model: ModelClient,
+        execute: Callable[[ToolCall], str],
+        cancel: CancelToken | None = None,
+        max_turns_this_attempt: int | None = None,
+    ) -> RunOutcome:
+        """Attach to an existing session and run the next attempt.
+
+        The ceilings are **not** re-supplied. Finding 006 measured a ceiling of 3
+        permitting 6 cycles because the counter was rebuilt per attempt; an
+        `attach` that accepted ceilings would be that measurement with a
+        parameter, and every individual attempt would still be compliant.
+
+        The earlier attempt's turns do not come back. Reconstructing them from
+        the journal is T052's; what carries here is what the ceilings and the
+        turn numbering read, which is the journal itself.
+        """
+        token = _require_token(cancel)
+        row = self.lifecycle.get(session_id)
+        if row is None or self.store.load(session_id) is None:
+            raise RunnerError(f"{session_id!r} has no session to attach to")
+        if row.state == STATE_TERMINATED:
+            raise RunnerError(
+                f"{session_id!r} is {STATE_TERMINATED} as "
+                f"{row.terminal_state!r}. data-model.md §2.1 has no edge out of "
+                "it, and a revived session would carry a second outcome for a "
+                "run FR-006 says already has one."
+            )
+
+        transition = None
+        if row.state == STATE_INTERRUPTED:
+            transition = self.machine.resume(
+                session_id, at=self.clock(),
+                lease_expires_at=self.clock() + self.lease_interval_seconds)
+        elif row.state == STATE_STARTING:
+            transition = self.machine.start(session_id, at=self.clock())
+        elif row.state != STATE_RUNNING:  # pragma: no cover - closed set
+            raise RunnerError(f"{session_id!r} is {row.state}, which has no edge")
+
+        loop = self._loop(session_id, model, execute, token)
+        if transition is not None:
+            loop.write_transition_span(transition)
+        return self._drive(
+            loop, session_id, prompt, token, max_turns_this_attempt)
+
+    # -- the one place a loop runs and a session is stood down --------------
+
+    def _drive(
+        self,
+        loop: AgentLoop,
+        session_id: str,
+        prompt: str,
+        token: CancelToken,
+        max_turns_this_attempt: int | None,
+    ) -> RunOutcome:
+        outcome: LoopOutcome | None = None
+        try:
+            outcome = loop.run(
+                prompt, max_turns_this_attempt=max_turns_this_attempt)
+            return RunOutcome(
+                session_id=session_id,
+                turns=outcome.turns,
+                terminal_state=outcome.terminal_state,
+                text=outcome.text,
+                cancelled=outcome.cancelled,
+                merged_state=outcome.merged_state,
+            )
+        finally:
+            self._stand_down(loop, session_id, outcome)
+
+    def _stand_down(
+        self, loop: AgentLoop, session_id: str, outcome: LoopOutcome | None
+    ) -> None:
+        """Leave the session in a state the enforcement point will not honour.
+
+        Wrapped so that a teardown failure cannot replace the exception that
+        brought us here. The suppression is narrow — it covers only the
+        transition — and it is the reason `_stand_down` reads the row first
+        rather than blindly writing: a session the loop already ended is left
+        alone, so an attempt to terminate it twice never arises.
+        """
+        row = self.lifecycle.get(session_id)
+        if row is None or row.state == STATE_TERMINATED:
+            return
+        if row.state != STATE_RUNNING:
+            # Already interrupted by something else. Not ours to move.
+            return
+        failure: BaseException | None = None
+        try:
+            if outcome is not None and outcome.cancelled:
+                transition = self.machine.interrupt(
+                    session_id, at=self.clock())
+            elif outcome is not None:
+                # The loop returned without ending the session and without
+                # being cancelled: `max_turns_this_attempt` bounded the attempt.
+                # Interrupting is the honest record — the session did not end.
+                transition = self.machine.interrupt(
+                    session_id, at=self.clock())
+            else:
+                # The loop raised. FR-006's named member for a fault the runtime
+                # cannot classify further; reaching it is a defect report rather
+                # than a normal outcome, which is exactly why it is recorded.
+                transition = self.machine.terminate(
+                    session_id,
+                    terminal_state=terminal.UNRECOVERABLE_FAULT.name,
+                    at=self.clock())
+            loop.write_transition_span(transition)
+        except Exception as exc:  # noqa: BLE001 - see the docstring
+            # Deliberately swallowed, and only here. The alternative is that a
+            # teardown failure becomes the reported cause and the real one is
+            # gone. What is *not* swallowed is the effect: the row is re-read
+            # below, and a session still honoured is escalated.
+            failure = exc
+
+        after = self.lifecycle.get(session_id)
+        if after is None or not after.honoured_at(self.clock()):
+            return
+
+        # The session is still honoured. This is the leak the handshake exists to
+        # prevent, and it must not pass quietly — but *how* it is surfaced
+        # depends on whether something is already propagating.
+        #
+        # **Two obligations that conflict here, resolved rather than ranked.**
+        # A still-honoured session must be surfaced; and the exception that
+        # brought us into teardown is the diagnosis and must not be replaced.
+        # Raising satisfies the first and breaks the second, so it is done only
+        # when nothing is in flight. When something is, the leak is attached to
+        # it as a note: visible in the traceback, so not silent, and the original
+        # type still propagates, so a caller matching on it still matches.
+        #
+        # What neither branch can do is *fix* the leak. The lease is not ours to
+        # write and the supervisor's own write just failed. The lease lapsing is
+        # FR-050's `capability_lapsed` path and is the fail-closed direction, so
+        # the leak is bounded by the lease interval rather than unbounded — which
+        # is why this is a report and not a retry loop.
+        message = (
+            f"{session_id!r} is still honoured after teardown "
+            f"({after.state}, lease {after.lease_expires_at}). The capability "
+            "outlives the run until the lease lapses, which is the leak the "
+            "teardown handshake exists to prevent."
+            + (f" The teardown itself failed: {failure!r}"
+               if failure is not None else "")
+        )
+        in_flight = sys.exc_info()[1]
+        if in_flight is None:
+            raise RunnerError(message) from failure
+        in_flight.add_note(f"runner teardown: {message}")
+
+    def _loop(
+        self,
+        session_id: str,
+        model: ModelClient,
+        execute: Callable[[ToolCall], str],
+        token: CancelToken,
+    ) -> AgentLoop:
+        return AgentLoop(
+            session_id=session_id,
+            store=self.store,
+            budget=self.budget,
+            spans=self.spans,
+            machine=self.machine,
+            bound=self.bound,
+            retention=self.retention(session_id),
+            model=model,
+            execute=execute,
+            versions=self.versions,
+            clock=self.clock,
+            assembler=self.assembler,
+            merge_policy=self.merge_policy,
+            cancel=token,
+        )
+
+
+def _require_token(cancel: CancelToken | None) -> CancelToken:
+    """A `CancelToken`, or a fresh one that is never set.
+
+    Typed rather than duck-typed because `cancel=True` is the plausible mistake:
+    a bare truthy value is callable in no useful sense, and if it were accepted
+    as a predicate every run would cancel before its first turn — a silent
+    no-op that looks like a working runner.
+    """
+    if cancel is None:
+        return CancelToken()
+    if not isinstance(cancel, CancelToken):
+        raise RunnerError(
+            f"cancel must be a CancelToken, not {type(cancel).__name__}. A "
+            "truthy value passed here would read as 'already cancelled' and "
+            "every run would return before its first turn."
+        )
+    return cancel
