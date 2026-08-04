@@ -1924,6 +1924,34 @@ question.
   > that**, which is why this note states the derivation and the untested status in the same breath
   > rather than footnoting the second.
 
+  > **Managed container services join the unsupported list 2026-08-04, and they are unsupported
+  > rather than degraded.** **OD-17** put every non-Linux platform on this requirement's unsupported
+  > list because the three mechanisms of FR-048, FR-049 and FR-050 are kernel facilities.
+  > [Finding 024](./findings/024-deployment-surface-permission-census.md) establishes that the list
+  > also reaches four surfaces that *are* Linux: **AWS Fargate, Cloud Run, Azure Container Instances
+  > and GKE Autopilot**. On each the runtime's seccomp profile is not operator-changeable — Fargate
+  > restricts `CAP_SYS_ADMIN` and offers no privileged mode, AKS documents that custom profiles are
+  > not supported, GKE Autopilot applies containerd's default with no opt-out — so the mount namespace
+  > FR-048 rests on cannot be entered at all. **The kernel permits it and the operator cannot reach
+  > it**, which is neither a floor nor a configuration but a third thing, and the honest label is
+  > *foreclosed by the platform*.
+  >
+  > **There is no degraded tier for them to occupy, and that is a property of this specification
+  > rather than of the surfaces.** The best such a surface could offer is seccomp user-notification
+  > and cgroup bounds with no filesystem containment — bounds and a recorder, and nothing holding the
+  > agent inside a declared set — which is FR-048 unsatisfied. Constitution Principle IV bullet 1's
+  > own words are that a configuration missing any one of its terms does not satisfy it, so each
+  > surface either supports the whole model or supports none of it. Under this requirement's rule,
+  > describing any of the four as best-effort would be the prohibited statement.
+  >
+  > ⚠️ **This entry is derived and not measured, and the gap is at the layer that matters most.** All
+  > four rest on vendor documentation, and the finding's measured arms ran on a host carrying **no LSM
+  > at all**, so an AppArmor or SELinux refusal — the layer that actually refuses on Ubuntu 24.04, the
+  > likeliest self-hosted operating system — was unconstructible there rather than merely
+  > unconstructed. **The most consequential refusal is the one that could not be measured**, and
+  > nothing here may be restated as though it were. This is the discipline the kernel floor above
+  > carries, applied to a second derived claim.
+
 **Artifact versioning and rollback**
 
 - **FR-054**: Every artifact the system produces or consumes as configuration or as derived state —

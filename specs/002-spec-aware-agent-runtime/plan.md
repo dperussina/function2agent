@@ -146,12 +146,89 @@ full and which no restatement may be weaker than.
 > and recursive read-only remount repairs are what close finding 021's two authority gaps and they hold
 > under every privilege model, so the namespace's remaining margin is per-session uid isolation rather
 > than a gap closure; and Docker's default seccomp profile blocks `unshare(CLONE_NEWUSER)` outright,
-> which under **OD-08**'s self-hosted model is not ours to choose. **No requirement text changes**, and
+> ~~which under **OD-08**'s self-hosted model is not ours to choose~~ **which is a property of that
+> profile and not of the deployment — corrected 2026-08-04 by
+> [finding 024](./findings/024-deployment-surface-permission-census.md), and the bundle we author is
+> exactly where it is ours to choose. The measured half of the struck clause stands and the inference
+> from it does not.** **No requirement text changes**, and
 > nothing on this line is wrong — user namespaces remain a platform requirement.
+>
+> **The deferral is undisturbed by that correction, and it matters which of its two grounds carried
+> it.** The first ground — the landed repairs close finding 021's gaps under every privilege model —
+> is untouched. What replaces the second is a *different* reason to wait rather than an absence of
+> one: [finding 023](./findings/023-user-namespace-privilege-model.md)'s question of whether the
+> supervisor may hold `CAP_SETUID` is open, and a runtime that permits `unshare` does not answer it.
+> **The two constraints are independent and both must hold.** A permissive deployment surface plus a
+> supervisor that cannot write a multi-line uid map produces the self-mapped namespace finding 023
+> measured the hazards of, which is worse than not entering one.
+
+> **Extended 2026-08-04 — the three facilities being present in the kernel does not make them
+> reachable from the runtime the operator runs, and the bundle is where the difference is closed.**
+> [Finding 024](./findings/024-deployment-surface-permission-census.md) measured eight container
+> configurations against one probe. The line above names a kernel floor; what it did not name is a
+> **runtime** floor, and on Docker's default seccomp profile the mount-namespace mechanism is refused
+> at its first syscall on a kernel that has every facility. Four conditions follow, none of them a
+> research question, and the first two are files in the bundle rather than requests to the operator:
+>
+> - **The bundle ships its own seccomp profile.** Docker's own default plus one added
+>   `SCMP_ACT_ALLOW` rule — 426 allow-listed syscall names becoming 427 — is enough to run the whole
+>   sequence to `pivot_root` at uid 1000 under `--cap-drop=ALL`. **The choice was never the default
+>   profile versus `seccomp=unconfined`, and that framing must not be reproduced anywhere**: it
+>   presents an operator with the loss of the entire filter as the price of the mechanism, when the
+>   price is a named eight-syscall widening with `keyctl`, `add_key`, `userfaultfd`, `kexec_*`,
+>   `swapon` and the rest still denied. The profile is not free and is not sold as free — the eight it
+>   exposes are the container-escape-relevant set — but it is a defensible trade and `unconfined` is
+>   not.
+> - **The bundle mounts `/sys/fs/cgroup` read-write with `--cgroupns=host`.** FR-049 is refused by the
+>   **mount configuration**, not by seccomp: `/sys/fs/cgroup` is read-only in a container, `mkdir`
+>   returns `EROFS`, and no seccomp change touches it. Conversely delegation works under the
+>   *unmodified* default profile once the filesystem is writable, because cgroup operations are file
+>   writes rather than gated syscalls. Two mechanisms, two unrelated layers, and a fix aimed at one
+>   does nothing for the other. **The cost here is the larger of the two in blast radius** — the
+>   supervisor container gets write access to the host's whole cgroup tree rather than to a delegated
+>   subtree, and no route to narrowing that was found.
+> - **The preflight attempts a real `unshare(CLONE_NEWUSER)` and an `unshare(0)` no-op beside it.**
+>   That pair is the entire diagnostic: Docker's rule is on the `unshare` **syscall** rather than on
+>   `CLONE_NEWUSER`, so `unshare(0)` — which creates no namespace and which no kernel namespace check
+>   can refuse — also returns `EPERM` under the profile. A refusal of the pair separates *your
+>   runtime's profile is blocking this, and here is the profile to use* from *your distribution's LSM
+>   or sysctl is blocking this*, and only the first has a remedy the bundle can supply. The existing
+>   `namespaces` check reads `/proc/self/ns/` and `max_user_namespaces` and distinguishes neither;
+>   T206 is the extension.
+> - **Managed container services are unsupported, not degraded.** Fargate, Cloud Run, ACI and GKE
+>   Autopilot expose no seccomp knob at all, so this is neither a kernel floor nor an operator
+>   configuration but a third thing — *foreclosed by the platform*. They go on FR-053's **unsupported
+>   rather than best-effort** list beside the non-Linux platforms **OD-17** put there. There is no
+>   degraded tier available to put them in: two of the three mechanisms are absent and the third alone
+>   supplies no containment, and constitution Principle IV bullet 1's own words are that a
+>   configuration missing any one of its terms does not satisfy it.
+>
+> **The one diagnostic to put in front of an operator, because it is the change they will make first
+> and it does not work.** `--cap-add=SYS_ADMIN` is invited by the profile's own rule, which is written
+> as a capability gate, and it is by a wide margin the most dangerous of the available changes. It is
+> also **insufficient**: `pivot_root` appears in **no rule of the profile at all**, so it falls to the
+> default action and returns `EPERM` even with the capability granted. An operator who makes that
+> change watches the mount tree build correctly — namespace, uid map, private propagation, `tmpfs`,
+> bind, read-only remount — and fail on the single step that establishes containment, which reads as
+> *the mechanism is broken* rather than as *you granted the wrong thing*. **Whatever surface carries
+> the preflight's remedy text, this belongs on it.**
+>
+> ⚠️ **The most consequential refusal on the list is the one that could not be measured, and no
+> condition above may be read as though it were.** Every measured arm ran on `6.12.76-linuxkit`,
+> aarch64, under Docker Desktop, whose linuxkit VM carries **neither AppArmor nor SELinux** — no
+> `/sys/kernel/security/apparmor`, no `/sys/fs/selinux`, no `/sys/kernel/security/lsm`. So an
+> **LSM-layer refusal was not merely unconstructed but unconstructible there**, and the LSM is exactly
+> what refuses on Ubuntu 24.04 by way of `kernel.apparmor_restrict_unprivileged_userns` — the single
+> most likely host operating system for a self-hosted install of this product. A sysctl-layer refusal
+> could not be constructed either, and the reason it could not be is itself inferred rather than
+> observed. The conditions above are derived from an unmeasurable layer at exactly that point, and
+> they carry the same discipline as the 5.14 floor: **DERIVED, NOT TESTED, and the two halves are one
+> claim.** Closing it needs a different machine, not more reading. **None of this is an x86-64
+> measurement.**
 
 **Project Type**: Self-hosted multi-container service (**OD-08**): analysis, runtime, supervisor and
 enforcement point, plus a per-session sandbox image, shipped as OCI images with a compose bundle we
-author (T-11).
+author (T-11), **carrying the seccomp profile and the cgroup mount the note above requires** (T160).
 
 **Performance Goals**: None inherited and none invented. SC-001's fifteen-minute window is the only
 time-shaped criterion and [`research.md`](./research.md) §7.2 reports that it contains an unbounded
@@ -600,7 +677,7 @@ Everything the plan cannot satisfy, in the section that records it.
 | **FR-047 ships unmeasured — no experiment has ever run the scenario it governs** *(added 2026-08-03)*. Feature 001's only drift experiment is **E13**, whose three named mutations are *rename a route, change a parameter type, delete an endpoint*: all three move the **source**. It has **no arm in which the source is unchanged and the deployment stops serving an operation**, and none in which an admitted target's **published specification is withdrawn** — which is the case FR-047 actually governs. **E13 never ran at all.** So FR-047's disposition (serve the last-known-good set marked stale, deny past the ceiling), its fifteen-minute ceiling, and its deployment-clock detection latency all ship with **zero** supporting evidence | **Recorded as a departure from this project's prove-before-build discipline, on `plan.md` OD-14's precedent, not as coverage.** The measurement requires the artifact to exist: the deciding quantity is how often a published specification stops being reachable *transiently* rather than permanently, which is a property of real deployments and real networks and cannot be manufactured here. **The obligation is therefore deferred to production against real traffic** — instrument re-fetch outcomes with their duration and their recovery, and report the transient-versus-permanent split against the configured ceiling — and it is stated plainly rather than folded into FR-042's drift instrumentation, whose two committed corpora are about drift being *detected* and not about the observation channel *failing*. **The authorising decision, OD-21, is unaffected**; what is recorded is that it rests on a consistency argument and not on a measurement, which OD-21 says of itself. `research/14-architecture-synthesis.md` **O-04** carries the same statement and stays **open** | **SC-021 is not the measurement and must not be read as it.** It scores an implementation's conformance to FR-047 against a fixture derived from FR-047 — a conformance test, not evidence the disposition is right. Calling it coverage would be the substitution this corpus has caught repeatedly. Manufacturing the corpus here is worse than absent: any withdrawal schedule we invent would encode the transient-versus-permanent ratio the measurement exists to discover |
 | **FR-058 closes U-50's token limb by argument and leaves its task-success limb unmeasured, and the split is what any future spend on this question should be decided against** *(added 2026-08-04)*. `research/14-architecture-synthesis.md` **U-50** opened two limbs: what inlining bulk command output *costs*, and whether replacing it with a bounded preview plus a reference costs *task success*. **The token limb is now largely determined and it is determined by where the bound sits, not by a run.** E17's pre-registered sensitivity analysis — a projection, dry run, no model was called — shows the saving a reference buys is almost entirely a function of the alternative's truncation point: substantial at a high bound, near zero at a low one. FR-058 argues a low bound from the context window and from the re-send arithmetic, and forbids by its ceiling the highest of the three settings that analysis prices. **At the bound FR-058 permits, the reference mechanism's economic case is small and its correctness case is the whole of it** — a low bound without a reference destroys data the agent cannot ask for again. **What remains genuinely unmeasured is the second limb**: whether an agent handed a path answers as often correctly as one handed the bytes. Nothing in this corpus bears on it | **Recorded as a determination made without a measurement, not as coverage, and the reason it is acceptable here is that the alternative was worse.** U-50 states that the specification half is independent of both measurement arms and must not wait on either, and that *recording inlining as the chosen default would itself be an acceptable outcome* — what is unacceptable is inheriting it silently. FR-058 chooses, states its reasoning, and marks the one figure it invents. **The consequence for spend is the useful part and it inverts the obvious reading:** the token limb no longer justifies buying E17, because its answer now follows from a requirement rather than from a run, and a run priced against a bound this specification forbids would price a setting v1 cannot ship. The limb that could still change a decision is task success, and it is the expensive one — it needs the paired battery, the calibration gate and enough pairs to see a shift that matters | **Setting a high bound in order to make the reference mechanism measurable would be designing the instrument to produce a result**, which is the failure this project has a standing rule against and has caught in its own artifacts more than once. **Deferring the bound until E17 runs was rejected for the reason U-50 gives**: a gap that waits on a run stays open, and this one is a requirement gap that exists whether or not any model is ever called. **Quoting the projected ratios as the answer was rejected** because they are a dry-run projection against a synthetic corpus, they move with the bound, and a single ratio without its bound is not a result. **The authorising decision is OD-25**, recorded 2026-08-04 in [feature 001's plan](../001-discovery-validation/plan.md) *(citation added when OD-25 was recorded; this row's text is otherwise unchanged — what it lacked was a decision to point at, not a determination)*. OD-25 records all three limbs as commitments rather than consequences, including that the requirement forecloses the configuration at which the planned experiment would have shown its largest effect, and that the task-success limb is predicted to void at stage one on its own harness — so the experiment is dead on both limbs rather than only on the token one |
 | **FR-041's threshold is left unset** | Pre-registration for a **per-call** gate is an owner act preceding measurement. **OD-10** records why the superseded per-tool number does not travel: different base rate, different blast radius | Inventing a threshold here is the inherited-number failure arriving through a new door — the failure this corpus has caught repeatedly |
-| **Linux-only, with no degraded mode elsewhere** (~~**Q-11**~~ → **OD-17**, 2026-08-03) | All three FR-048/049/050 mechanisms are kernel facilities | A degraded mode is a sandbox missing one of Principle IV bullet 1's terms, and the bullet's own words are that a configuration missing any term does not satisfy it |
+| **Linux-only, with no degraded mode elsewhere** (~~**Q-11**~~ → **OD-17**, 2026-08-03). **Extended 2026-08-04: the unsupported list also reaches four surfaces that *are* Linux** — Fargate, Cloud Run, ACI and GKE Autopilot — because their seccomp profile is not operator-changeable, so FR-048's namespace cannot be entered however willing the kernel is. Neither a floor nor a configuration but *foreclosed by the platform* | All three FR-048/049/050 mechanisms are kernel facilities, **and a kernel that has them does not make them reachable from the runtime the operator runs** — the profile and the cgroup mount the bundle ships are what close that gap (Target Platform note, T160) | A degraded mode is a sandbox missing one of Principle IV bullet 1's terms, and the bullet's own words are that a configuration missing any term does not satisfy it. **On the four managed surfaces there is no degraded tier to offer**: two of the three mechanisms are absent and the third alone supplies no containment. ⚠️ **The four are derived from vendor documentation and the LSM refusal path was unconstructible on the measuring host**, which carried no AppArmor and no SELinux — so the layer that refuses on Ubuntu 24.04 is the one thing here nobody measured |
 
 ---
 

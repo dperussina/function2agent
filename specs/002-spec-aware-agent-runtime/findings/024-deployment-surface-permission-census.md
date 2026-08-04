@@ -7,10 +7,17 @@ run permit, before the privilege model measured in
 **User Story**: US1, by way of FR-048, FR-049 and the Target Platform section of
 [`plan.md`](../plan.md).
 **Owner decision**: **none is recorded here, and the register was deliberately not edited.** Where
-this document needs to refer to the decision the owner has not yet taken it writes `OD-24` inside a
+this document needs to refer to the decision the owner has not yet taken it writes ~~`OD-24`~~
+**a code span reserving the next free number, and 2026-08-04 that number is no longer `OD-24`** inside a
 code span, which the corpus checker does not resolve as an identifier. Writing it as a live token
 before the register carries the entry is a hard `identifier-resolution` error, and this document is
-using the code-span escape deliberately rather than quietly. The precedent is the note under OD-21
+using the code-span escape deliberately rather than quietly.
+**Corrected 2026-08-04 by the propagation pass, because the reservation collided rather than being
+free.** OD-24 was already taken by the privilege-model decision this document defers to throughout,
+and OD-25 by the per-result output bound; **the next free number is `OD-26`**, and the live `OD-24`
+tokens added to this document below denote the privilege-model entry rather than the reservation. The
+reserved token appears nowhere in the body, so nothing derived here rests on it and the correction is
+to the reservation alone. The precedent is the note under OD-21
 that recording an owner decision *"required owner authority rather than a propagation pass"*, and
 [finding 023](./023-user-namespace-privilege-model.md) declined on the same grounds.
 **Model spend**: **$0.0000.** No model was called and no credential was read. Eight containers were
@@ -452,7 +459,37 @@ and with the argument mask removed from the non-`CAP_SYS_ADMIN` `clone` rule so 
 
 ## What this changes downstream, stated for documents this pass may not edit
 
-Nothing here was applied and no file outside this one was touched.
+~~Nothing here was applied and no file outside this one was touched.~~ **Superseded 2026-08-04 — a
+later propagation pass applied all four conditions, and this section is annotated rather than
+rewritten so that what the measuring pass wrote stays legible beside what was done with it.** Where
+each landed:
+
+| Condition | Where it landed |
+|---|---|
+| **1 — the bundle ships its own seccomp profile** | [`plan.md`](../plan.md)'s Target Platform note and Project Type line; [`tasks.md`](../tasks.md) **T160**, as `deploy/compose/seccomp/session.json` with the eight-name rule and the `clone` argument mask removed. T160 is also forbidden from reproducing the default-versus-unconfined framing |
+| **2 — `/sys/fs/cgroup` read-write with `--cgroupns=host`** | The same two sites, recorded as a *separate* change refused by a separate layer, with the host-wide cgroup write access stated as the cost rather than elided |
+| **3 — the real `unshare` plus the `unshare(0)` no-op arm** | **Not already discharged.** `src/supervisor/preflight.py`'s `namespaces` check reads `/proc/self/ns/` and `max_user_namespaces` only — presence and a sysctl, neither of which is a syscall attempt — so it cannot see a runtime-profile refusal at all. [`tasks.md`](../tasks.md) **T206** is the extension, and it carries the `--cap-add=SYS_ADMIN` warning in its remedy text |
+| **4 — managed container services are unsupported, not degraded** | [`spec.md`](../spec.md) at **FR-053**, as a note naming the four surfaces and the absent degraded tier; [`plan.md`](../plan.md)'s Complexity Tracking row and Target Platform note |
+
+**The unconstructible LSM layer is carried with all four**, at the Target Platform note, at the
+FR-053 note and in T206's own text, under the same *DERIVED, NOT TESTED* discipline the 5.14 kernel
+floor carries — because a condition derived from a layer nobody could measure must not read as a
+measured one. **`CAP_SETUID` is recorded as still open** at [`plan.md`](../plan.md)'s OD-24 note: a
+permissive deployment surface does not unblock finding 023's privilege model, and both constraints
+must hold.
+
+**One correction was made outside the four conditions.** [`plan.md`](../plan.md)'s OD-24 note carried
+the same over-strong inference this document flags in finding 023's reproduction section — that
+Docker's default profile blocking `unshare` is *"not ours to choose"* under OD-08's self-hosted
+model. The measured half stands and the inference is struck there: the bundle is exactly where it is
+ours to choose. **OD-24's deferral is undisturbed**, because its first ground is untouched and
+finding 023's open `CAP_SETUID` question replaces the second.
+
+**Two items in this section were not applied by this propagation, and neither is this pass's to
+edit**: finding 023's own reproduction section and its FR-050 label, which belong to that document
+and are being carried there; and the owner decision this document reserved a number for, which is untaken and
+whose reservation is corrected to `OD-26` in the header above. **No register entry was created**, and
+no condition applied here was written as though one had been.
 
 - **`plan.md`'s Target Platform** names the three kernel facilities and the 5.14 floor. Neither
   moves. What it does not say, and what the evidence says it should, is that **the facilities being
