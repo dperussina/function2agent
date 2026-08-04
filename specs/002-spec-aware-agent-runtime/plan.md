@@ -217,6 +217,16 @@ full and which no restatement may be weaker than.
 >   because Docker's rule is on the whole `unshare` syscall; that last step is derived, since
 >   `CLONE_NEWNET` is not among the four flags the census measured. **So no count of surviving
 >   mechanisms is available, and this verdict never needed one.**
+>   **Owner ruling, 2026-08-04 — the derived basis stays, and this is not an open action item.** Two
+>   ways to convert it were offered and both declined: an `unshare` probe deployed to Cloud Run and
+>   Fargate, and an Ubuntu 24.04 host carrying AppArmor to construct the LSM refusal that was
+>   unconstructible on the measuring host. The ground is that the error direction here is conservative
+>   — a wrong derivation **excludes** a surface the product could have served, rather than promising
+>   one it cannot — so the cost of being wrong is a narrower supported list, not a broken deployment.
+>   A later pass reading *derived from vendor documentation* or *nobody measured the refusal path*
+>   above should read those as the disclosed basis of a settled verdict, not as work owed. What would
+>   reopen it is an operator reporting that one of the four does admit the mount namespace, which is
+>   evidence no probe of ours produces.
 >
 > **The one diagnostic to put in front of an operator, because it is the change they will make first
 > and it does not work.** `--cap-add=SYS_ADMIN` is invited by the profile's own rule, which is written
