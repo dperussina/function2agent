@@ -21,8 +21,8 @@
 # supposed to depend on it, and reports UNPROVEN for any test that still passes.
 
 schema_version: "1.0.0"
-version: "1.2.0"
-updated: "2026-08-03"
+version: "1.3.0"
+updated: "2026-08-04"
 
 invariants:
   - id: INV-001
@@ -153,5 +153,28 @@ invariants:
       Two, both in tests/removal_proofs.sh — make require_write a no-op in
       src/contracts/ownership.py, or drop the scope-column guard from
       Repository.insert so a caller can supply its own tenant_id.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-010
+    discharges: T-08, FR-007, data-model.md §2.2
+    statement: >
+      A turn's parallel tool calls are recorded in the provider's declared
+      index order and never in completion order, and no declared merge rule
+      can lose a concurrent write. Every shared key names a rule in advance;
+      an undeclared key is refused rather than resolved by position, and every
+      declared rule either reflects every contribution or refuses naming both
+      branches. Finding 006 measured both hazards — 5 distinct orderings in 8
+      runs, and one of two parallel writes to a shared key vanishing with no
+      error and no warning — but it measured them on ADK, which OD-15 dropped.
+      The hazard is the providers' and the mitigation is now ours, so this is
+      an invariant with a known-real hazard and no measurement behind it.
+    test: tests/invariants/test_fanout_ordering.py
+    removal_proof: >
+      Four, all in tests/removal_proofs.sh — record on completion instead of
+      on the declared prefix, return the results in completion order, make
+      MergePolicy.rule_for fall back to a last-write-wins rule, or make
+      single_writer pick a winner instead of refusing. The last reproduces
+      finding 006's silent lost update exactly.
     runtime: milliseconds
     model_in_loop: false
