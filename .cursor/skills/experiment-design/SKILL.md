@@ -329,6 +329,76 @@ denominator and no statement of how many comparisons it represents. Ask *how man
 instrument actually look at* — and if the answer is not written down anywhere, the number is a
 statement and not a rate.
 
+## Rule 8: an experiment whose positive result is a failure signal needs a negative control
+
+**Added 2026-08-03, and it is a third distinct failure rather than a variant of the two above.** Rule
+6 is scoring against the wrong state; Rule 7 is scoring over the wrong population. This one is
+scoring from **one reading where the design needs two**, and it survives both of those audits
+untouched — the state is current, the population is complete, and the number is still unearned.
+
+**The shape: an ablation reads only the state after the treatment, and a failure there is its
+positive result.** Remove the mechanism, observe the test fail, conclude the test was load-bearing.
+Remove the feature, observe the score drop, conclude the feature carried the score. The reading is
+one bit — *did it break* — and **every way the instrument itself can break produces that same bit.**
+A missing dependency, a renamed subject, a subject that was already failing, a treatment that left
+the subject unbuildable: each is indistinguishable from success, and each is scored as success.
+
+This inverts the usual protection. When an experiment's expected result is *pass*, a broken
+instrument reads as a disappointing result and gets investigated. When the expected result is
+*fail*, a broken instrument reads as a triumph and gets published.
+
+**The instance.** This repository's removal-proof harness deletes a mechanism, runs the test that
+should depend on it, and reads a non-zero exit as proof. Run on a host where `python3` could not
+`import pytest`, every arm exited non-zero for that reason, and it reported **51 proved, 0 unproven**
+and exited clean. Nothing in the output was false; every line was computed correctly from what the
+instrument observed. The only thing that surfaced it was that the score was implausibly good.
+
+**Two siblings in the same instrument, pointing opposite ways, and both were live.** `pytest` exits
+4 for a selector naming a test that no longer exists, which is non-zero and was therefore scored
+`proved` — so a *renamed test* silently converted a proof into a result. `go test -run` exits 0 when
+its pattern matches nothing, so the same rot on the Go side was scored `UNPROVEN`, which is a false
+claim about the tests rather than about the proof. **One rot, two opposite verdicts, neither true.**
+
+### The check
+
+1. **Name the reading a positive result produces.** Here, a non-zero exit status. Write it down; it
+   is usually narrower than people assume, and that narrowness is the problem.
+2. **List every fault that produces that reading without the treatment having done anything.**
+   Dependency absent, subject renamed or deleted, subject already failing, treatment applied nothing,
+   treatment left the subject unparseable or unbuildable. The list is short and finite, which is why
+   this is a check and not a disposition.
+3. **Produce each fault and run the instrument.** Not reason about it — produce it. A missing
+   dependency is one `PATH` away; a renamed subject is one rename. An instrument that has never been
+   run in its own failure modes has no evidence about them.
+4. **Require a reading of the untreated state, and require it to be the expected negative.** This is
+   the fix, and everything above is diagnosis. The claim is *A because B*, which needs both states;
+   an instrument holding one of them can only ever report *A*.
+5. **If the untreated reading is too expensive per case, take it once over the whole population
+   rather than dropping it.** Per-case baselines here would have roughly doubled a fifty-one-arm run.
+   Taken once across the suite and looked up per arm, the same evidence cost about a tenth of the
+   run — and it is *stronger*, because it also answers "was anything already red."
+
+### What it does not buy
+
+**A negative control establishes that the subject passed before, not that it failed *because of* the
+treatment.** A treatment that breaks the subject for an unrelated reason still reads as a positive
+and still clears every step above. Closing that needs attribution — which specific assertion failed,
+and does its name have anything to do with the claim — and attribution is a reading task with no
+threshold in it, so it belongs in a listing a human reads rather than in a gate. This project keeps
+one at [`tools/proof_attribution.py`](../../../tools/proof_attribution.py), on the same
+fails-nothing footing as [the citation advisory](../../../tools/README.md#the-advisory--cite_advisorpy).
+
+**And the control cannot be the thing being controlled for.** The baseline must be taken with the
+same interpreter, toolchain and privileges the treated run will use, in the same tree. A baseline
+established somewhere healthier than the arms is a statement about the healthier place.
+
+**The tell, if you only remember one thing.** **A perfect score on an ablation suite.** Every
+mechanism load-bearing, nothing unproven, no skips — that is either an unusually well-tested system
+or an instrument that has stopped discriminating, and from the outside the two are the same output.
+Before believing it, break the instrument on purpose and check that the score moves.
+([`tests/removal_proofs.sh`](../../../tests/removal_proofs.sh),
+[`tools/check_tampers.py`](../../../tools/check_tampers.py).)
+
 ## Spike hygiene
 
 **Spike code is disposable; the task corpus and its oracles are not.** The corpus outlives the

@@ -13,13 +13,48 @@ from __future__ import annotations
 
 import ctypes
 import os
+import shutil
 import sys
+import tempfile
 
 import pytest
 
 _skipped_privileged = 0
 _skipped_linux = 0
 _vacuous_invariants: dict[str, str] = {}
+
+# `sun_path` in `struct sockaddr_un`: 104 bytes on the BSDs and macOS, 108 on
+# Linux. The smaller one is the budget, because a path that binds on one and not
+# the other is a portability trap rather than a fix.
+_SUN_PATH_MAX = 104
+# What the longest socket-binding test appends below `tmp_path`: pytest's own
+# `<test-name-truncated-to-30>0/` plus `run/session-s-listener.sock`.
+_TMP_PATH_SUFFIX_BUDGET = 64
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Keep `tmp_path` short enough that a test can bind a socket inside it.
+
+    On macOS `$TMPDIR` is a ~49-character per-user path under `/var/folders`,
+    and pytest builds `tmp_path` beneath it. `SessionListener` then binds an
+    `AF_UNIX` socket in that directory and the address overflows `sun_path`,
+    so two lease-revocation tests fail with `OSError: AF_UNIX path too long`
+    and one of them fails as an `IndexError` on the child's empty stdout,
+    which does not name the cause anywhere.
+
+    That is an environmental fault wearing a result's clothes — the same shape
+    as a removal proof that reports `proved` because pytest was missing — so it
+    is fixed rather than documented. The redirect is conditional on the budget
+    actually being exceeded, so on Linux and in CI nothing changes.
+    """
+    if config.option.basetemp is not None:
+        return
+    if len(tempfile.gettempdir()) + _TMP_PATH_SUFFIX_BUDGET <= _SUN_PATH_MAX:
+        return
+    short = os.path.join("/tmp", f"f2a-pytest-{os.getuid()}")
+    shutil.rmtree(short, ignore_errors=True)
+    os.makedirs(short, exist_ok=True)
+    config.option.basetemp = short
 
 
 def note_vacuous_invariant(invariant_id: str, reason: str) -> None:

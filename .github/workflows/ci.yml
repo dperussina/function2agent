@@ -32,6 +32,14 @@ jobs:
         run: pip install --require-hashes -r requirements.lock
       - name: Run the invariant runner
         run: python tests/invariants/runner.py
+      - name: Are the removal proofs still pointed at anything?
+        # Under a second, no pytest, no Go, no privileges. It is here, in the
+        # fastest job, because the proofs' dominant failure mode is not a
+        # mechanism regressing — it is a tamper string quietly ceasing to match
+        # after an unrelated edit, which the harness only notices minutes later
+        # in a job that needs root. Fifteen proofs rotted on 2026-08-03 because
+        # nothing cheap enough to run during the work was looking.
+        run: python tools/check_tampers.py
 
   python:
     name: pytest (kernel mechanisms included)
@@ -61,6 +69,14 @@ jobs:
     # had drifted by the end of Phase 2 and every one reported as a gap in the
     # tests rather than as a broken proof. The harness now fails a tamper that
     # matches nothing, which is what makes this job worth running.
+    #
+    # **The harness refuses to report a number in an environment it cannot
+    # measure in.** It runs the whole suite untampered first and aborts with exit
+    # 2 if pytest produced no outcomes at all. Without that, a runner whose
+    # dependency install had silently failed would score every arm non-zero and
+    # publish a perfect result; that was run for real on a developer host and
+    # reported 48 proved, 0 unproven, having tested nothing. `set -e` is not in
+    # this script, so the exit status is carried explicitly by its last line.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

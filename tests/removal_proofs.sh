@@ -14,61 +14,188 @@
 #   docker run --rm --privileged --cgroupns=host \
 #     -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v "$PWD:/work" -w /work \
 #     f2a-dev bash tests/removal_proofs.sh
+#
+# ---------------------------------------------------------------------------
+# WHAT A PROOF HAS TO ESTABLISH, AND WHY THE POST-TAMPER RUN IS NOT ENOUGH
+#
+# A proof claims: *this test fails BECAUSE this mechanism is gone.* Reading only
+# the state after the tamper cannot establish that, because everything below
+# also produces a failing test and none of it is evidence of anything:
+#
+#   - the interpreter cannot import pytest, so every arm exits non-zero;
+#   - the test named by the proof was renamed, so `pytest` exits 4 for an
+#     unrecognised selector — which reads as a failing test;
+#   - the test was already failing before anything was tampered;
+#   - the tamper produced source that does not parse or does not build.
+#
+# The first of those was run for real: on a host without pytest the harness
+# reported **48 proved, 0 unproven**, and the only reason anyone noticed is that
+# the number was implausibly good. A verification instrument that scores full
+# marks precisely when it is measuring nothing is worse than no instrument.
+#
+# So a proof is scored against BOTH states. The suite is run once, untampered,
+# before any proof; each proof looks its own test up in that baseline and is
+# attempted only if the test RAN and PASSED there. The baseline costs one
+# pytest invocation and one `go test` invocation for the whole file — a few
+# percent on a run that makes fifty-one of each — because it is taken over the
+# whole suite at once rather than per proof.
+#
+# `tools/check_tampers.py` is the same reasoning applied statically, and costs
+# under a second with no pytest, no Go and no privileges. Run that first.
 
 set -uo pipefail
 
 SRC=$(pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
-cp -r "$SRC/src" "$SRC/tests" "$SRC/pyproject.toml" "$WORK/" 2>/dev/null
+cp -r "$SRC/src" "$SRC/tests" "$SRC/tools" "$SRC/pyproject.toml" "$WORK/" 2>/dev/null
 # The Go arms need the fixtures at the relative path the tests use
 # (src/proxy/../../tests/fixtures), which the copy above already satisfies.
 cd "$WORK" || exit 1
+
+TAMPER="$SRC/tools/tamper.py"
+BASELINE_PY="$WORK/.baseline-pytest.txt"
+BASELINE_GO="$WORK/.baseline-go.txt"
 
 PASS=0
 FAIL=0
 SKIP=0
 
-# A tamper whose match string has drifted applies nothing, the test passes for the
-# ordinary reason, and the result is reported as UNPROVEN — indistinguishable from a
-# real gap in the tests. That silently weakens every proof in this file as the source
-# moves under it, so a no-op edit is its own failure class.
-proof () {
-  local name="$1" file="$2" test="$3" python_edit="$4"
+echo "Removal proofs"
+echo
+
+# ---------------------------------------------------------------------------
+# The baseline. Nothing below is attempted until this says the suite runs.
+
+python3 -m pytest tests -v --tb=no -p no:cacheprovider >"$BASELINE_PY" 2>&1
+if ! grep -qE ' (PASSED|FAILED|SKIPPED|ERROR|XFAIL|XPASS)' "$BASELINE_PY"; then
+  echo "  CANNOT RUN — pytest produced no test outcomes at all in this environment."
+  echo
+  sed 's/^/    /' "$BASELINE_PY" | tail -20
+  echo
+  echo "  Every proof below would have exited non-zero for this reason and been"
+  echo "  scored as proved. Refusing to report a number. Install the pinned"
+  echo "  dependencies (pip install --require-hashes -r requirements.lock) or run"
+  echo "  inside the dev image."
+  exit 2
+fi
+_py_total=$(grep -cE ' (PASSED|FAILED|SKIPPED|ERROR|XFAIL|XPASS)' "$BASELINE_PY")
+_py_failed=$(grep -cE ' (FAILED|ERROR)' "$BASELINE_PY")
+
+HAVE_GO=0
+if command -v go >/dev/null 2>&1; then
+  HAVE_GO=1
+  (cd "$WORK/src/proxy" && go test -v ./...) >"$BASELINE_GO" 2>&1
+  _go_total=$(grep -cE '^ *--- (PASS|FAIL|SKIP): ' "$BASELINE_GO")
+  _go_failed=$(grep -cE '^ *--- FAIL: ' "$BASELINE_GO")
+  echo "  baseline   ${_py_total} python outcomes (${_py_failed} not passing), ${_go_total} go outcomes (${_go_failed} not passing)"
+else
+  : >"$BASELINE_GO"
+  echo "  baseline   ${_py_total} python outcomes (${_py_failed} not passing), no Go toolchain"
+fi
+echo
+
+# _escape turns a pytest node id into something grep -E will match literally.
+_escape () { printf '%s' "$1" | sed 's/[][\.*^$(){}?+|\/]/\\&/g'; }
+
+# baseline_py: PASSED | SKIPPED | FAILED | ABSENT, for a node id or a file.
+#
+# ABSENT is the one that had no detection at all before. A renamed test makes
+# `pytest` exit 4, the harness read any non-zero exit as the mechanism being
+# load-bearing, and the proof reported `proved` while running nothing.
+baseline_py () {
+  local sel esc out
+  sel="$1"
+  esc=$(_escape "$sel")
+  case "$sel" in
+    *::*) out=$(grep -E "^${esc}( |\[)" "$BASELINE_PY") ;;
+    *)    out=$(grep -E "^${esc}::" "$BASELINE_PY") ;;
+  esac
+  if [ -z "$out" ]; then echo ABSENT; return; fi
+  if echo "$out" | grep -qE ' (FAILED|ERROR)'; then echo FAILED; return; fi
+  if echo "$out" | grep -qE ' PASSED'; then echo PASSED; return; fi
+  echo SKIPPED
+}
+
+# baseline_go: the same question for a `-run` alternation. Every named test must
+# have passed. `go test -run` exits 0 when its pattern matches nothing, so a
+# renamed Go test reported UNPROVEN — a claim about the tests rather than about
+# the proof, and equally false.
+baseline_go () {
+  local pattern name out verdict=PASSED
+  pattern="$1"
+  IFS='|' read -r -a _names <<<"$pattern"
+  for name in "${_names[@]}"; do
+    out=$(grep -E "^ *--- (PASS|FAIL|SKIP): $(_escape "$name") " "$BASELINE_GO")
+    if [ -z "$out" ]; then echo ABSENT; return; fi
+    if echo "$out" | grep -q -- '--- FAIL: '; then verdict=FAILED; fi
+    if [ "$verdict" = PASSED ] && echo "$out" | grep -q -- '--- SKIP: '; then verdict=SKIPPED; fi
+  done
+  echo "$verdict"
+}
+
+# report_unrunnable prints the one line that says why a proof was not attempted,
+# and returns 0 if the caller should stop.
+report_unrunnable () {
+  local verdict="$1" name="$2" test="$3"
+  case "$verdict" in
+    ABSENT)
+      echo "  NO TEST   $name — $test matched nothing in the baseline; the test was renamed or removed"
+      FAIL=$((FAIL+1)); return 0 ;;
+    FAILED)
+      echo "  UNUSABLE  $name — $test already fails before the tamper, so its failure after proves nothing"
+      FAIL=$((FAIL+1)); return 0 ;;
+    SKIPPED)
+      echo "  SKIPPED   $name — the test did not run here (privilege or platform)"
+      SKIP=$((SKIP+1)); return 0 ;;
+  esac
+  return 1
+}
+
+# apply_tamper edits $2 per the snippet in $3, or explains why it could not.
+# Returns 0 on success. `tools/tamper.py` owns the matching rules; see its
+# docstring for why a match may be whitespace-insensitive and must be unique.
+apply_tamper () {
+  local name="$1" file="$2" snippet="$3" mode status
   cp "$file" "$file.orig"
-  python3 - "$file" <<PY
-import sys, pathlib
-p = pathlib.Path(sys.argv[1]); s = p.read_text()
-before = s
-$python_edit
-if s == before:
-    raise SystemExit(3)
-p.write_text(s)
-PY
-  local edit_status=$?
-  if [ "$edit_status" -ne 0 ]; then
-    if [ "$edit_status" -eq 3 ]; then
-      echo "  NO-OP     $name — the tamper matched nothing; the source moved under this proof"
-    else
-      echo "  BROKEN    $name — the tamper script failed to run"
-    fi
+  mode=$(python3 "$TAMPER" "$file" "$snippet" 2>"$WORK/.tamper-err")
+  status=$?
+  if [ "$status" -ne 0 ]; then
+    case "$status" in
+      3) echo "  NO-OP     $name — the tamper matched nothing; the source moved under this proof" ;;
+      4) echo "  AMBIGUOUS $name — the tamper matches more than one site; it does not name a mechanism" ;;
+      5) echo "  NO-OP     $name — the tamper ran and changed nothing" ;;
+      7) echo "  BROKEN    $name — the tampered source does not parse; the test would fail for the wrong reason" ;;
+      *) echo "  BROKEN    $name — the tamper script failed to run" ;;
+    esac
+    sed 's/^/            /' "$WORK/.tamper-err" | head -2
     FAIL=$((FAIL+1))
     mv "$file.orig" "$file"
-    return
+    return 1
   fi
-  # A test that skipped exits 0, which reads as "passed with the mechanism
-  # removed" — so an unprivileged run would report every kernel proof as a gap
-  # in the tests rather than as a proof that could not be attempted. Collect the
-  # outcome before interpreting the exit status.
-  local output
-  output=$(python3 -m pytest "$test" -q 2>&1)
-  local status=$?
-  if [ "$status" -eq 0 ] && echo "$output" | grep -qE '^[0-9]+ skipped|[0-9]+ skipped in ' \
-     && ! echo "$output" | grep -qE '[0-9]+ passed'; then
-    echo "  SKIPPED   $name — the test did not run here (privilege or platform)"
-    SKIP=$((SKIP+1))
-  elif [ "$status" -eq 0 ]; then
+  if [ "$mode" = OK_NORMALIZED ]; then
+    echo "  drifted   $name — the tamper matched only after whitespace normalization (a formatter moved this site)"
+  fi
+  return 0
+}
+
+proof () {
+  local name="$1" file="$2" test="$3" python_edit="$4"
+  local verdict
+  verdict=$(baseline_py "$test")
+  if report_unrunnable "$verdict" "$name" "$test"; then return; fi
+
+  apply_tamper "$name" "$file" "$python_edit" || return
+
+  local output status
+  output=$(python3 -m pytest "$test" -q -p no:cacheprovider 2>&1)
+  status=$?
+  if [ "$status" -eq 0 ]; then
     echo "  UNPROVEN  $name — the test still passes with the mechanism removed"
+    FAIL=$((FAIL+1))
+  elif echo "$output" | grep -qE '^(ERROR|INTERNALERROR)' && ! echo "$output" | grep -qE '[0-9]+ failed'; then
+    # The test did not run: an import or collection error, not an assertion.
+    echo "  BROKEN    $name — the tamper broke collection rather than the mechanism"
     FAIL=$((FAIL+1))
   else
     echo "  proved    $name"
@@ -76,9 +203,6 @@ PY
   fi
   mv "$file.orig" "$file"
 }
-
-echo "Removal proofs"
-echo
 
 proof "FR-048 mount namespace — pivot_root removed" \
   src/supervisor/mounts.py \
@@ -120,10 +244,17 @@ proof "FR-011 rule id — the deny/rule_id check removed" \
   "tests/invariants/test_rule_id_present.py::test_a_deny_without_a_rule_id_cannot_be_constructed" \
   's = s.replace("        if self.disposition == DENY and not self.rule_id:", "        if False:")'
 
+# The tamper moves the field as well as defaulting it, and it has to. `verification` is the first
+# field of a dataclass whose second field has no default, so adding a default to it alone is not a
+# weaker contract — it is `TypeError: non-default argument 'payload' follows default argument` at
+# class-definition time. The module then does not import, every test in the file errors during
+# collection, and the harness scored that as `proved` for as long as the proof existed. Moving the
+# field below `payload` is the edit a contributor would actually make, and it is the one both
+# assertions in `test_verification_has_no_default_in_the_source` exist to catch.
 proof "FR-025 result — verification given a default" \
   src/contracts/result.py \
   "tests/invariants/test_result_constructor.py" \
-  's = s.replace("    verification: VerificationOutcome\n", "    verification: VerificationOutcome = VerificationOutcome.VERIFIED\n")'
+  's = s.replace("    verification: VerificationOutcome\n    payload: Any\n", "    payload: Any\n    verification: VerificationOutcome = VerificationOutcome.VERIFIED\n")'
 
 proof "FR-006 taxonomy — closed membership becomes a prefix match" \
   src/contracts/terminal.py \
@@ -146,27 +277,27 @@ proof "Q-10 no-default bounds — a default added" \
 
 go_proof () {
   local name="$1" file="$2" test="$3" python_edit="$4"
-  if ! command -v go >/dev/null 2>&1; then
+  if [ "$HAVE_GO" -eq 0 ]; then
     echo "  SKIPPED   $name — no Go toolchain on PATH"
     SKIP=$((SKIP+1))
     return
   fi
-  cp "$file" "$file.orig"
-  python3 - "$file" <<PY
-import sys, pathlib
-p = pathlib.Path(sys.argv[1]); s = p.read_text()
-$python_edit
-assert s != p.read_text(), "the removal edit matched nothing; the proof would be vacuous"
-p.write_text(s)
-PY
-  if [ $? -ne 0 ]; then
-    echo "  UNPROVEN  $name — the removal edit did not apply"
-    FAIL=$((FAIL+1))
-    mv "$file.orig" "$file"
-    return
-  fi
-  if (cd "$WORK/src/proxy" && go test -run "$test" ./... >/dev/null 2>&1); then
+  local verdict
+  verdict=$(baseline_go "$test")
+  if report_unrunnable "$verdict" "$name" "$test"; then return; fi
+
+  apply_tamper "$name" "$file" "$python_edit" || return
+
+  local output
+  output=$(cd "$WORK/src/proxy" && go test -run "$test" ./... 2>&1)
+  local status=$?
+  if [ "$status" -eq 0 ]; then
     echo "  UNPROVEN  $name — the test still passes with the mechanism removed"
+    FAIL=$((FAIL+1))
+  elif echo "$output" | grep -q 'build failed'; then
+    # A package that will not compile fails every test in it, which is not the
+    # same claim as the test noticing the mechanism is gone.
+    echo "  BROKEN    $name — the tampered package does not build; no test ran"
     FAIL=$((FAIL+1))
   else
     echo "  proved    $name"
@@ -222,10 +353,13 @@ proof "SC-022 path marking — the caveat dropped from the serialized record" \
 # address becomes one address PER CLASS". The last three proofs cover the loopback path and that
 # new failure mode; a proof set that only tampered the RFC1918 path would leave both unproven.
 #
-# Note the tamper strings below carry TWO spaces after `classPrivate:`. That is gofmt's alignment
-# of the two-entry map, and the single-space form these proofs used while the map had one entry
-# now matches nothing. A drifted tamper reports rather than passing silently, which is how this
-# was caught.
+# The tamper strings below carry TWO spaces after `classPrivate:`, which is gofmt's alignment of
+# the two-entry map. When the map had one entry they carried one space, and adding the second
+# entry made every one of them match nothing. That is now survivable rather than fatal — the
+# matcher normalizes intra-line whitespace — but the strings are still written in the source's
+# current form, because a proof that matches only after normalization reports `drifted` and is a
+# repair waiting to be made. The next edit that changes the longest key in that map will realign
+# it again and the proofs will keep applying.
 
 go_proof "FR-017 exemption — the declared RFC1918 origin stops being reachable" \
   src/proxy/addresses.go \
@@ -303,10 +437,15 @@ proof "T015 schema gate — a required field removed without a MAJOR bump" \
   "tests/contract/test_schema_versions.py" \
   's = s.replace("    required=(\x22schema_version\x22, \x22deployment_id\x22, \x22operations\x22),", "    required=(\x22schema_version\x22, \x22deployment_id\x22),")'
 
+# The tamper names the guard inside `migrate`, not the string `raise MigrationError(`.
+# That string occurs five times, and the first is at module scope inside the duplicate-registration
+# loop — so the old tamper inserted a `return` outside a function, the module stopped parsing, and
+# every test in it failed for a reason this proof does not claim. It read as `proved` for as long
+# as it existed. `tools/check_tampers.py` is what surfaced it.
 proof "T014 migration — a stale document passes through unmigrated" \
   src/contracts/migrations/__init__.py \
   "tests/contract/test_migrations.py" \
-  's = s.replace("        raise MigrationError(", "        return dict(document)\n        raise MigrationError(", 1)'
+  's = s.replace("        if migration is None:\n", "        if migration is None:\n            return dict(document)\n")'
 
 proof "T017 ownership — a non-owner may write" \
   src/contracts/ownership.py \

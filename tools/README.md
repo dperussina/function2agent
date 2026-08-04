@@ -67,6 +67,9 @@ threshold** before you write any edit-and-restore loop of your own.
 | `corpuscheck/checks/` | One module per failure class. |
 | `gen_claims.py` | Writes the two claim classes that are derivable rather than authored. See below. |
 | `cite_advisor.py` | **Not a check and not a generator.** Ranks every requirement against each contract's subject and lists the high scorers the contract does not name. No finding changes its exit code, nothing imports it, the gate does not know it exists. |
+| `tamper.py` | The matcher `tests/removal_proofs.sh` edits source with. Exact first, whitespace-tolerant second, unique always. See [Removal-proof rot](#removal-proof-rot--tamperpy-and-check_tamperspy). |
+| `check_tampers.py` | Static rot check over every removal proof: does each tamper still name one live site, and does each test still exist? No pytest, no Go, no privileges. |
+| `proof_attribution.py` | **Not a check.** For each removal proof, the test that actually fails once its tamper lands — the reading a human does to decide whether a proof proves what it claims. |
 | `selftest.py` | Proof that each check fires, that none fires on well-formed input, and that the generator writes digits and nothing else. |
 | `threshold_probe.py` | Proof that each numeric threshold is pinned: moves every tolerance, window, bound and distance by one unit and requires the self-test to break. |
 | `fixtures/` | The two miniature corpora. See `fixtures/README.md`. |
@@ -487,6 +490,79 @@ that ranking findings against requirements would produce a serviceable *reading
 aid* — "here are the requirements this finding touches" — which is a different and
 much weaker product than defect detection, and nothing in the corpus says anyone
 wants it.
+
+## Removal-proof rot — `tamper.py` and `check_tampers.py`
+
+`tests/removal_proofs.sh` is the repository's evidence that its tests are load-bearing: it edits a
+mechanism out of the source and requires the test that covers it to start failing. **Its dominant
+failure mode is not a mechanism regressing. It is a tamper string quietly ceasing to match**, after
+which the edit applies nothing, the test passes for the ordinary reason, and the proof reports a
+result it did not earn. Fifteen proofs reached that state on 2026-08-03 — thirteen found at once,
+then two more.
+
+```
+python3 tools/check_tampers.py                      # every proof; exits 1 on rot
+python3 tools/check_tampers.py --warnings-as-errors # a proof surviving on whitespace tolerance fails too
+python3 tools/check_tampers.py --root PATH --proofs FILE --exact-only   # score one revision against another
+python3 tools/proof_attribution.py --only FR-017    # which test each proof's tamper actually breaks
+```
+
+**Three rot classes, and they were not equally visible.**
+
+| Class | What it does | What it used to report |
+|---|---|---|
+| The tamper string moved | applies no edit | `UNPROVEN` — a claim about the tests, not the proof |
+| The tamper grew a second site | `str.replace` edits both | `proved`, for a mechanism it did not isolate |
+| The **test** was renamed | `pytest` exits 4, `go test -run` exits 0 | `proved` on the Python side, `UNPROVEN` on the Go side |
+
+The third had no guard anywhere and is the worst of the three, because one rot produced two opposite
+verdicts and neither was true.
+
+### Why matching is whitespace-tolerant, and where the tolerance stops
+
+Two of the fifteen rotted for a reason no amount of care prevents. Adding a second entry to a Go map
+made `gofmt` realign it, `classPrivate: true,` became `classPrivate:  true,`, and both proofs
+matching the single-space form stopped applying. Nobody wrote a wrong string; a formatter moved the
+source underneath two correct ones, and the next edit that changes the longest key in that map will
+do it again.
+
+So `tamper.py` tries the literal string first and, failing that, normalizes both sides before
+matching. **Leading indentation is deliberately not normalized** — it is the one whitespace that
+carries meaning in these languages, and collapsing it would let a needle written for one nesting
+depth match a same-looking line at another, then splice the replacement in at the wrong depth. What
+collapses is runs of spaces and tabs *after* the first non-whitespace character of a line, which is
+exactly the alignment class and nothing else.
+
+**Tolerance without uniqueness would be worse than the rot**, so a match must identify exactly one
+site. Zero is `NO_MATCH`; two or more is `AMBIGUOUS` unless the tamper declares its multiplicity with
+an explicit count. And a normalized match is reported rather than swallowed — the harness prints
+`drifted`, the check emits a warning, and the string is a repair waiting to be made.
+
+### The rot check runs in the ordinary suite, and that is the point
+
+Nothing about detection is new; the harness has failed a no-op tamper since Phase 2. What was
+missing is a detector cheap enough for the person who *causes* the rot to run. The harness needs
+pytest, a Go toolchain, a Linux kernel and root, and takes minutes. Thirteen proofs rotted inside one
+session because nothing that ran during that session looked at them.
+
+`check_tampers.py` needs none of that and finishes in well under a second, so it sits in three
+places: the fast CI job, `tests/unit/test_tamper_matching.py` in the ordinary `pytest` run, and a
+pre-commit hook if you want one. That file also carries the fixtures — the two real 2026-08-03 rots
+against the source that caused them, plus the refusals that keep the tolerance honest.
+
+### What none of it catches
+
+- **A tamper that applies cleanly and removes the wrong thing.** The test fails, the harness scores
+  it `proved`, and every mechanical check above is satisfied. `proof_attribution.py` prints the
+  evidence a human needs — the node ids that went from passing to failing — and decides nothing,
+  because no threshold separates "an unexpected test failed" from "this file covers the mechanism
+  from two angles."
+- **A test that is weak in the same direction the mechanism is.** A proof shows the test notices the
+  edit that was made, never that it would notice a subtler one.
+- **Rot in a proof for a test that cannot run here.** A skipped arm is scored `SKIPPED` and its
+  tamper is never applied — but `check_tampers.py` reads the source statically and so covers those
+  four arms on any host, which is the one place the static check is strictly stronger than the
+  harness.
 
 ## Roles: who is authoritative
 
