@@ -197,6 +197,7 @@ class Repository:
                 f"ON {_quote_identifier(table)} ({columns})"
             )
         except sqlite3.IntegrityError as exc:
+            self._rollback_if_outermost()
             keys = ", ".join((*SCOPE_COLUMNS, *group))
             raise UniquenessError(
                 f"{table}: cannot declare ({keys}) unique because rows "
@@ -232,6 +233,15 @@ class Repository:
             try:
                 self._conn.execute(sql, tuple(scoped.values()))
             except sqlite3.IntegrityError as exc:
+                # **The rollback is the load-bearing line.** A statement that
+                # fails inside an implicit transaction does not end it, so
+                # without this the connection sits holding a write lock and
+                # *every other process* writing this file gets `database is
+                # locked` — for five seconds, and then an engine-specific
+                # exception this layer promises no caller will see. T050's
+                # probe measured it: one refused uniqueness insert wedged an
+                # unrelated write from a second connection.
+                self._rollback_if_outermost()
                 raise UniquenessError(f"{table}: {exc}") from None
             self._commit_if_outermost()
 
@@ -298,6 +308,17 @@ class Repository:
         """Commit only when no `transaction()` is open above this write."""
         if self._depth == 0:
             self._conn.commit()
+
+    def _rollback_if_outermost(self) -> None:
+        """End the transaction a failed statement left open, and only that one.
+
+        Inside a `transaction()` the rollback belongs to the context manager,
+        which owns the whole group; rolling back here would discard the outer
+        transaction's earlier writes on a failure the caller may be about to
+        catch.
+        """
+        if self._depth == 0:
+            self._conn.rollback()
 
     @contextmanager
     def transaction(self) -> Iterator[None]:

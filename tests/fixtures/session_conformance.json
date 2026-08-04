@@ -31,7 +31,7 @@
       "honoured_at_now": false,
       "why": "terminated by the supervisor, which also zeroes the lease",
       "capability_sha256": "4f2e8d65483c641648cdb374ae9d8abd368d269e4ddffe092a8237b8162cddd6",
-      "terminal_state": "OPERATOR_TERMINATED"
+      "terminal_state": "terminated.operator_terminated"
     },
     {
       "session_id": "sess-terminated-live-lease",
@@ -41,7 +41,7 @@
       "honoured_at_now": false,
       "why": "the SC-024 replay shape. The supervisor does not currently produce this row \u2014 `terminate()` zeroes the lease \u2014 so it is written directly, bypassing that writer. Without it the fixture cannot tell a state check from an expiry check, and an enforcement point that only checked expiry would pass every other row here.",
       "capability_sha256": "f435f2420b50c70ec80865cf8e20b169874165fb8576b48633caf2a8176d2e4a",
-      "terminal_state": "OPERATOR_TERMINATED"
+      "terminal_state": "terminated.operator_terminated"
     },
     {
       "session_id": "sess-expired",

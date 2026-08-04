@@ -176,6 +176,46 @@ SUPERVISOR_KEYS: tuple[Key, ...] = (
 )
 
 
+_CEILING_KEYS: tuple[Key, ...] = tuple(
+    key for key in SUPERVISOR_KEYS if key.name.startswith("SESSION_CEILING_")
+)
+
+_NO_DEFAULT_RESULT_BOUND = (
+    "FR-058 states the bound is required configuration and states no default. "
+    "An unset per-result bound is not a number nobody measured; it is the "
+    "operative behaviour of inlining whatever the call printed, which no "
+    "requirement chose."
+)
+
+RUNTIME_KEYS: tuple[Key, ...] = (
+    # FR-005 — the same four keys the supervisor reads. Shared Key objects
+    # rather than a second declaration: two declarations of one ceiling would
+    # eventually disagree, and the disagreement would be between the process
+    # that enforces the ceiling and the process that reports it.
+    *_CEILING_KEYS,
+    # FR-058 — no default, and the ceiling is derived rather than configured.
+    Key("TOOL_RESULT_BOUND_TOKENS", Kind.INT, "FR-058",
+        "the largest a single tool result may be, in tokens of the model in "
+        "force. Refused above one twentieth of the context window",
+        no_default_reason=_NO_DEFAULT_RESULT_BOUND),
+    Key("MODEL_CONTEXT_WINDOW_TOKENS", Kind.INT, "FR-058",
+        "the context window of the model in force. Not a bound in itself — it "
+        "is what makes FR-058's one-twentieth ceiling computable, so a bound "
+        "cannot be checked without it",
+        no_default_reason=_NO_DEFAULT_RESULT_BOUND),
+    Key("RESULT_RETENTION_MAX_BYTES", Kind.BYTES_SIZE, "FR-058",
+        "the declared bound on the retention location a bounded result points "
+        "at. Without it the reference relocates an unbounded liability from "
+        "the transcript onto a disk nothing bounds",
+        no_default_reason=_NO_DEFAULT_RESULT_BOUND),
+    Key("F2A_STATE_DIR", Kind.PATH, "FR-033",
+        "directory holding the runtime's own store — the journal, the ledger "
+        "and the ceilings. Outside the session's mount namespace"),
+    Key("F2A_TENANT_ID", Kind.STR, "FR-035", "tenant namespace, from OD-08"),
+    Key("F2A_DEPLOYMENT_ID", Kind.STR, "FR-035", "admitted deployment identity"),
+)
+
+
 @dataclass(frozen=True)
 class Config:
     values: Mapping[str, Any]

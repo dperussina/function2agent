@@ -133,7 +133,7 @@ def build(db_path: Path) -> list[dict]:
             if row["state"] in ("RUNNING", "TERMINATED"):
                 table.mark_running(row["session_id"])
             if row["state"] == "TERMINATED":
-                table.terminate(row["session_id"], "OPERATOR_TERMINATED")
+                table.terminate(row["session_id"], "terminated.operator_terminated")
             # The adversarial row: put the lease back after termination, which
             # the supervisor's own writer will not do. Raw SQL, and visibly so.
             if row["session_id"] == "sess-terminated-live-lease":

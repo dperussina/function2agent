@@ -55,7 +55,16 @@ from src.contracts.terminal import is_terminal
 STATE_STARTING = "STARTING"
 STATE_RUNNING = "RUNNING"
 STATE_TERMINATED = "TERMINATED"
-STATES = frozenset({STATE_STARTING, STATE_RUNNING, STATE_TERMINATED})
+# `data-model.md` §2.1's `interrupted ─▶ RUNNING` edge. Not a terminal state: a
+# session that resumes has not ended, which is why it carries no member of the
+# taxonomy. Added with T049, and **nothing drives the outward edge yet** — the
+# producer is T052's resume reconstruction. It is declared here rather than
+# later because the alternative is retrofitting a state into a closed set, and
+# `STATES` is closed on purpose.
+STATE_INTERRUPTED = "INTERRUPTED"
+STATES = frozenset({
+    STATE_STARTING, STATE_RUNNING, STATE_TERMINATED, STATE_INTERRUPTED,
+})
 
 
 @dataclass(frozen=True)
@@ -121,10 +130,23 @@ ST_UNRECOVERABLE_FAULT = TransitionRule(
     "Reaching it is a defect report (FR-006).",
 )
 
+ST_SESSION_INTERRUPTED = TransitionRule(
+    "ST-009", "session_interrupted", False,
+    "RUNNING → INTERRUPTED. The session stopped without ending; no limit was "
+    "consulted and no terminal state is named, because FR-007 resumes this "
+    "same session.",
+)
+ST_SESSION_RESUMED = TransitionRule(
+    "ST-010", "session_resumed", False,
+    "INTERRUPTED → RUNNING. `data-model.md` §2.1's resume edge. Determined by "
+    "the prior state: a session is resumable exactly when it is interrupted.",
+)
+
 RULES: tuple[TransitionRule, ...] = (
     ST_SESSION_STARTED, ST_LEASE_RENEWED, ST_WORK_COMPLETED,
     ST_BOUND_EXHAUSTED, ST_CEILING_REACHED, ST_CAPABILITY_LAPSED,
     ST_OPERATOR_TERMINATED, ST_UNRECOVERABLE_FAULT,
+    ST_SESSION_INTERRUPTED, ST_SESSION_RESUMED,
 )
 RULES_BY_ID = {rule.rule_id: rule for rule in RULES}
 

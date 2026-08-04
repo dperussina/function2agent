@@ -772,6 +772,66 @@ proof "INV-003 root check — a moved root stops being noticed" \
   "tests/invariants/test_sandbox_reachability.py::test_every_declared_root_exists" \
   's = s.replace("    REPO / \x22src\x22 / \x22sandbox\x22,", "    REPO / \x22src\x22 / \x22sandbox_renamed_by_someone\x22,")'
 
+# T-08's two mechanisms. Finding 006 measured both hazards on ADK; OD-15 dropped
+# ADK, so the mitigations are ours and the measurement behind them is gone. Four
+# proofs, and the pairing is deliberate: the first two separate *recording* order
+# from *returned* order, because a dispatcher can get one right and the other
+# wrong and the difference is which downstream consumer is corrupted.
+proof "T-08 declared order — the journal records in completion order" \
+  src/runtime/dispatch.py \
+  "tests/invariants/test_fanout_ordering.py::test_recording_follows_declared_index_order_not_completion_order" \
+  's = s.replace("            while next_to_record in done:\n                record(done[next_to_record])\n                next_to_record += 1", "            record(done[index])")'
+
+proof "T-08 declared order — the returned results follow completion order" \
+  src/runtime/dispatch.py \
+  "tests/invariants/test_fanout_ordering.py::test_recording_follows_declared_index_order_not_completion_order" \
+  's = s.replace("    results = tuple(done[index] for index in range(len(calls)))", "    results = tuple(done[index] for index in completion)")'
+
+proof "T-08 no default rule — an undeclared shared key falls back to last-write-wins" \
+  src/runtime/state_merge.py \
+  "tests/invariants/test_fanout_ordering.py::test_an_undeclared_shared_key_is_refused_rather_than_defaulted" \
+  's = s.replace("            raise UndeclaredMergeKey(", "            return MergeRule(name=\x22lww\x22, on_conflict=COMBINE, why=\x22\x22, combine=lambda v: v[-1], sample_a=1, sample_b=2)\n            raise UndeclaredMergeKey(")'
+
+# This is the one that reproduces finding 006's measurement exactly: two branches
+# write one key, one write is gone, nothing raises. The tamper needs both edits —
+# with only the first, `_single_writer` still refuses and the test sees the
+# permitted alternative rather than the forbidden one.
+proof "T-08 no lost update — single_writer picks a winner instead of refusing" \
+  src/runtime/state_merge.py \
+  "tests/invariants/test_fanout_ordering.py::test_every_declared_merge_rule_either_combines_or_refuses" \
+  's = s.replace("            if rule.on_conflict == REFUSE and len(writers) > 1 and rule is SINGLE_WRITER:", "            if False:"); s = s.replace("def _single_writer(values: Sequence[Any]) -> Any:\n    if len(values) != 1:", "def _single_writer(values: Sequence[Any]) -> Any:\n    return values[-1]\n    if len(values) != 1:")'
+
+# T048/T050. The rollback is one line and its absence is invisible in every
+# single-connection test, which is why it survived Phase 2: a refused insert
+# raises `UniquenessError` either way, and the damage lands on a *different*
+# connection five seconds later.
+proof "T050 lock release — a refused insert keeps its transaction open" \
+  src/contracts/repository.py \
+  "tests/integration/test_store_concurrent_writers.py::test_a_refused_insert_does_not_wedge_another_connection" \
+  's = s.replace("                self._rollback_if_outermost()\n                raise UniquenessError(f\x22{table}: {exc}\x22)", "                raise UniquenessError(f\x22{table}: {exc}\x22)")'
+
+# T049. The guarded update is the whole mechanism and its return value was
+# discarded before this task; the proof is that discarding it again is noticed.
+proof "T049 guarded transition — a transition that matched nothing reports success" \
+  src/runtime/session_state.py \
+  "tests/unit/test_session_store.py::test_a_session_cannot_be_started_twice" \
+  's = s.replace("        row = self.lifecycle.get(session_id)\n        if row is None:\n            raise SessionStateError(f\x22{session_id!r} has no session row\x22)", "        row = self.lifecycle.get(session_id)\n        if row is None:\n            raise SessionStateError(f\x22{session_id!r} has no session row\x22)\n        return StateTransition(session_id=session_id, from_state=row.state, to_state=to_state, terminal_state=terminal_state, deciding_rule=rule.rule_id, predicate_inputs=tuple(predicate_inputs), at=at)")'
+
+# FR-006. The taxonomy check moved from `transition.py` alone to the row writer
+# too, because the two are written by different paths and only one was guarded.
+proof "FR-006 named terminal — the writer accepts any non-empty string again" \
+  src/supervisor/session_table.py \
+  "tests/integration/test_lease_revocation.py::test_terminate_requires_a_named_state" \
+  's = s.replace("        terminal.require(terminal_state)", "        if not terminal_state:\n            raise ValueError(\x22terminate() requires a named terminal state\x22)")'
+
+# FR-005. The ceiling and the total both have to come off disk on every call.
+# Caching the ceiling on the store is the shape of finding 006's defect: the
+# ceiling of 3 that permitted 6 was a number living on a rebuilt context.
+proof "FR-005 ceiling reached — the comparison permits one over the declared number" \
+  src/runtime/session_store.py \
+  "tests/unit/test_session_store.py::test_a_ceiling_reached_exactly_is_reached" \
+  's = s.replace("        breached = observed >= declared", "        breached = observed > declared")'
+
 echo
 if [ "$SKIP" -gt 0 ]; then
   echo "$PASS proved, $FAIL unproven, $SKIP skipped"

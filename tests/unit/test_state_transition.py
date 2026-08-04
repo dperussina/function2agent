@@ -176,6 +176,17 @@ def test_the_state_names_agree_with_the_session_table() -> None:
     assert tr.STATE_STARTING == st.STATE_STARTING
     assert tr.STATE_RUNNING == st.STATE_RUNNING
     assert tr.STATE_TERMINATED == st.STATE_TERMINATED
+    assert tr.STATE_INTERRUPTED == st.STATE_INTERRUPTED
+    # Every state in the trace contract exists in the storage module, checked
+    # as a set rather than name by name — a new state added to one and not the
+    # other is the case a fixed list of four assertions cannot see.
+    stored = {
+        value for name, value in vars(st).items()
+        if name.startswith("STATE_") and isinstance(value, str)
+    }
+    assert tr.STATES == stored, (
+        f"the two state sets disagree: {tr.STATES ^ stored}"
+    )
 
 
 def test_every_terminal_state_has_a_rule_that_can_produce_it() -> None:

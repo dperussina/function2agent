@@ -168,9 +168,25 @@ def test_the_renewer_says_why_it_stopped(table) -> None:
 
 
 def test_terminate_requires_a_named_state(table) -> None:
+    """FR-006 — a *member* of the taxonomy, which is stronger than non-empty.
+
+    The empty string was the only case this asserted, and the check it asserted
+    was `if not terminal_state`. That passed for `"OPERATOR_TERMINATED"`, which
+    is not in the taxonomy at all — and the committed conformance fixture was
+    seeded with exactly that string through this method. The namespaced case is
+    the one that matters: a generic error wearing a plausible name is what
+    FR-006 forbids, and a non-empty check cannot see it.
+    """
     _start(table, "s-1", time.time())
-    with pytest.raises(ValueError, match="named terminal state"):
-        table.terminate("s-1", "")
+    for invented in ("", "OPERATOR_TERMINATED", "terminated.error",
+                     "terminated.something_someone_invented"):
+        with pytest.raises(ValueError, match="taxonomy"):
+            table.terminate("s-1", invented)
+    assert table.get("s-1").state == "RUNNING", (
+        "a refused terminal state still moved the row, so the session is "
+        "terminated with a state FR-006 forbids and there is no way back"
+    )
+    assert table.terminate("s-1", "terminated.completed") == 1
 
 
 # --- layer 2, the crash arm: SIGKILL from a separate process --------------

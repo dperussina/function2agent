@@ -65,6 +65,21 @@ OWNERSHIP: tuple[TableOwnership, ...] = (
     # turn journal, budget ledger, trace, result, drift signal → runtime.
     _own("turn_journal", ROLE_RUNTIME, ROLE_ANALYSIS),
     _own("budget_ledger", ROLE_RUNTIME, ROLE_ANALYSIS),
+    _own("session_ceiling", ROLE_RUNTIME, ROLE_ANALYSIS,
+         note="FR-005's last clause: 'Every one of the four ceilings, and the "
+              "cumulative total against it, MUST be recorded with the "
+              "deployment identity it applies to.' The totals are "
+              "budget_ledger; this is the ceilings, beside them, in the same "
+              "role's store and under the same FR-035 scope columns. "
+              "**This row extends data-model.md §0's map rather than "
+              "transcribing it** — §2.1 puts `budget` on the Session entity, "
+              "whose table is the supervisor's, and T048 puts the store that "
+              "persists the four ceilings in src/runtime/. Both cannot be "
+              "honoured at once. Recording them from the enforcing role is "
+              "the reading that violates neither the ownership map nor the "
+              "requirement; writing the supervisor's table from the runtime "
+              "would violate the first, and the ceiling not surviving a "
+              "resume would violate the second."),
     _own("trace_span", ROLE_RUNTIME, ROLE_ANALYSIS),
     _own("result", ROLE_RUNTIME, ROLE_ANALYSIS),
     _own("drift_signal", ROLE_RUNTIME, ROLE_ANALYSIS),

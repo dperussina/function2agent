@@ -23,9 +23,14 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from src.contracts import terminal
+
 STATE_STARTING = "STARTING"
 STATE_RUNNING = "RUNNING"
 STATE_TERMINATED = "TERMINATED"
+# `data-model.md` §2.1's interrupted state. See the note on the same constant in
+# `src/contracts/transition.py`: not terminal, and its outward edge is T052's.
+STATE_INTERRUPTED = "INTERRUPTED"
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -122,11 +127,44 @@ class SessionTable:
              capability_sha256, lease_expires_at, created),
         )
 
-    def mark_running(self, session_id: str) -> None:
-        self._exec(
+    def mark_running(self, session_id: str) -> int:
+        """STARTING → RUNNING. Returns rows changed.
+
+        The count used to be discarded. A guarded update that matches nothing
+        is indistinguishable from one that worked when the caller is handed
+        `None`, and the guard is the whole mechanism — so the caller gets the
+        count and `SessionStateMachine` refuses on zero.
+        """
+        return self._exec(
             "UPDATE session SET state=? WHERE session_id=? AND state=?",
             (STATE_RUNNING, session_id, STATE_STARTING),
-        )
+        ).rowcount
+
+    def mark_interrupted(self, session_id: str) -> int:
+        """RUNNING → INTERRUPTED. Returns rows changed.
+
+        The lease is deliberately left alone. Interruption is not termination:
+        FR-007 resumes this same session and never issues a new capability, so
+        driving the lease to zero here would make resume indistinguishable from
+        a fresh admission. The state alone is enough to stop the enforcement
+        point honouring the handle, because `honoured_at` requires RUNNING.
+        """
+        return self._exec(
+            "UPDATE session SET state=? WHERE session_id=? AND state=?",
+            (STATE_INTERRUPTED, session_id, STATE_RUNNING),
+        ).rowcount
+
+    def mark_resumed(self, session_id: str, lease_expires_at: float) -> int:
+        """INTERRUPTED → RUNNING, renewing the lease (FR-007). Rows changed.
+
+        Guarded on INTERRUPTED rather than on "not terminated", so a resume of
+        a terminated session changes nothing rather than reviving it.
+        """
+        return self._exec(
+            "UPDATE session SET state=?, lease_expires_at=? "
+            "WHERE session_id=? AND state=?",
+            (STATE_RUNNING, lease_expires_at, session_id, STATE_INTERRUPTED),
+        ).rowcount
 
     def renew(self, session_id: str, lease_expires_at: float) -> int:
         """Extend the lease. Only a `RUNNING` session's lease is renewable.
@@ -142,24 +180,29 @@ class SessionTable:
             (lease_expires_at, session_id, STATE_RUNNING),
         ).rowcount
 
-    def terminate(self, session_id: str, terminal_state: str) -> None:
-        """FR-006 — a named terminal state, never a generic error.
+    def terminate(self, session_id: str, terminal_state: str) -> int:
+        """FR-006 — a named terminal state, never a generic error. Rows changed.
 
         The lease is also driven into the past. Termination and lease
         expiry are two independent reasons the proxy refuses, and setting both
         means a reader that somehow saw a stale `state` still refuses on the
         lease.
+
+        **The check used to be `if not terminal_state`**, which accepted any
+        non-empty string — and the cross-language conformance fixture was
+        seeded through this method with `"OPERATOR_TERMINATED"`, a string that
+        is not a member of the taxonomy at all. FR-006's subject is that the
+        recorded outcome is a *named* member, and a non-empty check is not that
+        test. Membership is now required here, where the row is written, rather
+        than only in `transition.py`, where the span is built: the two are
+        written by different code paths and only one of them was guarded.
         """
-        if not terminal_state:
-            raise ValueError(
-                "terminate() requires a named terminal state; FR-006 forbids "
-                "a generic error as a terminal state"
-            )
-        self._exec(
+        terminal.require(terminal_state)
+        return self._exec(
             "UPDATE session SET state=?, terminal_state=?, lease_expires_at=0 "
-            "WHERE session_id=?",
-            (STATE_TERMINATED, terminal_state, session_id),
-        )
+            "WHERE session_id=? AND state != ?",
+            (STATE_TERMINATED, terminal_state, session_id, STATE_TERMINATED),
+        ).rowcount
 
     def get(self, session_id: str) -> SessionRow | None:
         return _row(self._exec(
