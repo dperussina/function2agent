@@ -382,8 +382,27 @@ false. Four conditions, and none is a research question:
 4. **The managed-container-service tier is documented as unsupported, not as degraded.** Fargate,
    Cloud Run, ACI and GKE Autopilot expose no knob. Under FR-053's *unsupported rather than
    best-effort* discipline — the same discipline `plan.md` applies to non-Linux platforms under
-   OD-17 — these belong on the unsupported list. **They are not a degraded tier**, because two of
-   the three mechanisms are entirely absent and the third alone provides no containment.
+   OD-17 — these belong on the unsupported list. **They are not a degraded tier**, ~~because two of
+   the three mechanisms are entirely absent and the third alone provides no containment.~~
+   **Corrected 2026-08-04: the condition stands and this ground for it does not, because this document
+   never established it.** The set is the right one — the three kernel mechanisms of
+   [The three mechanisms](#the-three-mechanisms-and-the-fr-numbers-the-brief-had-wrong), which
+   correctly exclude FR-050 because only one of its four layers is kernel. What the struck clause adds
+   to that set is a **per-mechanism availability claim about these four surfaces**, and of the three
+   only the mount namespace is placed there at all, on vendor documentation, the weakest basis above.
+   Both other terms are unestablished. **The listener is not shown present**: it works under the
+   *unmodified* default profile, so a profile the operator cannot change is not on its face an obstacle
+   — but that arm is moby's, and none of the four surfaces' profiles was read for `seccomp` on the
+   unconditional allow list or for `no_new_privs`. **Cgroup v2 is not shown absent**: it is refused by
+   the cgroup mount configuration, which no seccomp finding here reaches, and nothing above checks
+   `/sys/fs/cgroup` or `--cgroupns=host` on any of the four. **So no count of absent or surviving
+   mechanisms is available from this document, and the condition never needed one** — the mount
+   namespace alone is a missing term of Principle IV bullet 1, which the paragraph below already gives
+   as sufficient. FR-050 was never in this count and is unaffected: three of its layers are
+   application code, and the fourth holds a descriptor inside a network namespace, which the
+   syscall-level `unshare` rule reaches and which no arm here measured, `CLONE_NEWNET` being absent
+   from the four flags in
+   [The refusing layer](#the-refusing-layer-named-exactly).
 
 **What a degraded tier would look like, for completeness.** A surface with the seccomp mechanism and
 the cgroup mechanism but no mount namespace has bounds and a recorder but no filesystem containment,

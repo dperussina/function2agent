@@ -1926,7 +1926,9 @@ question.
 
   > **Managed container services join the unsupported list 2026-08-04, and they are unsupported
   > rather than degraded.** **OD-17** put every non-Linux platform on this requirement's unsupported
-  > list because the three mechanisms of FR-048, FR-049 and FR-050 are kernel facilities.
+  > list because each of the four mechanisms that deliver FR-048, FR-049 and FR-050 — FR-048 holds
+  > two, one that enforces its boundary and one that records attempts against it — depends on a kernel
+  > facility with no equivalent elsewhere.
   > [Finding 024](./findings/024-deployment-surface-permission-census.md) establishes that the list
   > also reaches four surfaces that *are* Linux: **AWS Fargate, Cloud Run, Azure Container Instances
   > and GKE Autopilot**. On each the runtime's seccomp profile is not operator-changeable — Fargate
@@ -1939,7 +1941,9 @@ question.
   > **There is no degraded tier for them to occupy, and that is a property of this specification
   > rather than of the surfaces.** The best such a surface could offer is seccomp user-notification
   > and cgroup bounds with no filesystem containment — bounds and a recorder, and nothing holding the
-  > agent inside a declared set — which is FR-048 unsatisfied. Constitution Principle IV bullet 1's
+  > agent inside a declared set — which is FR-048 unsatisfied. **That is an upper bound and not a
+  > statement that either is available**; finding 024 settles neither for these four, and the argument
+  > holds because the most favourable case already fails. Constitution Principle IV bullet 1's
   > own words are that a configuration missing any one of its terms does not satisfy it, so each
   > surface either supports the whole model or supports none of it. Under this requirement's rule,
   > describing any of the four as best-effort would be the prohibited statement.
