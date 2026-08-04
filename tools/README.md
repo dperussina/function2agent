@@ -11,6 +11,7 @@ python3 tools/check_corpus.py --list-checks
 python3 tools/gen_claims.py                   # write the derived claims
 python3 tools/gen_claims.py --check           # exit 1 if a derived claim is stale
 python3 tools/selftest.py                     # prove the checks and the generator fire
+python3 tools/cite_advisor.py                 # advisory only; never fails anything
 ```
 
 Python 3.11+, standard library only, no network. External URL liveness is
@@ -65,6 +66,7 @@ threshold** before you write any edit-and-restore loop of your own.
 | `corpuscheck/report.py` | `Violation`, and the `text` / `json` / `summary` formats. |
 | `corpuscheck/checks/` | One module per failure class. |
 | `gen_claims.py` | Writes the two claim classes that are derivable rather than authored. See below. |
+| `cite_advisor.py` | **Not a check and not a generator.** Ranks every requirement against each contract's subject and lists the high scorers the contract does not name. No finding changes its exit code, nothing imports it, the gate does not know it exists. |
 | `selftest.py` | Proof that each check fires, that none fires on well-formed input, and that the generator writes digits and nothing else. |
 | `threshold_probe.py` | Proof that each numeric threshold is pinned: moves every tolerance, window, bound and distance by one unit and requires the self-test to break. |
 | `fixtures/` | The two miniature corpora. See `fixtures/README.md`. |
@@ -300,6 +302,178 @@ skipped.
 **Do not reach for a `MANUAL` marking here.** `MANUAL` is keyed on a live range
 sharing its line with a *struck* one, and a fresh provenance sentence has no
 struck range to trigger it.
+
+## The advisory — `cite_advisor.py`
+
+The gate rule described under [What this cannot catch](#what-this-cannot-catch)
+failed and stays unbuilt. **The ranking underneath it was built on 2026-08-03**,
+as an advisory that fails nothing.
+
+```
+python3 tools/cite_advisor.py                        # the listing
+python3 tools/cite_advisor.py --ground-truth         # score against the five hand-audited contracts
+python3 tools/cite_advisor.py --contracts-at REV     # score the contracts as they stood at a revision
+python3 tools/cite_advisor.py --sensitivity          # how the ranks move with the stoplist and the stemmer
+python3 tools/cite_advisor.py --ablation             # drop citations from clean contracts, count false alarms
+```
+
+It ranks all of `spec.md`'s requirements by Jaccard similarity against each
+contract's subject — its title plus its leading section — and lists the
+highest-scoring ones the contract does not name. **It has no threshold, and no
+finding it makes changes its exit code** — it exits non-zero only for a path or a
+revision that does not exist, which is a broken invocation rather than a result.
+`check_corpus.py` does not import it, `selftest.py` does not test it, and adding it
+to either would rebuild the rule that failed.
+
+### Why it needs no threshold, which is the whole reason it survives
+
+**Each contract states its own baseline.** The `**Requirements**:` header field
+means the tool never has to answer *"is this score high enough?"* — only *"does
+this score beat what the contract already names?"* That is why there is no
+constant to pin, and it is the property that does not generalise; see
+[the generalisation](#the-generalisation-that-was-assessed-and-not-built).
+
+The sentence it exists to produce is **"FR-055 scores higher than anything this
+contract names"**. The output marks those lines with `->` and says nothing else
+about them. *"This contract is wrong"* is the sentence that failed the
+false-positive probe and no output here is readable as it.
+
+### What was measured, and where the earlier claim did not hold
+
+That entry claims the metric put the governing requirement **first of 57**
+for `artifact-versioning` and **third of 57** for `trace-record`. The first
+half reproduces. **The second half does not survive being checked, and the reason
+is a leak.**
+
+Both pre-fix contract states were reconstructed from `cee7ff8`, which predates
+all the contract work. Scored against **the requirement text as it stood at that
+same revision** — the only state in which the defect was ever live:
+
+| Contract | Governing requirement | Corpus-wide rank | Position in the listing (body scope) |
+|---|---|---|---|
+| `artifact-versioning.md` | FR-055 | **1 of 55** | **1** |
+| `trace-record.md` | FR-038 | **10 of 55** | 6 — below a top-five cutoff |
+
+Scored instead against the **current** requirement set, FR-038 ranks third of 57
+exactly as claimed — and that measurement is circular. **FR-038 was rewritten on
+2026-08-03 from the contract being scored against it**, growing from 53 words to
+1374; `spec.md` says so in as many words, that *"the v1 subject is the span, and
+it was already the unit in the downstream contract rather than invented here"*.
+The third-of-57 figure measures the repair, not the detection. **FR-055 by
+contrast is byte-identical at both revisions**, so its first-of-55 is clean.
+
+`--sensitivity` is in the tool because the prior sweep recorded neither the
+stoplist nor the stemmer, and they move the ranks. Across six settings FR-055 is
+**rank 1 in all six**; FR-038 ranges from **4 to 19 of 55** and reaches the top
+three in none of them.
+
+**So the advisory finds one of the two known defects, not two.**
+
+### Precision, and the surface it should be measured on
+
+A contract audited clean contributes zero hits and however many suggestions it
+emits, because an advisory's cost *is* what it says about work that is fine.
+Over all five hand-audited contracts at their pre-fix state:
+
+| k | hits | suggestions shown | precision@k |
+|---|---|---|---|
+| 1 | 1 | 5 | `0.2000` |
+| 3 | 1 | 15 | `0.0667` |
+| 5 | 1 | 25 | `0.0400` |
+
+**The listing is mostly noise and the headline is not**, and the difference is
+the whole finding. Restricted to lines marked `->` — requirements outranking
+everything the contract names — the same five contracts produce **five claims,
+all of them on the one contract that was actually defective, with the correct
+answer first**. All three clean contracts are silent.
+
+### The one improvement, and it is a scope change rather than a metric change
+
+The metric is untouched. What changed is **what counts as already considered**:
+`--scope body` treats a requirement the contract names anywhere in its prose as
+known, not only one listed in the header field. The reader is being asked *"is
+there a requirement you have not thought about"*, and one discussed by name in
+the second paragraph has been thought about.
+
+This was not asserted. `configuration.md` is audited clean and its two loudest
+suggestions were FR-048 and FR-014 — **both named in its own leading section**,
+which reads *"Nothing in FR-048's declared mount set carries a configuration
+file"*. Neither true positive is named in body prose, so nothing is lost. Running
+the same citation-ablation probe that killed the gate rule — dropping one and two
+citations from each clean contract, 184 cases:
+
+| Scope | Silent cases | False headline claims | Worst single case |
+|---|---|---|---|
+| `header` | 133 of 184 | 112 | 6 |
+| `body` | **161 of 184** | **33** | 3 |
+
+`configuration.md` is never silent under header scope and silent in all 28 of its
+ablations under body scope. **Caveat worth its own sentence: body scope was chosen
+after looking at these five documents.** It introduces no constant and its
+mechanism is *"does the contract name this identifier"* rather than a tuned bound,
+which is the difference that matters — but it is validated on the same corpus that
+motivated it, and it deliberately blinds the tool to a contract that mentions the
+right requirement in passing without citing it. `--scope header` keeps that
+visible and `--ground-truth` reports both.
+
+### What it adds on the repaired contracts: nothing
+
+Run against the working tree, **all five contracts produce no `->` line at all**.
+Both repaired contracts now rank their governing requirement first of 57 and cite
+it, so it correctly leaves the listing. A tool that goes quiet once the defects are
+fixed is the behaviour that separates this from the rule that failed.
+
+### The judgement
+
+**Shipped, narrowly.** On real corpus states the headline surface produced five
+claims across ten contract-observations — one true positive, four siblings on the
+same defective contract, and **nothing at all on any clean contract in its real
+state**. That is not output a reader learns to skip. Against it: the tool detects
+one of two known defects, and its usefulness rests on a single unleaked positive
+example. **Read the listing below the `->` lines as topic adjacency, not as a
+worklist.**
+
+### The generalisation that was assessed and not built
+
+The same defect class appears twice more in this corpus without involving a
+contract citation at all: a measured non-compliance sitting unnoticed against a
+requirement written independently of it, and an instrumentation defect found only
+by cross-reading two findings. **The ranking does not transfer, and the reason is
+not the metric.**
+
+What transfers is not Jaccard similarity — it is the **self-supplied baseline**.
+A contract carries a `**Requirements**:` field, so the tool compares a score
+against a score and needs no constant. **Neither findings nor success criteria
+carry such a field.** Success criteria looked like the promising case and are not:
+across the whole specification only twelve lines pair a success criterion with a
+requirement at all, and every one is a prose aside rather than a mapping. Without
+a baseline the tool is back to choosing an absolute cut on a Jaccard score, which
+is the four-thousandths-wide window that killed the gate — or to a fixed top-N per
+document, which emits a constant volume of suggestions whether or not anything is
+wrong. Sixteen findings at three suggestions each is roughly fifty permanent
+adjacency claims, which is the shape a reader stops reading.
+
+**A second obstacle is independent of the first.** The defect in the
+non-compliance case is that a measurement *violates* a requirement. Bag-of-words
+similarity sees topic, not polarity: a finding that satisfies a requirement and a
+finding that violates it score identically. That is the failure class already
+recorded above as *"which of two mechanisms a claim names"*.
+
+**What ground truth it would need, and what it would cost.** For findings against
+requirements, a hand audit pairing every finding with every requirement — sixteen
+by fifty-seven, a little over nine hundred judgements — each labelled not merely
+*related* but *compliance-bearing*, by someone who understands both sides. The
+corpus contains **one** known positive. One positive instance cannot validate a
+ranking; the contract case had two and one of those turned out to be leaked. The
+cross-reading case is worse: one hundred and twenty finding pairs, ground truth of
+exactly one. The analysis code is perhaps a day's work and is not the expensive
+part.
+
+**Recommendation: do not build it.** The honest version of the smaller claim is
+that ranking findings against requirements would produce a serviceable *reading
+aid* — "here are the requirements this finding touches" — which is a different and
+much weaker product than defect detection, and nothing in the corpus says anyone
+wants it.
 
 ## Roles: who is authoritative
 
@@ -549,11 +723,18 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   **The narrower version that is worth having is not a check.** The ranking is
   useful precisely where the threshold is not: run as an **advisory listing** — for
   each contract, the highest-scoring requirements it does *not* cite — it named the
-  right requirement first and third out of 57, with no false-positive cost, because
+  right requirement ~~first and third out of 57~~ **first of 57 for one of the two
+  and not at all for the other; see [The advisory](#the-advisory--cite_advisorpy),
+  where it was built and measured on 2026-08-03 and where the second half of that
+  claim did not survive checking**, with ~~no false-positive cost~~ **a false-positive
+  cost that is real but survivable — 33 false claims across 184 ablated clean cases,
+  and none on any clean contract in its real state**, because
   an advisory fails nothing. That is a human-run audit aid rather than a gate, so it
-  belongs beside `gen_claims.py` rather than in the check set, and it is deliberately
+  belongs beside `gen_claims.py` rather than in the check set, and ~~it is deliberately
   not built here: the instruction that produced this entry was to implement nothing
-  unless the gate bar was met. **A zero-overlap rule** — fire only where a contract's
+  unless the gate bar was met.~~ **it is now built there.**
+
+  **A zero-overlap rule** — fire only where a contract's
   best cited requirement shares no significant term at all with its subject — was
   also considered and rejected: neither real defect reaches zero (`0.0873` and
   `0.0515`), so it would have caught neither, and a branch no fixture can reach is
