@@ -54,9 +54,12 @@ Sources: `research/03-graph-and-loop-architecture.md` §3, §7.1, §11.1–11.3;
 >
 > **Hold these two apart when citing this skill, because the record has already blurred them.**
 > **The mechanism is demonstrated and was not fitted:** the postcondition arm detects **all 9 numeric
-> value errors including all 3 sub-1% near-misses, with zero false alarms across 220 clean
-> positives** — *the offline full-corpus sweep; the `FPR_c2 = 0/60` quoted elsewhere is the
-> judge-scored sample and a smaller population, and the two must never be merged. See the labelling
+> value errors including all 3 sub-1% near-misses** on the eligible population, and — separately, over
+> a different population — ~~with zero false alarms across 220 clean
+> positives~~ **raises zero false alarms on the 96 oracle-positives whose own run manifest declares
+> the battery under test, 93 of which it compared** — *the offline full-corpus sweep restricted to
+> records that need no cross-battery join; the pooled 220 and the `FPR_c2 = 0/60` are two further
+> populations, and none of the three may be merged. See the labelling
 > table at [14](../../../research/14-architecture-synthesis.md) §3.2* — through a **six-rung
 > precision ladder committed before any derivation was written that
 > contains no numeric constant** — each rung names a *source* of precision, never a value, and the
@@ -64,6 +67,26 @@ Sources: `research/03-graph-and-loop-architecture.md` §3, §7.1, §11.1–11.3;
 > judge call was ever billed, and every judge figure in the committed artifacts is a stub. **"The
 > verifier works" is supported. "The verifier beats a judge" is not, and the inherited-AUROC caveat
 > above therefore still governs every comparative claim in this skill.**
+>
+> **Restated 2026-08-03 on the attested denominator — the mechanism claim is stronger, not weaker, and
+> the struck figure was not wrong**
+> ([finding 018](../../../specs/001-discovery-validation/findings/018-verifier-false-alarm-attested-denominator.md)).
+> The census was re-run restricted to records whose manifest declares the current battery; the narrow
+> rate is zero and the cross-battery half is separately zero, so the pooled figure was never resting
+> on records kept in scope by a test blind to wording drift. **Two things changed, and both are rules
+> this skill has to apply to itself.** ① **`0 of 220` is a true statement and is not a rate** — 45 of
+> the 220 are records the arm declined as `unverifiable`, 40 of them the entire unattested class, and
+> a record never compared cannot enter the numerator, so the pooled rate is 0 of 175 compared. That is
+> the general failure recorded as **U-49**: a denominator padded with cases the instrument could not
+> fire on. ② **The sentence above used to pair a detection count with a false-alarm denominator drawn
+> from a different population**, joined by *with*, which reads as one measurement over one population
+> and is not. On the attested population both sides do share one denominator, and there they read
+> **2 of 2 false successes flagged, 0 false alarms on 96 positives** — the detection count is 2 rather
+> than 10 because the false successes concentrate in exactly the records the drift touched. **Neither
+> correction touches what this skill recommends.** The mechanism is demonstrated on a better-attested
+> population than before, and the claim it supports — *specify the verifier as recomputation against an
+> independent source* — rests on the shape of the failure c2 caught, not on the width of the
+> denominator it was clean over.
 >
 > **One design constraint this skill must now carry, and it is ~~the most transferable thing E8
 > produced~~ the most transferable thing E8 produced *about verifiers*** *(narrowed 2026-08-03, not
@@ -240,6 +263,31 @@ Run this on every derived verifier, before it is emitted or relied on.
    you hold, so there is no reason to learn it from a sample — and a sample drawn for some other
    component's metric is not sized to expose this one's failure mode. Reserve the sample for the
    metric it was sized for and say, in the artifact, which population each number came from.
+   **Amended later the same day, because following this step exactly is what produced the defect step
+   7 exists to catch: the full population contains the records your verifier refused, and they are not
+   passes.** Do step 6 and then do step 7; step 6 alone buys a denominator, not a rate.
+7. **Count only what the verifier compared, and never pair two populations.** Added 2026-08-03 from
+   [finding 018](../../../specs/001-discovery-validation/findings/018-verifier-false-alarm-attested-denominator.md)
+   (**U-49**). A derived verifier that can return `unverifiable` has a third outcome, and a
+   record it declined **cannot enter a false-alarm numerator** — so counting it in the denominator
+   tightens the interval while supplying no evidence. E8's headline figure carried 45 such records in
+   a denominator of 220: `0 of 220` is a true statement and the rate is 0 of 175 compared. Two rules
+   follow, and the second is the one that hides inside a well-formed sentence.
+   - **Print the compared count beside the denominator on every rate the verifier produces.** Where
+     they differ, the smaller is the rate and the larger is a coverage statement. Carry the refusal
+     rate as its own claim rather than letting it silently improve another one.
+   - **A detection numerator and a false-alarm denominator drawn from different populations are two
+     measurements, not one.** *"Detects every value error with zero false alarms across N clean
+     positives"* reads as a single result over a single population and is not; restate both sides over
+     one population, or label each side explicitly. On E8's attested population both sides do share a
+     denominator, and the detection count is 2 rather than 10 — because the failures the verifier
+     exists to catch concentrate in exactly the records whose provenance is weakest, which is the
+     general shape and not an accident of this corpus.
+
+   **Note the direction of the correction, because it decides how hard to fight for it.** Neither rule
+   made E8's verifier look worse: the narrow attested rate is also zero. What they change is how much
+   comparison the number represents and how many claims it licenses, and both are cheap to state at
+   the time and expensive to retrofit once the figure has propagated.
 
 ### What this looks like when it is done right
 

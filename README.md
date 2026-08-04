@@ -257,9 +257,20 @@ help; tools that return records do not.**
 **Decided by building the E8 harness and then declining to run it (OD-14,
 2026-08-03).** The verifier's *mechanism* is demonstrated and was not fitted — the
 postcondition arm detects all 9 numeric value errors including all 3 sub-1%
-near-misses with **zero false alarms across 220 clean positives** — *the offline
-full-corpus sweep; the `FPR_c2 = 0/60` quoted elsewhere is the judge-scored
-sample and a smaller population, and the two must never be merged
+near-misses in the eligible population, ~~with **zero false alarms across 220 clean
+positives**~~ **and raises zero false alarms on the 96 oracle-positives whose own run
+manifest declares the battery under test, 93 of which it compared** — *the offline
+full-corpus sweep, restricted to records that need no cross-battery join to attest;
+restated 2026-08-03 on that denominator, where the result is stronger rather than
+weaker and the struck figure was not wrong
+([finding 018](specs/001-discovery-validation/findings/018-verifier-false-alarm-attested-denominator.md)).
+`0 of 220` remains true as a statement and is not a rate, because 45 of the 220 were
+declined as `unverifiable` and so could never have entered the numerator; the pooled
+rate is 0 of 175 compared. The detection count and the false-alarm count above are
+over two different populations and are not one measurement — on the attested
+population both sides share one denominator and read 2 of 2 false successes flagged,
+0 false alarms on 96 positives. The `FPR_c2 = 0/60` quoted elsewhere is the
+judge-scored sample and a smaller population again, and the three must never be merged
 ([`14`](research/14-architecture-synthesis.md) §3.2)* — through a
 six-rung precision ladder committed before any derivation was written that
 **contains no numeric constant**. What is unmeasured is strictly whether an LLM

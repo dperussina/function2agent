@@ -277,6 +277,58 @@ number to distrust**, and the second tell is an artifact that got longer: text a
 text written with the answer in view.
 ([finding 017](../../../specs/001-discovery-validation/findings/017-evaluation-contemporaneity.md).)
 
+## Rule 7: a denominator is the set of cases the instrument could have fired on
+
+**Added 2026-08-03, and it is a different failure from Rule 6 rather than a variant of it.** Rule 6 is
+about scoring against the wrong *state*. This is about scoring over the wrong *population*, and it
+survives every amount of provenance work you do on the artifacts — the census that exposed it
+reproduced its inputs exactly and was still reporting a figure that was not a rate.
+
+**The shape: a detector that can decline, and a denominator that counts the declines as passes.** A
+verifier returning `unverifiable`, a judge returning `uncertain`, a classifier with a reject option, a
+probe that skips an unroutable target — each produces records on which the instrument returned no
+verdict at all. Those records cannot enter a false-alarm numerator by construction, so counting them in
+the denominator narrows the confidence interval while supplying no evidence in either direction. **The
+figure looks stronger and the evidence has not moved.**
+
+The instance: a postcondition verifier published as raising **zero false alarms across 220 clean
+positives**. 45 of the 220 were records it declined, 40 of them a class it declined entirely. `0 of
+220` is a true *statement* — no clean positive was flagged — and it is **not a rate**. The rate over
+records actually compared is 0 of 175, and the attested subset is 0 of 96 with 93 compared.
+([finding 018](../../../specs/001-discovery-validation/findings/018-verifier-false-alarm-attested-denominator.md).)
+
+### The check
+
+1. **Ask what the instrument's third outcome is**, before quoting any rate it produces. Almost every
+   real detector has one. If it has none, say so — that is a finding about the instrument.
+2. **Print the compared count beside the denominator.** Where they differ, the smaller number is the
+   rate and the larger one is a coverage statement. Both are worth having; they are not the same claim.
+3. **Report the refusal rate as its own number.** Folding it into a denominator lets a coverage problem
+   silently improve an accuracy figure, and coverage is usually the more interesting of the two.
+4. **Check that a paired numerator and denominator come from one population.** *"Detects every value
+   error with zero false alarms across N clean positives"* is two measurements over two populations
+   wearing one sentence. Restate both sides over one population, or label each side explicitly.
+5. **Expect the honest paired figure to be smaller on the detection side, and do not read that as a
+   loss.** In the instance above, restricting both sides to one population took detection from 10 of 10
+   to 2 of 2 — because the failures the instrument exists to catch concentrate in exactly the records
+   whose provenance is weakest. That is the general case, not a quirk: the interesting cases and the
+   badly-attested cases are usually the same cases.
+
+### Its mirror image, which this project also hit
+
+**A denominator that *excludes* the failure and a denominator that *pads itself* with cases the
+instrument could not fire on are opposite defects with an identical symptom.** In the same corpus a
+schema-derived arm reported a perfect false-alarm rate on a 60-record sample while raising two false
+alarms on the full corpus the sample had simply not drawn. That is the exclusion form; this rule is the
+padding form. **Both produce a clean rate, both survive arithmetic checking, and neither is visible in
+the figure** — the only thing that exposes either is re-running the instrument over the full population
+and counting what it did on every record, including the records it refused.
+
+**The tell, if you only remember one thing.** A false-alarm figure with a suspiciously round
+denominator and no statement of how many comparisons it represents. Ask *how many of these did the
+instrument actually look at* — and if the answer is not written down anywhere, the number is a
+statement and not a rate.
+
 ## Spike hygiene
 
 **Spike code is disposable; the task corpus and its oracles are not.** The corpus outlives the
