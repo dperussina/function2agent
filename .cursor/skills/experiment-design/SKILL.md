@@ -178,6 +178,105 @@ failure**, because it consumes the whole build and returns no evidence in either
 ([`14`](../../../research/14-architecture-synthesis.md) TL;DR 21, U-47;
 [finding 015](../../../specs/001-discovery-validation/findings/015-verifier-vs-judge-not-run.md).)
 
+## Rule 6: score the instrument against the state the defect lived in
+
+**An evaluation set drawn from defects that have since been fixed is contaminated by default.** Added
+2026-08-03, after the third instance in this project. The question an instrument is being asked is
+*would this have caught the defect*, and the only state in which that question has an answer is the
+one the defect was live in. Score against the current state and the number measures the repair.
+
+**The half that is easy to miss is the half that actually bit: reconstruct *every* side of the
+comparison, not just the artifact carrying the defect.** A score reads at least two things — the
+defective artifact and whatever it is scored against — and a half-reconstruction is indistinguishable
+from a whole one at the point of use. It produces a real number, from real historical text, with a
+git revision quoted beside it.
+
+### The check
+
+Before quoting any number an instrument produces against a set of known defects:
+
+1. **List every artifact the score reads.** The defective one, the thing it is compared against, the
+   population it is ranked within, the fixture that pins it, the prose that justifies its threshold.
+   Anything that moves the number is on the list, and the list is longer than it first looks.
+2. **Fix the revision at which the defect was live**, and diff each listed artifact between there and
+   now.
+3. **Byte-identical is a clean result and is worth stating out loud**, because it is what licenses the
+   score. Unchanged artifact, score stands.
+4. **Changed for unrelated reasons → provisional** until re-run with it pinned back. **Changed as part
+   of the repair → invalid, not provisional**, and no amount of re-reading it helps.
+5. **No revision separates the two states → the instrument is unvalidated on that instance.** Record
+   that. Do not substitute the current state, and do not reconstruct a plausible history.
+
+### Three instances, and each teaches something different
+
+| # | Instrument | What the contaminated score said | How it surfaced |
+|---|---|---|---|
+| 1 | A verifier arm hand-written with the failure cases in view | detection **1.000 by construction** — an identity, not an estimate | pre-registration review, before any spend |
+| 2 | A trace corpus frozen by file hash | every downstream figure, computed against questions that had since been edited | three unrelated arrivals inside one hour, none looking for it |
+| 3 | A citation advisory ranking requirements against contracts | **2 of 2** known defects found, at ranks 1 and 3 of 57 | someone re-ran it with the requirement text pinned back |
+
+**Instance 1 — the ground truth was also going to be an arm.** In that corpus the hand-written check
+*was* the definition of failure, so using it as the arm made marginal detection algebraically equal to
+the judge's fail-open rate under a different name. The fix was to require the arms be derived from
+contracts by a mechanical procedure applied to *every* case, including the ones it must refuse —
+"deriving only where success was expected would have selected the numerator." Cheapest of the three,
+because it was caught by reading the design rather than by reading a result.
+
+**Instance 2 — hash-pinning proves the traces did not change and says nothing about the questions.**
+The freeze pinned every corpus file and refused to start on any change to any of them. It did not pin
+the prompts, which lived in an external mutable file that the traces joined to by a stable task id.
+The join was total, so it could never warn, and the dangerous drift was *wording* — which leaves
+expected values untouched and is therefore invisible to the obvious value-comparison detector. **A
+freeze must cover the inputs the frozen artifacts were derived from, not just the artifacts.**
+([finding 015](../../../specs/001-discovery-validation/findings/015-verifier-vs-judge-not-run.md).)
+
+**Instance 3 — the reconstruction was done, and it was done to one side.** Both pre-fix contracts were
+correctly checked out of git. The requirements they were scored against were read from the working
+tree. One of those requirements had been rewritten *from the contract being scored against it*, growing
+from 51 words to 1379 and importing the contract's own subject matter, so a bag-of-words metric was
+measuring the import. Pinned back to the revision where the defect was live, its rank falls from **3 of
+57 to 10 of 55** — below any cutoff anyone would set. The sibling requirement is byte-identical at both
+revisions, so its rank of 1 survives untouched. **The instrument finds 1 of 2, not 2 of 2**, and its
+usefulness now rests on a single unleaked positive.
+
+### What it cannot do, and what it costs
+
+**It is inapplicable more often than it is applicable, and the reason is usually commit granularity.**
+This repository holds five commits; one of them landed 455 files. Every consistency check, every
+fixture pinning one, and every rule fix those fixtures were written around arrived together, so for all
+of them the question *was this fixture written before or after the fix* has no answer and never will.
+**Commit granularity is an evidence property.** A repository that squashes cannot run this check on its
+own history later, and that cost is paid at squash time by someone who is not thinking about
+evaluation.
+
+**Two other classes are out of reach.** A defect in a *process* rather than an artifact — the agent
+chose the wrong tool — has no state to roll back to. And a defect whose repair destroyed the evidence
+cannot be reconstructed at all: instance 2's historical prompts are unrecoverable, so that corpus could
+only be *trimmed*, never restored, and trimming spends n. Losing the power to answer is a real outcome
+of applying this rule and not a failure of it.
+
+**The costs are real and worth stating before someone discovers them mid-audit.**
+
+- **It forbids a class of legitimate evaluation.** An instrument built today to catch a defect class
+  will usually be validated against defects found yesterday, and yesterday's defects are fixed. Applied
+  strictly, you cannot validate anything against your own history without reconstruction. The mitigation
+  is to budget for the reconstruction rather than to soften the rule — instance 3's cost two flags.
+- **Its most common output is "you have less evidence than you thought."** That is expensive to act on
+  and easy to argue away, which is exactly why it needs to be a check somebody runs rather than a
+  disposition somebody has.
+- **It has a false-positive mode.** An artifact can change between revisions for reasons that have
+  nothing to do with the repair, and re-pinning it then costs accuracy rather than buying it. Diff
+  first; do not assume every change is a leak.
+- **Passing it does not make a result clean.** It closes one route. Instance 3's surviving positive is
+  still a single example, still chosen by the person who built the metric, still scored under
+  parameters selected to reproduce an earlier sweep.
+
+**The tell, if you only remember one thing.** An instrument that scores well on exactly the cases it
+was built from, where *built from* silently includes anything the repair touched. **Two of two is the
+number to distrust**, and the second tell is an artifact that got longer: text added during a repair is
+text written with the answer in view.
+([finding 017](../../../specs/001-discovery-validation/findings/017-evaluation-contemporaneity.md).)
+
 ## Spike hygiene
 
 **Spike code is disposable; the task corpus and its oracles are not.** The corpus outlives the

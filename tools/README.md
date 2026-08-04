@@ -313,8 +313,19 @@ as an advisory that fails nothing.
 python3 tools/cite_advisor.py                        # the listing
 python3 tools/cite_advisor.py --ground-truth         # score against the five hand-audited contracts
 python3 tools/cite_advisor.py --contracts-at REV     # score the contracts as they stood at a revision
+python3 tools/cite_advisor.py --spec-at REV          # read the requirements as they stood at a revision
 python3 tools/cite_advisor.py --sensitivity          # how the ranks move with the stoplist and the stemmer
 python3 tools/cite_advisor.py --ablation             # drop citations from clean contracts, count false alarms
+```
+
+**`--contracts-at` moves the requirements too, and that is the flag that matters here.** Given
+`--contracts-at REV` alone, `spec.md` is read at `REV` as well, which is the state you want and is
+why the leak below is visible at all. Holding the contracts at one revision while reading the
+requirements at another — the comparison that *exposes* the leak — needs both flags:
+
+```
+python3 tools/cite_advisor.py --contracts-at cee7ff8 --ground-truth                  # 1 of 55, 10 of 55
+python3 tools/cite_advisor.py --contracts-at cee7ff8 --spec-at HEAD --ground-truth   # 1 of 57,  3 of 57
 ```
 
 It ranks all of `spec.md`'s requirements by Jaccard similarity against each
@@ -356,8 +367,10 @@ same revision** — the only state in which the defect was ever live:
 
 Scored instead against the **current** requirement set, FR-038 ranks third of 57
 exactly as claimed — and that measurement is circular. **FR-038 was rewritten on
-2026-08-03 from the contract being scored against it**, growing from 53 words to
-1374; `spec.md` says so in as many words, that *"the v1 subject is the span, and
+2026-08-03 from the contract being scored against it**, growing from **51 words at
+`cee7ff8` to 1379 at `HEAD`** — the bullet as `parse_requirements` reads it,
+whitespace-split, which is the definition the scoring actually sees.
+`spec.md` says so in as many words, that *"the v1 subject is the span, and
 it was already the unit in the downstream contract rather than invented here"*.
 The third-of-57 figure measures the repair, not the detection. **FR-055 by
 contrast is byte-identical at both revisions**, so its first-of-55 is clean.
@@ -548,23 +561,46 @@ undocumented gets switched off the first time it is wrong.
   live run stating the same three claims the dry run beside it is forbidden to
   state.
 
-**Accepted, and live in the current output.**
+**Accepted.** ~~And live in the current output.~~ **Corrected 2026-08-03 — the gate
+is at zero and this section described a state it had left.** Re-run against the
+working tree, `check_corpus.py` reports **0 errors and 0 warnings**; re-run against
+the tree as `git archive cee7ff8` materialises it, it reports **0 errors and 32
+warnings, every one `numeric-provenance` on a multiplier**. So of the four entries
+below, one was live at `cee7ff8` and has since been repaired in the documents, and
+two were *never* in the output at either revision — the section asserted an
+instrument's behaviour without re-running it, which is the same defect the entry on
+[the advisory](#what-was-measured-and-where-the-earlier-claim-did-not-hold) records
+one flight up. Each entry keeps its reasoning, which is still right about *why* the
+construct is accepted; what is struck is the claim that you will see it.
 
 - *A price in a bare table cell.* `research/05` has a pricing table whose cell
-  is just `| $2.50 |`, with no per-unit marker on the line. It is reported. One
-  instance corpus-wide.
+  is just `| $2.50 |`, with no per-unit marker on the line. ~~It is reported. One
+  instance corpus-wide.~~ **It is not reported, at either revision.** The cell is
+  still there — `research/05-frontier-lab-agent-definitions.md` carries it — so the
+  accepted construct is real; what is wrong is the claim that the checker surfaces
+  it. Anything asserting
+  which figures reach the output has to be re-run rather than remembered.
 - *Derived aggregates.* `$24.82` and `$18.15` in `VERDICT.md` are sums computed
-  from findings figures, not quoted from one. They are correctly reported as
-  unsourced and are not errors of fact. `sum-arithmetic` verifies the arithmetic
-  where the working is shown.
+  from findings figures, not quoted from one. ~~They are correctly reported as
+  unsourced and are not errors of fact.~~ **Neither is reported, at either
+  revision**, and they are still not errors of fact. `$24.82` has since been struck
+  and superseded in `VERDICT.md` in the house style, which exempts it outright.
+  `sum-arithmetic` verifies the arithmetic where the working is shown.
 - *Percentages and fractions.* `percent_decimal` and `fraction` are implemented
   and **off by default**. Turning them on adds roughly 125 violations, nearly all
   external benchmark and vendor figures from `research/01`, `/04`, `/05` and
   `/13`. Enable them in `numeric_kinds` for a targeted sweep of one document,
   never for the gate.
-- *Third-party multipliers with no citation.* **32 warnings, and they are the
-  reason this gate is not at zero.** Typing the multiplier lookup surfaced them;
-  it did not create them. All 32 are external figures — Anthropic's ~15× token
+- *Third-party multipliers with no citation.* ~~**32 warnings, and they are the
+  reason this gate is not at zero.**~~ **32 warnings at `cee7ff8`, and they were
+  the reason that gate was not at zero. All 32 are now cleared and the gate is at
+  zero** — the fix named at the end of this entry was applied, in commit `1f5450b`,
+  as eight inline citations across five `.cursor/skills/*/SKILL.md` files; one
+  citation covers every claim within four lines of it, which is why eight edits
+  closed thirty-two warnings. The entry is kept because the *mechanism* is what
+  matters and it is unchanged: the rule still fires the moment a citation is
+  dropped. Typing the multiplier lookup surfaced them;
+  it did not create them. All 32 were external figures — Anthropic's ~15× token
   multiplier for multi-agent systems (23 sites), a permissive-mode 200× approval
   figure (2), a 5–100× search-loop cost range (5), a 10–25× model-family price
   range (2) — and none is a measurement this corpus took. Under the untyped rule
@@ -576,8 +612,9 @@ undocumented gets switched off the first time it is wrong.
   `$3.7687` defect in a wider form — a status code sourcing a cost multiplier —
   and these warnings are it being caught. Six sibling claims at the same values
   *are* exempt, because they carry the inline link the house style requires; these
-  32 carry none, and no citation sits within four lines of any of them. The fix is
-  a citation on each line, which belongs to the documents and not to this tool.
+  32 carried none, and no citation sat within four lines of any of them. The fix
+  was a citation on each line, which belonged to the documents and not to this tool,
+  and that is what was done.
   Do not add these values to `numeric_allow`: it is keyed on the digit string, so
   allowing `15×` would also exempt a future genuine 15× measurement.
 
