@@ -7,6 +7,17 @@ did not run is one sentence in one place.
 **Skipped is reported, never silent.** A skipped kernel-mechanism test is not
 evidence the mechanism works, and a run that skipped all of them should not
 read as a green run. `pytest_terminal_summary` prints the count and says so.
+
+**And it counts the reports pytest filed, not the markers it dispatched, because
+the paragraph above is not true of the whole tree.** Five modules — the mount,
+seccomp and bounds suites, which are exactly the FR-048 and FR-049 mechanism
+tests — carry a module-level `pytest.mark.skipif(sys.platform != "linux")`
+instead of the marker. Those never reach `pytest_runtest_setup`'s counters, so on
+a macOS host the banner stayed silent through a run whose 45 skips were 44
+kernel-mechanism skips and one vacuous invariant. A warning that a green run is
+not evidence is worthless if the run that most needs it is the run that suppresses
+it, so the count is derived from `terminalreporter.stats` and is independent of
+how the skip was raised.
 """
 
 from __future__ import annotations
@@ -107,12 +118,41 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         )
 
 
+def _skip_reason(report) -> str:
+    longrepr = getattr(report, "longrepr", None)
+    if isinstance(longrepr, tuple) and len(longrepr) == 3:
+        return str(longrepr[2])
+    return str(longrepr or "")
+
+
+def _mechanism_skips(terminalreporter) -> tuple[int, int]:
+    """Platform and privilege skips, counted from the reports pytest filed.
+
+    Taken from the reports rather than from the marker counters because the
+    modules holding the FR-048 and FR-049 mechanism tests skip by `skipif` and
+    never touch those counters. See this file's own docstring.
+    """
+    platform_skips = privilege_skips = 0
+    for report in terminalreporter.stats.get("skipped", []):
+        reason = _skip_reason(report).lower()
+        if "cap_sys_admin" in reason or "privileg" in reason:
+            privilege_skips += 1
+        elif "od-17" in reason or "linux only" in reason or "cgroup v2" in reason:
+            platform_skips += 1
+    return platform_skips, privilege_skips
+
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
-    if _skipped_privileged or _skipped_linux:
+    platform_skips, privilege_skips = _mechanism_skips(terminalreporter)
+    # The marker path and the report path see the same skip on a Linux run, so
+    # this is a floor rather than a sum; adding them would double-count there.
+    platform_skips = max(platform_skips, _skipped_linux)
+    privilege_skips = max(privilege_skips, _skipped_privileged)
+    if privilege_skips or platform_skips:
         terminalreporter.write_sep("=", "kernel mechanisms not exercised")
         terminalreporter.write_line(
-            f"  {_skipped_linux} skipped for platform, "
-            f"{_skipped_privileged} for privilege.\n"
+            f"  {platform_skips} skipped for platform, "
+            f"{privilege_skips} for privilege.\n"
             "  This run is NOT evidence that FR-048, FR-049 or FR-050 hold. "
             "Those requirements are\n"
             "  discharged only by a privileged Linux run."
