@@ -43,8 +43,8 @@ type PinnedDialer struct {
 	Addr string
 
 	// exempt is the one declared-origin exemption, handed in at construction. It is
-	// unexported and has no setter: the only way this dialer excuses an RFC1918 address is if
-	// whoever built it derived the exemption from the declared upstream (FR-017).
+	// unexported and has no setter: the only way this dialer excuses an RFC1918 or loopback
+	// address is if whoever built it derived the exemption from the declared upstream (FR-017).
 	exempt pinnedExemption
 
 	inner *net.Dialer

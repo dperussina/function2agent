@@ -223,9 +223,9 @@ func validatePinnedAddr(addr string) (pinnedExemption, error) {
 		return noExemption, fmt.Errorf("config: %s=%q must contain a port (FR-016)", envUpstreamAddr, addr)
 	}
 
-	// Build the exemption first. For a public origin this is empty; for an RFC1918 origin it
-	// names that one address; for link-local, the metadata service, loopback or unique-local it
-	// is an error, and the proxy does not start.
+	// Build the exemption first. For a public origin this is empty; for an RFC1918 or loopback
+	// origin it names that one address; for link-local, the metadata service, unique-local or
+	// the unspecified address it is an error, and the proxy does not start.
 	exempt, err := exemptionForPinnedOrigin(parsed)
 	if err != nil {
 		return noExemption, fmt.Errorf("config: %s=%q rejected: %w", envUpstreamAddr, addr, err)

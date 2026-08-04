@@ -211,26 +211,56 @@ proof "SC-022 path marking — the caveat dropped from the serialized record" \
   's = s.replace(chr(34)+"path_provenance"+chr(34)+": self.path_provenance,\n", "")'
 
 # ---------------------------------------------------------------------------
-# FR-017's pinned-origin exemption (owner decision 2026-08-03).
+# FR-017's pinned-origin exemption (owner decision 2026-08-03, extended to loopback the same day).
 #
-# The exemption's risk is not that it fails — it is that it GENERALISES. Three of the four proofs
-# below therefore remove a containment property rather than the feature, and pass only if a test
-# notices the widening.
+# The exemption's risk is not that it fails — it is that it GENERALISES. Most of the proofs below
+# therefore remove a containment property rather than the feature, and pass only if a test notices
+# the widening.
+#
+# The exemptible set holds TWO classes since the loopback extension, which adds a second way to
+# generalise that did not exist while it held one: not "one address becomes a range" but "one
+# address becomes one address PER CLASS". The last three proofs cover the loopback path and that
+# new failure mode; a proof set that only tampered the RFC1918 path would leave both unproven.
+#
+# Note the tamper strings below carry TWO spaces after `classPrivate:`. That is gofmt's alignment
+# of the two-entry map, and the single-space form these proofs used while the map had one entry
+# now matches nothing. A drifted tamper reports rather than passing silently, which is how this
+# was caught.
 
 go_proof "FR-017 exemption — the declared RFC1918 origin stops being reachable" \
   src/proxy/addresses.go \
   "TestTheDeclaredRFC1918OriginIsReachable" \
-  's = s.replace("\tclassPrivate: true,\n", "")'
+  's = s.replace("\tclassPrivate:  true,\n", "")'
+
+go_proof "FR-017 exemption — the declared loopback origin stops being reachable" \
+  src/proxy/addresses.go \
+  "TestTheDeclaredLoopbackOriginIsReachable" \
+  's = s.replace("\tclassLoopback: true,\n", "")'
 
 go_proof "FR-017 containment — the exemption widened to a prefix" \
   src/proxy/addresses.go \
   "TestADifferentRFC1918AddressIsStillDenied|TestTheExemptionIsAnAddressNotAPrefix" \
   's = s.replace("\treturn e.addr.IsValid() \x26\x26 e.addr == addr", "\treturn e.addr.IsValid() \x26\x26 netip.PrefixFrom(e.addr, 24).Masked().Contains(addr)")'
 
+# The same tamper against the loopback path alone. Sharing a test alternation with the RFC1918
+# proof above would let the loopback assertion rot unnoticed, because the RFC1918 half would go on
+# failing the run on its own.
+go_proof "FR-017 containment — the loopback exemption widened to a prefix" \
+  src/proxy/addresses.go \
+  "TestADifferentLoopbackAddressIsStillDenied" \
+  's = s.replace("\treturn e.addr.IsValid() \x26\x26 e.addr == addr", "\treturn e.addr.IsValid() \x26\x26 netip.PrefixFrom(e.addr, 24).Masked().Contains(addr)")'
+
+# The failure mode two exemptible classes introduce: an exemption that excuses every address in
+# any exemptible class rather than the one that was declared.
+go_proof "FR-017 containment — the exemption widened to its whole class" \
+  src/proxy/addresses.go \
+  "TestOneDeclaredOriginExemptsExactlyOneAddress" \
+  's = s.replace("\treturn e.addr.IsValid() \x26\x26 e.addr == addr", "\tif c, isDenied := classify(addr); isDenied \x26\x26 exemptibleClasses[c] {\n\t\treturn true\n\t}\n\treturn e.addr.IsValid() \x26\x26 e.addr == addr")'
+
 go_proof "FR-017 containment — link-local becomes exemptible" \
   src/proxy/addresses.go \
-  "TestExemptibleClassesIsExactlyRFC1918|TestTheMetadataServiceCannotBeExemptedByDeclaringIt" \
-  's = s.replace("\tclassPrivate: true,\n", "\tclassPrivate: true,\n\tclassLinkLocal: true,\n\tclassMetadata: true,\n")'
+  "TestExemptibleClassesIsExactlyPrivateAndLoopback|TestTheMetadataServiceCannotBeExemptedByDeclaringIt" \
+  's = s.replace("\tclassPrivate:  true,\n", "\tclassPrivate:  true,\n\tclassLinkLocal: true,\n\tclassMetadata: true,\n")'
 
 go_proof "FR-017 ordering — the exemption consulted before the class is decided" \
   src/proxy/addresses.go \

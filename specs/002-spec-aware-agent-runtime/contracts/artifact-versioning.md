@@ -50,8 +50,18 @@ not edit `spec.md` during the plan phase.~~
 `Artifact` is immutable, keyed by `sha256` over the canonical payload, stored at `objects/<sha256>`.
 `ArtifactRef` is `(deployment_id, kind) → content_hash` with retained history.
 
-**Rollback is a ref move**, which is what makes FR-054's one-command restoration of a previous
-configuration true rather than aspirational. Nothing rewrites an artifact in place.
+**Rollback is a ref move**, which is what makes FR-054's one-command restoration of ~~a previous~~
+**the immediately prior** configuration true rather than aspirational. Nothing rewrites an artifact
+in place.
+
+**Rollback is an undo, and it is its own inverse** *(wording corrected 2026-08-03 — the owner
+confirmed FR-054's toggle reading, and "a previous configuration" above read as a walk backwards
+through history, which is a different operation from the one that ships)*. It moves the ref to the
+version the artifact held before the change being undone. Performed twice in succession it returns
+the ref to where the first one started; it does not step further back, and an artifact three versions
+old is not reachable by repeating it. Retained history is what makes the prior version *findable*,
+not a stack the operation pops. Consecutive duplicate addresses are skipped when the prior version is
+located, because a republication of identical content is the same version and not a new one.
 
 ## Two clocks, versioned independently
 
@@ -75,6 +85,8 @@ retrofitted.
   would hide a serializer stable only within a process.
 - Re-analysing unchanged input produces **no** source-clock drift signal.
 - Every artifact kind round-trips through the canonical serializer unchanged.
-- Rollback restores a previous configuration in one operation and the restored deployment produces
-  the same artifact hashes it produced before.
+- Rollback restores ~~a previous~~ **the immediately prior** configuration in one operation and the
+  restored deployment produces the same artifact hashes it produced before.
+- Rollback is its own inverse: performed twice in succession it returns the artifact to the version
+  the first one started from, rather than stepping a second time backwards through history.
 - A `codegraph` schema-hash mismatch fails the analysis stage rather than emitting a drift signal.

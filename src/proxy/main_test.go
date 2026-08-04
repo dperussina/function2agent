@@ -282,10 +282,11 @@ func TestConfigRejectsBadValues(t *testing.T) {
 		{"origin_with_userinfo", func(e map[string]string) { e[envUpstreamOrigin] = "https://u:p@api.example.com:443" }, "userinfo"},
 		{"addr_is_a_name", func(e map[string]string) { e[envUpstreamAddr] = "api.example.com:443" }, "literal IP"},
 		{"addr_no_port", func(e map[string]string) { e[envUpstreamAddr] = "203.0.113.10" }, "ip:port"},
-		{"addr_loopback", func(e map[string]string) { e[envUpstreamAddr] = "127.0.0.1:443" }, "loopback"},
-		// addr_rfc1918 is deliberately absent: an RFC1918 target origin is now PERMITTED
-		// under the owner's 2026-08-03 decision, and TestDeclaredRFC1918OriginStarts below
-		// asserts it starts. The class stays denied for every other address.
+		// addr_rfc1918 and addr_loopback are deliberately absent: an RFC1918 target origin
+		// is PERMITTED under the owner's 2026-08-03 decision and a loopback one under its
+		// same-day extension. TestDeclaredRFC1918OriginStarts and
+		// TestDeclaredLoopbackOriginStarts below assert each starts. Both classes stay
+		// denied for every other address.
 		{"addr_metadata", func(e map[string]string) { e[envUpstreamAddr] = "169.254.169.254:80" }, "cloud_metadata"},
 		{"addr_ipv6_ula", func(e map[string]string) { e[envUpstreamAddr] = "[fd00::1]:443" }, "unique_local"},
 		{"listen_not_hostport", func(e map[string]string) { e[envListen] = "8080" }, envListen},
@@ -328,6 +329,43 @@ func TestDeclaredRFC1918OriginStarts(t *testing.T) {
 	}
 	if strings.Contains(cfg.String(), "exempt") {
 		t.Log("note: Config.String mentions the exemption; check it discloses no more than the address")
+	}
+}
+
+// TestDeclaredLoopbackOriginStarts is the same assertion for the same-host reading of OD-08,
+// permitted by the owner's 2026-08-03 extension. It runs through LoadConfig rather than through
+// validatePinnedAddr, so the whole startup path is covered and not only the address check.
+func TestDeclaredLoopbackOriginStarts(t *testing.T) {
+	env := fullEnv()
+	env[envUpstreamAddr] = "127.0.0.1:8443"
+	cfg, err := LoadConfig(getenvFrom(env))
+	if err != nil {
+		t.Fatalf("a declared loopback target origin must start (OD-08): %v", err)
+	}
+	if !cfg.AddressExemption.exempts(netip.MustParseAddr("127.0.0.1")) {
+		t.Fatal("the loaded config does not exempt the address it was pinned to")
+	}
+	if cfg.AddressExemption.exempts(netip.MustParseAddr("127.0.0.2")) {
+		t.Fatal("the loaded config exempts an address that was never declared")
+	}
+	// One address in total: a loopback declaration buys nothing in the other exemptible class.
+	if cfg.AddressExemption.exempts(netip.MustParseAddr("10.1.2.3")) {
+		t.Fatal("a loopback declaration also exempted an RFC1918 address; the exemption " +
+			"has become one per class rather than one in total")
+	}
+}
+
+// TestTheMetadataServiceStillRefusesToStartAfterTheLoopbackExtension is the regression the
+// extension could plausibly have caused: exemptibleClasses grew, and the question is whether
+// anything downstream was keyed to it having exactly one member. Asserted end-to-end through
+// LoadConfig, because that is the path an operator actually takes.
+func TestTheMetadataServiceStillRefusesToStartAfterTheLoopbackExtension(t *testing.T) {
+	for _, addr := range []string{"169.254.169.254:80", "169.254.1.1:443", "[fe80::1]:443", "[fd00::1]:443"} {
+		env := fullEnv()
+		env[envUpstreamAddr] = addr
+		if _, err := LoadConfig(getenvFrom(env)); err == nil {
+			t.Errorf("%s must remain a startup refusal after loopback became exemptible", addr)
+		}
 	}
 }
 

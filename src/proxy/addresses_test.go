@@ -152,24 +152,56 @@ func TestPinnedDialerHasNoResolver(t *testing.T) {
 // The exemption's whole risk is that it generalises. These tests are the fence, and each states
 // which way it would have to be broken.
 
-// TestExemptibleClassesIsExactlyRFC1918 is the assertion the owner asked for rather than merely
-// the implementation: link-local and the metadata service must be deniable by NO path.
+// TestExemptibleClassesIsExactlyPrivateAndLoopback is the assertion the owner asked for rather
+// than merely the implementation: link-local and the metadata service must be deniable by NO path.
 //
-// It checks the set's size as well as its contents, because a test that only checked for absence
-// would pass while someone added loopback, and the decision did not grant loopback either.
-func TestExemptibleClassesIsExactlyRFC1918(t *testing.T) {
-	if len(exemptibleClasses) != 1 {
-		t.Fatalf("exemptibleClasses has %d members, want exactly 1 (%s). Widening the set of "+
-			"classes an exemption can reach is a requirement change, not an implementation "+
-			"detail.", len(exemptibleClasses), classPrivate)
+// It asserts EXACT MEMBERSHIP rather than a size, which is what the size check was standing in
+// for. A bare count would pass while someone swapped one exemptible class for another, and the
+// absence loop below would pass while someone added a sixth class nobody named. Together they say
+// the set is these two and nothing else.
+//
+// Loopback moved from the forbidden list to the permitted one under the owner's 2026-08-03
+// extension. Everything else in the forbidden list stays forbidden and is enumerated here by name
+// rather than inferred from the count, so a future widening has to delete an assertion that says
+// why it exists.
+func TestExemptibleClassesIsExactlyPrivateAndLoopback(t *testing.T) {
+	want := map[string]bool{
+		classPrivate:  true,
+		classLoopback: true,
 	}
-	if !exemptibleClasses[classPrivate] {
-		t.Fatalf("the one exemptible class must be %q", classPrivate)
+	if !reflect.DeepEqual(exemptibleClasses, want) {
+		t.Fatalf("exemptibleClasses = %v, want exactly %v. Widening the set of classes an "+
+			"exemption can reach is a requirement change, not an implementation detail.",
+			exemptibleClasses, want)
 	}
-	for _, forbidden := range []string{classLinkLocal, classMetadata, classLoopback, classUniqueLocal, classUnspecified} {
+	for _, forbidden := range []string{classLinkLocal, classMetadata, classUniqueLocal, classUnspecified} {
 		if exemptibleClasses[forbidden] {
 			t.Fatalf("%q must have no exemption path under any configuration (FR-017)", forbidden)
 		}
+	}
+}
+
+// TestTheExemptionHoldsExactlyOneAddress is the containment the loopback extension put under
+// pressure, asserted against the type rather than against behaviour.
+//
+// With two exemptible classes, the widening to watch for is no longer only "one address becomes a
+// range" but "one address becomes one address PER CLASS". Both are prevented by the same fact:
+// pinnedExemption has one field and it is a single netip.Addr. A slice, a map, a second Addr or a
+// netip.Prefix would each make a second exemption expressible, and each fails here.
+func TestTheExemptionHoldsExactlyOneAddress(t *testing.T) {
+	typ := reflect.TypeOf(pinnedExemption{})
+	if typ.NumField() != 1 {
+		var names []string
+		for i := 0; i < typ.NumField(); i++ {
+			names = append(names, typ.Field(i).Name+" "+typ.Field(i).Type.String())
+		}
+		t.Fatalf("pinnedExemption has %d fields (%s), want exactly 1. A second field is a "+
+			"second exemption, which is the widening two exemptible classes invite.",
+			typ.NumField(), strings.Join(names, ", "))
+	}
+	if got := typ.Field(0).Type; got != reflect.TypeOf(netip.Addr{}) {
+		t.Fatalf("pinnedExemption's one field is %s, want netip.Addr. A prefix or a "+
+			"collection here would let one declaration cover more than one address.", got)
 	}
 }
 
@@ -177,14 +209,17 @@ func TestExemptibleClassesIsExactlyRFC1918(t *testing.T) {
 // 169.254.169.254 as your target origin and the deny is lifted for it. It must be a startup
 // failure instead.
 func TestTheMetadataServiceCannotBeExemptedByDeclaringIt(t *testing.T) {
+	// Loopback is deliberately absent since the owner's 2026-08-03 extension: a declared
+	// loopback origin IS exemptible, and TestTheDeclaredLoopbackOriginIsReachable asserts it.
+	// Everything below stays inexemptible by every path, including by declaration.
 	inexemptible := map[string]string{
 		"169.254.169.254": classMetadata,
 		"169.254.1.1":     classLinkLocal,
 		"fe80::1":         classLinkLocal,
-		"127.0.0.1":       classLoopback,
-		"::1":             classLoopback,
 		"fc00::1":         classUniqueLocal,
+		"fd12:3456::1":    classUniqueLocal,
 		"0.0.0.0":         classUnspecified,
+		"::":              classUnspecified,
 	}
 	for s, wantClass := range inexemptible {
 		addr := netip.MustParseAddr(s)
@@ -257,6 +292,89 @@ func TestADifferentRFC1918AddressIsStillDenied(t *testing.T) {
 		if err := checkDialAddress(other, exempt); err == nil {
 			t.Errorf("%s is not the declared origin and must stay denied; the exemption "+
 				"has generalised beyond one address", other)
+		}
+	}
+}
+
+// TestTheDeclaredLoopbackOriginIsReachable is the same-host reading of the OD-08 co-located
+// topology, permitted by the owner's 2026-08-03 extension.
+//
+// The deployment reaches its own application over loopback or over a private address depending on
+// the host layout, and denying one while permitting the other is a distinction with no security
+// difference: both are one declared, single, non-arbitrary origin.
+func TestTheDeclaredLoopbackOriginIsReachable(t *testing.T) {
+	for _, addr := range []string{"127.0.0.1:8443", "127.0.0.53:8443", "[::1]:8443"} {
+		exempt, err := validatePinnedAddr(addr)
+		if err != nil {
+			t.Fatalf("the declared same-host target %s must be permitted (OD-08): %v", addr, err)
+		}
+		if exempt == noExemption {
+			t.Fatalf("%s: a loopback target must produce a non-empty exemption", addr)
+		}
+		if err := checkDialAddress(addr, exempt); err != nil {
+			t.Fatalf("%s: the declared target must be dialable: %v", addr, err)
+		}
+	}
+}
+
+// TestADifferentLoopbackAddressIsStillDenied is TestADifferentRFC1918AddressIsStillDenied for the
+// new path. 127.0.0.0/8 is sixteen million addresses and the exemption covers one of them.
+//
+// Without this, a prefix-shaped regression in `exempts` would be caught only on the RFC1918 path
+// and the loopback path would be unproven.
+func TestADifferentLoopbackAddressIsStillDenied(t *testing.T) {
+	exempt, err := validatePinnedAddr("127.0.0.1:8443")
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	// Neighbours in the same /24 and the same /8, the IPv6 loopback, and the IPv4-mapped form
+	// of a neighbour. If the exemption were keyed to a prefix, at least one would pass.
+	for _, other := range []string{
+		"127.0.0.2:8443", "127.0.0.0:8443", "127.0.0.255:8443",
+		"127.1.2.3:8443", "127.255.255.254:8443",
+		"[::1]:8443", "[::ffff:127.0.0.2]:8443",
+	} {
+		if err := checkDialAddress(other, exempt); err == nil {
+			t.Errorf("%s is not the declared origin and must stay denied; the exemption "+
+				"has generalised beyond one address", other)
+		}
+	}
+
+	// The IPv4-mapped form of the declared address IS the declared address, because both
+	// sides are unmapped before the comparison. Asserted so that the unmapping is not
+	// mistaken for a hole by the loop above.
+	if err := checkDialAddress("[::ffff:127.0.0.1]:8443", exempt); err != nil {
+		t.Errorf("::ffff:127.0.0.1 is the declared address in mapped form and must be "+
+			"reachable: %v", err)
+	}
+}
+
+// TestOneDeclaredOriginExemptsExactlyOneAddress is the question two exemptible classes raise and
+// the reason the extension is not a one-line edit: the exemption is one address in TOTAL, not one
+// address per exemptible class.
+//
+// A deployment declares one upstream, so it gets one exemption. Declaring a loopback origin buys
+// nothing on the private network and declaring a private origin buys nothing on loopback.
+func TestOneDeclaredOriginExemptsExactlyOneAddress(t *testing.T) {
+	cases := []struct{ declared, otherClass string }{
+		{"127.0.0.1:8443", "10.0.0.5:8443"},
+		{"10.0.0.5:8443", "127.0.0.1:8443"},
+		{"[::1]:8443", "192.168.1.20:8443"},
+		{"172.20.0.3:8443", "[::1]:8443"},
+	}
+	for _, tc := range cases {
+		exempt, err := validatePinnedAddr(tc.declared)
+		if err != nil {
+			t.Fatalf("setup for %s: %v", tc.declared, err)
+		}
+		if err := checkDialAddress(tc.declared, exempt); err != nil {
+			t.Errorf("%s is the declared origin and must be reachable: %v", tc.declared, err)
+		}
+		if err := checkDialAddress(tc.otherClass, exempt); err == nil {
+			t.Errorf("declaring %s also exempted %s, which is in the other exemptible "+
+				"class; the exemption has become one per class rather than one in total",
+				tc.declared, tc.otherClass)
 		}
 	}
 }

@@ -25,20 +25,33 @@ import (
 //
 // Three structural properties keep that exemption from generalising, and each has a test:
 //
-//  1. It is ONE ADDRESS, not a prefix. `pinnedExemption` holds a `netip.Addr` compared with `==`.
-//     There is no CIDR anywhere in it, so there is no syntax in which a range could be written.
+//  1. It is ONE ADDRESS, not a prefix, and one address in TOTAL rather than one per class.
+//     `pinnedExemption` holds a single `netip.Addr` compared with `==`. There is no CIDR anywhere
+//     in it, so there is no syntax in which a range could be written, and there is no second
+//     field, so there is no syntax in which a second address could be written either.
 //  2. It is only constructible from the pinned origin. `exemptionForPinnedOrigin` is the sole
 //     constructor, it takes the address the operator declared as the upstream, and it REFUSES to
 //     build an exemption for any inexemptible class. 169.254.169.254 cannot be exempted by
 //     declaring it as the target.
 //  3. The inexemptible classes are decided BEFORE the exemption is consulted, so no ordering
-//     mistake can let one through. `exemptibleClasses` names exactly one class and a test asserts
-//     both its size and that link-local and cloud-metadata are absent from it.
+//     mistake can let one through. `exemptibleClasses` names the exemptible classes and only
+//     those, and a test asserts both its exact membership and that link-local, cloud-metadata,
+//     unique-local and unspecified are absent from it.
 //
-// Loopback is deliberately NOT exemptible. The owner's decision names the RFC1918 deny, and
-// widening it to loopback would be this component choosing a scope the decision did not grant.
-// See the report: a same-host (127.0.0.1) deployment is a plausible reading of "co-located" that
-// this exemption does not cover, and that is a question for the owner rather than a default here.
+// # Loopback (owner decision, 2026-08-03, extending the above)
+//
+// Loopback was initially left OUT of the exemption, because the first decision named the RFC1918
+// deny and widening it would have been this component choosing a scope the decision did not
+// grant. That left an incoherence: a same-host deployment at 127.0.0.1 was denied while the
+// identical deployment one hop away on an RFC1918 address was permitted. The owner extended the
+// exemption to a declared loopback origin on exactly the same terms — single address, equality
+// comparison, sole constructor, decided after the inexemptible classes.
+//
+// The exemptible set is now two classes and STILL one address: which class the declared origin
+// falls in decides whether an exemption may be built at all, never how many may exist. A
+// deployment declares one upstream address, so it obtains one exemption or none.
+//
+// Link-local, cloud-metadata, unique-local and unspecified remain inexemptible by every path.
 
 // Named address classes, used as the denial detail so the operator sees which class matched.
 const (
@@ -72,12 +85,18 @@ var deniedPrefixes = []struct {
 }
 
 // exemptibleClasses names every denied class from which the declared target origin may be
-// exempted. It has exactly one member, on purpose.
+// exempted. It has exactly two members, on purpose: the two ways the OD-08 co-located topology
+// reaches its own application, depending on whether the deployment shares a host with it.
 //
-// TestExemptibleClassesIsExactlyRFC1918 asserts the size and the absence of link_local and
-// cloud_metadata, so adding a class here is a test failure and not a quiet policy change.
+// Membership here decides WHETHER an exemption may be built, never HOW MANY may exist — see
+// pinnedExemption, which holds one address whatever this set contains.
+//
+// TestExemptibleClassesIsExactlyPrivateAndLoopback asserts the exact membership and the absence
+// of link_local, cloud_metadata, unique_local and unspecified, so adding a class here is a test
+// failure and not a quiet policy change.
 var exemptibleClasses = map[string]bool{
-	classPrivate: true,
+	classPrivate:  true,
+	classLoopback: true,
 }
 
 // pinnedExemption is the declared target origin's address, or the zero value for no exemption.
@@ -85,6 +104,11 @@ var exemptibleClasses = map[string]bool{
 // A struct wrapping one `netip.Addr` rather than a bare address, so that "no exemption" is a
 // distinct, obviously-empty value at every call site, and so the type cannot be widened into a
 // list or a prefix without changing every one of them.
+//
+// ONE FIELD, and that is the containment that survives the exemptible set growing. Two exemptible
+// classes could have meant one exemption per class; it does not, because there is nowhere to put
+// a second address. TestTheExemptionHoldsExactlyOneAddress asserts the field count against the
+// type, so adding a slot is a test failure rather than a quiet widening.
 type pinnedExemption struct {
 	addr netip.Addr
 }
@@ -117,6 +141,10 @@ func (e *ExemptionError) Error() string {
 //
 // An address in an inexemptible denied class is an error rather than an exemption, which is what
 // makes "declare the metadata service as your target" a startup failure instead of a bypass.
+//
+// It takes ONE address and returns ONE exemption, so it cannot be the route by which a deployment
+// accumulates an exemption per exemptible class. Its single production caller, validatePinnedAddr,
+// is reached once per process from the single declared upstream.
 func exemptionForPinnedOrigin(addr netip.Addr) (pinnedExemption, error) {
 	if !addr.IsValid() {
 		return noExemption, &ExemptionError{Addr: addr.String(), Class: classUnspecified}

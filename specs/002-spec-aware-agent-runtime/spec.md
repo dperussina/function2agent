@@ -909,19 +909,28 @@ question.
 - **FR-017**: ~~Loopback, private, link-local and cloud-metadata addresses MUST be denied even when
   they are reached through an allowlisted host.~~ **The private-address clause was replaced
   2026-08-03 — replaced on that class only, and the link-local class is strengthened rather than
-  loosened in the same edit.** The struck sentence's **loopback** clause is carried forward verbatim
+  loosened in the same edit.** ~~The struck sentence's **loopback** clause is carried forward verbatim
   below rather than dropped, because the replacement does not name that class and deleting it here
-  would retire a denial nobody decided to retire.
+  would retire a denial nobody decided to retire.~~ **The loopback clause was replaced later the same
+  day by a second owner decision, on exactly the terms the private-address clause already had.
+  Carrying it forward was right while no decision named it and is wrong now that one does; the
+  carried-forward sentence is struck rather than deleted so the denial it stated stays legible.**
 
-  Loopback addresses MUST be denied even when they are reached through an allowlisted host.
+  ~~Loopback addresses MUST be denied even when they are reached through an allowlisted host.~~
 
   The enforcement point MUST deny any destination resolving to a link-local address (including the
   cloud metadata service at 169.254.169.254) unconditionally, with no exemption path. It MUST deny
-  any destination resolving to an RFC1918 address other than the single explicitly declared target
-  origin. The exemption is keyed to that one declared address and MUST NOT be expressible as a
-  range, a prefix, or a configuration toggle.
+  any destination resolving to an RFC1918 **or loopback** address other than the single explicitly
+  declared target origin; a declared loopback origin is exemptible on the same terms as a declared
+  RFC1918 one and on no others. The exemption is keyed to that one declared address and MUST NOT be
+  expressible as a range, a prefix, or a configuration toggle. It MUST be **one address in total and
+  not one address per exemptible class**: a deployment declares one target origin and therefore holds
+  one exemption or none, whichever class that origin falls in.
 
-  > **Why one class gained an exemption and the other lost the possibility of one.** The struck
+  > **Why ~~one class~~ two classes gained an exemption and another lost the possibility of one.**
+  > *(Written when the private-address clause was the only one replaced. The loopback clause joined it
+  > later the same day and the argument below carries over unchanged, because it turns on the origin
+  > being single and declared rather than on which class it sits in.)* The struck
   > sentence denied RFC1918 unconditionally, which forbids a pinned upstream on a private address —
   > and that is the ordinary self-hosted topology FR-049 and **OD-08** already require the design to
   > survive, so the requirement as written was unsatisfiable against the deployment shape v1 sells
@@ -933,12 +942,26 @@ question.
   > reaching it is credential theft rather than exfiltration, and an exemption path that exists for
   > any reason is one an operator can be talked into using.
   >
-  > ⚠️ **One reading is left open rather than settled here, and it is an owner question.** A
+  > ⚠️ ~~**One reading is left open rather than settled here, and it is an owner question.**~~
+  > **CLOSED 2026-08-03 — the question was put to the owner and the answer was to extend. The
+  > description of the gap below is kept unstruck, because it is the reasoning *for* the extension
+  > rather than a claim the extension superseded.** A
   > same-host deployment reached at `127.0.0.1` is a plausible reading of the co-located topology
-  > **OD-08** describes, and under the text above it is denied with no exemption while the same
-  > deployment one hop away on an RFC1918 address is permitted. The replacement wording names the
-  > RFC1918 class only, so extending the exemption to loopback would be this document choosing a
-  > scope the decision did not grant. Recorded as a gap, not closed.
+  > **OD-08** describes, and under the ~~text above~~ **replacement wording as first written** it is
+  > denied with no exemption while the same deployment one hop away on an RFC1918 address is
+  > permitted. ~~The replacement wording names the RFC1918 class only, so extending the exemption to
+  > loopback would be this document choosing a scope the decision did not grant. Recorded as a gap,
+  > not closed.~~ **The owner granted the scope, on the ground that denying one while permitting the
+  > other is a distinction without a security difference.** Which of the two a deployment reaches its
+  > application over is a fact about where the operator put the two processes — same host, or one hop
+  > away on the private network — and not about how much authority either process holds. Both are one
+  > declared, single, non-arbitrary origin that FR-016 already pins at configuration time, and neither
+  > is the *arbitrary internal address* the deny exists to prevent. **The link-local clause is
+  > untouched by this**, and the containment is carried across whole rather than restated: single
+  > address, equality comparison, one constructor, the inexemptible classes decided before the
+  > exemption is consulted. **One containment is added that a single exemptible class did not need** —
+  > the exemption is one address in total, so a deployment cannot hold a loopback exemption and a
+  > private-address exemption at the same time.
 - **FR-018**: The enforcement point MUST be able to read the method and path of every request it
   allows, and MUST achieve that without requiring a trust anchor inside the execution environment or
   a certificate pin the operator must maintain. Any traffic it cannot interpret as an individual
@@ -1692,7 +1715,11 @@ question.
   > 5.14* is a weaker statement than *this code works on 5.14*: cgroup delegation semantics,
   > `pivot_root` inside a user namespace, and `seccomp` notification behaviour all moved across the
   > intervening releases. Turning the derived bound into a tested one needs boots on 5.14, 5.15 LTS,
-  > 6.1 LTS and 6.6 LTS — a CI matrix that does not exist and is not scheduled. **Under this
+  > 6.1 LTS and 6.6 LTS — a CI matrix that does not exist and is not scheduled. **It is T205, and it
+  > is deferred by owner decision 2026-08-03: the owner accepted shipping the derived floor marked
+  > NOT TESTED rather than building the matrix now.** That is a decision not to measure, so the
+  > caveat above is permanent until an owner decision to measure reverses it — it is not a backlog
+  > item that will quietly clear. **Under this
   > requirement's own rule, a release with no committed fixture is unsupported rather than
   > best-effort, so the only *supported* kernel today is the one the fixtures run on.** The floor is
   > the preflight's refusal threshold, not a support claim.
@@ -1709,12 +1736,35 @@ question.
   deny list, the egress policy, FR-048's declared location set and FR-049's bounds, and the admission
   decision — MUST be versioned and content-addressed, and **restoring the immediately prior version
   of any one of them MUST be a single operator action**: no hand-editing of individual entries, no
-  reconstruction from a trace, and no restart of the runtime. A restoration MUST be recorded exactly
-  as a widening is under FR-019 — the operator, the version restored from, the version restored to —
-  and MUST be subject to the same review as FR-012. FR-026 and FR-027 already require provenance,
+  reconstruction from a trace, and no restart of the runtime.
+
+  **Restoration is an undo of the most recent change, and it is its own inverse.** *"The immediately
+  prior version"* means the version the artifact held before the change now being undone — so a
+  restoration performed twice in succession returns the artifact to exactly where the first one
+  started. A restoration is itself a change to what the artifact holds, and the version it moved away
+  from is therefore what the next restoration restores. **This is a toggle between the last two
+  versions and MUST NOT be implemented as a walk backwards through the publication history**: an
+  artifact three versions old is not reachable by repeating the operation, and this requirement does
+  not ask for it. Republishing content identical to what the artifact already holds is not a new
+  version, so it does not become a restoration target and cannot make the operation a no-op.
+
+  A restoration MUST be recorded exactly as a widening is under FR-019 — the operator, the version
+  restored from, the version restored to — and MUST be subject to the same review as FR-012.
+  FR-026 and FR-027 already require provenance,
   content hashing, and the two drift artifacts to be versioned independently; what this requirement
   adds is that those versions be **navigable**, because a version nobody can return to is a record
   rather than a control, and constitution Principle VIII requires rollback to be one command.
+
+  > **The toggle reading confirmed by the owner 2026-08-03 — a wording change, not a behaviour
+  > change.** The implementer flagged *"the immediately prior version"* as ambiguous between a toggle
+  > and a history walk, shipped the literal reading, and named it in the test. The owner confirms the
+  > toggle is what was intended: rollback undoes the last change, and rolling back twice returns you
+  > to where you started. **Nothing in the implementation moves.** The two paragraphs above exist so
+  > that a later reader does not recover the ambiguity from the phrase and reimplement the walk —
+  > which would be a behaviour change, would silently invalidate the committed rollback test, and
+  > would need a different word here rather than a different reading of this one. A walk backwards
+  > would also have to distinguish publications from restorations in the retained history, which this
+  > requirement neither states nor implies.
 - **FR-055**: Every artifact FR-054 enumerates MUST be serialized in a **canonical form** before it
   is content-addressed, and re-deriving any source-derived artifact from unchanged input MUST
   produce a **byte-identical** payload and therefore an identical content address. The canonical
@@ -1948,6 +1998,8 @@ question.
 - **SC-028**: For **100%** of versioned artifacts, restoring the immediately prior version is
   completed by a single operator action, with **zero** hand-edits of individual entries and **zero**
   runtime restarts, and **100%** of restorations are recorded with the operator and both versions.
+  Restoring twice in succession returns **100%** of artifacts to the version the first restoration
+  started from, which is FR-054's undo-and-its-own-inverse reading measured rather than assumed.
 - **SC-029**: Analysing one committed fixture twice from unchanged input produces byte-identical
   payloads for **100%** of the artifact kinds FR-054 enumerates, and therefore **zero** content
   addresses that differ between the two runs; across a drift battery in which source is held
