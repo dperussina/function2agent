@@ -3,14 +3,21 @@
 **Feature**: `002-spec-aware-agent-runtime` | **Date**: 2026-08-03 | **Spec**: [`spec.md`](./spec.md)
 
 **Input**: Feature specification from `specs/002-spec-aware-agent-runtime/spec.md`
-(54 functional requirements, 28 success criteria, five user stories, four deviation records)
+(~~54 functional requirements, 28 success criteria~~ **58 functional requirements, 30 success
+criteria** *(recounted 2026-08-04 against the document; the struck figures were already stale before
+FR-058 was added)*, five user stories, four deviation records)
 
 **Constitution**: ~~v1.2.0~~ **v1.3.0** *(amended 2026-08-03 by **OD-22**; Principle VI restated over a
-tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ **OD-21**
+tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ ~~**OD-21**~~ **OD-25**
 *(extended 2026-08-03 after the owner reviewed this gate — see the banner under Summary — and
 extended again the same day: **OD-18** through **OD-21** were taken at the specification's clarify
 session and recorded retroactively, and this plan already relies on two of them, at FR-002's
-admission criterion and at FR-047's staleness ceiling)*
+admission criterion and at FR-047's staleness ceiling. **Advanced to OD-25 on 2026-08-04**, and the
+four entries above OD-21 are progressively less *inherited*: **OD-22** amends the constitution and is
+cited on this line already, **OD-23** bears on FR-024 and this plan does not discuss it, and
+**OD-24** and **OD-25** were both taken against this feature's own documents — OD-24 supplying the
+privilege model behind the Target Platform line below, OD-25 authorising the FR-058 row in Complexity
+Tracking. The bound is the register's extent; the parenthetical is which of it this plan leans on.)*
 ([feature 001 plan](../001-discovery-validation/plan.md)) | **Evidence base**:
 [feature 001 verdict](../001-discovery-validation/VERDICT.md)
 
@@ -128,6 +135,20 @@ work rather than a statement that 5.14 does; the boots that would make it tested
 outstanding obligation below. See [`spec.md`](./spec.md) FR-053, which is the site that states it in
 full and which no restatement may be weaker than.
 
+> **The privilege model the user namespace is entered under is recorded 2026-08-04 as
+> [`plan.md`](../001-discovery-validation/plan.md) OD-24, and this line named the facility without
+> naming the model.** The **workload** is root inside the namespace and unprivileged outside it, mapped
+> to a dedicated per-session kernel uid range that is not the supervisor's, in a pid namespace of its
+> own, and it drops to a second mapped uid once the mount tree is built. **The supervisor is not
+> unprivileged** — writing the multi-line uid map needs `CAP_SETUID`, and a single-entry self-map has
+> no uid to drop to and makes in-namespace root the supervisor's own kernel uid. **The decision is
+> adopted and its 13–20 day build is deferred**, on two grounds OD-24 states: the landed `MS_RDONLY`
+> and recursive read-only remount repairs are what close finding 021's two authority gaps and they hold
+> under every privilege model, so the namespace's remaining margin is per-session uid isolation rather
+> than a gap closure; and Docker's default seccomp profile blocks `unshare(CLONE_NEWUSER)` outright,
+> which under **OD-08**'s self-hosted model is not ours to choose. **No requirement text changes**, and
+> nothing on this line is wrong — user namespaces remain a platform requirement.
+
 **Project Type**: Self-hosted multi-container service (**OD-08**): analysis, runtime, supervisor and
 enforcement point, plus a per-session sandbox image, shipped as OCI images with a compose bundle we
 author (T-11).
@@ -178,6 +199,25 @@ FR-046's detection window, and the credential lease interval this plan introduce
 > loudly; only the third could be closed by running something, which is why it is carried as an
 > outstanding measurement rather than as a marking obligation. The measurement that would close it is
 > a boot matrix over 5.14, 5.15 LTS, 6.1 LTS and 6.6 LTS, and it does not exist.
+
+> **Extended 2026-08-04 by FR-058's per-result output bound, and it lands in two of the three kinds
+> above at once without changing the count of four.** The **bound itself** takes FR-005's treatment
+> exactly — required configuration, startup fails loudly when unset, no default stated — for FR-005's
+> reason and not FR-047's: an unset bound on how much one command result may put into the context
+> window is an unbounded liability, not a number nobody has checked. So it is **not** a *configured
+> value with nothing behind it*, the enumeration above stays at four, and
+> [`contracts/README.md`](./contracts/README.md)'s "four such values" stays correct. The same is true
+> of the **declared bound on the retention location** FR-058's first obligation requires, which fails
+> closed on the same grounds. **What is new is a figure of the third kind**, alongside the kernel
+> floor: FR-058 states a **hard ceiling on what an operator may configure** — one twentieth of the
+> context window of the model in force — and that fraction is derived from an argument about what a
+> transcript has to hold, not from a measurement. It differs from the kernel floor in that no run
+> could close it; what would inform it is a task-success measurement of bounded-and-referenced output
+> against inlined output, which is the gap the Complexity Tracking row below records. Nothing ships
+> at the ceiling, because nothing ships without an operator's value, so it is a bound on
+> configuration rather than a default travelling as one. **The authorising decision is OD-25**
+> *(citation added 2026-08-04 when OD-25 was recorded; nothing in this note changes, and the fraction
+> is the figure OD-25 records as derived from an argument and from nothing else)*.
 
 ---
 
@@ -558,6 +598,7 @@ Everything the plan cannot satisfy, in the section that records it.
 | **A second language (Go) at the enforcement point** | A parser differential between the proxy and the target defeats FR-018 completely, and FR-018 is what makes the method allowlist meaningful (**Q-01**) | Python keeps one toolchain and gives a weaker framing-ambiguity posture at the one component where that bug class is fatal. Envoy is strong but puts a large dependency in a self-hosted install for a single-upstream policy, and the security-critical decision stays ours regardless |
 | **Deployment-clock drift latency is not measurable on real traffic** unless the customer emits a deployment event, which FR-046 says may not be assumed | A property of the world: a deployment change generally has no observable change time. Measurable on the committed synthetic corpus, which controls the change time, and on real traffic only where the optional trigger exists | Inferring the change time from first observation measures the detector against itself |
 | **FR-047 ships unmeasured — no experiment has ever run the scenario it governs** *(added 2026-08-03)*. Feature 001's only drift experiment is **E13**, whose three named mutations are *rename a route, change a parameter type, delete an endpoint*: all three move the **source**. It has **no arm in which the source is unchanged and the deployment stops serving an operation**, and none in which an admitted target's **published specification is withdrawn** — which is the case FR-047 actually governs. **E13 never ran at all.** So FR-047's disposition (serve the last-known-good set marked stale, deny past the ceiling), its fifteen-minute ceiling, and its deployment-clock detection latency all ship with **zero** supporting evidence | **Recorded as a departure from this project's prove-before-build discipline, on `plan.md` OD-14's precedent, not as coverage.** The measurement requires the artifact to exist: the deciding quantity is how often a published specification stops being reachable *transiently* rather than permanently, which is a property of real deployments and real networks and cannot be manufactured here. **The obligation is therefore deferred to production against real traffic** — instrument re-fetch outcomes with their duration and their recovery, and report the transient-versus-permanent split against the configured ceiling — and it is stated plainly rather than folded into FR-042's drift instrumentation, whose two committed corpora are about drift being *detected* and not about the observation channel *failing*. **The authorising decision, OD-21, is unaffected**; what is recorded is that it rests on a consistency argument and not on a measurement, which OD-21 says of itself. `research/14-architecture-synthesis.md` **O-04** carries the same statement and stays **open** | **SC-021 is not the measurement and must not be read as it.** It scores an implementation's conformance to FR-047 against a fixture derived from FR-047 — a conformance test, not evidence the disposition is right. Calling it coverage would be the substitution this corpus has caught repeatedly. Manufacturing the corpus here is worse than absent: any withdrawal schedule we invent would encode the transient-versus-permanent ratio the measurement exists to discover |
+| **FR-058 closes U-50's token limb by argument and leaves its task-success limb unmeasured, and the split is what any future spend on this question should be decided against** *(added 2026-08-04)*. `research/14-architecture-synthesis.md` **U-50** opened two limbs: what inlining bulk command output *costs*, and whether replacing it with a bounded preview plus a reference costs *task success*. **The token limb is now largely determined and it is determined by where the bound sits, not by a run.** E17's pre-registered sensitivity analysis — a projection, dry run, no model was called — shows the saving a reference buys is almost entirely a function of the alternative's truncation point: substantial at a high bound, near zero at a low one. FR-058 argues a low bound from the context window and from the re-send arithmetic, and forbids by its ceiling the highest of the three settings that analysis prices. **At the bound FR-058 permits, the reference mechanism's economic case is small and its correctness case is the whole of it** — a low bound without a reference destroys data the agent cannot ask for again. **What remains genuinely unmeasured is the second limb**: whether an agent handed a path answers as often correctly as one handed the bytes. Nothing in this corpus bears on it | **Recorded as a determination made without a measurement, not as coverage, and the reason it is acceptable here is that the alternative was worse.** U-50 states that the specification half is independent of both measurement arms and must not wait on either, and that *recording inlining as the chosen default would itself be an acceptable outcome* — what is unacceptable is inheriting it silently. FR-058 chooses, states its reasoning, and marks the one figure it invents. **The consequence for spend is the useful part and it inverts the obvious reading:** the token limb no longer justifies buying E17, because its answer now follows from a requirement rather than from a run, and a run priced against a bound this specification forbids would price a setting v1 cannot ship. The limb that could still change a decision is task success, and it is the expensive one — it needs the paired battery, the calibration gate and enough pairs to see a shift that matters | **Setting a high bound in order to make the reference mechanism measurable would be designing the instrument to produce a result**, which is the failure this project has a standing rule against and has caught in its own artifacts more than once. **Deferring the bound until E17 runs was rejected for the reason U-50 gives**: a gap that waits on a run stays open, and this one is a requirement gap that exists whether or not any model is ever called. **Quoting the projected ratios as the answer was rejected** because they are a dry-run projection against a synthetic corpus, they move with the bound, and a single ratio without its bound is not a result. **The authorising decision is OD-25**, recorded 2026-08-04 in [feature 001's plan](../001-discovery-validation/plan.md) *(citation added when OD-25 was recorded; this row's text is otherwise unchanged — what it lacked was a decision to point at, not a determination)*. OD-25 records all three limbs as commitments rather than consequences, including that the requirement forecloses the configuration at which the planned experiment would have shown its largest effect, and that the task-success limb is predicted to void at stage one on its own harness — so the experiment is dead on both limbs rather than only on the token one |
 | **FR-041's threshold is left unset** | Pre-registration for a **per-call** gate is an owner act preceding measurement. **OD-10** records why the superseded per-tool number does not travel: different base rate, different blast radius | Inventing a threshold here is the inherited-number failure arriving through a new door — the failure this corpus has caught repeatedly |
 | **Linux-only, with no degraded mode elsewhere** (~~**Q-11**~~ → **OD-17**, 2026-08-03) | All three FR-048/049/050 mechanisms are kernel facilities | A degraded mode is a sandbox missing one of Principle IV bullet 1's terms, and the bullet's own words are that a configuration missing any term does not satisfy it |
 

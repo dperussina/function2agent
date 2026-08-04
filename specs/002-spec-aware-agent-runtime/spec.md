@@ -13,7 +13,7 @@
 This is the production specification. It follows feature 001, which planned fifteen numbered
 experiments, reached nine ladder positions, ran eight of them, and closed with a verdict
 ([`VERDICT.md`](../001-discovery-validation/VERDICT.md)). Its binding scope decisions are the owner
-decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ **OD-21** in [`plan.md`](../001-discovery-validation/plan.md)
+decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ ~~OD-21~~ **OD-25** in [`plan.md`](../001-discovery-validation/plan.md)
 *(extended 2026-08-03: **OD-15** drops ADK for v1 and partially reverses OD-01, **OD-16** removes
 `litellm` from the shipped product, and **OD-17** makes Linux the only supported platform. None of
 the three changes a requirement in this document; all three change what the plan builds against)*.
@@ -28,6 +28,16 @@ answer of that same clarify session and had the same defect**: FR-047, the narro
 FR-001, FR-030 and FR-031, and SC-021 rested on an authority that appeared nowhere. It is recorded
 separately from its three siblings because recording it needed the owner rather than a propagation
 pass, and the note under OD-20 that named the gap is struck rather than deleted.
+**Extended again 2026-08-03 with OD-22 and OD-23, and once more 2026-08-04 with OD-24 and OD-25;
+the bound above is advanced to OD-25 to match.** The first two are already carried in the
+requirement text below — **OD-22** amends constitution Principle VI so the traced unit is
+tier-relative, at v1.3.0, and **OD-23** admits FR-024's request-declared precision rung only where
+the ladder would otherwise refuse. **The last two change no requirement in this document, and
+neither should.** **OD-24** settles the privilege model FR-048, FR-049 and FR-050 are delivered by:
+those three state properties, OD-24 states the mechanism, and it is adopted with its build deferred.
+**OD-25** is the decision authorising FR-058 in full, including its unit rule and its ceiling; the
+register records FR-058's own text as unchanged by it, because what FR-058 lacked was a decision to
+cite rather than a decision.
 
 **What the product is.** The operator points the system at a codebase and at a *named running
 deployment* of that codebase. The system derives contracts from the source, establishes what the
@@ -594,6 +604,13 @@ FR-054's eight artifact kinds are the subject. FR-055 is that narrowing carried 
 requirement text, where it belongs, instead of living as a correction in a downstream artifact.
 Append-only applies to it too.
 
+**Extended 2026-08-04 with FR-058, and this one comes from neither a checklist nor a gate.** It comes
+from a register entry — [`14`](../../research/14-architecture-synthesis.md) **U-50** — which recorded
+that no requirement here governed the size of a command's output, so the operative default was to
+inline whatever a call printed. That default was inherited rather than chosen, on a product whose
+claim **OD-09** moved onto cost. FR-058 sits with FR-004, whose surface it bounds, and with FR-005,
+which it is repeatedly mistaken for. Append-only applies to it too.
+
 **Spec-aware runtime**
 
 - **FR-001**: The system MUST require, as configuration, an identified target deployment, and MUST
@@ -719,6 +736,14 @@ Append-only applies to it too.
   available as the fallback path when no served operation fits the request. A tool surface is a bet
   that the question falls inside it, and the measured cost of losing that bet was a run that spent
   its entire budget and returned nothing.
+
+  > **Extended 2026-08-04 by FR-058 — extended, not narrowed.** This requirement says what the agent
+  > holds. It says nothing about **how much a single use of it may return**, and neither capability
+  > has a natural size: one command over a large tree, or one response from a general request, can be
+  > larger than any context window this product's providers offer. Until FR-058 the operative default
+  > was therefore *inline whatever the call printed*, which is the expensive case and which no
+  > requirement chose. [`14`](../../research/14-architecture-synthesis.md) **U-50** is the register
+  > entry.
 - **FR-005**: The runtime MUST enforce per-session ceilings on spend, token consumption, wall-clock
   time and turns. A ceiling MUST survive a crash and resume: the post-resume total MUST be counted
   against the same ceiling rather than restarting it. **All four ceilings are required configuration
@@ -767,6 +792,136 @@ Append-only applies to it too.
   > obligation, and it is the same seam **U-31** names from the other side — crossing a durable-execution
   > activity boundary silently loses token accounting ([`02`](../../research/02-agent-harnesses.md) §4),
   > which would degrade the very metric this requirement depends on.
+
+  > **Neither extended nor narrowed 2026-08-04 by FR-058, and the reason to record a non-change is
+  > that a reader will otherwise assume one of the two covers the other.** These four ceilings bound
+  > a **session's cumulative consumption**; FR-058 bounds **one result**. Neither is a special case of
+  > the other. This requirement cannot supply FR-058's bound, because a session can be made
+  > structurally impossible — its context window full, its next call unable to be built — while every
+  > one of these four ceilings is far from binding, and a ceiling whose remedy is to stop spending
+  > does not help with a window that is already full. FR-058 cannot supply these, because any number
+  > of results each under its bound still sum without limit. The composition is set out at FR-058,
+  > including the one interaction that runs against the intuition: a per-result bound set low enough
+  > to force follow-up calls **spends this requirement's budget faster**, because every follow-up
+  > re-sends the whole transcript.
+- **FR-058**: Every result either of FR-004's capabilities returns to the agent MUST be bounded before
+  it enters the model's context. The bound MUST be stated in **tokens of the model in force**, MUST be
+  required configuration under FR-033, and **this specification states no default value for it**: an
+  unset bound MUST make startup fail loudly, naming what is missing, exactly as FR-005's ceilings,
+  FR-006's stall threshold and FR-049's bounds do. A configured bound **MUST NOT exceed one twentieth
+  of the context window of the model in force**, and a configuration above that ceiling MUST be
+  refused at startup rather than silently clamped to it.
+
+  **The unit is tokens, and a byte proxy is permitted only where it cannot overshoot.** The resource
+  this bound protects is the context window, which is denominated in tokens, and the bytes-per-token
+  ratio of what this surface returns is not a constant — it varies with content, and it varies in the
+  direction that defeats a byte bound: the denser the content in tokens, the more window a fixed
+  number of bytes consumes. Where the
+  tokenizer of the model in force is not available to the runtime, the bound MAY be enforced against
+  bytes **only if the byte figure is derived so that it can never admit more tokens than the bound**,
+  and the substitution MUST be recorded under the third obligation below. An average bytes-per-token
+  divisor is not such a derivation and MUST NOT be used as one: minified JSON, base64, dense
+  identifiers and tabular numerics are exactly the content an average under-counts, so a bound
+  enforced through one admits most where it is needed most.
+
+  Three obligations, and this requirement is satisfied only when all three hold.
+
+  - **What happens at the bound.** A result that reaches it MUST be returned as a **bounded preview
+    together with a reference to the withheld bytes**, and the reference MUST be one **the agent's
+    next call on the same surface can name**. FR-004's capabilities return bytes across an enforcement
+    boundary and there is no in-process object for a reference to point into, so **an object handle is
+    not available and MUST NOT be assumed**. What is available is a path: the withheld bytes MUST be
+    written inside FR-048's declared filesystem set and the reference MUST be that path, so the next
+    command can filter, count or search it without the bytes entering the transcript at all. That
+    retention location MUST be a declared location under FR-048 carrying **a declared bound of its
+    own**, MUST NOT be readable from another session's execution environment (FR-050), and MUST NOT
+    outlive the session. **Truncation with loss remains permitted in exactly one case** — the bytes
+    cannot be retained, because the retention location is at its bound or the output was never
+    captured — and in that case the result MUST state that the withheld bytes are **unrecoverable**.
+    Moving an unbounded quantity out of the transcript and onto a disk that nothing bounds would be
+    this requirement's own defect relocated rather than fixed.
+  - **What the agent is told.** The result the model reads MUST state, **in itself**, that it is
+    bounded; the full size of the result; how much was admitted; and either the reference by which
+    the remainder is reachable or that the remainder is unrecoverable. **A bounded result that reads
+    as a complete one MUST NOT be produced**, and a disclosure recorded anywhere other than in the
+    result does not discharge this. The model is a reader that arrives at the result and at nothing
+    else, and an answer composed from a silently shortened result is a wrong answer carrying no
+    signal that it is one.
+  - **What the trace records.** The span for the call MUST record that the bound was applied, the
+    bound in force, the unit it was enforced in and whether a byte proxy stood in for that unit, the
+    full size of the result, the amount admitted, and the disposition — retained, with the reference,
+    or unrecoverable. Applying the bound is a decision about what the model was permitted to see, so
+    a span carrying only what was admitted describes a result that never existed. This is a field
+    obligation on the `tool_call` span of FR-038 and does not add a span kind; FR-038's set is closed.
+
+  > **Added 2026-08-04. Why a session ceiling does not supply this, why the number is a ceiling rather
+  > than a default, and the one thing the argument deliberately does not do.**
+  >
+  > **Nothing in this document bounded a unit of work, and the omission sits on the product's cost
+  > claim.** Searched 2026-08-04 across this specification: no truncation rule, output cap, byte
+  > ceiling, bounded preview or reference appeared anywhere in this role. FR-005 bounds a session's
+  > totals and halts it; it does nothing to the cost of one call inside it, and it cannot, because a
+  > single `grep` over a large tree can return more than the context window holds, on the first call,
+  > with every one of those four ceilings still far from binding. `plan.md` **OD-09** is what makes the omission
+  > load-bearing rather than untidy — it repositioned the product claim onto cost — and
+  > [`14`](../../research/14-architecture-synthesis.md) **U-50** is the register entry. E17's
+  > pre-registered projection under `specs/001-discovery-validation/harness/pass-by-reference/`
+  > prices the uncapped default at a 726,766-token transcript for one task against a 200,000-token
+  > window; that figure is a projection from a dry run in which no model was called, and it is not
+  > load-bearing here — **the bound follows from the shape of the surface and would be required if no
+  > experiment ever ran.**
+  >
+  > **Why the ceiling sits where it does, and why it is a ceiling rather than a default.** The
+  > fallback path's smallest useful shape is orient, search, narrow, read, answer, and every result
+  > along it stays in the transcript and is re-sent on every call after it. A bound at a fraction *f*
+  > of the window lets a session admit roughly 1/*f* results at the bound before the window is gone —
+  > before the system prompt, the capability descriptions, the agent's own reasoning and its answer,
+  > and before any allowance for having guessed wrong once. One fifth leaves five results and no room
+  > to be wrong; **one twentieth leaves twenty**, which is thin rather than generous once the rest of
+  > the transcript is counted, and it is the loosest fraction this document will permit an operator to
+  > configure. On a 200,000-token window that ceiling is 10,000 tokens. **The useful operating region
+  > sits well below it**, in the low thousands, for a reason the ceiling does not capture: a result
+  > admitted on one call is paid again on every call after it, so a bound is not paid once but once
+  > per remaining turn. **Neither figure is measured.** The fraction is derived from the argument just
+  > given and from nothing else; it is not a configured value with nothing behind it in FR-047's
+  > sense, because nothing ships at it, and it belongs on [`plan.md`](./plan.md)'s list of figures
+  > this product states without a measurement behind them, beside the kernel floor. **No default is
+  > stated at all**, on FR-005's grounds and not FR-047's: an unset per-result bound is not a number
+  > nobody has checked, it is an unbounded liability, and the treatment for those here is to fail
+  > closed.
+  >
+  > **The bound was chosen against the reference mechanism's own interest, and that is checkable
+  > rather than asserted.** E17's sensitivity analysis — the same dry-run projection, no model called
+  > — establishes that the token saving a preview-plus-reference buys is almost entirely a function of
+  > where the alternative truncates: large at a high bound, and near zero at a low one. **A bound
+  > argued in order to make the mechanism worth building would therefore have been a high one**, and
+  > the highest of the three settings that analysis prices is above the ceiling this requirement
+  > permits on the window it prices them against, so this requirement forbids the setting that flatters
+  > the mechanism most. The argument above lands low, from the window and the re-send arithmetic, which
+  > is the setting at which the mechanism's *economic* case is weakest. What survives at a low bound
+  > is not an economic argument but a correctness one, and it is why the first obligation above is
+  > written as a reference rather than as truncation: at a low bound, truncation without a reference
+  > destroys data the agent needed and cannot ask for again, whereas a reference makes a cheap result
+  > a filterable one rather than a lossy one.
+  >
+  > **How this composes with FR-005.** Two instruments on two quantities, neither substituting for the
+  > other. FR-005 is cumulative, session-scoped, denominated in money, tokens, time and turns, and it
+  > is a **stopping** instrument whose remedy is a named terminal state under FR-006. This is
+  > per-result, denominated in tokens of the window, and it is a **shaping** instrument: reaching it is
+  > an ordinary disposition of one call and **MUST NOT** end the session. The interaction that matters
+  > runs against the intuition and is a cost rather than a saving — a bounded result the agent has to
+  > follow up costs an extra call, every extra call re-sends the whole transcript, and both land on
+  > FR-005's token, spend and turn ceilings. So a per-result bound set too low spends FR-005's budget
+  > faster, and FR-005's turn ceiling is what keeps that from being unbounded.
+  >
+  > **What this does not close, named rather than left to be found.** It bounds one result and not a
+  > turn: an agent issuing twenty calls in one turn, each returning just under the bound, reproduces
+  > the problem one level up, and nothing here bounds that — FR-005's token and turn ceilings do. It
+  > does not say how a preview should be shaped, because nothing measures which shape an agent can act
+  > on. And the second limb of the question is untouched: **whether an agent given a reference answers
+  > as often correctly as one given the bytes is unmeasured**, it is the limb that decides whether a
+  > low bound is safe, and no figure in this corpus bears on it. [`plan.md`](./plan.md)'s Complexity
+  > Tracking carries that gap.
 - **FR-006**: Every session MUST terminate in a named state drawn from a declared taxonomy in which
   each success and each failure outcome is separately named. A generic error MUST NOT be a terminal
   state.
@@ -2260,7 +2415,7 @@ above depends on each of them.
   `/speckit-implement` for any feature that adds a permission tier, and this feature adds one
   (FR-008 through FR-012).
 - **Feature 001's record.** [`VERDICT.md`](../001-discovery-validation/VERDICT.md) for what was
-  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ **OD-21**, and
+  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-21~~ **OD-25**, and
   [`research/14-architecture-synthesis.md`](../../research/14-architecture-synthesis.md) for the
   decision, contradiction and uncertainty registers.
 - **A reference application** that is real, data-driven, seedable and publishes its operations, for

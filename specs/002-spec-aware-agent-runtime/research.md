@@ -13,7 +13,7 @@ deliberately did not: the specification names no language, framework, library or
 its own quality checklist scored that as a deliberate pass.
 
 Most of the stack is **not** decided here. It was decided in feature 001 and recorded as owner
-decisions **OD-01** through ~~**OD-14**~~ **OD-21** in that feature's
+decisions **OD-01** through ~~**OD-14**~~ ~~**OD-21**~~ **OD-25** in that feature's
 [`plan.md`](../001-discovery-validation/plan.md), which is the authority for the register's extent.
 *(**Range corrected 2026-08-03**, and the reasoning is recorded because a prior pass deliberately
 left it alone. The sentence was read as a claim about **provenance** — which decisions came out of
@@ -33,7 +33,21 @@ rather than smuggled into a bound. **And a note on what guards this, which is no
 records `register-range` as unable to read a whole-register claim written as ordinary prose, and
 neither the checker nor `gen_claims.py` treats the sentence above as a site — verified 2026-08-03 by
 running both. This bound is maintained by a reader noticing, which is how it came to be seven entries
-behind while the corpus's other three sites were kept current.)* §1 records how each binding one is honoured, and —
+behind while the corpus's other three sites were kept current.
+**Range advanced again 2026-08-04 to OD-25**, after OD-22 and OD-23 landed on 2026-08-03 and OD-24
+and OD-25 on 2026-08-04. The provenance sentence above extends the same way and is stated rather
+than smuggled into the bound: **OD-22 and OD-23 are the owner's answers to the two questions the
+production specification left open at its Clarifications section, and OD-24 and OD-25 are
+contemporaneous records — OD-24 of the workload's privilege model, written already revised because
+the measurements that falsified its original wording landed before it was written, and OD-25 of the
+disposition FR-058 carries.** Neither of the last two changes anything decided in this document.
+**The guard note above was re-verified 2026-08-04 and is confirmed, with the mechanism now
+established rather than observed**: `register-range`'s pattern requires the second bound to follow
+the separator immediately, so the `~~` and `**` this sentence is maintained with defeat it, and the
+check's second gate admits a whole-register claim only where the range is parenthesised,
+bracketed, or led by a colon or a dash — which this sentence, being ordinary prose, is not.
+**Either alone is sufficient to hide it**, so a fix to the pattern would not by itself put this
+site under guard.)* §1 records how each binding one is honoured, and —
 *(**Updated 2026-08-03.** The owner has since answered every question in §5, and three answers became
 **OD-15**, **OD-16** and **OD-17**. OD-15 partially reverses OD-01 and is annotated at §1.1, T-01,
 T-02, T-03, T-04, T-06 and T-08. Nothing below is deleted and no measurement is amended.)* —

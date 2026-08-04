@@ -3,10 +3,19 @@
 **Feature**: `002-spec-aware-agent-runtime` | **Date**: 2026-08-03 | **Phase**: 2 (`/speckit-tasks`)
 
 **Input**: Design documents from `specs/002-spec-aware-agent-runtime/` —
-[`spec.md`](./spec.md) (55 functional requirements, 30 success criteria, five user stories),
-[`plan.md`](./plan.md) (Constitution Check, deviation records, Complexity Tracking),
+[`spec.md`](./spec.md) (~~55~~ **58** functional requirements, 30 success criteria, five user
+stories), [`plan.md`](./plan.md) (Constitution Check, deviation records, Complexity Tracking),
 [`research.md`](./research.md) (T-01..T-14, the three mechanisms, Q-01..Q-11 all resolved),
 [`data-model.md`](./data-model.md), [`contracts/`](./contracts/), [`quickstart.md`](./quickstart.md)
+
+> **Requirement count recounted 2026-08-04 against `spec.md`, and it was stale by three.** The
+> struck figure predates FR-056 through FR-058, the last of which was added on 2026-08-04. **The
+> success-criteria figure is deliberately not struck** — it was already correct, and striking a
+> figure that was right would record a correction that never happened. `plan.md`'s header carried
+> the same drift, by three and by two, and was corrected the same day. Both counts are now under
+> `definition-count` in [`tools/check_corpus.py`](../../tools/check_corpus.py), which compares a
+> prose count against the definitions in the document it describes, so neither can go stale again
+> without the gate saying so.
 
 **Constitution**: v1.2.0 ([`constitution.md`](../../.specify/memory/constitution.md)) ·
 **Inherited decisions**: **OD-01** onward, in
@@ -413,7 +422,13 @@ below as an outstanding item rather than glossed~~ now independently adjudicated
 assumption of one per 3,000 the phase is denser on every population, by between roughly three and
 roughly eight times depending on which one is named.
 
-**Why, and the *why* is what makes this usable rather than just alarming.** The five were: a
+**Why, and the *why* is what makes this usable rather than just alarming.** ~~The five were~~
+**Corrected 2026-08-04 — this paragraph still enumerated the composition the paragraph above it had
+already struck, so read it as a description of *finding 019's original five* and not of Phase 2's
+defect set.** Two of the five below — the redaction marker and the benchmark — were introduced by
+Phase 1 and merely fixed by Phase 2, by `git log -S` attribution in
+[finding 020](./findings/020-phase-2-defect-density-adjudicated.md); and three Phase 2 defects the
+pass fixed are missing from the list entirely. The five were: a
 non-reentrant lock that deadlocked only under a nesting pattern one caller uses; a rollback that
 split its restoration record and its ref move across two transactions; a volatility scanner with **no
 positive control**, which could have returned the empty list unconditionally and passed every test; a
@@ -426,6 +441,20 @@ code fails loudly — the kernel returns `EPERM` and the test stops.** Serializa
 fails quietly: it returns a plausible value, the assertion passes, and the defect is in what the
 value *means*. Three of the five are instruments that would have reported success while measuring
 nothing, which is the failure class this repository already has a name for.
+
+> **The inference in the paragraph above does not survive the adjudication, and this is the second
+> half of the same 2026-08-04 correction.** *"Not one of those is caught by the thing that catches
+> kernel-mechanism defects"* is true of those five and is **not** true of the phase. The counting
+> that produced them excluded two pure-cgroup defects, neither of which failed loudly:
+> [finding 020](./findings/020-phase-2-defect-density-adjudicated.md)'s **X3**, a `cgroup.kill`
+> fallback that returned successfully having killed only some of the processes, and its **P4**, a
+> preflight check that reads a path the kernel documents as absent in the root cgroup, gets `False`,
+> reports a present facility as missing, and is paired with a test that never reads the check's
+> result. **The instrument share survives the recount and the storage-class claim does not** — of the
+> seven, P3, P4 and P7 are instrument defects, so *three of the counted defects are instruments*
+> remains true over the new population while *all of them sit in the storage class* becomes false.
+> The table below carries the same correction on both of its rows; this note exists because the prose
+> stated the classification before the table did, and a reader arriving here first would not reach it.
 
 **So the rate is not one number, and applying one per 500 uniformly would overcorrect exactly as
 badly as one per 3,000 underestimated.** The working split:
