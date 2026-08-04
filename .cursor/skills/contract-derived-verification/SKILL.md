@@ -284,10 +284,20 @@ Run this on every derived verifier, before it is emitted or relied on.
      exists to catch concentrate in exactly the records whose provenance is weakest, which is the
      general shape and not an accident of this corpus.
 
-   **Note the direction of the correction, because it decides how hard to fight for it.** Neither rule
-   made E8's verifier look worse: the narrow attested rate is also zero. What they change is how much
-   comparison the number represents and how many claims it licenses, and both are cheap to state at
-   the time and expensive to retrofit once the figure has propagated.
+   ~~**Note the direction of the correction, because it decides how hard to fight for it.**~~
+   **Amended 2026-08-04 — direction decides nothing, and reading it as a signal is the trap.** Neither
+   rule made E8's verifier look worse: the narrow attested rate is also zero. What they change is how
+   much comparison the number represents and how many claims it licenses, and both are cheap to state
+   at the time and expensive to retrofit once the figure has propagated. **What the struck sentence
+   got wrong is treating the direction as informative.** A third instance of the same defect
+   ([finding 022](../../../specs/002-spec-aware-agent-runtime/findings/022-e7-tool-result-truncation-cap.md))
+   ran the other way: its padded denominator *understated* the rate, 30% became 47%, and the
+   correction made the argument the document was advancing **stronger**. **So arithmetic that
+   reproduces to the digit and a conclusion that improves under correction are both fully compatible
+   with a defective population, and neither is evidence the population is sound.** Apply the rule on
+   the structural trigger — the numerator and the denominator are named by different predicates —
+   which is readable off the two definitions before you know which way the number will move. Same
+   amendment, same day, in `.cursor/skills/experiment-design/SKILL.md` Rule 7.
 
 ### What this looks like when it is done right
 

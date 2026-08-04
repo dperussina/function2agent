@@ -324,10 +324,29 @@ padding form. **Both produce a clean rate, both survive arithmetic checking, and
 the figure** — the only thing that exposes either is re-running the instrument over the full population
 and counting what it did on every record, including the records it refused.
 
+### Amended 2026-08-04: the trigger is structural, not directional
+
+**A third instance falsifies a directional assumption the two above rest on.** In both of them the
+padding *flattered* the figure, so correcting it made the number worse and the author's incentive ran
+against checking. In the third the padding **understated** the rate: *"21 of the 70 arm-B commands
+that write a file immediately `cat` the whole file back"* computed its numerator over commands that
+spilled **command output** while padding its denominator with 25 heredoc script writes — the model
+typing a file, with no captured output to read back. The honest form is **21 of 45**. 30% became 47%,
+and the correction made the argument the document was advancing *stronger*.
+
+**So arithmetic that reproduces to the digit, and a conclusion that improves under correction, are
+both fully compatible with a defective population. Neither is evidence the population is sound.** The
+figures above reproduced exactly and were quoted in three places. Run the check whichever way the
+error leans — **the trigger is that the numerator and the denominator are named by different
+predicates**, and that is a structural property you can read off the two definitions without knowing
+which direction the correction will move the number.
+([finding 022](../../../specs/002-spec-aware-agent-runtime/findings/022-e7-tool-result-truncation-cap.md).)
+
 **The tell, if you only remember one thing.** A false-alarm figure with a suspiciously round
 denominator and no statement of how many comparisons it represents. Ask *how many of these did the
 instrument actually look at* — and if the answer is not written down anywhere, the number is a
-statement and not a rate.
+statement and not a rate. **And do not wait for the number to look too good**: the amendment above is
+the instance where it looked too modest.
 
 ## Rule 8: an experiment whose positive result is a failure signal needs a negative control
 
