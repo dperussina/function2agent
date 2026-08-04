@@ -634,6 +634,23 @@ proof "FR-049 preflight — the cgroup.kill probe reads the root cgroup" \
   "tests/unit/test_kernel_floor.py::test_the_kill_probe_reads_a_child_cgroup_and_not_the_root" \
   's = s.replace("    probe = root / CGROUP_KILL_PROBE", "    probe = root")'
 
+# T206's two arms, proved separately, because they fail in different directions.
+# The first removes the syscall attempt and restores the pre-T206 behaviour: a
+# check that reports green from `/proc/self/ns/` presence and a sysctl, neither
+# of which can observe a runtime seccomp refusal. The second keeps the syscall
+# and removes only the no-op arm, which is the cell that tells a fixable
+# runtime-profile refusal from an LSM or sysctl one — the mechanism still runs,
+# and only the layer attribution is wrong, which is the harder failure to notice.
+proof "T206 preflight — the namespaces check goes back to presence and a sysctl" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_namespace_probe.py::test_presence_and_the_sysctl_are_not_evidence_the_mechanism_works" \
+  's = s.replace("    ok, layer, message = _classify_unshare_pair(\n        attempt(UNSHARE_NOOP), attempt(CLONE_NEWUSER)\n    )", "    ok, layer, message = True, LAYER_AVAILABLE, \x22presence only\x22")'
+
+proof "T206 preflight — the unshare(0) discriminator is assumed rather than attempted" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_namespace_probe.py::test_both_arms_refused_is_attributed_to_the_runtime_seccomp_profile" \
+  's = s.replace("        attempt(UNSHARE_NOOP), attempt(CLONE_NEWUSER)", "        UnshareAttempt(UNSHARE_NOOP, True, True, None, \x22assumed\x22), attempt(CLONE_NEWUSER)")'
+
 proof "FR-038 ordering — the span position has no unique index" \
   src/runtime/trace.py \
   "tests/contract/test_trace_spans.py::test_two_writers_over_one_repository_cannot_share_a_position" \

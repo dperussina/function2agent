@@ -17,12 +17,21 @@ that says only "unsupported" makes an operator guess.
 from __future__ import annotations
 
 import ctypes
+import errno as errno_module
 import os
 import platform
 from dataclasses import dataclass
 from pathlib import Path
 
 CGROUP2_ROOT = Path("/sys/fs/cgroup")
+
+# unshare(2) flags. Duplicated from `_linux.CLONE_NEWUSER` rather than imported:
+# `_linux` resolves every symbol against the platform libc at import time and is
+# Linux-only by construction, and preflight has to run on the platform it is
+# about to refuse. `tests/unit/test_namespace_probe.py` asserts the two agree, so
+# the copy cannot drift.
+CLONE_NEWUSER = 0x10000000
+UNSHARE_NOOP = 0
 
 # seccomp(2) constants. Values are the kernel's UAPI numbers, identical on every
 # Linux architecture.
@@ -202,6 +211,11 @@ class Check:
     ok: bool
     detail: str
     requirement: str
+    # Which layer produced the answer, where the check can tell. Defaulted, so
+    # the checks that have only one possible refusing layer are unchanged; it is
+    # the `namespaces` check that needs it, because four layers can refuse there
+    # and they have four different remedies.
+    layer: str | None = None
 
 
 class PreflightError(RuntimeError):
@@ -276,29 +290,276 @@ def _check_cgroup_delegation() -> Check:
             pass
 
 
-def _check_namespaces() -> Check:
-    """Mount and user namespaces, which FR-048's mechanism is built on."""
-    missing = [
-        n for n in ("mnt", "user", "pid", "net")
-        if not Path(f"/proc/self/ns/{n}").exists()
-    ]
+# ---------------------------------------------------------------------------
+# T206 — the real `unshare` pair.
+#
+# **Presence and a sysctl are not evidence a mechanism works.** The check below
+# used to establish user namespaces by reading `/proc/self/ns/` and
+# `max_user_namespaces`, which report kernel-build presence and an
+# administrative setting. Neither is a syscall attempt, so on a host whose
+# container runtime refuses `unshare` in its seccomp profile both read yes and
+# the check reported green — for a mechanism that does not work there. Measured
+# in findings/024-deployment-surface-permission-census.md, which ran one probe
+# across eight container configurations, **none of them `--privileged`**.
+#
+# **Why there are two arms.** Docker's default profile carries no rule about
+# `CLONE_NEWUSER`. It carries a rule on the whole `unshare` *syscall*, gated on
+# `CAP_SYS_ADMIN`, with `defaultAction` `SCMP_ACT_ERRNO` and `defaultErrnoRet` 1
+# (`EPERM`). A rule on the syscall refuses every call, so `unshare(0)` — which
+# asks for nothing, and which no kernel namespace check can refuse, because
+# there is no namespace to refuse — also returns `EPERM`. That one call is the
+# only thing separating a seccomp refusal from every other layer: an LSM hook, a
+# sysctl, a chroot and a missing kernel config all permit the no-op and refuse
+# the flag. It costs one syscall and it is the entire diagnostic value here.
+
+LAYER_AVAILABLE = "available"
+LAYER_RUNTIME_SECCOMP = "runtime-seccomp-profile"
+LAYER_KERNEL_OR_LSM = "kernel-sysctl-or-lsm"
+LAYER_INCOHERENT = "incoherent"
+LAYER_NOT_ATTEMPTED = "not-attempted"
+LAYER_KERNEL_BUILD = "kernel-build"
+LAYER_SYSCTL_DISABLED = "sysctl-administratively-disabled"
+
+# Exit codes the probe child speaks back through. errno on Linux tops out at 133
+# (`EHWPOISON`), so 1..200 encodes an errno unambiguously and the two codes above
+# that are reserved for "the child could not make the call at all" — which is an
+# absence of evidence and must never be read as a refusal.
+_ERRNO_MAX = 200
+_CODE_CHILD_FAILED = 201
+_CODE_ERRNO_UNENCODABLE = 202
+
+_REMEDY_RUNTIME_SECCOMP = (
+    "REFUSING LAYER: your container runtime's seccomp profile. Both arms were "
+    "refused, and a refused no-op can only come from a rule on the unshare "
+    "syscall itself — Docker's default profile gates the whole syscall on "
+    "CAP_SYS_ADMIN and falls through to defaultAction SCMP_ACT_ERRNO/EPERM. "
+    "MEASURED (finding 024), uid 1000 with --cap-drop=ALL, not --privileged. "
+    "REMEDY: run the session with a custom seccomp profile. It is Docker's own "
+    "default plus one added syscall name — 426 allow-listed names becomes 427 — "
+    "so keyctl, add_key, userfaultfd, kexec_load, swapon and the rest stay "
+    "denied. The bundle ships one (T206's sibling T160); the flag is "
+    "--security-opt seccomp=<profile.json>. "
+    "DO NOT USE --cap-add=SYS_ADMIN. The profile writes its unshare rule as a "
+    "capability gate, so that is the change this error invites, it is by a wide "
+    "margin the most dangerous one available, and IT DOES NOT WORK: pivot_root "
+    "appears in no rule of the profile at all, so it returns EPERM even with the "
+    "capability held. The whole mount tree builds correctly and then fails at "
+    "the final containment step, which reads as a broken mechanism rather than "
+    "as a wrong grant. Do not reach for seccomp=unconfined either; it removes "
+    "the entire filter rather than one rule."
+)
+
+_REMEDY_KERNEL_OR_LSM = (
+    "REFUSING LAYER: not the container runtime's seccomp profile. unshare(0) "
+    "was permitted, and a syscall-level seccomp rule would have refused the "
+    "no-op too, so shipping a seccomp profile would not help here. What is left "
+    "is one of the refusals inside create_user_ns(), and this check cannot tell "
+    "them apart, so it reports the errno above rather than naming one: a chroot "
+    "(EPERM), the caller's own uid unmapped in the parent namespace (EPERM), the "
+    "user.max_user_namespaces ucount limit or a nesting depth over 32 (ENOSPC), "
+    "an out-of-tree sysctl such as Debian's kernel.unprivileged_userns_clone, an "
+    "LSM hook reached through security_create_user_ns() — Ubuntu 24.04's "
+    "kernel.apparmor_restrict_unprivileged_userns is the common case — or a "
+    "systemd unit directive, RestrictNamespaces= or PrivateUsers=. REMEDY: the "
+    "bundle cannot supply one. The host has to change. "
+    "DERIVED, NOT MEASURED: finding 024 could construct neither an LSM refusal "
+    "nor a sysctl one on its measuring host — Docker Desktop's linuxkit VM "
+    "carries no AppArmor and no SELinux, and the LSM is exactly what refuses on "
+    "Ubuntu 24.04 — so this branch's candidate list comes from a source read of "
+    "create_user_ns() at v6.12 and not from an observed refusal. Only the ENOSPC "
+    "nesting limit was measured (NC-3)."
+)
+
+
+@dataclass(frozen=True)
+class UnshareAttempt:
+    """One forked-child `unshare(2)` call: what was asked, what the kernel said.
+
+    `attempted` is False when the call could not be made at all — a libc with no
+    `unshare` symbol, a `fork` that failed, a child that died on a signal. That
+    is deliberately not the same state as a refusal: `preflight()` has no
+    degraded mode, so every failure it prints is read by an operator looking for
+    a way past it, and reporting "I could not ask" as "the host said no" sends
+    them after a change they do not need. Same discipline the `cgroup.kill`
+    probe follows when it cannot create a child cgroup.
+    """
+
+    flags: int
+    attempted: bool
+    ok: bool
+    errno: int | None
+    note: str
+
+    def describe(self) -> str:
+        label = "unshare(0)" if self.flags == UNSHARE_NOOP else (
+            f"unshare({hex(self.flags)})"
+        )
+        if not self.attempted:
+            return f"{label} NOT ATTEMPTED ({self.note})"
+        if self.ok:
+            return f"{label} ok"
+        if self.errno is None:
+            return f"{label} FAILED ({self.note})"
+        name = errno_module.errorcode.get(self.errno, str(self.errno))
+        return f"{label} {name} (errno {self.errno}: {os.strerror(self.errno)})"
+
+
+def _attempt_unshare(flags: int) -> UnshareAttempt:
+    """`unshare(flags)` in a forked child, so this process is never moved.
+
+    **Forked because `unshare(2)` mutates the calling process.** A preflight that
+    put the supervisor into a user namespace as a side effect of asking whether
+    it could would have changed the thing it was measuring, and every later check
+    would run in a namespace nobody asked for. The child is discarded, so the
+    only thing that crosses back is an exit code.
+    """
+    libc = ctypes.CDLL(None, use_errno=True)
+    try:
+        libc.unshare
+    except AttributeError:
+        return UnshareAttempt(
+            flags, False, False, None,
+            "this libc exports no unshare(2) symbol, so the call was never "
+            "made — that is an absence of evidence, not a refusal",
+        )
+    try:
+        pid = os.fork()
+    except OSError as exc:
+        return UnshareAttempt(
+            flags, False, False, None, f"fork() for the probe child failed: {exc}"
+        )
+    if pid == 0:  # pragma: no cover - the child never returns to the collector
+        code = _CODE_CHILD_FAILED
+        try:
+            ctypes.set_errno(0)
+            rc = libc.unshare(ctypes.c_int(flags))
+            if rc == 0:
+                code = 0
+            else:
+                err = ctypes.get_errno()
+                code = err if 1 <= err <= _ERRNO_MAX else _CODE_ERRNO_UNENCODABLE
+        except BaseException:
+            code = _CODE_CHILD_FAILED
+        os._exit(code)
+    _, status = os.waitpid(pid, 0)
+    if not os.WIFEXITED(status):
+        signal_number = os.WTERMSIG(status) if os.WIFSIGNALED(status) else None
+        return UnshareAttempt(
+            flags, False, False, None,
+            f"the probe child did not exit normally (signal {signal_number}); "
+            "nothing can be concluded about the syscall from that",
+        )
+    code = os.WEXITSTATUS(status)
+    if code == 0:
+        return UnshareAttempt(flags, True, True, None, "the call returned 0")
+    if code == _CODE_CHILD_FAILED:
+        return UnshareAttempt(
+            flags, False, False, None,
+            "the probe child raised before it could report an errno",
+        )
+    if code == _CODE_ERRNO_UNENCODABLE:
+        return UnshareAttempt(
+            flags, True, False, None,
+            f"the call failed with an errno above {_ERRNO_MAX}, which the "
+            "child's exit code cannot carry",
+        )
+    return UnshareAttempt(flags, True, False, code, "the call failed")
+
+
+def _classify_unshare_pair(
+    noop: UnshareAttempt, newuser: UnshareAttempt
+) -> tuple[bool, str, str]:
+    """The four cells of the pair, as `(ok, layer, message)`. No syscalls here.
+
+    Kept separate from the probe so the table can be exercised on a host that
+    cannot run any of it, which is every developer machine that is not Linux.
+    """
+    observed = f"{noop.describe()}; {newuser.describe()}"
+    if not noop.attempted or not newuser.attempted:
+        return (
+            False,
+            LAYER_NOT_ATTEMPTED,
+            f"{observed}. The syscall could not be attempted, so this host is "
+            "reported as unverified rather than as refused — there is no "
+            "reading here at all, and no remedy follows from one.",
+        )
+    if noop.ok and newuser.ok:
+        return (
+            True,
+            LAYER_AVAILABLE,
+            f"{observed}. Both arms of the pair were permitted, in a forked "
+            "child, so this process was not moved into any namespace.",
+        )
+    if not noop.ok and not newuser.ok:
+        return False, LAYER_RUNTIME_SECCOMP, f"{observed}. {_REMEDY_RUNTIME_SECCOMP}"
+    if noop.ok and not newuser.ok:
+        return False, LAYER_KERNEL_OR_LSM, f"{observed}. {_REMEDY_KERNEL_OR_LSM}"
+    return (
+        False,
+        LAYER_INCOHERENT,
+        f"{observed}. The no-op was refused and the real namespace was granted. "
+        "No layer produces that: unshare(0) asks for nothing, so anything that "
+        "refuses it refuses the flagged call too. This is reported as "
+        "incoherent rather than being resolved into a remedy, because guessing "
+        "one from a reading nothing produces is how an operator is sent after a "
+        "fix for a problem they do not have.",
+    )
+
+
+def _check_namespaces(
+    attempt=None,
+    ns_root: Path | None = None,
+    maxns_path: Path | None = None,
+) -> Check:
+    """Mount and user namespaces, which FR-048's mechanism is built on.
+
+    Three layers can refuse, and they are asked in the order that keeps each
+    answer meaningful. A kernel built without the namespaces cannot have its
+    `unshare` refused by a profile, and `max_user_namespaces=0` is an
+    administrative refusal with its own fix — so both are read first, and the
+    syscall is not attempted when either has already answered. What remains is
+    the pair, which is the only arm that can see the container runtime.
+    """
+    attempt = _attempt_unshare if attempt is None else attempt
+    ns_root = Path("/proc/self/ns") if ns_root is None else ns_root
+    if maxns_path is None:
+        maxns_path = Path("/proc/sys/user/max_user_namespaces")
+
+    missing = [n for n in ("mnt", "user", "pid", "net")
+               if not (ns_root / n).exists()]
     if missing:
         return Check(
             "namespaces",
             False,
             f"/proc/self/ns/ is missing {missing} — the kernel was built "
-            "without them",
+            "without them. Not attempting unshare(2): a kernel with no user "
+            "namespaces cannot have one refused by a runtime profile, and "
+            "reporting that layer here would be wrong.",
             "FR-048",
+            LAYER_KERNEL_BUILD,
         )
-    maxns = Path("/proc/sys/user/max_user_namespaces")
-    limit = maxns.read_text().strip() if maxns.is_file() else "unreadable"
-    ok = limit not in ("0",)
+    limit = maxns_path.read_text().strip() if maxns_path.is_file() else "unreadable"
+    if limit == "0":
+        return Check(
+            "namespaces",
+            False,
+            f"mnt/user/pid/net present; max_user_namespaces={limit} — user "
+            "namespaces are administratively disabled by the sysctl. Not "
+            "attempting unshare(2): the refusal is already located, and it is "
+            "raised with `sysctl -w user.max_user_namespaces=<n>` on the host.",
+            "FR-048",
+            LAYER_SYSCTL_DISABLED,
+        )
+
+    ok, layer, message = _classify_unshare_pair(
+        attempt(UNSHARE_NOOP), attempt(CLONE_NEWUSER)
+    )
     return Check(
         "namespaces",
         ok,
-        f"mnt/user/pid/net present; max_user_namespaces={limit}"
-        + ("" if ok else " — user namespaces are administratively disabled"),
+        f"mnt/user/pid/net present; max_user_namespaces={limit}; {message}",
         "FR-048",
+        layer,
     )
 
 
