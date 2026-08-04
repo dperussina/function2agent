@@ -121,7 +121,9 @@ superseded per-tool number does not travel (FR-041).
 
 ### C · The boundary holds — User Story 3, SC-022, SC-023, SC-024
 
-Three arms, one per mechanism.
+Three arms, one per requirement. Not one per mechanism: FR-048 has two, and the filesystem arm below
+exercises both — the mount namespace that enforces the boundary and the supervisor that records the
+attempt.
 
 **Filesystem** — attempt access outside the declared set. Assert it fails, and assert the attempt is
 **recorded with the rule that produced it**, in the same shape as an egress denial. A mount namespace

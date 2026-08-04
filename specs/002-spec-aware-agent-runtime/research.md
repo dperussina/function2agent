@@ -558,8 +558,9 @@ specification and the customer instantiates it, and a compose file is ours to au
 separate mechanism: dependency resolution at run time is an outbound request to a destination that is
 not the target, so the egress policy already denies it. Two requirements, one control.
 
-**Supported platform.** Linux with cgroup v2 and user namespaces. The three mechanisms in §3 are
-Linux kernel facilities; there is no macOS or Windows implementation of them and none is planned.
+**Supported platform.** Linux with cgroup v2 and user namespaces. Each of the four mechanisms in §3 —
+§3.1 supplies two — **depends on** a Linux kernel facility; there is no macOS or Windows
+implementation of them and none is planned.
 Under FR-053 that makes Linux the only supported platform and everything else **unsupported rather
 than best-effort** — operators on other systems run the bundle in a Linux VM, which is what Docker
 Desktop already is.
@@ -624,8 +625,22 @@ it is recorded so the provisional share is expected rather than alarming.
 ## 3. The three mechanisms the specification left to the plan
 
 FR-048, FR-049 and FR-050 are stated as observable properties with no mechanism named. That was
-correct discipline and it means the plan owes a mechanism for each. All three are Linux kernel
-facilities, which is why T-11 makes Linux the supported platform.
+correct discipline and it means the plan owes a mechanism for each — **four mechanisms across the
+three requirements, because §3.1 owes two**: a mount namespace that enforces the boundary and a
+`seccomp` user-notification listener that records attempts against it, deliberately not collapsed.
+**Each of the four depends on a Linux kernel facility**, which is why T-11 makes Linux the supported
+platform.
+
+> **Corrected 2026-08-04. This section said *all three are Linux kernel facilities*, and that is
+> false of §3.3.** Its construction is four layers and only one is kernel — the descriptor held inside
+> the session's network namespace. The other three are an opaque handle, a lease row and resume as
+> renewal, which are application code and a database. **The platform conclusion is undisturbed**,
+> because it rests on each requirement's delivery containing a kernel facility with no equivalent
+> elsewhere, which stays true of §3.3 through that one layer. The same sentence was corrected in
+> [`plan.md`](./plan.md)'s Target Platform line and Complexity Tracking row by an earlier pass; this
+> is the document those two were derived from, and it was not swept then. **The heading's "three"
+> labels this section's three subsections, not a mechanism count, and is left standing** — `plan.md`'s
+> Phase 0 row and [`tasks.md`](./tasks.md) both cite it as that label.
 
 ### 3.1 FR-048 — the declared filesystem scope
 
