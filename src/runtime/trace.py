@@ -48,6 +48,7 @@ from src.contracts.repository import Repository, UniquenessError
 from src.contracts.secret import Secret
 from src.contracts.terminal import is_terminal
 from src.contracts.transition import StateTransition
+from src.runtime.result_bound import BoundFields
 
 TABLE = "trace_span"
 
@@ -201,6 +202,7 @@ class Span:
 
     decision: DecisionFields | None = None
     transition: StateTransition | None = None
+    result_bound: "BoundFields | None" = None
     terminal_state: str | None = None
     pre: Mapping[str, Any] | None = None
     post: Mapping[str, Any] | None = None
@@ -262,6 +264,29 @@ class Span:
         if self.kind != STATE_TRANSITION and self.transition is not None:
             raise SpanError("only a state_transition span carries a transition")
 
+        # FR-058's third obligation. **On every `tool_call`, not only on the
+        # ones where the bound bit** — a field written only on truncation cannot
+        # distinguish a result that fitted from a bound that was never applied,
+        # which is the vacuous-instrument shape this corpus keeps finding. The
+        # sibling precedent is FR-038's own requirement that a decision and its
+        # matched inputs are recorded for permits as well as denials.
+        if self.kind == TOOL_CALL and self.result_bound is None:
+            raise SpanError(
+                "a tool_call span must carry FR-058's seven result-bound "
+                "fields: that the bound was applied, the bound in force, the "
+                "unit, whether a byte proxy stood in for it, the full size, "
+                "the amount admitted, and the disposition. This is required on "
+                "every tool_call and not only where the bound bit, because a "
+                "bound recorded only where it bit is unfalsifiable in absence."
+            )
+        if self.kind != TOOL_CALL and self.result_bound is not None:
+            raise SpanError(
+                f"a {self.kind} span carries result-bound fields; FR-058 bounds "
+                "what FR-004's capabilities return, which is called through a "
+                "tool_call, and putting the fields elsewhere makes the check "
+                "miss the span that needed them."
+            )
+
         if self.kind == VERIFICATION and (self.pre is None or self.post is None):
             raise SpanError(
                 "a verification span must carry its precondition and "
@@ -303,6 +328,8 @@ class Span:
             }
         if self.transition is not None:
             record["transition"] = self.transition.to_record()
+        if self.result_bound is not None:
+            record["result_bound"] = self.result_bound.to_record()
         if self.pre is not None:
             record["pre"] = dict(self.pre)
         if self.post is not None:

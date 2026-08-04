@@ -15,6 +15,11 @@ from src.contracts import transition as tr
 from src.contracts.repository import Repository
 from src.contracts.secret import Secret
 from src.runtime import trace
+from src.runtime.result_bound import (
+    DISPOSITION_RETAINED,
+    UNIT_TOKENS,
+    BoundFields,
+)
 from src.runtime.trace import (
     ArtifactVersions,
     Cost,
@@ -81,8 +86,15 @@ def _full_session(writer: SpanWriter, session_id: str = "sess-1") -> list[Span]:
              matched={"method": "GET", "path": "/orders",
                       "served_operation": "listOrders"}))
 
+    # FR-058's seven fields are required on every `tool_call`, so a full session
+    # cannot be emitted without them. This one fits inside the bound, which is
+    # the case an implementation writing the fields only at the bound gets wrong.
     emit(0, kind=trace.TOOL_CALL, outcome=trace.OUTCOME_OK,
-         detail={"tool": "listOrders"})
+         detail={"tool": "listOrders"},
+         result_bound=BoundFields(
+             bound_applied=True, bound_in_force=2_000, unit=UNIT_TOKENS,
+             byte_proxy=False, full_size=48, admitted=48,
+             disposition=DISPOSITION_RETAINED, tokenizer_name="test-tok"))
 
     emit(0, kind=trace.FILESYSTEM_DECISION, outcome=trace.OUTCOME_DENIED,
          decision=DecisionFields(

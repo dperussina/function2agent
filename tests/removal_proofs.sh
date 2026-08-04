@@ -832,6 +832,40 @@ proof "FR-005 ceiling reached — the comparison permits one over the declared n
   "tests/unit/test_session_store.py::test_a_ceiling_reached_exactly_is_reached" \
   's = s.replace("        breached = observed >= declared", "        breached = observed > declared")'
 
+# FR-058. Five, one per obligation that has an independent failure mode. The
+# byte-proxy one is the load-bearing one: FR-058 disqualifies an average
+# bytes-per-token divisor by name, this repository has a 4.0 divisor in it, and
+# the tamper is exactly the edit somebody makes reaching for it.
+proof "FR-058 byte proxy — an average bytes-per-token divisor stands in for the floor" \
+  src/runtime/result_bound.py \
+  "tests/unit/test_result_bound.py::test_the_byte_proxy_never_uses_an_average_divisor" \
+  's = s.replace("    return bound_tokens\n\n\n@dataclass(frozen=True)\nclass BoundFields:", "    return bound_tokens * 4\n\n\n@dataclass(frozen=True)\nclass BoundFields:")'
+
+proof "FR-058 ceiling — a bound above one twentieth is clamped instead of refused" \
+  src/runtime/result_bound.py \
+  "tests/unit/test_result_bound.py::test_a_bound_above_one_twentieth_of_the_window_is_refused_not_clamped" \
+  's = s.replace("        if self.bound_tokens > ceiling:\n            raise BoundConfigError(", "        if False:\n            raise BoundConfigError(")'
+
+proof "FR-058 disclosure — the notice is dropped from the result the model reads" \
+  src/runtime/result_bound.py \
+  "tests/unit/test_result_bound.py::test_the_bounded_result_discloses_its_own_bounding" \
+  's = s.replace("    return (\n        f\x22[bounded result", "    return \x22\x22\n    return (\n        f\x22[bounded result")'
+
+proof "FR-058 trace fields — written only where the bound bit" \
+  src/runtime/trace.py \
+  "tests/unit/test_result_bound.py::test_a_tool_call_span_without_the_seven_fields_is_refused" \
+  's = s.replace("        if self.kind == TOOL_CALL and self.result_bound is None:", "        if False:")'
+
+proof "FR-058 retention — the withheld bytes outlive the session" \
+  src/runtime/result_bound.py \
+  "tests/unit/test_result_bound.py::test_retention_does_not_outlive_the_session" \
+  's = s.replace("        shutil.rmtree(self.directory, ignore_errors=True)\n        self._discarded = True", "        self._discarded = True")'
+
+proof "FR-058 retention bound — the location accepts bytes past its declared bound" \
+  src/runtime/result_bound.py \
+  "tests/unit/test_result_bound.py::test_the_retention_location_carries_its_own_declared_bound" \
+  's = s.replace("        if self.bytes_held + len(payload) > self.max_bytes:", "        if False:")'
+
 echo
 if [ "$SKIP" -gt 0 ]; then
   echo "$PASS proved, $FAIL unproven, $SKIP skipped"
