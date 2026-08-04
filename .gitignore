@@ -158,3 +158,19 @@ examples/
 # F2A_RECORD_MEASUREMENTS=1; an ordinary privileged run writes .latest.json so
 # it cannot silently replace a recorded figure.
 tests/batteries/results/*.latest.json
+
+# CI scratch. `.github/workflows/ci.yml` writes these into the workspace so it
+# can upload them as artifacts; they are readings of one run and are never
+# committed. Listed rather than written to a temp directory because
+# `actions/upload-artifact` reads paths relative to the workspace.
+/preflight.txt
+/pytest-collected.txt
+/pytest-privileged.xml
+/pytest-unprivileged.xml
+/privileged-suite-identity.json
+/proof-attribution.txt
+src/proxy/go-test.txt
+
+# `tests/invariants/runner.py` writes this to count outcomes per invariant.
+# The runner's own exit code carries the verdict; the report is scratch.
+tests/invariants/.invariants-report.xml

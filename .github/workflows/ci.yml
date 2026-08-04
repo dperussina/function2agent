@@ -1,9 +1,11 @@
-# T005 — `pytest`, `go test` and the invariants suite on every change.
+# T005 — `pytest`, `go test`, the invariants suite and the corpus gates on
+# every change.
 #
-# Three jobs, and the split is deliberate. The invariants suite runs on its own
+# The split into jobs is deliberate. The invariants suite runs on its own
 # because it is the fastest signal in the repository — milliseconds, no model,
 # no kernel — and a contributor should not wait on a container build to learn
-# that the model-judge boundary was crossed.
+# that the model-judge boundary was crossed. The corpus gates run beside it for
+# the same reason and with no dependency install at all.
 #
 # **OD-17 shapes this file.** The kernel mechanisms need a Linux host with
 # cgroup v2, mount namespaces and seccomp user notification. GitHub's
@@ -12,6 +14,37 @@
 # `tests/batteries/results/seccomp-overhead.json` records what its numbers are
 # a property of. **A CI figure and a laptop figure are different measurements
 # and must not be compared.**
+#
+# ---------------------------------------------------------------------------
+# WHAT THIS FILE IS, READ AS AN INSTRUMENT
+#
+# A green tick is one bit, and this repository has now caught six instruments
+# that produced a clean bit over a measurement that was absent, replayed or
+# unnamed. CI was the largest of them and the last to be audited. The rules
+# this file is now written to, each of which closes one of those:
+#
+#   1. **A step that cannot show what it ran does not get to be green.** Every
+#      job that measures something writes a durable record — a step summary, an
+#      artifact, or both — and the step that renders it fails when there is
+#      nothing to render.
+#   2. **No result is replayed.** `go test` is run with `-count=1`, and the run
+#      then asserts that no `(cached)` line came back, because the fix and the
+#      check for the fix are different things.
+#   3. **Zero outcomes is a failure, not a pass.** `go test` exits 0 over a
+#      package with no test files; `pytest` exits 0 over a suite that collected
+#      work and skipped all of it. Both are checked for explicitly.
+#   4. **Skips are named.** `-rs` for the log, `--junitxml` plus an artifact for
+#      the record, and `tools/pytest_outcomes.py` to read it back.
+#   5. **Every measurement carries the kernel it was taken on.** See
+#      `.github/actions/runner-identity`, and note the comment there about why
+#      that is recorded per job rather than once for the run.
+#
+# **What none of this buys, stated so nobody reads more into a green run than
+# it carries: at the time of writing `main` has no branch protection and no
+# rulesets, so nothing here blocks a merge.** Every check in this file is
+# advisory until somebody makes it required, and a required check is named by
+# its *job name* — renaming a job silently detaches whatever rule referenced
+# it. That is not a hypothetical; the job below was renamed on 2026-08-04.
 
 name: CI
 
@@ -25,6 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/runner-identity
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -41,15 +75,104 @@ jobs:
         # nothing cheap enough to run during the work was looking.
         run: python tools/check_tampers.py
 
+  corpus:
+    # **The five hand-run gates, four of which are wired here and one of which
+    # deliberately is not.** Until now every corpus claim in this repository
+    # rested on an agent having remembered to run these, which is the same
+    # standing as no gate at all.
+    #
+    # `tools/cite_advisor.py` is the one left out, and leaving it out is the
+    # decision rather than an omission. It has no threshold and no finding it
+    # makes changes its exit code, by design — the gate rule underneath it was
+    # built, measured against 184 ablated clean cases, and rejected. Wiring an
+    # advisory into a gate rebuilds exactly that rejected rule; running it
+    # unggated on every push emits a permanent listing that a reader learns to
+    # skip, which is how its one true positive gets lost. It stays a human-run
+    # audit aid, documented in `tools/README.md` with its invocations.
+    name: corpus gates (consistency, no model)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/runner-identity
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No `pip install` on purpose. `tools/README.md` states the whole
+      # toolchain is "Python 3.11+, standard library only, no network", and a
+      # job that installs nothing is the only thing that keeps checking it.
+
+      - name: Do the checks fire at all?
+        # First, and the ordering is the argument. `check_corpus.py` passing
+        # proves nothing on its own — a validator whose regex never matches
+        # passes everything, which is the failure this repository keeps
+        # hitting. `selftest.py` runs the whole check set against a corpus
+        # where every check must fire and one where none may.
+        run: python3 tools/selftest.py
+
+      - name: Are the thresholds the checks compare against pinned?
+        # And a green self-test proves less than it looks like it proves: it
+        # shows each check fires, not that the constant it fires at is the
+        # constant the fixtures require. `catalog-line-count` carried
+        # TOLERANCE = 2 for its whole life and the self-test could not tell it
+        # from 0.
+        #
+        # **This is in CI because it was measured, not because it looked
+        # cheap**: 34 perturbations, each a full self-test, in 5.2 seconds on
+        # an M-series laptop. A sweep that costs five seconds does not need a
+        # schedule.
+        run: python3 tools/threshold_probe.py
+
+      - name: The corpus gate
+        # Errors only. `--warnings-as-errors` is deliberately not set here —
+        # `tools/README.md` says to enable it once the warning set is cleared,
+        # and the warning classes that actually fire are line counts and
+        # register ranges, which go stale for a few minutes whenever a document
+        # is edited without the generator being re-run. A gate that flaps gets
+        # worked around. The step below prints them instead.
+        run: python3 tools/check_corpus.py
+
+      - name: The warnings, reported rather than enforced
+        # A warning nobody sees is the same defect one severity down, so they
+        # go on the run page. `--report-only` always exits 0; this step cannot
+        # fail the job and is not trying to.
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo '<details><summary>Corpus check — full report, warnings included</summary>'
+            echo
+            echo '```'
+            python3 tools/check_corpus.py --report-only
+            echo '```'
+            echo '</details>'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Are the derived claims regenerated?
+        # Line counts and register ranges are machine-readable from artifacts
+        # sitting beside them, and the repair is `python3 tools/gen_claims.py`
+        # rather than retyping a number. This is the only thing that notices
+        # the window between an edit and that command.
+        run: python3 tools/gen_claims.py --check
+
   python:
     name: pytest (kernel mechanisms included)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/runner-identity
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          # `cache:` is deliberately unset. It is opt-in on this action and
+          # turning it on would restore a pip cache across commits — harmless
+          # for a `--require-hashes` install, and still the wrong default in a
+          # file being audited for replayed results. pytest has no result cache
+          # of its own, so with `cache:` unset and `--lf`/`--ff` unused there is
+          # nothing on the Python side that can serve a stale verdict.
       - run: pip install --require-hashes -r requirements.lock
+
       - name: Confirm the Linux facilities are present
         # OD-17 has no degraded mode. If the runner lacks a facility the run
         # fails here rather than silently skipping the tests that need it.
@@ -65,14 +188,159 @@ jobs:
         # uid 1000: both report `Permission denied`. Running the gate
         # unprivileged therefore asserts a capability the supervisor does not
         # run with, which is the wrong question in the other direction.
-        run: sudo -E env "PATH=$PATH" python -m src.supervisor.preflight
+        #
+        # Its output goes to the run page as well as the log. The kernel floor
+        # is 5.14, it is DERIVED and NOT TESTED with T205 open, and preflight
+        # is the one place that owns both the floor and its provenance — so the
+        # summary quotes preflight rather than restating a version number that
+        # would then drift.
+        #
+        # `set -e` is deliberately absent and the status is carried by the last
+        # line, the same discipline `tests/removal_proofs.sh` states in its own
+        # header. Under `-e` a failing preflight would abort before the summary
+        # was written, and the failing run is the one whose facility list
+        # somebody needs. Note also that every `run:` here executes under
+        # `bash -e` **without** `pipefail`, so a pipeline's left-hand status is
+        # discarded unless it is asked for — hence `PIPESTATUS`.
+        run: |
+          set -uo pipefail
+          sudo -E env "PATH=$PATH" python -m src.supervisor.preflight 2>&1 \
+            | tee preflight.txt
+          status=${PIPESTATUS[0]}
+          {
+            echo '### Linux facility preflight'
+            echo
+            echo '```'
+            cat preflight.txt
+            echo '```'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Collect the whole suite, so the two halves can be checked against it
+        # The suite is run as two disjoint halves and the pair is taken for the
+        # whole. Nothing verified that it is. A marker expression that stopped
+        # selecting a file leaves those tests in neither half, and both halves
+        # stay green because each is internally complete. This is the third
+        # observation that makes the comparison possible.
+        run: |
+          set -euo pipefail
+          python -m pytest tests -q --collect-only | tee pytest-collected.txt
+
       - name: Unprivileged suite
-        run: python -m pytest tests -q -m "not privileged"
+        # `-rs` names every skip in the log. `--junitxml` is the durable half:
+        # the log for run 30919927355 turned out to be unreachable through
+        # `gh`, so a reason that exists only there is a reason nobody can read.
+        run: >
+          python -m pytest tests -q -rs -m "not privileged"
+          --junitxml=pytest-unprivileged.xml
+
       - name: Privileged suite — FR-048, FR-049, FR-050
-        run: sudo -E env "PATH=$PATH" python -m pytest tests -q -m privileged
+        # The identity is captured *under the same `sudo` wrapper* as the suite
+        # rather than asserted beside it, because the euid this half runs at is
+        # the whole reason it is a separate half. A line reading `euid: 0`
+        # written by the unprivileged shell would be a claim, not a reading.
+        run: |
+          set -euo pipefail
+          sudo -E env "PATH=$PATH" python -c 'import json,os,platform;json.dump({"euid":os.geteuid(),"uid":os.getuid(),"kernel":platform.release(),"machine":platform.machine(),"platform":platform.platform(),"python":platform.python_version(),"what_this_is":"observed inside the sudo wrapper that ran the privileged suite and the seccomp-overhead measurement; the figures in this artifact are a property of it"},open("privileged-suite-identity.json","w"),indent=2,sort_keys=True)'
+          sudo -E env "PATH=$PATH" python -m pytest tests -q -rs -m privileged \
+            --junitxml=pytest-privileged.xml
+
+      - name: What the two halves actually ran
+        # `436 passed, 1 skipped` names no skip, and a privileged test that
+        # skipped for want of a kernel facility is indistinguishable in that
+        # sentence from one that ran. This renders the JUnit reports and fails
+        # for the three things a pytest exit status cannot express: a missing
+        # report, a half that collected nothing, and a half that collected work
+        # and skipped all of it.
+        if: always()
+        run: |
+          set -euo pipefail
+          python3 tools/pytest_outcomes.py \
+            --collected pytest-collected.txt \
+            unprivileged=pytest-unprivileged.xml \
+            privileged=pytest-privileged.xml \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: The kernel-native seccomp-overhead figure
+        # `tests/batteries/test_seccomp_overhead.py` writes this on every
+        # ordinary privileged run and the privileged suite runs here, so CI has
+        # been producing a **kernel 6.17 native** figure and destroying it with
+        # the runner every time. It is gitignored, its `print()` is swallowed
+        # by `pytest -q`, and nothing uploaded it.
+        #
+        # **Captured, not committed.** `tests/batteries/results/
+        # seccomp-overhead.json` is Q-09's recorded figure, taken on
+        # `6.12.76-linuxkit`; this one is a different measurement on a
+        # different kernel. They are not a before and an after and must not be
+        # subtracted. Re-recording stays a deliberate act
+        # (`F2A_RECORD_MEASUREMENTS=1`).
+        #
+        # Absence is a failure rather than a warning: the file is missing
+        # exactly when the measurement did not happen, which is the state this
+        # step exists to make visible.
+        if: always()
+        run: |
+          set -euo pipefail
+          figure=tests/batteries/results/seccomp-overhead.latest.json
+          if [ ! -s "$figure" ]; then
+            {
+              echo '### seccomp overhead — NOT PRODUCED'
+              echo
+              echo "The privileged suite finished and left no figure at \`$figure\`."
+              echo 'That file is written by the measurement fixture itself, so its'
+              echo 'absence means the measurement did not run — most likely the'
+              echo 'battery skipped. The skip list above names why.'
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          {
+            echo '### seccomp overhead — measured natively on this runner'
+            echo
+            echo 'Not committed. The recorded Q-09 figure is'
+            echo "\`tests/batteries/results/seccomp-overhead.json\` and was taken on"
+            echo 'Docker/linuxkit 6.12; this is a different measurement on a'
+            echo 'different kernel. The record below carries its own environment'
+            echo 'and its own caveats — read those before comparing anything.'
+            echo
+            echo '```json'
+            cat "$figure"
+            echo '```'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the outcome record and the native figure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-outcomes-and-native-overhead
+          path: |
+            pytest-collected.txt
+            pytest-unprivileged.xml
+            pytest-privileged.xml
+            privileged-suite-identity.json
+            preflight.txt
+            tests/batteries/results/seccomp-overhead.latest.json
+          if-no-files-found: error
+          retention-days: 90
 
   removal-proofs:
-    name: removal proofs (do the tests catch removal?)
+    # **No `?` in this name, and that is not a style preference.** GitHub strips
+    # `?` from the paths inside a run's log archive, and `gh` finds a job's log
+    # by matching those paths against the job name — so while this job was
+    # called `removal proofs (do the tests catch removal?)`, `gh run view --job
+    # ... --log` returned **zero bytes with no error**, and `gh run view --log`
+    # omitted the job entirely. Run 30919927355 was green and its harness output
+    # was, to anyone reaching for it that way, gone. The bytes were on the blob
+    # store the whole time (`/actions/jobs/<id>/logs` served 30,047 of them);
+    # nothing anyone would type could reach them.
+    #
+    # A `?` in a *step* name is harmless — the invariants job has one and
+    # retrieves fine, because the match is on the job folder, not the step file.
+    # The artifact and step summary below are the durable fix; this rename only
+    # restores the ordinary route.
+    name: removal proofs (do the tests catch removal)
     runs-on: ubuntu-latest
     # A passing suite says the code works. It does not say the tests would
     # notice if a mechanism were deleted, and that is the property this
@@ -91,6 +359,7 @@ jobs:
     # this script, so the exit status is carried explicitly by its last line.
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/runner-identity
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -102,13 +371,82 @@ jobs:
       - name: Prove the tests fail when the mechanism is removed
         # Privileged so the kernel-mechanism arms are attempted rather than
         # skipped; a skipped proof is reported as skipped and not as proved.
+        #
+        # That last clause is the whole reason this job exists, and until the
+        # two steps below it was **not checkable from a finished run**. A green
+        # tick is one bit. It cannot separate `61 proved` from `57 proved, 4
+        # skipped`, and those are different claims about the kernel mechanisms.
+        # The harness now also writes a JSON record of every arm; see its header
+        # and `tools/removal_proofs_summary.py`.
         run: sudo -E env "PATH=$PATH" bash tests/removal_proofs.sh
+
+      - name: Publish the totals to the run page
+        # `if: always()` because the reading that matters most is the one from a
+        # run that failed. The renderer exits non-zero when there is no record
+        # to read — a harness step that went green without leaving one is the
+        # unauditable state this job is being repaired out of, so it must not
+        # itself be green.
+        if: always()
+        run: |
+          python3 tools/removal_proofs_summary.py \
+            --render tests/batteries/results/removal-proofs.latest.json \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Which test each tamper actually breaks
+        # The harness's verdict is one word per proof. It cannot separate "the
+        # test noticed the mechanism was gone" from "something broke" — a
+        # tamper that edits the wrong thing fails a test and reads exactly like
+        # a real proof. Closing that needs attribution, attribution is a
+        # reading task with no threshold in it, and a reading nobody can
+        # reconstruct after the runner is destroyed is a reading nobody does.
+        #
+        # **It is here rather than in a manual workflow because of what it
+        # costs and what it needs.** It needs privileged Linux, pytest and a Go
+        # toolchain, all of which this job has already paid for, and it takes
+        # under a minute. A manual workflow carrying that setup would be run by
+        # nobody, and its evidence is per-tree: it cannot be re-derived for a
+        # commit after the fact.
+        #
+        # **It still fails nothing.** Its only non-zero exit is the baseline
+        # abort — the same refusal the harness above makes, for the same
+        # reason — and no finding it reports changes its status.
+        if: always()
+        run: |
+          set -uo pipefail
+          sudo -E env "PATH=$PATH" python3 tools/proof_attribution.py 2>&1 \
+            | tee proof-attribution.txt
+          status=${PIPESTATUS[0]}
+          {
+            echo '<details><summary>Proof attribution — the test each tamper breaks</summary>'
+            echo
+            echo '```'
+            cat proof-attribution.txt
+            echo '```'
+            echo '</details>'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Keep the per-proof record
+        # Gitignored locally (`*.latest.json`), so the artifact is the only copy
+        # that outlives the runner. Retained long enough to compare two runs on
+        # different kernels, which is the comparison the record exists for.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: removal-proofs-record
+          path: |
+            tests/batteries/results/removal-proofs.latest.json
+            proof-attribution.txt
+          if-no-files-found: warn
+          retention-days: 90
 
   go:
     name: go test (the enforcement point)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/runner-identity
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24.3"
@@ -117,8 +455,87 @@ jobs:
         working-directory: src/proxy
         run: go vet ./...
       - name: Test
+        # ---------------------------------------------------------------------
+        # **`-count=1`, and it is the difference between a result and a replay.**
+        #
+        # Run 30919927355's Go job printed `ok …/src/proxy (cached)` and
+        # executed **no test**. `actions/setup-go`'s cache key is
+        # `…-go-1.24.3-<hash of go.sum>` — it does not include the source — so
+        # `GOCACHE` is restored across commits and Go's own content addressing
+        # then decides whether to re-run. All 223 outcomes, the whole egress
+        # enforcement point among them, were served from the cache the previous
+        # run left behind. `-count=1` bypasses the test cache outright.
+        #
+        # **Two things make this worse than an ordinary cache hit, and both
+        # were confirmed by running them rather than reasoned about.** Go's
+        # verbose output is cached with the result, so `go test -v` replays all
+        # 223 `--- PASS:` lines from a run that did not happen — a log full of
+        # passing tests is not evidence any of them ran. And `-race` is a
+        # *stochastic* detector: a data race that surfaces on some fraction of
+        # runs gets sampled once and then replayed indefinitely, so caching does
+        # not merely skip work, it freezes one draw from a distribution.
+        #
+        # **The assertion below is not decoration.** A fix and a check that the
+        # fix took are different things, and `-count=1` is one flag away from
+        # being dropped by someone speeding the job up. If a `(cached)` line
+        # ever comes back, this step fails.
+        #
+        # **And `-count=1` does not close the other hole.** `go test ./...`
+        # exits **0** over a package with no test files — verified by deleting
+        # every `*_test.go` and running it — so an accidentally-empty test set
+        # is green. The outcome count and the `[no test files]` check are what
+        # catch that. The count is published rather than compared against a
+        # constant, because a hardcoded 223 is the stale-transcribed-number
+        # defect that `catalog-line-count` exists to catch, one file over.
+        # ---------------------------------------------------------------------
         working-directory: src/proxy
-        run: go test ./... -race
+        run: |
+          set -uo pipefail
+          go test ./... -race -count=1 -v 2>&1 | tee go-test.txt
+          status=${PIPESTATUS[0]}
+
+          if grep -q '(cached)' go-test.txt; then
+            echo "::error::a Go test result was replayed from the build cache despite -count=1"
+            exit 1
+          fi
+          if grep -qE '^\?[[:space:]].*\[no test files\]' go-test.txt; then
+            echo "::error::a package under ./... has no test files; go test exits 0 over it"
+            grep -E '^\?[[:space:]]' go-test.txt
+            exit 1
+          fi
+
+          outcomes=$(grep -cE '^ *--- (PASS|FAIL|SKIP): ' go-test.txt || true)
+          skipped=$(grep -cE '^ *--- SKIP: ' go-test.txt || true)
+          if [ "$outcomes" -eq 0 ]; then
+            echo "::error::go test reported zero outcomes; nothing was executed"
+            exit 1
+          fi
+          {
+            echo '### go test — the enforcement point'
+            echo
+            echo "| outcomes | skipped | replayed from cache |"
+            echo "|---:|---:|---|"
+            echo "| $outcomes | $skipped | none — \`-count=1\`, asserted |"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$skipped" -gt 0 ]; then
+            {
+              echo "#### $skipped Go test(s) skipped, named"
+              echo
+              grep -E '^ *--- SKIP: ' go-test.txt \
+                | sed -e 's/^ *--- SKIP: /- /' -e 's/ (.*$//'
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"
+      - name: Keep the Go outcome list
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-test-outcomes
+          path: src/proxy/go-test.txt
+          if-no-files-found: error
+          retention-days: 90
       - name: Build the single static binary
         working-directory: src/proxy
         env:

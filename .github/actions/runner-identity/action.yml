@@ -1,0 +1,57 @@
+name: Runner identity
+description: >
+  Write this job's runner identity to the run page. Every measurement in this
+  repository is a property of the kernel it was taken on; this is what records
+  which one.
+
+# WHY THIS IS PER-JOB AND NOT PER-RUN
+#
+# The obvious shape is one job that reads the kernel once and every other job
+# quoting it. That would be a claim nothing here can support: GitHub gives each
+# job its own fresh VM, drawn from an image pool that is updated continuously,
+# so job A's `uname -r` is evidence about job A's runner and about nothing
+# else. A single run-level figure would be exactly the defect this file exists
+# to close, one level up — a number presented as covering measurements it was
+# never taken alongside.
+#
+# So each job records its own, and the run page carries all of them. That is
+# what "durable for the whole run" can honestly mean here, and it has a second
+# benefit: two jobs landing on different kernels becomes visible rather than
+# averaged away.
+#
+# The block is emitted by ONE action rather than copied into each job for the
+# same reason the figures it labels are compared at all. Four hand-maintained
+# identity blocks drift, and two identity blocks that report different fields
+# cannot be compared — which would leave the run page carrying four things that
+# look like one measurement and are not.
+
+runs:
+  using: composite
+  steps:
+    - name: Record the runner this job's results are a property of
+      shell: bash
+      run: |
+        set -euo pipefail
+        os=$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null \
+               | cut -d= -f2- | tr -d '"') || os=$(uname -s)
+        {
+          printf '### `%s` — runner identity\n\n' "${GITHUB_JOB}"
+          printf '| field | value |\n|---|---|\n'
+          printf '| kernel | `%s` |\n' "$(uname -r)"
+          printf '| arch | `%s` |\n' "$(uname -m)"
+          printf '| os | %s |\n' "${os:-unknown}"
+          printf '| runner image | `%s` / `%s` |\n' \
+            "${ImageOS:-unknown}" "${ImageVersion:-unknown}"
+          printf '| euid of this step | `%s` |\n' "$(id -u)"
+          printf '| cpus | `%s` |\n' "$(nproc 2>/dev/null || echo unknown)"
+          printf '| run | `%s` attempt `%s` |\n' \
+            "${GITHUB_RUN_ID}" "${GITHUB_RUN_ATTEMPT}"
+          printf '| commit | `%s` |\n' "${GITHUB_SHA}"
+          printf '\n'
+          printf 'Recorded per job: each GitHub job runs on its own VM, so '
+          printf 'this identity covers **this job only**. Compare the blocks '
+          printf 'rather than assuming one kernel for the run.\n\n'
+        } >> "$GITHUB_STEP_SUMMARY"
+        printf 'runner identity: kernel %s, %s, euid %s, image %s/%s\n' \
+          "$(uname -r)" "$(uname -m)" "$(id -u)" \
+          "${ImageOS:-unknown}" "${ImageVersion:-unknown}"
