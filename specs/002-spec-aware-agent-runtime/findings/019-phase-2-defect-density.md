@@ -26,6 +26,39 @@ artifact claims the identifier, in either namespace.
 
 ---
 
+> ## SUPERSEDED IN PART, 2026-08-04 — the count does not survive independent adjudication
+>
+> [Finding 020](./020-phase-2-defect-density-adjudicated.md) re-derived this count against a
+> severity bar written **before** the defects were looked at, and against a population rule that
+> asks which commit *introduced* each defect rather than which one fixed it. Read it before quoting
+> any figure in this document.
+>
+> **What survives.** All five defects below are real, and finding 020's bar admits every one of
+> them: not a single item here fails on severity. The direction of the headline survives and
+> strengthens. The bar itself is the durable artifact and it is recorded in 020.
+>
+> **What does not.** ~~Five defects, about one per 467.~~ **Seven Phase 2 defects against the 6,290
+> lines the commit added — about one per 898; or six in these same 2,337 lines, about one per 389.**
+> Three corrections compose to that:
+>
+> - **Defects 4 and 5 below were introduced by Phase 1, not Phase 2.** Both were authored in
+>   `d1f7d7a` and *fixed* by `34e33d3`. `git log -S` decides it. They belong to Phase 1's production
+>   and not to this rate.
+> - **Three defects the pass fixed are missing from this list**, one of them named in the commit's
+>   own message: `cgroup.kill` silently degrading to a racy per-pid loop.
+> - **Four Phase 2 defects are still present**, found by the adjudicating pass. One of them —
+>   a preflight check that looks for `cgroup.kill` in the root cgroup, where the kernel documents it
+>   as absent — appears to break the CI job that runs the test suite.
+>
+> **The denominator section below is right about the arithmetic and wrong about the cause.** The two
+> defects that sit outside the 2,337 lines are the same two that sit outside the phase. Restating the
+> rate over the wider population does not repair that; it dilutes a correct numerator to accommodate
+> two items that should have been removed. **A numerator-attribution error can masquerade as a
+> denominator error.**
+>
+> **The two-rate split has counterexamples in this very commit.** See
+> [020 §The two-rate split has counterexamples in its own commit](./020-phase-2-defect-density-adjudicated.md#the-two-rate-split-has-counterexamples-in-its-own-commit).
+
 > ## Read this before quoting the two-rate table
 >
 > **The two-rate split — roughly one defect per 500 lines for storage-and-serialization work, roughly
@@ -46,7 +79,11 @@ artifact claims the identifier, in either namespace.
 
 ## The headline
 
-**Phase 2 produced five real defects against 2,337 lines of new source — about one per 467.** The
+~~**Phase 2 produced five real defects against 2,337 lines of new source — about one per 467.**~~
+**Superseded 2026-08-04**: six defects in these 2,337 lines, about one per 389, after two of the
+five below were re-attributed to Phase 1 and three more were added — see
+[finding 020](./020-phase-2-defect-density-adjudicated.md). The paragraph is kept as written
+because the reasoning below it is unaffected. The
 working assumption going in was one per 3,000, so on that denominator the phase came in roughly
 **6.4×** denser than predicted. On the one denominator that contains all five defects it is **2.4×**
 denser; see [the denominator problem](#the-denominator-problem-this-measurement-has-about-itself)
@@ -103,8 +140,8 @@ Nothing material moves.
 | 1 | A **non-reentrant lock**. `transaction()` holds the lock across the writes inside it, so a plain `Lock` deadlocked the repository the moment a caller wrote two rows in one transaction — the shape every ref move has, and the shape rollback always has | `src/contracts/repository.py` line 100, with the reason in the comment above it | concurrency, silent until a particular nesting occurs |
 | 2 | A **rollback split across two transactions**. The restoration record and the ref move were separate commits, so a crash between them left a ref moved with no history entry: an unattributed move, which is the one case retained history exists to prevent | `src/analysis/rollback.py` lines 104–108, now one transaction | durability, silent until a crash lands in the window |
 | 3 | A **volatility scanner with no positive control**. Nothing in the suite asserted that the scanner ever returns a non-empty list, so an implementation returning the empty list unconditionally would have passed every test in the file | `tests/contract/test_canonical_determinism.py`, `test_the_volatility_scanner_catches_an_undeclared_volatile_value` | **instrument reporting success while measuring nothing** |
-| 4 | A **redaction marker that named no credential**. A bare marker is safe and useless: an operator reading a redacted trace of a session that used three credentials cannot tell which one appeared where, which is the diagnosis the trace was retained for | `src/contracts/secret.py` lines 23–32, the marker now carrying the configuration key | observability, safe and worthless |
-| 5 | A **benchmark overwriting its own committed measurement** on every privileged run, so a deliberate re-measurement and an incidental CI run were indistinguishable and a real regression would arrive as ordinary run-to-run noise | `tests/batteries/test_seccomp_overhead.py` line 199, re-recording now behind an explicit environment variable | **instrument destroying its own baseline** |
+| 4 | **Phase 1's, not Phase 2's — see [020](./020-phase-2-defect-density-adjudicated.md).** A **redaction marker that named no credential**. A bare marker is safe and useless: an operator reading a redacted trace of a session that used three credentials cannot tell which one appeared where, which is the diagnosis the trace was retained for | `src/contracts/secret.py` lines 23–32, the marker now carrying the configuration key | observability, safe and worthless |
+| 5 | **Phase 1's, not Phase 2's — see [020](./020-phase-2-defect-density-adjudicated.md).** A **benchmark overwriting its own committed measurement** on every privileged run, so a deliberate re-measurement and an incidental CI run were indistinguishable and a real regression would arrive as ordinary run-to-run noise | `tests/batteries/test_seccomp_overhead.py` line 199, re-recording now behind an explicit environment variable | **instrument destroying its own baseline** |
 
 **Three of the five are instruments or records that would have reported success while establishing
 nothing** — the scanner that could match nothing, the marker that redacts without identifying, the
@@ -197,10 +234,18 @@ denominator, and must carry it.**
   declared severity bar, no independent adjudicator, and no record of anything that was considered
   and rejected as not-a-defect. The five are the five the implementation pass called real. A
   different reviewer might have said four or seven, and nothing here bounds that.
+  **Answered 2026-08-04**: an independent reviewer, applying a bar written first, said seven and
+  removed two of these five as another phase's. The bar and the rejection record this bullet asks
+  for now exist in [finding 020](./020-phase-2-defect-density-adjudicated.md). Notably, **not one of
+  the five failed on severity** — the count moved on attribution, which this bullet did not
+  anticipate.
 - **It says nothing about defects still present.** This is a count of defects *found*, and a phase
   that found five may contain more. Three of the five had no symptom, which is direct evidence that
   finding a defect in this class requires someone to go looking; the two found by removal proof are
   evidence about the method, not about the residue.
+  **Confirmed 2026-08-04, and worse than a disclaimer**: a single adjudicating pass found four Phase 2
+  defects still present, including a preflight check that appears to fail on every conformant bare
+  Linux host. See [020 §Still present](./020-phase-2-defect-density-adjudicated.md#still-present-and-this-is-the-part-that-matters-most).
 - **It cannot be converted into days, and no conversion is attempted.** A defect rate predicts
   defects. Turning one into schedule needs a cost per defect, which this corpus has never measured;
   [`tasks.md`](../tasks.md) refuses the conversion for the same reason and this finding does not

@@ -400,11 +400,18 @@ corpus has never measured one. Deriving days from a defect density here would in
 unmeasured number to launder the first, which is the inherited-number failure this section already
 refuses twice in its own text.
 
-**What was measured.** Phase 2 produced **five real defects across roughly 2,300 lines** — about
-**one per 460**. The line count is the new Phase 2 sources in the working tree; the defect count is
-the implementation pass's own, and **neither has a findings document behind it**, which is recorded
-below as an outstanding item rather than glossed. Against a working assumption of one per 3,000 that
-is roughly six times denser.
+**What was measured.** ~~Phase 2 produced **five real defects across roughly 2,300 lines** — about
+**one per 460**.~~ **Superseded 2026-08-04 by
+[finding 020](./findings/020-phase-2-defect-density-adjudicated.md)**, which adjudicated the count
+against a severity bar written before the defects were looked at: **seven Phase 2 defects against the
+6,290 lines the commit added, about one per 898 — or six against the 2,337 lines of new source,
+about one per 389.** Two of the original five were introduced by Phase 1 and merely fixed by
+Phase 2; three the pass fixed were missing from the list; four are still present. The line count is
+the new Phase 2 sources in the working tree; the defect count is
+~~the implementation pass's own, and **neither has a findings document behind it**, which is recorded
+below as an outstanding item rather than glossed~~ now independently adjudicated. Against a working
+assumption of one per 3,000 the phase is denser on every population, by between roughly three and
+roughly eight times depending on which one is named.
 
 **Why, and the *why* is what makes this usable rather than just alarming.** The five were: a
 non-reentrant lock that deadlocked only under a nesting pattern one caller uses; a rollback that
@@ -425,16 +432,27 @@ badly as one per 3,000 underestimated.** The working split:
 
 | Rate | Applies to | Why |
 |---|---|---|
-| **~1 per 500** | anything crossing a storage or serialization boundary — persisted records, cross-process handoffs, canonical form, redaction, ledgers and journals, and **any instrument whose output is a measurement** | The failure is a plausible wrong value, and nothing outside the code checks it. All five Phase 2 defects are here |
-| **~1 per 3,000** | code the kernel checks for you — namespaces, cgroups, `seccomp`, capabilities, file descriptors | A wrong call fails at the syscall with a named errno, so the defect surfaces on first execution rather than at review |
+| **~1 per 500** | anything crossing a storage or serialization boundary — persisted records, cross-process handoffs, canonical form, redaction, ledgers and journals, and **any instrument whose output is a measurement** | The failure is a plausible wrong value, and nothing outside the code checks it. ~~All five Phase 2 defects are here~~ **Corrected 2026-08-04: not all of them are.** Two Phase 2 defects are in cgroup code and neither failed loudly |
+| **~1 per 3,000** | code the kernel checks for you — namespaces, cgroups, `seccomp`, capabilities, file descriptors | ~~A wrong call fails at the syscall with a named errno, so the defect surfaces on first execution rather than at review~~ **Contradicted 2026-08-04 by two counterexamples in the phase that produced this table** — see the caption |
 
-> **This table is reasoned from one phase and is not a measurement — quote it with this sentence
-> attached.** One rate was observed; the other is the prior it was measured against, carried forward
-> on an argument about failure modes rather than on any count of kernel-mechanism code in this
-> repository. The observed side is itself denominator-sensitive: two of the five defects sit outside
+> **This table is reasoned from one phase, is not a measurement, and its second row now has observed
+> counterexamples — quote it with this sentence attached.** One rate was observed; the other is the
+> prior it was measured against, carried forward on an argument about failure modes rather than on any
+> count of kernel-mechanism code in this repository.
+> [Finding 020](./findings/020-phase-2-defect-density-adjudicated.md) found **two kernel-mechanism
+> defects in the same commit, neither of which failed loudly**: `cgroup.kill` degrading silently to a
+> racy per-pid signalling loop, and a preflight check that looks for `cgroup.kill` in the root cgroup
+> where the kernel documents it as absent, paired with a test that never reads the check's result. The
+> claim that all the phase's defects sat in the storage class was true only of the five that were
+> counted, and the counting excluded the counterexamples.
+> ~~The observed side is itself denominator-sensitive: two of the five defects sit outside
 > the line count that produced *one per 460*, and on the one population containing all five the rate
-> is one per 1,247.
-> [Finding 019](./findings/019-phase-2-defect-density.md) is the anchor and states both.
+> is one per 1,247.~~ **Superseded**: those two defects sit outside the *phase*, not merely outside
+> the denominator — both were introduced by Phase 1 and fixed by Phase 2. Restating the denominator
+> diluted a correct numerator rather than repairing it.
+> [Finding 019](./findings/019-phase-2-defect-density.md) is the original anchor and
+> [finding 020](./findings/020-phase-2-defect-density-adjudicated.md) is the adjudication that
+> supersedes its count; read both.
 
 **Classifying the remaining phases against that split, because the point of an anchor is that
 somebody can use it.** Phase 4 is the one that matters and it is **mixed, not predominantly either**:
@@ -473,7 +491,7 @@ than leaving the interval honestly unbounded on the high side. What is stated in
 lower bound whose upper end is now less trustworthy than its lower end**, and row 5's absent band is
 the specific place to start when someone re-derives with a cost per defect in hand.
 
-**Two outstanding items this creates**, both flagged rather than resolved:
+**Three outstanding items this creates**, all flagged rather than resolved:
 
 - ~~**The measurement has no findings document.** Five defects in roughly 2,300 lines is a
   measurement of this project's own output and it currently lives only in this section and in the
@@ -486,12 +504,22 @@ the specific place to start when someone re-derives with a cost per defect in ha
   that figure rounded, not a different measurement. The finding also records a defect in the
   measurement this section did not catch: **two of the five defects lie outside the 2,337 lines**, so
   the numerator and the denominator describe different populations, which is exactly the pairing
-  **U-49** was opened for.
+  **U-49** was opened for. **Amended 2026-08-04**: the same two defects lie outside the *phase* —
+  [finding 020](./findings/020-phase-2-defect-density-adjudicated.md) attributes both to Phase 1 by
+  `git log -S` — so the pairing was a numerator error wearing a denominator error's clothes.
 - **The classification is reasoned, not measured.** One phase produced the split. Whether kernel
   code really is six times cleaner, or whether Phase 2 was simply the harder phase, is not
   established by a single phase, and the next phase to complete is the one that tests it. *(Still
-  outstanding. [Finding 019](./findings/019-phase-2-defect-density.md) states it as its headline
+  outstanding, and now **worse than outstanding**: finding 020 found two kernel-mechanism defects in
+  the same commit and neither failed loudly, so the split's second row has counterexamples rather
+  than merely an absence of support.
+  [Finding 019](./findings/019-phase-2-defect-density.md) states it as its headline
   limitation rather than resolving it, and proposes it for a register entry of its own.)*
+- **Four Phase 2 defects are still present, one of which appears to break CI.** Opened 2026-08-04 by
+  [finding 020](./findings/020-phase-2-defect-density-adjudicated.md), which found them in a single
+  adjudicating pass over a suite that is green. They are unowned by any task in this list. The
+  preflight one — `_check_cgroup_kill` reading the root cgroup, where the kernel documents
+  `cgroup.kill` as absent — should be looked at before the next privileged run.
 
 ### Nothing else in this task list is sized, and that is a statement rather than an omission
 
