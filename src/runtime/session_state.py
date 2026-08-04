@@ -16,11 +16,12 @@ whether the session is in the state the rest of the system now believes it is
 in. The count is checked *and* the row is re-read, because the count says the
 statement matched and the row says what it matched to.
 
-**What is not here.** Nothing drives `RUNNING → INTERRUPTED` in this slice.
-`interrupt()` exists because the state is in the declared lifecycle and
-`STATES` is a closed set — retrofitting a member into a closed set later is
-worse than declaring it now — but the producer is T052's resume reconstruction,
-and `resume()`'s caller is T052's too.
+**Who drives the two non-terminal edges.** `interrupt()` and `resume()` are the
+runner's: T046 interrupts on cancellation and on an attempt bounded short, and
+`attach()` resumes. What is still *not* here is resume **reconstruction** —
+replaying the journal to rebuild the turns an interrupted attempt produced. That
+is T052's, and the difference matters: the edge carries the ceilings and the turn
+numbering, because both read the journal, and it does not carry the transcript.
 """
 
 from __future__ import annotations

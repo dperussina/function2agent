@@ -29,7 +29,8 @@ STATE_STARTING = "STARTING"
 STATE_RUNNING = "RUNNING"
 STATE_TERMINATED = "TERMINATED"
 # `data-model.md` §2.1's interrupted state. See the note on the same constant in
-# `src/contracts/transition.py`: not terminal, and its outward edge is T052's.
+# `src/contracts/transition.py`: not terminal. Both edges are the runner's (T046);
+# rebuilding an interrupted attempt's transcript over them is T052's.
 STATE_INTERRUPTED = "INTERRUPTED"
 
 SCHEMA = """

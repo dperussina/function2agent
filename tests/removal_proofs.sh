@@ -866,6 +866,20 @@ proof "FR-058 retention bound — the location accepts bytes past its declared b
   "tests/unit/test_result_bound.py::test_the_retention_location_carries_its_own_declared_bound" \
   's = s.replace("        if self.bytes_held + len(payload) > self.max_bytes:", "        if False:")'
 
+# FR-037 and T-02. The opaque state is round-tripped; a loop that drops it still
+# produces plausible answers, which is why the arm asserts the bytes.
+proof "T041 opaque state — the provider state is not carried into the next turn" \
+  src/runtime/context.py \
+  "tests/unit/test_loop.py::test_provider_state_is_reinjected_verbatim" \
+  's = s.replace("        if turn.provider_state is not None:\n            return turn.provider_state", "        if False:\n            return turn.provider_state")'
+
+# T042. Trimming the task to fit is the silent failure: the agent answers a
+# question nobody asked and every size assertion still passes.
+proof "T042 prompt refusal — an over-budget prompt is trimmed instead of refused" \
+  src/runtime/context.py \
+  "tests/unit/test_context.py::test_a_prompt_that_alone_exceeds_the_budget_is_refused_not_trimmed" \
+  's = s.replace("        if head_tokens > self.budget_tokens:\n            raise ContextError(", "        if False:\n            raise ContextError(")'
+
 echo
 if [ "$SKIP" -gt 0 ]; then
   echo "$PASS proved, $FAIL unproven, $SKIP skipped"

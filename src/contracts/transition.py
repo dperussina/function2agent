@@ -57,10 +57,9 @@ STATE_RUNNING = "RUNNING"
 STATE_TERMINATED = "TERMINATED"
 # `data-model.md` §2.1's `interrupted ─▶ RUNNING` edge. Not a terminal state: a
 # session that resumes has not ended, which is why it carries no member of the
-# taxonomy. Added with T049, and **nothing drives the outward edge yet** — the
-# producer is T052's resume reconstruction. It is declared here rather than
-# later because the alternative is retrofitting a state into a closed set, and
-# `STATES` is closed on purpose.
+# taxonomy. Added with T049; both edges are driven by the runner (T046), which
+# interrupts on cancellation and resumes on attach. Rebuilding an interrupted
+# attempt's transcript over the edge is still T052's.
 STATE_INTERRUPTED = "INTERRUPTED"
 STATES = frozenset({
     STATE_STARTING, STATE_RUNNING, STATE_TERMINATED, STATE_INTERRUPTED,
