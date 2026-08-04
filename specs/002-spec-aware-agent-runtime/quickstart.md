@@ -33,9 +33,18 @@ A missing or malformed key stops startup with a named reason. There is no permis
 
 ### 2 · Admit the deployment
 
-The system fetches the target's published specification, establishes correspondence between the
-running deployment and the source commit, and either admits or **refuses with the missing criterion
-named** (FR-001, FR-002, FR-003).
+The system fetches the target's published specification, ~~establishes correspondence between the
+running deployment and the source commit~~ **records the source reference the operator declared for
+this deployment**, and either admits or **refuses with the missing criterion named** (FR-001,
+FR-002, ~~FR-003~~ **FR-057**).
+
+> **Corrected 2026-08-03.** This step described admission as *establishing* deployment-to-source
+> correspondence and cited **FR-003**, which is the access-path requirement and says nothing of the
+> kind. **Nothing in v1 establishes that correspondence**, and **OD-06** is why: analysis is kept
+> rebuildable from the codebase alone, so nothing reads a commit identity out of a running instance.
+> What admission does is **record a declaration**, which **FR-057** now requires as configuration and
+> requires to be presented as a declaration. Missing it fails startup loudly; a wrong one is not
+> caught here, and drift detection afterwards is what surfaces divergence.
 
 A target that publishes no specification is refused. That is not a limitation to work around: the
 published specification is the independent artifact that validates derived contracts under

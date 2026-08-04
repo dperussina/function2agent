@@ -46,9 +46,9 @@ a *user wants done*. Every user request crosses all three layers, so:
   which can only serve a UI agent.
 - You have built **a call stack out of language models**: 3× the tokens, three chances to garble the
   intent, and no agent that owns an outcome.
-- Anthropic's numbers: ~4× tokens for a single agentic loop, **~15× for multi-agent**, with token
-  spend alone explaining ~80% of performance variance on BrowseComp. **Paying 15× to reproduce a
-  function call is a bad trade.**
+- Anthropic's numbers: ~4× tokens for a single agentic loop, **~15× for multi-agent** ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)),
+  with token spend alone explaining ~80% of performance variance on BrowseComp.
+  **Paying 15× to reproduce a function call is a bad trade** ([same source](https://www.anthropic.com/engineering/multi-agent-research-system)).
 
 Vertical slices — bounded contexts like Orders, Billing, Identity, Inventory — are the right axis.
 Each owns a coherent operation set, a coherent data scope, and can finish a request end to end.

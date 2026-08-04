@@ -1,18 +1,32 @@
 # Contract — Trace Records and Measurement Artifacts
 
-**Requirements**: FR-005, FR-006, FR-011, FR-030, FR-031, FR-039–FR-042, FR-053
-**Constitution**: Principle VI
+**Requirements**: FR-005, FR-006, FR-011, ~~FR-030, FR-031~~ **FR-038**, FR-039–FR-042, FR-053
+**Constitution**: Principle VI *(as amended to **v1.3.0** 2026-08-03, **OD-22** — the field list is
+stated over a **traced unit** whose kind the shipping tier declares, and v1's declared unit is the
+span this contract already specifies)*
 
 ---
 
 ## Span shape
 
-Every model call, tool call, state transition and decision point is a span (FR-030), carrying inputs,
-outputs, timing, cost, `deployment_id`, `session_id`, `turn_index`, and the artifact versions in
-force (FR-031).
+Every model call, tool call, state transition and decision point is a span ~~(FR-030)~~ **(FR-038)**,
+carrying inputs, outputs, timing, cost, `deployment_id`, `session_id`, `turn_index`, and the artifact
+versions in force ~~(FR-031)~~ **(FR-038, FR-035)**.
+
+> **Citation corrected 2026-08-03, and the correction is worth more than a reference fix.** This
+> contract cited **FR-030 and FR-031** for the span shape. Those are the two **drift** requirements —
+> FR-030 disables a drifted operation, FR-031 states what a drift *signal* must carry — and neither
+> says anything about spans. The overlap that made the miscitation plausible is real but narrow:
+> FR-031 does require artifact versions and deployment identity, on drift signals only. **The
+> consequence was that this contract's central shape had no requirement behind it**, because the one
+> tracing requirement in the specification, **FR-038**, was written per *node* and this contract is
+> written per *span* — so nothing connected them. FR-038 was rewritten against the span on
+> 2026-08-03 and now supplies the citation directly, including the closed span-kind set below, which
+> until that rewrite existed only here.
 
 Span kinds: `model_call`, `tool_call`, `egress_decision`, `filesystem_decision`, `state_transition`,
-`verification`, `drift_check`.
+`verification`, `drift_check`. **This set is closed** — FR-038 forbids writing a span of an
+undeclared kind — and it is the set FR-038 declares, stated here and there identically.
 
 **Two decision spans have a required `rule_id`**, and the invariant suite fails without it:
 `egress_decision` (FR-011) and `filesystem_decision` (FR-048, which requires a filesystem denial

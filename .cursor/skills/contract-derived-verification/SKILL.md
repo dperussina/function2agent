@@ -448,4 +448,4 @@ out across many judgments.
 | Best-of-N + programmatic scorer | N× | Yes | ✅ Cheap gen, cheap check, high variance |
 | Best-of-N + LLM judge | N×+ | No | ⚠️ Often just selects for verbosity |
 | Debate | 3–5× | No | ❌ No better than self-consistency at equal compute |
-| ToT / GoT / LATS / MCTS | 5–100× | **Yes** | ⚠️ Narrow. Only with a cheap programmatic scorer for *partial* states, and gate the branching |
+| ToT / GoT / LATS / MCTS | 5–100× ([2305.10601](https://arxiv.org/abs/2305.10601)) | **Yes** | ⚠️ Narrow. Only with a cheap programmatic scorer for *partial* states, and gate the branching |

@@ -12,7 +12,7 @@
 > 4. **Tool-set size is a first-order failure mode.** Tool-selection accuracy degrades past roughly 30–50 tools. Two orthogonal fixes now exist as shipped primitives: deferred/searchable tool loading (trims *definitions*) and code-execution-as-tool-calling (trims *results* and round trips, with reported reductions of 78–99%).
 > 5. **Memory is four tiers, and the filesystem beat the vector database for the agent-authored tiers.** Working / episodic / semantic / procedural is the settled taxonomy. Files-as-memory won for procedural and semantic memory because it is inspectable, diffable, and legible to both the model and the human. The unsolved part is governance: consolidation, staleness, and conflict.
 > 6. **MCP is the dominant tool interop standard and it just went stateless.** The `2026-07-28` spec removed the handshake and session header, making MCP servers ordinary horizontally-scalable HTTP services. It is also wire-incompatible with prior versions, deprecates Roots/Sampling/Logging, and carries a well-documented trust-model problem: 40+ CVEs and a spec that declares tool descriptions untrusted while providing no mechanism to enforce that.
-> 7. **Multi-agent is usually the wrong answer.** Anthropic's own numbers: ~4× tokens for a single agentic loop, ~15× for multi-agent — and on BrowseComp, token spend alone explained ~80% of the performance variance. Most "multi-agent wins" are compute wins you could buy more cheaply with a bigger turn budget.
+> 7. **Multi-agent is usually the wrong answer.** Anthropic's own numbers: ~4× tokens for a single agentic loop, ~15× for multi-agent — and on BrowseComp, token spend alone explained ~80% of the performance variance ([Anthropic, *How we built our multi-agent research system*](https://www.anthropic.com/engineering/multi-agent-research-system)). Most "multi-agent wins" are compute wins you could buy more cheaply with a bigger turn budget.
 > 8. **For `function2agent`: the promotion of a function into an agent is 90% metadata and context engineering, 10% loop.** The loop is fifty lines. What earns its keep is the tool contract (naming, schema, error text, token-bounded returns), progressive disclosure, budget enforcement, and durable state. Design the *promotion artifact*, not the runtime.
 
 ---
@@ -605,7 +605,7 @@ Anthropic published the only widely-cited first-party numbers, and they are larg
 |---|---|
 | Chat interaction | 1× |
 | Single agentic loop (tools) | **~4×** |
-| Multi-agent system | **~15×** |
+| Multi-agent system | **~15×** ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)) |
 
 ([How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system), Anthropic, 2025)
 
@@ -613,7 +613,7 @@ That is the *baseline*, not the tail. A subagent that recursively spawns subagen
 
 **The uncomfortable finding, in Anthropic's own words:** *"Multi-agent systems work mainly because they help spend enough tokens to solve the problem."* On BrowseComp, three factors explained 95% of the performance variance, and **token usage alone explained ~80%** — with tool-call count and model choice making up the rest. Coordination sophistication is not on the list.
 
-Read that carefully, because it reframes the entire build decision. If ~80% of your multi-agent win is purchasable with tokens, the correct control experiment is not "multi-agent vs. single agent" — it is **"multi-agent vs. single agent with a 15× larger turn/token budget."** Most published multi-agent wins never ran that comparison. Anthropic also notes that upgrading the model was a bigger gain than doubling the token budget, which means the cheapest lever is usually neither architecture nor budget but **a better model on a single loop.**
+Read that carefully, because it reframes the entire build decision. If ~80% of your multi-agent win is purchasable with tokens, the correct control experiment is not "multi-agent vs. single agent" — it is **"multi-agent vs. single agent with a 15× larger turn/token budget."** Most published multi-agent wins never ran that comparison. Anthropic also notes that upgrading the model was a bigger gain than doubling the token budget, which means the cheapest lever is usually neither architecture nor budget but **a better model on a single loop** ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)).
 
 ### 7.3 The other four costs, which are worse than tokens
 
@@ -643,7 +643,7 @@ Multi-agent earns its keep when *all* of these hold:
 1. The task decomposes into threads that are **genuinely independent** — no thread's output constrains another's.
 2. The threads are **read-only**, or writes are partitioned so cleanly that merge is mechanical.
 3. The total evidence **exceeds one context window** and cannot be reduced by retrieval.
-4. The task value **absorbs a 15× multiplier**.
+4. The task value **absorbs a 15× multiplier** ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)).
 5. You have somewhere to put a **verification pass** on the synthesis.
 
 Fail any one and a single loop with a bigger budget, a better model, and better tools will beat you on cost, latency, and reliability simultaneously. The engineering-lesson version: you can steal the three genuinely portable patterns from Anthropic's system — **externalize state to memory before context fills, give workers self-contained task descriptions, and verify high-stakes outputs with a separate clean-context pass** — and run all three *inside a single agent* without paying the multiplier ([analysis](https://theaiengineer.substack.com/p/how-anthropic-built-multi-agent-deep)).
@@ -838,13 +838,13 @@ A caution before the table: **the secondary sources describing this landscape co
 | Family | Members | Notes |
 |---|---|---|
 | **Anthropic Claude 5** | **Fable 5** (highest capability), **Opus 5**, **Sonnet 5** | Opus 5 announced **2026-07-24** at **$5 / $25 per MTok**, model string `claude-opus-5`. Positioned as "close to the frontier intelligence of Claude Fable 5 at half the price." Graded effort levels (low → high → xhigh → max) and a **Fast mode** at ~2.5× speed for 2× price ([Introducing Claude Opus 5](https://www.anthropic.com/news/claude-opus-5)) |
-| **OpenAI GPT-5.6** | **Sol**, **Terra**, **Luna** | Released **2026-07-09** as a three-tier family rather than one model with settings. Reported ~1.05M-token context across all three. *Which tier is flagship is reported inconsistently by secondary sources — check OpenAI's docs.* |
+| **OpenAI GPT-5.6** | **Sol**, **Terra**, **Luna** | Released **2026-07-09** as a three-tier family rather than one model with settings. Reported ~1.05M-token context across all three. ~~*Which tier is flagship is reported inconsistently by secondary sources — check OpenAI's docs.*~~ **Resolved 2026-08-03 against OpenAI's docs: Sol is the frontier tier and the `gpt-5.6` alias routes to it ([GPT-5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)); the family prices Sol $5/$30, Terra $2/$12, Luna $0.20/$1.20 per MTok.** |
 | **Google Gemini** | **Gemini 3.1 Pro** (Preview), **Gemini 3.6 Flash** | 3.1 Pro appeared 2026-02-19 and, remarkably, **is still `gemini-3.1-pro-preview` with no GA date**. Google's push is Flash-as-main-line: cheap, fast, multimodal, wide surface rollout. Long-context and multimodal breadth remain the differentiators |
 | **"Mythos 5"** | — | Anthropic's own Opus 5 announcement states Opus 5 "remains behind Mythos 5 on cybersecurity tasks," and Cognition referenced "a new Mythos class of even larger & more capable models on the horizon." **I could not verify which lab ships Mythos or its specifications.** Flagging rather than guessing |
 
 Three structural observations that matter more than the names:
 
-1. **The "one flagship" era is over.** Every lab now ships a *family* spanning roughly a 10–25× price range, and the interesting engineering question moved from "which model" to "which model for which call."
+1. **The "one flagship" era is over.** Every lab now ships a *family* spanning roughly a 10–25× price range, and the interesting engineering question moved from "which model" to "which model for which call." *(Both ends checked against vendor primary pricing on 2026-08-03: Anthropic spans Fable 5 at $10/$50 per MTok down to Haiku 4.5 at $1/$5, a factor of ten on both meters ([Anthropic pricing](https://www.anthropic.com/pricing)); OpenAI spans `gpt-5.6-sol` at $5/$30 down to `gpt-5.6-luna` at $0.20/$1.20, a factor of twenty-five on both ([OpenAI API pricing](https://developers.openai.com/api/docs/pricing)).)*
 2. **Effort/thinking level is a first-class dial** (§6.3), and it interacts with price in ways that invalidate naive comparisons. Anthropic's Opus 5 material reports results *per effort level* and frames the win as performance-at-a-given-cost, not raw peak score. That is the honest framing and you should adopt it internally.
 3. **No model dominates.** Capability has fragmented by sub-task — debugging, visual reasoning, long-document work, terminal work, and multimodal all have different leaders. This is exactly what makes Cognition's "capability router" finding (§7.5) practical rather than exotic.
 
@@ -888,12 +888,12 @@ The academic framing is now explicit: **Harness-Bench** argues agent performance
 
 ### 9.4 Picking a model per role
 
-The 10–25× intra-family price spread makes per-role routing the highest-leverage cost lever available — often larger than any prompt or architecture optimization. Rough guidance:
+The 10–25× intra-family price spread makes per-role routing the highest-leverage cost lever available — often larger than any prompt or architecture optimization (§9.1; [Anthropic pricing](https://www.anthropic.com/pricing), [OpenAI API pricing](https://developers.openai.com/api/docs/pricing)). Rough guidance:
 
 | Role | Capability that binds | Model tier | Reasoning |
 |---|---|---|---|
 | **Planner** | Long-horizon coherence, decomposition | **Top tier, high effort.** Fable 5 / Opus 5 / GPT-5.6 flagship | Called once or a few times; the plan constrains everything downstream. Cheapest place to spend money and the most expensive place to save it |
-| **Executor** | Tool-calling reliability, instruction following | **Mid tier, default effort.** Sonnet 5 / GPT-5.6 mid | Called 10–100× more often than the planner. This is where the bill lives. Reliability matters far more than brilliance |
+| **Executor** | Tool-calling reliability, instruction following | **Mid tier, default effort.** Sonnet 5 / GPT-5.6 mid | Called ~~10–100×~~ **many times more often** than the planner *(the multiplier is struck 2026-08-03 rather than cited: it was an engineering estimate read off the shape of an agent loop, it was never measured here, and no source states it. The direction is robust; the bracket was false precision. See* Explicitly unverified*.)*. This is where the bill lives. Reliability matters far more than brilliance |
 | **Judge / reviewer** | Independence and clean context | **Mid-to-top tier, separate call** | See caveat below |
 | **Cheap classifier** (routing, permission gating, extraction, no-progress detection) | Latency and unit cost | **Cheapest tier.** Flash-class / Luna-class / Haiku-class | High volume, narrow decision, verifiable output. Never put a frontier model here |
 | **"Smart friend" escalation** | Capability routing | **Top tier, called as a tool** | Works frontier-to-frontier as a capability router; **does not work** with an asymmetrically weak primary (§7.5) |
@@ -1163,7 +1163,8 @@ All URLs accessed **2026-08-02** unless otherwise noted. Grouped by section; pri
 
 ### Explicitly unverified
 - **"Mythos 5" / the Mythos model class.** Referenced by name in Anthropic's Opus 5 announcement and in Cognition's 2026 multi-agent post. I could not determine the publishing lab, release date, or specifications. Flagged rather than guessed (§9.1).
-- **GPT-5.6 tier ordering.** Secondary sources disagree about which of Sol/Terra/Luna is the flagship and place them in conflicting price tiers. Not resolved against OpenAI primary documentation (§9.1).
+- **GPT-5.6 tier ordering.** Secondary sources disagree about which of Sol/Terra/Luna is the flagship and place them in conflicting price tiers. ~~Not resolved against OpenAI primary documentation (§9.1).~~ **Resolved 2026-08-03 against OpenAI's own docs while sourcing the 10–25× figure in §9.1: Sol is the flagship — the model page states "GPT-5.6 Sol is the frontier model in the GPT-5.6 family" and that the `gpt-5.6` alias routes to it ([GPT-5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)), and the pricing table orders the family Sol $5/$30, Terra $2/$12, Luna $0.20/$1.20 ([OpenAI API pricing](https://developers.openai.com/api/docs/pricing)). The secondary-source disagreement stands as recorded; it was wrong, not merely unresolved.**
+- **The executor-to-planner call ratio ~~bracketed~~ formerly bracketed in §9.4.** An engineering estimate from the shape of an agent loop, not a measured ratio from any published study or from this corpus. The direction — executors dominate the bill — is robust; the bracket was not a number to plan against. Measure it on your own workload. *(**Struck at the site 2026-08-03.** Annotating it as an estimate left a bare multiplier standing in a guidance table, where it reads as a figure to size against. It is now printed struck there, which is a retraction rather than a caveat, and the table states the direction in words. This entry is kept so the retraction has somewhere to point.)*
 - **Terminal-Bench 2.1 absolute scores.** Three different figures found for the same model family from three sources (§9.3). Cited as evidence of unreliability, not as measurements.
 - **Publication date of Cognition's *Multi-Agents: What's Actually Working*.** The post says "10 months ago" relative to *Don't Build Multi-Agents* and references SWE-1.6 (March 2026); exact date not stated on the page.
 

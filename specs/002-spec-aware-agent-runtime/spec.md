@@ -13,7 +13,7 @@
 This is the production specification. It follows feature 001, which planned fifteen numbered
 experiments, reached nine ladder positions, ran eight of them, and closed with a verdict
 ([`VERDICT.md`](../001-discovery-validation/VERDICT.md)). Its binding scope decisions are the owner
-decision log OD-01 through ~~OD-14~~ ~~OD-17~~ **OD-20** in [`plan.md`](../001-discovery-validation/plan.md)
+decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ **OD-21** in [`plan.md`](../001-discovery-validation/plan.md)
 *(extended 2026-08-03: **OD-15** drops ADK for v1 and partially reverses OD-01, **OD-16** removes
 `litellm` from the shipped product, and **OD-17** makes Linux the only supported platform. None of
 the three changes a requirement in this document; all three change what the plan builds against)*.
@@ -23,7 +23,11 @@ they are this document's own clarify-session decisions, finally written down.** 
 so until now FR-002, FR-044, FR-025, FR-045, FR-029 and FR-046 rested on an owner authority that
 appeared nowhere. No requirement changes; each now names the decision that authorises it. **OD-18 is
 the consequential one** — a published machine-readable specification is an admission criterion, which
-narrows what v1 accepts.
+narrows what v1 accepts. **Extended once more the same day with OD-21, which is the fourth and last
+answer of that same clarify session and had the same defect**: FR-047, the narrowings it makes at
+FR-001, FR-030 and FR-031, and SC-021 rested on an authority that appeared nowhere. It is recorded
+separately from its three siblings because recording it needed the owner rather than a propagation
+pass, and the note under OD-20 that named the gap is struck rather than deleted.
 
 **What the product is.** The operator points the system at a codebase and at a *named running
 deployment* of that codebase. The system derives contracts from the source, establishes what the
@@ -113,9 +117,13 @@ Recorded here because they are load-bearing and each has evidence behind the pro
 > requirement text on the day they were given and no decision record was created for any of them.**
 > The first three are now **OD-18**, **OD-19** and **OD-20** in
 > [`plan.md`](../001-discovery-validation/plan.md), each stating in its own text that it is a
-> retroactive record and why. The **fourth** answer below — the staleness disposition that became
+> retroactive record and why. ~~The **fourth** answer below — the staleness disposition that became
 > FR-047 — **still has no decision record**, and recording it is an owner act rather than a
-> propagation one; the note at OD-20 says so rather than leaving it implicit.
+> propagation one; the note at OD-20 says so rather than leaving it implicit.~~
+> **Closed 2026-08-03 — the owner authorised the record and the fourth answer is now **OD-21**,
+> immediately after OD-20 in the same register.** All four of this session's answers are citable. The
+> struck sentence is kept because it is why OD-21 is a separate act from the propagation that wrote
+> OD-18 through OD-20, and OD-21's own first paragraph turns on that distinction.
 
 - Q: When a target publishes no machine-readable specification of what it serves, what does v1
   support? → A: Nothing. A published machine-readable specification is an **admission criterion**,
@@ -129,7 +137,80 @@ Recorded here because they are load-bearing and each has evidence behind the pro
 - Q: When an admitted target stops publishing the specification that admitted it, does the runtime
   continue on the last-known-good served-operation set or deny? → A: **Continue, marked stale on
   every result**, under a configured staleness ceiling measured from the last successful fetch, past
-  which it denies (FR-047, SC-021).
+  which it denies (FR-047, SC-021). **OD-21.**
+
+### ~~Open — asked 2026-08-03, no owner answer yet~~ Asked and answered 2026-08-03
+
+> **These are not deferrals and they are not loose requirements.** Each is a point where resolving a
+> loose requirement ran into a **genuine product or constitutional choice that no existing decision
+> settles**. In each case the requirement text is written as far as the evidence carries it and the
+> undecided part is named here rather than filled in with a preference. ~~Both are stated as questions
+> because both have a defensible answer either way.~~
+>
+> **Both were answered on 2026-08-03, in the same owner session, and the section is retitled rather
+> than emptied because the questions are what make the answers legible.** Neither answer was one of
+> the two branches the question posed. The Principle VI question offered a deviation record or an
+> amendment and got an amendment **of a different shape than the one sketched** — unit-neutral rather
+> than v1-scoped. The FR-024 question offered admit-or-exclude and got **neither** — ~~a ratchet
+> admitting the source in one direction only~~ **first a ratchet admitting the source in one direction
+> only, then, once that ratchet was verified inert against the census, a revision the same day to a
+> variant admitting the source in one *region* only: where the ladder would otherwise refuse.** Both
+> are recorded below against the question that
+> produced them, and both carry an owner decision of their own.
+
+- ~~**Q: Does Principle VI get a v1-scoped deviation record, or an amendment?**~~ **ANSWERED
+  2026-08-03 — an amendment. `.specify/memory/constitution.md` is at v1.3.0, recorded as OD-22.**
+  Its field list was
+  scoped to *"every emitted system"* and so had no v1 subject, on the same argument that disposes of
+  Principles II, III and VII; but its ship gate — *"a capability that cannot be attributed to a
+  versioned node MUST NOT ship"* — was unscoped, and on a literal reading blocked every v1
+  capability,
+  because v1 has no nodes. FR-038 requires the same fields against the **span**. **A deviation
+  record** would have had to cover *both* clauses, and would have left the graph wording in force the
+  moment
+  v2 emits a topology. **An amendment** restating identity and cost in unit-neutral terms binds
+  v2's emitted graphs to the unit-neutral wording as well. → **The owner took the amendment**, on
+  two grounds recorded at OD-22: a deviation record cannot fix an unscoped `MUST NOT`, and the
+  principle's own unit word was already *"span"*, so the graph sat in the qualifier rather than in
+  the unit. Set out clause by clause in Dependencies, which now records the resolution rather than
+  the question.
+- ~~**Q: Is a precision declared in the caller's own request an admissible source on FR-024's precision
+  ladder?**~~ **ANSWERED 2026-08-03 — ~~admissible only where it tightens~~ admissible only where no
+  artifact source supplies any precision, recorded as OD-23 and revised there the same day.**
+  It was rung **P4** in the one instance ever built, and the trade was sharp in both
+  directions. *For*: on that corpus P4 was the **sole** rung that caught the three sub-one-percent
+  near-misses — a mean of `3.23` against `3.201754`, checked at the two decimal places the request
+  itself asked for — so excluding it removes the numeric half of the surviving discriminative set,
+  which is precisely what
+  [finding 015](../001-discovery-validation/findings/015-verifier-vs-judge-not-run.md) says a strict
+  reader accepting Amendment B2.2's invitation would lose. *Against*: it is **request-derived rather
+  than contract-derived** on a product sold on contract-derived verification, and it lets a caller
+  weaken their own verification by asking for fewer decimal places. → **The owner took neither
+  branch**, ~~and made the rung a **ratchet**: a declared precision is admitted only where it is
+  strictly tighter than the best comparison the ladder derives from a non-request source, and is
+  otherwise ignored. This removes the weakening vector structurally. **It does not, on the one census
+  available, preserve the catch** — the measured declaration was looser than the exact comparison it
+  would now be tested against, so it is ignored and that quantity refuses.~~ **twice.** The first
+  answer made the rung a **ratchet**, admitted only where strictly tighter than the best non-request
+  comparison — which was then verified **inert**, because the ladder takes the first rung it reaches,
+  so the rung is only reached where no artifact source applies and the comparand the ratchet needs is
+  empty in exactly the case it could fire. **The second answer, the same day, is the narrower variant
+  the first one had recorded as available and not taken**: a declared precision is admissible **only
+  where no artifact source supplies any precision at all** — only where the ladder would otherwise
+  refuse — and is ignored outright wherever one does, which is *stricter* than the ratchet in the
+  region the ratchet governed. **The catch is preserved**: the one measured declaration meets the
+  variant's condition on its own recorded derivation, so the census holds at its as-measured 17
+  refusals of 61 and the three sub-one-percent near-misses stay detected. **What it costs** is that a
+  caller obtains an affirmative, at a precision they chose, where the ladder would otherwise have
+  returned an honest not-verifiable — bounded by the state being **provisional** and never plain
+  verified, and by the displaced alternative being a refusal, which checks nothing. FR-024's property 5
+  states the rule and prices it; SC-005's stratified refusal-share requirement, added when the ratchet
+  concentrated the loss in the sub-one-percent stratum, **stays** — the instance is repaired, the
+  structural hazard is not. **Provisional marking is
+  retained**, as property 6, ~~on the ground that the ratchet governs direction while marking governs
+  provenance~~ **and matters more under the variant than under the ratchet: no independent artifact
+  exists is the variant's own admissibility premise, so marking is the only disposition Principle I
+  leaves**.
 
 **Why the first answer is a safety finding rather than a preference.** The alternative to requiring
 a published specification is discovering which methods a path serves by probing it, and
@@ -498,7 +579,8 @@ Append-only applies to it too.
   > last-known-good set exists, where the target was never admitted, or where the ceiling has been
   > crossed. Without this narrowing a restart during a transient outage of the target's specification
   > endpoint would be indistinguishable from a decommissioned specification, which is the confusion
-  > FR-047 exists to prevent.
+  > FR-047 exists to prevent. **The authorising decision is OD-21** *(citation added 2026-08-03 when
+  > OD-21 was recorded; the narrowing itself is unchanged)*.
 - **FR-002**: The served-operation set MUST be produced by a stage separate from and above source
   analysis, and MUST record the deployment identity it describes. Source analysis MUST remain
   reproducible from the codebase alone, with no network input and no dependency on any running
@@ -525,6 +607,84 @@ Append-only applies to it too.
   classification and the fail-closed disposition are this document's own.
 - **FR-003**: The agent MUST act on the target only through the target's own external interface. It
   MUST NOT call the target in process and MUST NOT reach the target's datastore directly.
+
+  > **Unchanged 2026-08-03, and recorded here because two downstream artifacts read an obligation
+  > into it that it does not carry.** [`data-model.md`](./data-model.md) §1.1 and
+  > [`quickstart.md`](./quickstart.md) step 2 both cited this requirement for establishing
+  > correspondence between the running deployment and a source commit. **This requirement is about
+  > the agent's access path and nothing else** — it is **D-01** — and it gains no correspondence
+  > clause. The real obligation underneath the miscitation is a *declared* source reference, which is
+  > now **FR-057**; both downstream artifacts are corrected there.
+- **FR-057**: The **source reference** — the repository and commit the operator asserts produced the
+  admitted deployment — MUST be required configuration under FR-033, MUST be recorded on the
+  deployment, and MUST be carried on every source-derived artifact as the anchor of the source clock
+  FR-028 and FR-031 depend on. An absent source reference MUST make startup fail loudly, naming what
+  is missing, exactly as FR-001 requires of the served-operation set.
+
+  **It MUST be recorded and presented as an operator declaration and MUST NOT be recorded or
+  presented as verified correspondence.** v1 has no mechanism that establishes that a given source
+  produced a given running instance, and **admission MUST NOT be described — in this specification,
+  in any downstream artifact, in the system's interfaces, or in its documentation — as establishing
+  that correspondence**. Where the source reference appears beside a derived artifact, its status as
+  a declaration MUST be visible in the same place, so that no consumer can read it as evidence.
+  Divergence between the declared source and the running deployment is **detected afterwards and
+  continuously** by the two-clock drift machinery of FR-028 through FR-031 and FR-046; that is
+  detection of divergence, not establishment of correspondence, and the two MUST NOT be conflated.
+
+  > **Added 2026-08-03 to adjudicate a conflict between FR-003 and two downstream artifacts, and the
+  > adjudication went partly each way. Read the split, because "the downstream overreached" alone is
+  > the wrong summary.**
+  >
+  > **The overreach is real and is corrected at source.** [`data-model.md`](./data-model.md) §1.1
+  > carried a `correspondence_evidence` field glossed *"what established that this source produced
+  > this deployment (FR-003)"*, and [`quickstart.md`](./quickstart.md) step 2 said admission
+  > *"establishes correspondence between the running deployment and the source commit (FR-001,
+  > FR-002, FR-003)"*. **FR-003 says neither, and it is not a near miss**: FR-003 is the access-path
+  > requirement — act through the target's external interface, not in process, not into its
+  > datastore — inherited from **D-01**. It has no correspondence clause to gain, so extending it
+  > would have been the wrong repair. Worse than the miscitation: **nothing in v1 can produce that
+  > evidence**, so admission was gated on a step with no mechanism, and both artifacts have been
+  > corrected rather than this requirement being bent to fit them.
+  >
+  > **What survives the correction is not nothing, and dropping it would have broken the drift
+  > model.** FR-028 detects source drift and FR-031 requires every drift signal to state *which of the
+  > two clocks moved*. **A source clock with no anchor is not a clock**, so the source reference is a
+  > genuine requirement — it was simply never stated as one, which is why the downstream artifacts
+  > invented a citation for it. It is stated here.
+  >
+  > **OD-06 is what decides the shape, and it cuts cleanly.**
+  > ([`plan.md`](../001-discovery-validation/plan.md) OD-06.) That decision put reachability in a
+  > stage *above* analysis precisely so analysis stays rebuildable from the codebase alone —
+  > deterministic, cacheable, and testable against committed fixtures, which a network probe would
+  > break because *a fixture repository has nothing to probe*. A **verified** deployment-to-commit
+  > binding would need something read from the running instance, and would therefore reintroduce the
+  > exact dependency OD-06 removed; FR-002 restates the prohibition in this document's own words. A
+  > **declared** source reference does not: OD-06 gives deployment identity a home on the reachability
+  > annotation, above analysis, and this reference lives there beside it. So the correspondence is
+  > **not coherent as a verified admission step and is coherent as a declaration**, which is the
+  > distinction this requirement turns on.
+  >
+  > **This corpus rejected an operator declaration once already, and the difference between the two
+  > cases has to be stated rather than assumed.** The clarification session above rejected *an
+  > operator declaration of what the deployment serves* on the ground that **everything derived from
+  > an unverifiable declaration is provisional under D-17**, and that a product sold on *verified
+  > against the code's own contracts* cannot rest that guarantee on an unchecked assertion. That
+  > reasoning is not overturned here; it is **distinguished on two points and conceded on a third**.
+  > *Distinguished*: the served-operation set had a **verifiable alternative** — the target's own
+  > published specification — and this has none, so rejecting the declaration would not buy a better
+  > artifact, it would leave FR-028's source clock with no anchor. And the served-operation set is a
+  > **safety boundary**, bounding what the agent may call; the source reference bounds nothing, and
+  > FR-009's deny-what-cannot-be-resolved rule is unaffected by it. *Conceded*: **D-17's provisional
+  > rule is the right instinct**, which is why the presentation clause above exists.
+  >
+  > **A gross mismatch is caught downstream and a subtle one is not, and the boundary between them is
+  > the honest statement of what v1 offers.** Derived contracts are independently validated against
+  > the target's **published specification**, which is fetched *from the running deployment* (FR-002,
+  > T-14, SC-007), and the two clocks are compared continuously. So a source reference pointing at the
+  > **wrong application** surfaces as derived contracts that fail to validate, and as drift. What
+  > survives undetected is the **right repository at the wrong commit**, where the published
+  > specification still matches and the two clocks agree with each other while both disagree with
+  > reality. That is the residual, it is carried in Open Risks Carried, and it is not closed here.
 - **FR-004**: The agent MUST hold general-purpose capabilities — command execution and a general
   request capability — rather than a per-operation tool surface, and those capabilities MUST remain
   available as the fallback path when no served operation fits the request. A tool surface is a bet
@@ -581,6 +741,54 @@ Append-only applies to it too.
 - **FR-006**: Every session MUST terminate in a named state drawn from a declared taxonomy in which
   each success and each failure outcome is separately named. A generic error MUST NOT be a terminal
   state.
+
+  **The stall condition, defined 2026-08-03.** The taxonomy's `no_progress` member
+  ([`data-model.md`](./data-model.md) §2.1) MUST fire on a predicate over turns, defined as follows.
+
+  **A turn makes progress when it does at least one of two things**: it produces the session's
+  reported result, or it issues at least one tool call that is **new to the session** — meaning the
+  combination of the tool invoked, the arguments it was invoked with, and the outcome it returned
+  does not already appear in this session. Identity here MUST be decided by the content address of
+  the canonically serialized combination under FR-055, not by inspection, so that "the same call
+  again" is a determinate question rather than a judgement.
+
+  **A turn makes no progress in every other case** — and the cases are worth naming, because each is
+  a stall shape a caller has to be able to tell apart from a slow success: a turn that issues no tool
+  call and returns no result; a turn whose every tool call repeats a call already made in this
+  session with the same arguments and the same outcome; and a turn whose every tool call fails in a
+  way already recorded in this session for that call.
+
+  **The session MUST terminate in `no_progress` when a configured number of consecutive turns make
+  no progress.** That number MUST be **required configuration** under FR-033; **this specification
+  states no default value for it**, and an unset value MUST make startup fail loudly, naming what is
+  missing, exactly as FR-005's ceilings and FR-049's bounds do. A turn that makes progress MUST reset
+  the count.
+
+  > **Two things this definition is deliberately doing, and one it deliberately is not.**
+  >
+  > **It counts *consecutive* turns, which is what makes it safe to treat a pure reasoning turn as no
+  > progress.** A turn that plans without calling anything is legitimate and common; counting it as
+  > progress would hide an unbroken loop of them until the turn ceiling, and counting it as a stall in
+  > isolation would kill legitimate planning. Consecutiveness resolves that without a special case:
+  > one planning turn between two productive turns resets the count and costs nothing, and only an
+  > unbroken run terminates the session.
+  >
+  > **It takes the plan's Q-10 treatment for its threshold, and the reason differs from Q-10's other
+  > users in a way worth recording rather than glossing.** FR-005's ceilings and FR-049's bounds fail
+  > loudly when unset because an unset one is an **unbounded liability**. That is not true here:
+  > FR-005's turn ceiling already bounds every session, so an unset stall threshold costs no money and
+  > no time. What it costs is **the name** — the session would end at `turn_ceiling_reached` when what
+  > actually happened was a stall, and this requirement's entire subject is that each outcome be
+  > separately named. A taxonomy member no configuration can ever fire is a member with no producer,
+  > which is the same defect as a generic error wearing a specific label. So the treatment is the
+  > same and the justification is not inherited.
+  >
+  > **It does not attempt to detect a loop that varies its arguments.** An agent that calls the same
+  > tool with a slightly different argument each turn, forever, makes "progress" under this predicate
+  > every time. That is a real gap and this definition does not close it; what bounds that session is
+  > FR-005, and what makes it *visible* is the trace under FR-038. Closing it would mean judging
+  > whether varied calls are meaningfully different, which is a model judgement about success and is
+  > exactly what FR-023 forbids as a success signal.
 - **FR-007**: A resumed session MUST NOT repeat a side effect already recorded as performed, and work
   performed in parallel MUST be ordered deterministically before it is recorded.
 
@@ -702,6 +910,17 @@ question.
   > fixed after admission, and an operation added to a still-published specification would have become
   > available to the agent uninspected. FR-051 attaches the same inspection to every set change. The
   > inspection, its fail-closed default, and its unmeasured basis (**U-44**) are unchanged.
+
+  > **Given a procedure 2026-08-03 by FR-056 — given, not changed.** This requirement said what to
+  > inspect for and what to do when inspection is impossible, and named **no inspection**, so *"cannot
+  > be inspected"* had no truth conditions and the fail-closed clause could never be shown to apply.
+  > FR-056 supplies the procedure and its three-valued outcome. Two riders. **The unit of failing
+  > closed is the operation, not the target**, which is FR-051's wording rather than this
+  > requirement's; the target-level sentence above survives as the degenerate case where every
+  > operation is uninspectable, and FR-056 records why the two are one rule. And the confused deputy
+  > this requirement is about is **the target issuing outbound requests on the caller's behalf**, not
+  > the agent-authority sense the research corpus uses that phrase for — see FR-056, where the
+  > difference determines the requirement.
 - **FR-051**: Every operation that becomes available to the agent MUST have been inspected under
   FR-020 first, whichever fetch introduced it. FR-020 runs at admission, and FR-046 re-fetches the
   target's published specification on a schedule, so a target that never stops publishing may add an
@@ -716,6 +935,85 @@ question.
   by which an uninspected operation reaches the agent. The confused-deputy property being inspected
   for remains unmeasured on any target (**U-44**): moving the point at which it is checked does not
   measure it, and FR-020's default stands unchanged.
+
+  > **Given a procedure 2026-08-03 by FR-056 — given, not changed.** The comparison this requirement
+  > specifies is against the last **inspected** set, which presupposes that "inspected" has truth
+  > conditions; until FR-056 it had none. This requirement's operation-level unit of failing closed is
+  > the one FR-056 adopts, over FR-020's target-level wording. One consequence worth stating: because
+  > FR-056's outcome is recorded per operation, the "last inspected set" is **the set of operations
+  > whose recorded outcome is `clean`** — an operation previously found `uninspectable` and unchanged
+  > since is not silently re-admitted by a later fetch, and an operation whose *handler* changed is
+  > not treated as inspected merely because its specification entry did not.
+- **FR-056**: The inspection FR-020 and FR-051 require MUST be a **named procedure over the analysed
+  codebase with a three-valued outcome per operation**, and an operation's outcome MUST be recorded
+  with the operation. The three outcomes are **clean**, **deputy** and **uninspectable**; **both
+  `deputy` and `uninspectable` MUST be denied**, and they are distinguished so that the reason is
+  reportable, not so that they are treated differently. The procedure has three steps, each of which
+  MUST return a determinate answer or return `uninspectable`:
+
+  1. **Resolve the operation to a handler.** Each operation in the set FR-044 admitted MUST resolve to
+     **exactly one** handler symbol in the codebase FR-002 analysed. Zero — an operation served by
+     something outside the analysed codebase, such as a proxied upstream — or more than one is
+     `uninspectable`.
+  2. **Enumerate outbound-request call sites reachable from that handler.** The constructs that count
+     as issuing an outbound network request MUST be drawn from a **declared catalogue**, which MUST
+     be versioned configuration under FR-012 and reviewable before it takes effect. If the handler's
+     reachable call graph contains any call the analyser can classify as neither outbound nor
+     not-outbound — dynamic dispatch it cannot resolve, reflection, evaluated source, or a dependency
+     whose body is not in the analysed codebase — the operation is `uninspectable`. **An unresolved
+     call MUST NOT be read as the absence of an outbound request.**
+  3. **Decide destination influence at each enumerated call site.** A call site whose destination is
+     fixed at build time or read only from the target's own configuration does not make the operation
+     a deputy. A call site whose destination is influenced by any input to the operation makes it
+     `deputy`. A call site whose destination the analyser cannot trace to one of those two makes the
+     operation `uninspectable`.
+
+  **This is a stated rule set, not a proof, and the system's documentation and interfaces MUST NOT
+  describe it as one** — identically to FR-010, and for the same reason: step 2's catalogue is
+  enumerated rather than derived, and step 3's question is undecidable in the general case, which is
+  why the procedure is required to answer `uninspectable` rather than to answer at all costs.
+
+  > **Added 2026-08-03, because FR-020's fail-closed clause was not decidable and a fail-closed rule
+  > with an undecidable trigger fails open in practice — nothing ever meets it.** Three things this
+  > requirement settles, and one it deliberately does not.
+  >
+  > **What the threat actually is, because the name is ambiguous and the ambiguity was doing damage.**
+  > [`research/08`](../../research/08-auth-identity-and-secrets.md) §3.1 uses "confused deputy" for
+  > the *agent* acting with its own authority on an end user's behalf. **FR-020 is not about that
+  > case.** It sits inside the egress block, FR-014 through FR-021, and its subject is the *target*
+  > issuing outbound requests on the caller's behalf — the target as the agent's deputy. That
+  > distinction decides the requirement: FR-014's enforcement point governs traffic leaving **the
+  > agent's execution environment**, and a request the target originates from its own network position
+  > never traverses it. So the predicate *"any request the enforcement point cannot attribute to a
+  > declared operation"* — decidable, and worth having — **is not a substitute for this inspection**,
+  > because the requests this inspection exists to prevent are invisible to the enforcement point by
+  > construction. It is already carried by FR-015 and FR-018 for the traffic it does cover. Adopting
+  > it here would have replaced an undecidable rule with a decidable rule about something else.
+  >
+  > **Why an inspection can be decidable when the underlying question is not.** It is decidable
+  > because its output space includes `uninspectable`. Each step asks something the analyser either
+  > answers or declines, and declining is a determinate answer with a defined consequence. This is
+  > the same shape as FR-024's refusal and FR-025's not-verifiable state, and it is the shape
+  > [`.cursor/skills/agent-safety-and-sandboxing/SKILL.md`](../../.cursor/skills/agent-safety-and-sandboxing/SKILL.md)
+  > describes as classifying at the interception point rather than trusting a classification made
+  > upstream of it.
+  >
+  > **FR-020 and FR-051 disagreed about the unit of failing closed, and the disagreement is now
+  > resolved rather than papered over.** FR-020 says *"a **target** whose operations cannot be
+  > inspected MUST fail closed"*; FR-051 says *"MUST fail closed on any **operation** it cannot
+  > inspect"*. **The unit is the operation.** FR-020's target-level sentence is the degenerate case of
+  > the same rule: where the analysis precondition itself fails, step 1 returns `uninspectable` for
+  > every operation, every operation is denied, and the target has no callable operation left — which
+  > FR-044's admission check already refuses rather than admitting a target that serves nothing. No
+  > separate target-level threshold is needed and none is invented here.
+  >
+  > **What this does not do.** It does not measure anything. **U-44** records that the property is
+  > unmeasured on any target, FR-020 is a default rather than a finding, and naming a procedure for
+  > an unmeasured property does not measure it. It also inherits
+  > [`research/08`](../../research/08-auth-identity-and-secrets.md) §3.1's structural warning from the
+  > other direction: authorization lives *above* the layer an analyser decomposes, so step 3 finding a
+  > destination "fixed at build time" says nothing about whether the operation should have been
+  > callable by this caller at all. That is a different problem, and v1 does not solve it.
 - **FR-021**: The runtime MUST ship with its dependencies already resolved and MUST NOT resolve
   dependencies at run time.
 
@@ -733,6 +1031,208 @@ question.
   refuse rather than fall back to a default tolerance, and MUST name the reason for the refusal.
   This requirement is unchanged by the clarification at FR-025: it is what *creates* the not-verifiable
   state, and FR-025 settles only what the caller then sees.
+
+  **Where precision is stated, pinned 2026-08-03.** A precision is **stated** when it is attributable
+  to a **named source artifact**, and the admissible sources MUST be fixed by an **ordered precision
+  ladder** with all four of the following properties:
+
+  1. It MUST be **committed before any derivation is written against it**, and MUST be versioned
+     configuration under FR-012 — reviewable by the operator before it takes effect, and outside the
+     agent's write path.
+  2. **Every rung MUST name a source of precision and no rung may name a numeric value.** A ladder
+     containing a numeric constant is a default tolerance with extra steps, which is the thing this
+     requirement exists to forbid.
+  3. **Its last rung MUST be refusal.** There is no rung below the last.
+  4. Its admissible sources are exactly the artifact classes FR-023 permits — signatures, return
+     types, preconditions, postconditions, invariants, exception classes, existing tests, observable
+     state — **together with the target's published specification** (FR-002), which is the independent
+     artifact FR-023's derived checks are validated against. **A precision a model proposes is not a
+     source**, at any rung, under any provenance.
+  5. **A precision declared in the caller's own request is admissible only where ~~it tightens, and
+     the ladder MUST evaluate it as a ratchet rather than as a rung it falls to~~ no artifact source
+     supplies any precision for that quantity at all — that is, only where the ladder would otherwise
+     refuse.** Added 2026-08-03 by **OD-23** as a ratchet; **revised 2026-08-03 by OD-23** to the
+     narrower variant that decision recorded as available and not taken, after the ratchet was
+     verified inert against the census. The reasoning, the measured effect and what the variant costs
+     are in the note below.
+     - **The admissibility test, stated explicitly.** For the quantity under check, the verifier MUST
+       first determine whether **any** source among property 4's artifact classes supplies a
+       precision for it. A caller-declared precision is admissible **only if none does**.
+     - **Where any artifact source supplies a precision, the declaration MUST be ignored** — whether
+       it is tighter, equal or looser — and the ladder MUST proceed exactly as if the declaration were
+       absent, taking the artifact-derived rung it would have taken anyway. The declaration MUST NOT
+       displace, relax or override an artifact-derived comparison under any circumstance. **A
+       caller-declared precision may never be the reason a quantity is checked less strictly than an
+       artifact source permits.**
+     - **Where no artifact source supplies one, the declaration is admissible**, and the verifier MUST
+       record the declaration and its source text as the precision's provenance. This is the only
+       circumstance in which a declaration converts what would otherwise be a refusal into a checked
+       quantity, and the resulting state is **provisional** and never plain verified.
+     - **Where it is admitted it MUST still be marked provisional** under property 6. The
+       admissibility test governs *where* the declaration may act; it does not change its
+       *provenance*, and under this variant the field is by construction one for which no independent
+       artifact exists — so property 6 is not a formality here, it is the only disposition
+       constitution Principle I leaves available.
+     - **An ignored declaration MUST be disclosed on the result, not silently dropped.** Where a
+       declaration was present and an artifact source displaced it, the quantity is **checked at the
+       artifact rung** — it does not refuse — and the result MUST record that a declaration was
+       present and was not used. Under this variant a declaration can no longer be the *cause* of a
+       refusal, which is the substantive difference from the superseded ratchet: a quantity refuses
+       only where no artifact source and no usable declaration exists, and that refusal is governed by
+       the closing sentence of this requirement, which already requires the silent sources be named.
+  6. **A verification whose precision came from the caller's request MUST be marked provisional** on
+     its own provenance, under the same rule D-17 and constitution Principle I apply to every derived
+     field.
+
+  When a quantity's applicable rung is the refusal rung, the verifier MUST refuse and MUST name
+  **which sources were consulted and found silent**, not merely that it refused.
+
+  > **Property 5 added 2026-08-03 — `OD-23`, and the owner's premise was confirmed while the
+  > decision's cost estimate was not. Both are recorded here because the second one is a live cost
+  > and not a quibble.**
+  >
+  > **⚠️ Property 5 revised 2026-08-03, later the same day, by the same decision — `OD-23`. Read the
+  > whole of this note as the record of how the requirement got to where it is; the *rule in force* is
+  > the property above and nothing in this note overrides it.** The ratchet was verified inert against
+  > the census — the reasoning is three paragraphs down and it is the decision's own — and the owner
+  > took the narrower variant this note recorded as available and not taken. **The two tests are
+  > complementary and only one has a non-empty domain**: the ratchet needs a non-request comparand to
+  > compare against, the rung is only ever reached where none exists, so the ratchet could never fire.
+  > **Where a comparand does exist the variant is the stricter of the two** — the ratchet would admit
+  > a declaration that tightened it, the variant ignores the declaration outright — so nothing the
+  > ratchet protected was relaxed to make room for this.
+  >
+  > **What the decision fixes.** The request rung was request-derived on a product sold on
+  > contract-derived verification, and — as written before this property — it let a caller weaken
+  > their own verification by asking for fewer decimal places. ~~Requiring it to tighten removes that
+  > vector completely, and removes it structurally rather than by review.~~ **The variant removes that
+  > vector by domain restriction rather than by direction test**: where an artifact source supplies a
+  > precision the declaration is ignored outright, and where none does there is no check to weaken
+  > because the alternative is refusal, which checks nothing. The vector is absent **by construction**
+  > rather than by comparison, which is why the ratchet was replaced rather than relaxed.
+  >
+  > **The premise checks out.** The claim that the request rung was the sole catcher of the three
+  > sub-one-percent near-misses is **confirmed** against the harness that built the ladder.
+  > [Finding 015](../001-discovery-validation/findings/015-verifier-vs-judge-not-run.md) records that
+  > all three are **one submission** — `3.23` against a recomputed mean of `3.201754`, a relative
+  > error of 0.882%, answered by the same arm at three battery versions — and that its projection is
+  > the **sole** entry on the request rung, checked at the two decimal places the request text asked
+  > for. The harness's own `derivation-rules.md` says the near-misses are caught "by exactness, not by
+  > a tolerance"; **that sentence is true of the ladder in general and false of these three**, and it
+  > was narrowed on 2026-08-03 in the harness README and in finding 015 for exactly that reason. A
+  > mean is not a count.
+  >
+  > **The cost estimate does not, and this is the finding the revision acts on.** ⚠️ **On the one
+  > census available, the ratchet did not preserve that catch — it lost it.** Two facts
+  > combine. **The ladder takes the first rung it reaches**, so the request rung is *only ever*
+  > reached when no artifact source applies — which means the comparand the ratchet asks for is empty
+  > in precisely the case the ratchet can fire. And the one declaration ever measured was
+  > **looser** than the alternative it would be compared against: two decimal places admits `3.20`
+  > against a true `3.201754`, where exact comparison rejects it. So the declaration does not tighten,
+  > it is ignored, and the quantity refuses. ~~**The census moves from seventeen refusals of 61 to
+  > eighteen, and the three near-miss records go with it** — from detected to not verifiable.~~
+  > **Superseded by the revision.** Under the variant the declaration is admissible — its stored
+  > derivation records that no artifact source supplies a precision for that quantity — so it does not
+  > move, **the census stands at its as-measured 17 refusals of 61**, and the three near-miss records
+  > stay **detected**. The figure is counted from the harness's own rung assignments in
+  > `c2_derivations.json` rather than carried from prose.
+  >
+  > **What that does and does not mean.** It is not a detection *failure*: a refused quantity is
+  > returned not verifiable under FR-025 with a named reason, which is the honest state and is the
+  > whole reason the last rung is a refusal. It is a real loss of *discriminative* capability, and it
+  > is the numeric half of the surviving discriminative set that
+  > [finding 015](../001-discovery-validation/findings/015-verifier-vs-judge-not-run.md) says a strict
+  > reader would lose. **The corpus already anticipated this outcome and named it**: that finding's
+  > Amendment B2.2 invited a strict reader to discount the request rung, and ~~property 5 is the
+  > product accepting the invitation~~ **the ratchet was the product accepting the invitation; the
+  > variant declines it, and keeps the numeric half of the discriminative set on the record as
+  > provisional rather than losing it**.
+  >
+  > **~~One narrower alternative exists and is recorded rather than taken, because taking it is an
+  > owner act.~~ The narrower alternative recorded here has been taken — 2026-08-03, and it is now
+  > property 5.** Admitting a declaration where no artifact source supplies *any* precision — on the
+  > ground that there is no check there to weaken, only a refusal to convert — keeps the catch
+  > and is stricter than the ratchet everywhere a comparand exists. ~~It is not taken here because it
+  > is exactly the residual vector OD-23 names: converting a refusal into a caller-chosen verified
+  > state is what FR-025 forbids in substance, and the census's single instance would be the whole of
+  > the evidence for permitting it.~~ **The residual vector is real and is not waved away.** A caller
+  > does obtain an affirmative, at a precision they chose, for a quantity no artifact source can pin,
+  > where the ratchet would have refused. Three things bound it. FR-025 forbids **substituting a
+  > default tolerance to manufacture a verified state**, and a declaration attributable to a named
+  > source is not a default tolerance — property 2 already forbids the ladder holding a numeric
+  > constant, and that is untouched. The state produced is **provisional**, never plain verified, so
+  > no consumer may read it as contract-derived. And the comparison it displaces is a **refusal**,
+  > which checks nothing, so the affirmative cannot be less discriminating than what it replaced.
+  > What is genuinely given up is the *honesty of the non-answer*: a `not verifiable` becomes an
+  > affirmative that can be wrong, and property 6's marking is what carries that.
+  >
+  > **Why property 6's marking is kept, and why the variant makes it matter more rather than less.**
+  > The two govern different failures. Property 5 governs *where the declaration may act*. Marking
+  > governs *provenance*, and an admitted precision is still supplied by the party being verified —
+  > constitution Principle I at v1.1.0 requires a derived field validated against an artifact its
+  > own derivation did not produce, or marked provisional with provenance and confidence. Under the
+  > variant, *no independent artifact exists* is the **premise of admissibility itself**, so marking is
+  > not one of two available dispositions here — it is the only one. ~~The residual failure is also
+  > real and points the other way from the one property 5 closes: a declaration **tighter** than the
+  > quantity genuinely supports produces a **false alarm**, not a missed fault, and SC-005 scores a
+  > false-alarm rate of no worse than 1%.~~ **That sentence was sound for the ratchet and is struck
+  > because it is not sound for the variant.** The ratchet admitted only tightenings, so over-tightness
+  > was its only residual. The variant admits a declaration **whatever its direction**, so a second
+  > residual appears: a declaration **looser** than the quantity genuinely supports lets a fault
+  > smaller than the declared granularity pass as verified — a **missed fault**, not a false alarm.
+  > It is not hypothetical; the one declaration ever measured was the loose kind and caught its
+  > near-miss only because `3.23` and `3.20` differ at two decimal places. **Both directions are
+  > scored by SC-005**, which the variant returns to a testable state by putting the admitted quantity
+  > back into the denominator: a missed fault counts against the **95%** detection rate, a false alarm
+  > against the **1%** false-alarm rate, and while the quantity refuses neither is scored at all.
+  > Retiring the marking would leave that unattributable, and would be the "a safeguard that can no
+  > longer fire reads exactly like one that has been satisfied" failure this corpus has recorded
+  > before — a failure **the ratchet had itself become an instance of**, its admissibility set being
+  > empty by construction.
+
+  > **Pinned 2026-08-03 against the one instance of this mechanism that was ever built and measured,
+  > rather than against a plausible reading. The reason it is a ladder and not a place is a
+  > measurement, and it is the opposite of the obvious answer.**
+  >
+  > The obvious pin is *"precision is stated in the target's published specification"*. **On the only
+  > target this was ever run against, that source was empty**:
+  > [finding 015](../001-discovery-validation/findings/015-verifier-vs-judge-not-run.md) records that
+  > the target declared **no numeric precision anywhere** — no `multipleOf`, no numeric `format`,
+  > across **243** component schemas — so the instruction to compare *"at the schema's declared
+  > precision"* had no referent and was amended. Pinning to the published specification would have
+  > pinned this requirement to a source measured to be silent, and every quantity would refuse.
+  >
+  > **What was built instead is the ladder, and it is prior art in this corpus rather than a design
+  > proposed here**: a **six-rung** ladder committed in the harness's `derivation-rules.md` before any
+  > derivation was written, re-inspected for finding 015 and confirmed to contain **no numeric
+  > constant**. Its census over 61 requests — **28** integer-closed exactness, **9** text or set
+  > identity, **6** the application's own serialisation, **1** a precision the request declared, and
+  > **17** refused — is what the four properties above generalise. Property 2 and property 3 are not
+  > stylistic: together they are why *no tolerance was chosen, and so none could be fitted to the
+  > corpus*, which is the whole reason the mechanism's detection figures mean anything.
+  >
+  > **What this does to SC-005, stated because SC-005's figures are scored against whatever this
+  > resolves to.** A ladder whose last rung is refusal partitions any corpus into quantities it can
+  > check and quantities it refuses, and **a fault injected into a refused quantity cannot be
+  > detected — only refused**. The refusal share is therefore a property of the corpus and the target
+  > jointly, and in the one census available it was **17 of 61**, which is far too large to leave
+  > implicit in a detection rate. SC-005's denominator is stated at SC-005 accordingly; the
+  > percentages there are unchanged.
+  >
+  > **Updated 2026-08-03 for property 5 (`OD-23`), then updated again the same day for its revision.**
+  > The census above is a measurement and stands as taken. ~~What changed is the ladder it was taken
+  > from: the request rung is now a ratchet, its one measured entry does not tighten, and **the ladder
+  > as now specified would refuse eighteen of those 61 rather than 17**. The refusal share therefore
+  > rises, which is the intended shape of the decision and not a surprise —~~ **Under the ratchet the
+  > single request-declared entry moved to refusal and the count rose. Under the revised property 5 it
+  > does not move: that entry's own stored derivation records rung P1 empty on this target and the
+  > application's serialisation inapplicable, so no artifact source supplies a precision for it, which
+  > is exactly the variant's admissibility condition. The ladder as now specified refuses 17 of those
+  > 61 — the as-measured figure, and the ladder and the census agree again.** Counted from the rung
+  > assignments in `harness/verifier-vs-judge/c2_derivations.json`, not carried from prose.
+  > SC-005's denominator *rule* is unchanged throughout, because it was already
+  > written as "quantities the ladder does not refuse" rather than as a number. The figure that must
+  > move with it is the one SC-005 requires be **reported beside** the rates.
 - **FR-025**: Every reported result MUST carry exactly one of three states — verified, failed
   verification, or not verifiable — and the state MUST be visible to the caller. A result the verifier
   could not verify MUST be **returned to the caller carrying the not-verifiable state, together with
@@ -795,7 +1295,9 @@ question.
   > that case as a specialization rather than an exception: below FR-047's staleness ceiling there is
   > no affected operation to disable and the set is marked stale instead; at the ceiling every
   > operation is affected and this requirement applies to all of them, unchanged. What shrinks is
-  > what may be inferred from the disable-the-affected-operation clause, not its truth.
+  > what may be inferred from the disable-the-affected-operation clause, not its truth. **The
+  > authorising decision is OD-21** *(citation added 2026-08-03 when OD-21 was recorded; the narrowing
+  > itself is unchanged)*.
 - **FR-031**: Every drift signal MUST state which of the two clocks moved, the artifact versions
   before and after, and the deployment identity it applies to.
 
@@ -803,7 +1305,9 @@ question.
   > re-fetch* under FR-047 there is no "after" artifact version to state, because no artifact was
   > obtained. In that one case the after term is the specification state found, named from FR-044's
   > four-state classification, together with the timestamp of the last successful fetch. Every other
-  > term of this requirement is unchanged, and no other drift signal is affected.
+  > term of this requirement is unchanged, and no other drift signal is affected. **The authorising
+  > decision is OD-21** *(citation added 2026-08-03 when OD-21 was recorded; the narrowing itself is
+  > unchanged)*.
 - **FR-047**: A target admitted under FR-002 whose published specification later becomes absent,
   unreadable or empty MUST have that condition detected by the same check as FR-046, MUST have it
   reported as deployment-clock drift under FR-031, and MUST NOT have it read as a deployment that
@@ -855,6 +1359,14 @@ question.
   belief and becomes an unfounded one, every operation *is* affected, and FR-030 applies unchanged
   to all of them. FR-030 is marked accordingly.
 
+  **The authorising decision is OD-21**, recorded 2026-08-03 in
+  [`plan.md`](../001-discovery-validation/plan.md) — retroactively, and later than its three siblings
+  OD-18, OD-19 and OD-20, because recording it was an owner act rather than part of the propagation
+  that wrote those three. *(Citation added when OD-21 was recorded. This requirement's text is
+  unchanged: what it lacked was a decision to point at, not a decision.)* OD-21 also authorises the
+  narrowings this requirement makes at **FR-001**, **FR-030** and **FR-031**, and **SC-021** measures
+  it.
+
 **Deployment, credentials and providers**
 
 - **FR-032**: Every component — analysis, the enforcement point, the runtime and the credentials —
@@ -878,10 +1390,105 @@ question.
 
 **Observability**
 
-- **FR-038**: From the first shipped capability, every session MUST produce one trace record per
+- **FR-038**: ~~From the first shipped capability, every session MUST produce one trace record per
   executed node carrying a versioned node identity, a typed terminal, the routing decision together
   with the inputs its predicate saw, precondition and postcondition results, an explicit distinction
-  between a retry and a repair, and per-node cost.
+  between a retry and a repair, and per-node cost.~~ **Rewritten 2026-08-03 against a v1 subject —
+  rewritten, not narrowed and not extended. Six of the struck text's terms named a graph v1 does not
+  emit, and the note below records which, what replaced each, and the one part of this that is a
+  constitutional question rather than a specification one.**
+
+  From the first shipped capability, every session MUST produce **one trace record per span**. A
+  **span** is one of a **declared closed set of kinds** — a model call, a tool call, an egress
+  decision, a filesystem decision, a state transition, a verification, or a drift check — and a span
+  of an undeclared kind MUST NOT be written. Every span MUST carry:
+
+  - **its kind**, drawn from that set, and **its position in the session** — which session, which
+    turn, and where within that turn — sufficient to order every span in a session totally, without
+    reference to a clock;
+  - **the versions of every artifact in force when the span ran**, drawn from FR-054's
+    content-addressed set, together with the tenant and deployment identity FR-035 requires. This is
+    the versioned identity available to a system that versions configuration rather than nodes, and
+    it is what makes an attribution reproducible after the configuration has moved;
+  - **a typed outcome** drawn from a declared set, and, for the span on which the session ends, the
+    session's named terminal state under FR-006. A generic error MUST NOT be a span outcome, for the
+    same reason FR-006 forbids it as a terminal state;
+  - **for every egress and filesystem decision, the decision together with the inputs the rule that
+    produced it matched on** — the resolved effect tier, the **rule identifier** (FR-011, FR-048),
+    and the method, path and served operation the rule matched or failed to match. This MUST be
+    recorded for **every** such decision and not only for denials, because a permit resolved by the
+    wrong rule is the case an attribution has to be able to find;
+  - **precondition and postcondition results** — FR-046's per-operation path-level reachability
+    precondition, and the verification state under FR-025 with FR-024's named reason where it refused;
+  - **an explicit distinction between a retry and a repair**; and
+  - **per-span cost**, and the running total against each of FR-005's four ceilings as at that span.
+
+  > **Why this was rewritten, what the v1 subject is, and the part that is not this document's to
+  > settle.** The struck text is constitution Principle VI's field list transcribed, and it was
+  > correct for the product the constitution describes — one that *emits* a multi-agent system.
+  > **OD-09 removed that product from v1**, and this specification records the consequence twice
+  > already: the Principle II deviation record states that *"v1 emits no agent system — it is one
+  > runtime with one agent"*, and [`data-model.md`](./data-model.md) §4 lists *a node, edge or
+  > topology entity* among what is deliberately absent. **Six terms of the struck text therefore had
+  > no v1 subject**: *executed node* as the record's unit, *versioned node identity*, *routing
+  > decision*, *the predicate whose inputs are recorded*, the *conditional edge* Principle VI attaches
+  > that predicate to, and *per-node cost*. Nothing in the specification named a substitute for any of
+  > them, which made the requirement unbuildable rather than merely loose.
+  >
+  > **The v1 subject is the span, and it was already the unit in the downstream contract rather than
+  > invented here** ([`contracts/trace-record.md`](./contracts/trace-record.md)). The substitutions,
+  > term by term: *node* → **span**, the finest unit v1 executes that has an outcome and a cost;
+  > *versioned node identity* → **the artifact versions in force**, because what varies between two
+  > runs of the same v1 code path is the configuration, not a node version; *routing decision on a
+  > conditional edge* → **the egress or filesystem decision with its rule identifier and matched
+  > inputs**, which is the only place v1 branches on a predicate over data, and which FR-011 already
+  > required for denials only; *per-node cost* → **per-span cost**. *Typed terminals*, *precondition
+  > and postcondition results* and the *retry-versus-repair distinction* had v1 subjects already and
+  > are carried through unchanged.
+  >
+  > ~~**What this does not do, stated because a substitution is easy to read as a discharge.** It does
+  > not decide whether Principle VI is *satisfied* by the substitution.~~ **CLOSED 2026-08-03 by the
+  > constitution amendment at v1.3.0 (OD-22). The paragraph below was accurate when written and the
+  > state it described has moved; it is struck rather than deleted because it is the reasoning the
+  > amendment acted on.** ~~**Principle VI's terms do
+  > presuppose a graph** — its field list opens *"Every emitted system MUST produce… one span per
+  > node"*, which has no v1 subject on the same scope argument that disposes of Principles II, III
+  > and VII, while its ship gate — *"a capability that cannot be attributed to a versioned node MUST
+  > NOT ship"* — carries no such scope and on a literal reading blocks every v1 capability. Principle
+  > VI nonetheless carries **no deviation record**. **That is a constitutional problem and not a
+  > specification one**, its remedies are owner acts, and it is set out clause by clause in the
+  > Dependencies mapping and carried in
+  > [`checklists/requirements.md`](./checklists/requirements.md) rather than decided here.~~
+  >
+  > **What replaced it, and the one thing this requirement now owes that it did not before.**
+  > Principle VI is restated over a **traced unit** whose kind is tier-relative; v1's declared unit
+  > is the span, and the closed seven-kind set above is what the amendment means by a *declared
+  > closed set of unit kinds*. Every term of this requirement maps onto an amended term rather than
+  > substituting for a graph-bound one, so the substitution note above is now a record of how the
+  > requirement was derived rather than a caveat on whether it counts. **The amendment adds one
+  > obligation this requirement already meets and one it must not lose:** unit identity and artifact
+  > version are now *two* obligations rather than the single phrase *"versioned node identity"*, and
+  > this requirement satisfies both only because it carries **kind and position** as well as **the
+  > versions in force**. Dropping either half would leave it compliant with the superseded wording
+  > and non-compliant with the current one.
+  >
+  > ⚠️ **One place where the amended principle now asks for more than this requirement enumerates,
+  > recorded here rather than resolved, because resolving it is a change to what gets built.** The
+  > superseded field list required *the routing decision with its predicate inputs* **for every
+  > conditional edge** — a graph term with a graph scope. The amendment generalises it to **every
+  > decision that selected among alternatives**, carrying the decision, the inputs its predicate
+  > matched on, and the identity of the rule or edge that produced it. That generalisation is what
+  > makes the clause unit-neutral, and it is also **wider than the fourth bullet above**, which
+  > enumerates **egress and filesystem decisions only**. The gap is the **`state_transition`** span
+  > kind: a transition that selected among possible next states is a decision among alternatives on
+  > the amended reading, and this requirement does not currently ask it to carry the predicate inputs
+  > or the identity of the rule that produced it. **Two honest readings exist and neither is picked
+  > here.** If v1's state machine is fully determined by the prior state and the typed outcome
+  > already recorded, then nothing selected among alternatives, the transition is derivable from
+  > fields already present, and there is no gap. If it consults anything else — a retry budget, a
+  > ceiling, a policy result — then the amended principle asks for those inputs and this requirement
+  > does not. **The narrower requirement does not license the narrower behaviour**: the constitution
+  > binds directly, so where the two differ, the principle governs.
 
 **Evidence obligations**
 
@@ -953,6 +1560,40 @@ question.
   the product's verification coverage is described, under FR-043. **The obligation to measure the
   share, rather than to assume it, is the second half of OD-19**; the first half is FR-025's
   disposition, and the decision pairs them deliberately.
+
+  **The reporting window, stated 2026-08-03. Its length is deferred to the owner exactly as the
+  threshold is; its surface is not deferred and is stated here.** This requirement measured a share
+  *"over each reporting window"* and defined neither term of that phrase. The two gaps had different
+  causes and get different answers.
+
+  - **Length — deferred, and deferred explicitly rather than by omission.** The reporting window
+    MUST be **required configuration** under FR-033. **This specification states no default value for
+    it**; an unset window MUST make startup fail loudly, naming what is missing, and MUST NOT be
+    treated as unbounded, as a single window covering all of time, or as a figure this specification
+    invented. This is the plan's **Q-10** treatment — the one FR-005's four ceilings and FR-049's
+    bounds take — and not FR-047's, because there is no evidence base to draw a default from and a
+    default nobody has checked would still be a number the product invents. The window MUST be a
+    fixed length so that consecutive reports are comparable; how it is aligned is an implementation
+    question this specification does not constrain, because nothing here depends on the alignment.
+  - **Surface — stated, because "reported" with no reader is not a measurement.** Each window's
+    report MUST be a **versioned, machine-readable artifact obtainable on demand**, carrying the
+    interval it covers, the deployment identity and tenant identity FR-035 requires, the total count
+    of reported results it is a share of, and the per-reason breakdown FR-024's named refusal reasons
+    supply. It MUST be obtainable **without re-running any session and without reading the trace
+    store directly**, so that it is available to an owner review rather than only to an operator with
+    query access. A report for a window that has not closed MUST be marked as covering a partial
+    interval; SC-019's *"first production reporting window"* means the first **closed** one.
+
+  > **Why the two halves are treated differently, recorded because "no window" and "no threshold"
+  > look like the same gap and are not.** The missing threshold is **deliberate and stated as such**
+  > in this requirement's own text: nothing in the evidence base estimates the share, so a threshold
+  > invented here would be the inherited-number failure this corpus catches elsewhere. **The missing
+  > window was nowhere stated as deliberate** — it was an unstated term inside a requirement that
+  > otherwise explains itself carefully, which is the signature of an oversight rather than a
+  > deferral. Making the deferral explicit is the correction; the length remains the owner's, and now
+  > says so. **One consequence to carry forward**: SC-019 cannot be evaluated until the owner sets the
+  > window, which is the same shape as SC-001's dependency on this requirement already recorded in
+  > Open Risks Carried, and it is a precondition rather than a defect.
 - **FR-053**: A language, a framework, or a target shape is **supported** only where a committed
   fixture and an asserted expected output for it exist. Anything else MUST be described as
   unsupported rather than as best-effort, and MUST NOT appear in any statement of what the product
@@ -1052,7 +1693,47 @@ question.
   state, asserted by an automated scan that runs on every session.
 - **SC-005**: On a corpus of injected value faults, including faults smaller than one percent of the
   correct value, the verifier detects at least **95%**, with a false-alarm rate no worse than **1%**
-  on a matched corpus of correct results.
+  on a matched corpus of correct results. **Denominator stated 2026-08-03 with FR-024; the two
+  percentages are unchanged.** Both rates are computed over **the faults injected into quantities the
+  precision ladder does not refuse**, and **the refusal share MUST be reported beside them** rather
+  than folded into either. A quantity that refuses is returned not verifiable under FR-025, so a
+  fault injected into one is neither detected nor missed, and scoring it either way would make this
+  criterion movable by changing the corpus's mix rather than the verifier. **A run that reports the
+  two rates without the refusal share does not satisfy this criterion**, because the reader cannot
+  tell what they are rates of. FR-045 and SC-019 measure the same share in production, which is where
+  it stops being a property of a chosen corpus.
+
+  > **Refusal-share reporting narrowed 2026-08-03 by `OD-23`. The denominator rule is unchanged; what
+  > changed is that this criterion acquired a way to pass without testing the case it was written
+  > for.** ~~FR-024's property 5 makes the request rung a ratchet, and on the one census available that
+  > moves its single entry to refusal.~~ **The hazard was surfaced by property 5 in its ratchet form,
+  > which moved the corpus's one sub-one-percent entry into the refusal set; property 5 was revised
+  > the same day and that entry is admitted again, so the instance is gone. The requirement below
+  > stays, because it was written against the hazard and not against the instance — see the note at
+  > the end of this box.** That entry is the **only measured sub-one-percent catch in the
+  > corpus** — the 0.882% near-miss in
+  > [finding 015](../001-discovery-validation/findings/015-verifier-vs-judge-not-run.md). Follow the
+  > denominator rule through: a refused quantity leaves **both** the numerator and the denominator, so
+  > if the sub-one-percent faults are concentrated in quantities the ladder refuses, **the first
+  > sentence of this criterion becomes vacuous while the criterion still reports 95%**. The corpus
+  > would contain sub-one-percent faults, as required, and none of them would be scored.
+  >
+  > **So the refusal share MUST be reported broken out for the sub-one-percent stratum**, not only in
+  > aggregate. A run reporting a single pooled refusal share does not satisfy this criterion. This is
+  > the same failure shape the pooled share was introduced to prevent, one level down: an aggregate
+  > that looks healthy because the hard stratum was refused out of it rather than passed. The
+  > percentages are still unchanged; what is added is a second place the share must be cut.
+  >
+  > **Confirmed intact 2026-08-03 against property 5's revision, and the wording needs no change.**
+  > The revision restores the corpus's one sub-one-percent quantity to the scored set, which removes
+  > the *known instance* of the vacuity hazard and removes none of the hazard. Any corpus whose
+  > sub-one-percent faults happen to fall in quantities the ladder refuses — for any reason, this
+  > decision included or not — reports a healthy aggregate over a stratum it never tested. The
+  > requirement is written against that structure and never named the instance, so it survives
+  > unaltered. Retiring it now because the one known instance has been repaired would be the
+  > "a safeguard that can no longer fire reads exactly like one that has been satisfied" error, and it
+  > is a live risk here precisely because the stratum currently has exactly one member: a corpus in
+  > which that member is refused for some unrelated reason is one quantity away.
 - **SC-006**: A verifier restricted to shape and type conformance detects **none** of the value faults
   in SC-005's corpus, demonstrating that the shipped verifier's detection comes from independent
   recomputation rather than from conformance checking.
@@ -1074,8 +1755,17 @@ question.
   > exercises **one** crash-and-resume rather than repeated ones, and it says nothing about an unset
   > ceiling. SC-030 supplies all three, so the shape this one measured was never wrong — it was
   > partial, and partial coverage of a spend ceiling reads exactly like complete coverage in a review.
-- **SC-012**: For **100%** of sessions, a failure can be attributed from the trace alone to a versioned
-  node, a typed terminal, and the routing decision that reached it, without re-running the session.
+- **SC-012**: ~~For **100%** of sessions, a failure can be attributed from the trace alone to a versioned
+  node, a typed terminal, and the routing decision that reached it, without re-running the session.~~
+  **Rewritten 2026-08-03 with FR-038 and against the same v1 subject; see the note there. The
+  percentages are unchanged — what changed is what they are percentages *of*.** For **100%** of
+  sessions ending in a failure terminal state, the failure can be attributed from the trace alone,
+  without re-running the session, to **the span on which it occurred** — identified by kind and by
+  position in the session — to **that span's typed outcome** and the session's named terminal state,
+  and, where the failure was a denial, to **the rule identifier that produced it**. For **100%** of
+  spans, the artifact versions in force and the per-span cost are present. A trace in which a failed
+  session's attribution requires reading a second artifact, or requires a human to infer which span
+  failed from ordering, does not count toward either figure.
 - **SC-013**: Within 30 days of first production traffic, the verifier's marginal detection over the
   shadow judge is reported with the pre-registered gate applied and all three branches evaluated.
 - **SC-014**: No write capability is released until the effect gate's read-only precision has been
@@ -1096,7 +1786,14 @@ question.
   and **zero** are admitted on a specification that fetched successfully but carried no operations.
 - **SC-019**: The share of reported results returned in the not-verifiable state is reported, broken
   down by refusal reason, for the first production reporting window — with no threshold applied,
-  because none is pre-registered.
+  because none is pre-registered. **Window and surface stated 2026-08-03 with FR-045; the criterion
+  is unchanged and is now evaluable.** "The first production reporting window" means **the first
+  window to close** after first production traffic, at the configured length FR-045 requires as
+  configuration; the criterion is **not evaluable until that length is set**, and an unset length
+  fails startup rather than producing an unbounded window. The report satisfying this criterion is
+  FR-045's machine-readable artifact, and it MUST state the interval it covers and the total it is a
+  share of — a bare percentage does not satisfy this criterion, because with no threshold applied the
+  denominator is the only thing that makes the figure readable.
 - **SC-020**: On the synthetic deployment-drift corpus, **100%** of withdrawn operations are detected
   within the configured detection window under the default automated trigger and with no event
   supplied by a deployment pipeline, and **100%** are detected on demand under manual invocation.
@@ -1105,7 +1802,8 @@ question.
   machine-readable stale marking with the set's age; **zero** calls are served after the configured
   staleness ceiling elapses; **zero** sessions end in a generic error at the ceiling; and **100%**
   of the operations that differ between the last-known-good set and the restored set are reported as
-  drift rather than adopted silently.
+  drift rather than adopted silently. *(Authorised by **OD-21**; citation added 2026-08-03 when
+  OD-21 was recorded, criterion unchanged.)*
 - **SC-022**: Across an adversarial battery run from inside the agent's execution environment, **zero**
   reads and **zero** writes succeed outside the declared set of filesystem locations — including
   attempts against the effect-gate rule set, against the egress policy, and against another session's
@@ -1241,13 +1939,15 @@ above depends on each of them.
 | **OD-18** *(recorded retroactively 2026-08-03)* | A published machine-readable specification, at operation granularity, is an **admission criterion**. A target without one is declined at admission with a stated reason and is not served by a schema-free method-level path. Authorises **FR-002** and **FR-044**. **This is not inherited scope — it is this document's own clarify-session decision, listed here because a requirement above depends on it and nothing recorded it until now** |
 | **OD-19** *(recorded retroactively 2026-08-03)* | A result v1 cannot verify is returned with its unverifiability marked, not withheld, and the share returned in that state is measured with no threshold pre-registered. Authorises **FR-025** and **FR-045**. Also this document's own decision rather than inherited |
 | **OD-20** *(recorded retroactively 2026-08-03)* | A drift check is both manually invokable and automatically triggerable, with at least one automated trigger configurable rather than imposed. Authorises **FR-029** and **FR-046**. Also this document's own decision rather than inherited |
+| **OD-21** *(recorded retroactively 2026-08-03, after OD-18 through OD-20)* | An admitted target that stops publishing the specification which admitted it is served from the **last-known-good set, marked stale**, and denied past a configured staleness ceiling measured from the last successful fetch. Authorises **FR-047** and the narrowings it makes at **FR-001**, **FR-030** and **FR-031**; measured by **SC-021**. The fourth answer of the same clarify session, and also this document's own decision rather than inherited |
 | **D-01** | Calls reach the target over its existing external interface, never in process |
 | **D-07** | Two physically separate credential planes; no secret in model context |
 | **D-17** | Provenance, independent validation, provisional marking and deployment identity on every derived field |
 
 ## Dependencies
 
-- **The constitution at v1.2.0** ([`.specify/memory/constitution.md`](../../.specify/memory/constitution.md)).
+- **The constitution at ~~v1.2.0~~ v1.3.0** ([`.specify/memory/constitution.md`](../../.specify/memory/constitution.md))
+  *(amended 2026-08-03 by **OD-22**, Principle VI — see the disposition below)*.
   Principle I governs FR-022 through FR-026, Principle IV governs FR-008 through FR-021, Principle V
   governs FR-037, and Principle VI governs FR-038. **Extended 2026-08-03 — the four requirements the
   clarification session added had no principle mapping, which would have reached the plan phase as a
@@ -1273,11 +1973,73 @@ above depends on each of them.
   worth stating rather than rounding off.** Principle IV bullet 1 governs FR-005's **wall-clock** term
   — it requires a sandbox *"CPU/memory/wall-time capped"*, and FR-049 supplies the first two — but
   **no principle in the constitution names spend, token consumption or turns**. Principle VI requires
-  per-node cost to be *observable* and Principle I lists cost among a node contract's fields; neither
+  ~~per-node cost~~ **per-unit cost** *(unit-neutral since v1.3.0, OD-22)* to be *observable* and Principle I lists cost among a node contract's fields; neither
   requires a ceiling, and observability is not enforcement. FR-005's other three dimensions therefore
   rest on this specification and on `research/14-architecture-synthesis.md` **U-30**, not on a
   principle. That is recorded here rather than closed: whether the constitution should carry a spend
-  bound is an amendment question and an owner act.
+  bound is an amendment question and an owner act. **Extended once more 2026-08-03 for FR-056 and
+  FR-057**, added the same day and mapped when added rather than in a later sweep, because the
+  previous four extensions on this line all exist because a requirement arrived unmapped.
+  **Principle IV governs FR-056** — it is the procedure behind the inspection obligation the
+  principle attaches at FR-051, and mapping it anywhere else would separate a rule from the
+  obligation it discharges. **Principle I governs FR-057**, and only through one clause: the
+  provenance and provisional-marking rule that D-17 restates. FR-057 requires a *declaration* to be
+  carried and presented as a declaration, which is that clause applied to the one input v1 cannot
+  validate. **No principle governs FR-057's fail-loudly-when-unset clause**; that rests on this
+  specification and on the plan's **Q-10**, exactly as FR-005's three unprincipled dimensions do.
+
+  **~~Principle VI's terms do presuppose a graph~~ — RESOLVED 2026-08-03 by the constitution
+  amendment at v1.3.0 (OD-22). They did, and they no longer do. The clause-by-clause reading below is
+  kept unedited because it is what the amendment was drafted against; read it as the diagnosis and
+  the paragraph after it as the disposition.** The answer was more specific than "they presuppose a
+  graph", and the
+  specific version is what the plan phase needed. Recorded 2026-08-03 when FR-038 was rewritten, from
+  the principle's text rather than from its summary. Principle VI **had two clauses with different
+  scopes, and only one of them was graph-bound**:
+
+  - **The field list is scoped to emitted systems and therefore has no v1 subject at all.** Its
+    sentence opens *"Every **emitted system** MUST produce, from day one: one span per node…"*, and
+    v1 emits no system — the Principle II disposition below says so in terms, and
+    [`data-model.md`](./data-model.md) §4 lists *a node, edge or topology entity* among what is
+    deliberately absent. This is **the same scope argument that disposes of Principles II, III and
+    VII's generator clause**, reached independently and landing in the same place. Four of the
+    clause's terms are graph-bound — *versioned node identity*, *the routing decision with its
+    predicate inputs* **for every conditional edge**, *per-node cost*, and the per-node unit itself —
+    and its rationale groups traces by `(terminal_type, failing_node, incoming_edge)`, two-thirds of
+    which v1 has no value for. Worth recording as evidence for the substitution rather than against
+    it: **the clause's own unit word is already "span"** — *"one span per node"* — so FR-038 keeping
+    the span and dropping the node is the narrower of the two available readings.
+  - **The ship gate is not scoped, and it is the one that bites.** *"A capability that cannot be
+    attributed to a versioned node MUST NOT ship"* carries no "emitted system" qualifier, so on a
+    literal reading **no v1 capability may ship**, because v1 has no nodes to attribute anything to.
+    A deviation record scoped to the field list would leave this sentence untouched.
+
+  ~~**This specification cannot close either half**, and it should not~~ — **and it did not: the
+  owner did, on 2026-08-03, and the instrument was the second of the two remedies named below.**
+  ~~Principle VI is mapped above as
+  governing FR-038 and, unlike Principles II, III and VII, carries **no deviation record**, so nothing
+  in this corpus authorises reading its terms as other than literal.~~ The remedies — a v1-scoped
+  deviation record in the table below covering *both* clauses, or an amendment restating identity and
+  cost in unit-neutral terms so the principle binds a loop as well as a graph — are owner acts under
+  the constitution's governance section. The choice was not cosmetic: an **amendment** binds v2's
+  emitted graphs to the unit-neutral wording as well, whereas a **deviation record** leaves the graph
+  wording in force the moment v2 emits a topology.
+
+  **The disposition, recorded 2026-08-03 — `OD-22`, constitution v1.3.0, and Principle VI takes no
+  deviation record.** Both clauses are amended rather than exempted. The field list is restated over
+  a **traced unit** whose kind the shipping tier declares — the node for an emitted agent system, the
+  span for a runtime executing a loop — and the ship gate binds attributability to that tier's own
+  declared unit at the artifact versions in force, so the obligation survives intact while the unit
+  stops being graph-specific. **Three obligations arrive with it**, and they are the reason
+  unit-relativity is not an escape hatch: the unit set must be **closed and declared**, the tier must
+  trace at **the finest unit it executes that has an outcome and a cost** so a coarser declaration is
+  non-compliant, and **unit identity and artifact version are two terms rather than the single phrase
+  *versioned node identity***. FR-038 satisfies all three — the closed seven-kind span set, the span
+  as v1's finest costed unit, and kind-and-position carried alongside the versions in force — and
+  **SC-012** is the measurement of the ship gate. The reason the second remedy was taken rather than
+  the first is recorded at OD-22 and is worth repeating here: a deviation record cannot fix an
+  unscoped `MUST NOT`, because a record scoped to v1 leaves the sentence standing for every tier it
+  does not name.
 
   **Dispositions for the four principles this specification does not otherwise map.** Each is a
   deviation record in the form the plan's Constitution Check needs: what does not apply, to which
@@ -1302,7 +2064,7 @@ above depends on each of them.
   `/speckit-implement` for any feature that adds a permission tier, and this feature adds one
   (FR-008 through FR-012).
 - **Feature 001's record.** [`VERDICT.md`](../001-discovery-validation/VERDICT.md) for what was
-  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ **OD-17**, and
+  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ **OD-21**, and
   [`research/14-architecture-synthesis.md`](../../research/14-architecture-synthesis.md) for the
   decision, contradiction and uncertainty registers.
 - **A reference application** that is real, data-driven, seedable and publishes its operations, for
@@ -1358,6 +2120,22 @@ catching.
   data, untrusted content and an egress path that the original vision identified as present by
   construction. FR-014 through FR-021 cut the direct channel; they do not cut the target-as-deputy
   channel, which is **U-44**.
+- **The source reference is declared, never verified, and one class of wrong declaration is invisible
+  to every check in this specification. Added 2026-08-03 with FR-057.** Nothing in v1 establishes that
+  the declared repository and commit produced the running deployment, and **OD-06** is the reason
+  nothing does: analysis is kept rebuildable from the codebase alone, so no step reads a commit
+  identity out of a running instance. A **missing** source reference fails startup loudly (FR-057).
+  A **wrong** one splits, and only the narrow half is the risk. Pointing at the **wrong application**
+  is caught downstream, because derived contracts are independently validated against the
+  specification the deployment itself publishes (FR-002, SC-007) and would fail. Pointing at the
+  **right repository at the wrong commit** is caught by nothing: the published specification still
+  matches, both clocks agree with each other and disagree only with reality, and **every check in
+  this specification passes**, because each is internally consistent with the source it was handed.
+  The mitigation available in v1 is honesty about status rather than
+  detection, which is why FR-057 requires the reference to be carried and presented as a declaration
+  wherever a derived artifact shows it. What would close this is evidence read from the running
+  deployment, which is the stage boundary OD-06 drew, so closing it is a decision about that boundary
+  and not an implementation task.
 - **The human adjudication pass over the frozen oracle negatives was never performed.** A blind pass
   exists and states in its own text that a model performed it. No result resting on that corpus may
   be written up as resting on validated ground truth, and no amount of additional sampling changes

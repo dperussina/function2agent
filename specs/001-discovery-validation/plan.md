@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ **twenty** owner decisions
-(OD-01 through OD-20, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ **twenty-three** owner decisions
+(OD-01 through OD-23, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -26,7 +26,15 @@ specification's clarify session, applied to that document's requirement text on 
 recorded here at all.** They are retroactive records rather than new decisions, each says so in its own
 first line, and the phrase "were recorded during execution" in the sentence above is false of them —
 correctly, and it is left standing rather than softened, because three requirements resting on an
-unrecorded authority is the defect these entries close.)* **The last eleven
+unrecorded authority is the defect these entries close. **Extended a final time 2026-08-03 with
+OD-21**, the fourth answer of that same clarify session and the last one still unrecorded. It is
+separate from OD-18 through OD-20 because recording it required owner authority rather than a
+propagation pass — the note struck under OD-20 said exactly that on the day, and the owner
+subsequently gave it. **Extended once again 2026-08-03 with OD-22 and OD-23**, two owner answers to
+the two questions the production specification had left open at its Clarifications section. These two
+are additions and not corrections, they are contemporaneous records rather than retroactive ones, and
+**OD-22 is the third constitution amendment in this register**, joining OD-03 and OD-13.)*
+~~**The last twelve**~~ **The last fourteen
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -36,10 +44,16 @@ verifier's marginal value over an LLM judge UNMEASURED, unblocks the production 
 defers the measurement to production — a deliberate departure from this feature's prove-before-build
 discipline, recorded as such**, **OD-15 drops ADK for v1 and is a partial reversal of OD-01**,
 **OD-16 removes `litellm` from the shipped product on licensing grounds**, **OD-17 makes Linux
-the only supported platform**, and **OD-18, OD-19 and OD-20 record retroactively the three
-clarify-session decisions behind the production specification's FR-002/FR-044, FR-025/FR-045 and
-FR-029/FR-046 — OD-18 being the consequential one, an admission criterion that narrows what v1
-accepts.**
+the only supported platform**, and **OD-18, OD-19, OD-20 and OD-21 record retroactively the four
+clarify-session decisions behind the production specification's FR-002/FR-044, FR-025/FR-045,
+FR-029/FR-046 and FR-047 — OD-18 being the consequential one, an admission criterion that narrows
+what v1 accepts, and OD-21 being the one recorded last because recording it was an owner act rather
+than a propagation one**, **OD-22 amends Principle VI so the traced unit is tier-relative, taking
+`.specify/memory/constitution.md` to v1.3.0 and discharging a fourth deviation exposure at its source
+rather than by record**, and **OD-23 admits FR-024's request-declared precision rung ~~as a ratchet,
+only where it tightens~~ only where no artifact source supplies any precision — the one decision here
+that was ~~recorded as costing something it was expected to preserve~~ *taken, verified inert against
+the census, and revised the same day to the variant its own record named*.**
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -427,8 +441,11 @@ synthesis.
 
 **What it opened.** **U-39** — method-level reachability may be a schema-only capability, and the
 only schema-free alternative is the header D-18 forbids: a schema-free mechanism can be accurate,
-complete, or safe, and only two at once. **Blocking for any promise about emitting verb-bearing
-tools against a target that publishes no schema.** And **U-40** — Django's URL resolver carries no
+complete, or safe, and only two at once. ~~**Blocking for any promise about emitting verb-bearing
+tools against a target that publishes no schema.**~~ **Reclassified 2026-08-03 as v2-blocking by the
+owner annotation under OD-18 below — the sentence was true when written and is retained in its
+original tense; `research/14-architecture-synthesis.md` §5.1 is the authority for U-39's current
+status.** And **U-40** — Django's URL resolver carries no
 method information, so an undecorated view **executes** on a fabricated-verb probe; it was safe in
 the scored run only because static analysis could not recover its methods either, so it never entered
 the candidate set. **The probe's safety on that framework is a property of the extractor failing
@@ -657,7 +674,7 @@ bounded context, artifacts handed along edges — beat a single agent holding ev
 handoff between them. Same battery, same budget, decomposition axis as the only variable.
 
 **Gate.** Decomposition must win on task success rate **or** on cost. Research warns that multi-agent
-topologies can multiply token spend by roughly 15x, so a marginal accuracy gain purchased at that
+topologies can multiply token spend by roughly 15x ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)), so a marginal accuracy gain purchased at that
 price is a loss. **A tie means ship the single agent**, because it is dramatically simpler.
 
 ### E11 — Memory graph: does graph memory beat flat memory?
@@ -1168,6 +1185,58 @@ that foreclose it are all defaults someone reaches for when there is only one te
 **The iframe tier is deferred with the hosted model**, not shipped ahead of it. Untrusted end-user
 input reaching an agent that holds shell access and write tools is the lethal trifecta in full, and
 it is not the thing to build first.
+
+> ### Annotation — **U-05 is reclassified as hosted-tier-blocking. Owner decision, 2026-08-03.**
+>
+> **This is an annotation on OD-08 and not a new decision row, and the choice was verified against
+> the U-39 precedent rather than assumed.** The OD-15 through OD-21 precedent is to annotate an
+> existing entry rather than mint a decision row where nothing about the product changes, and
+> **U-39's reclassification earlier on 2026-08-03 is the first *executed* instance of that shape in
+> this corpus** — recorded as a dated annotation on **OD-18**, with the U-39 row annotated in place in
+> `research/14-architecture-synthesis.md` §5.1 rather than moved to §5.2, and with the §5.1 preamble
+> and the register's closing confidence note both corrected. That annotation was read in full before
+> this one was written, and all four of its site kinds are mirrored here. Nothing about the product
+> changes: OD-08 already decided the deployment model, and what is being decided now is which
+> register the consequence sits in.
+>
+> **What the U-39 annotation said about U-05, and why it no longer holds.** OD-18's annotation
+> recorded that *"U-05 has never actually been demoted; it is still in §5.1, still flagged,"* and that
+> *"U-05 is not reached by this decision."* Both were accurate on 2026-08-03 when written. This
+> annotation is what reaches it, later the same day, and the two are independent owner acts rather
+> than one act propagated twice.
+>
+> **The decision.** **U-05 stops blocking v1 and becomes hosted-tier-blocking.** It continues to block
+> the hosted deployment model that the second clause of this decision keeps reachable.
+>
+> **The reasoning, and each limb is load-bearing.** **① OD-08 discharged the limb that made U-05
+> block v1, and it discharged it by construction rather than by measurement.** U-05's *"why it
+> matters"* was that the answer *"determines whether BYO credentials can ever be anything better than
+> long-lived keys in our custody"* — and under self-hosting there is no custody of ours. The
+> credential lives in the customer's boundary, and a customer who already has a platform identity
+> federates to **their own** issuer, which is an ordinary documented GA configuration that asks
+> nothing of us. No v1 commitment depends on the undocumented case. **② The hosted-tier limb is
+> untouched, and it is a trust question rather than a technical one.** Whether a customer will
+> register *our* OIDC issuer — effectively trusting our token minting — is still undocumented as a
+> pattern, still unasked of any design partner, and still commercial (**O-02**). Nothing was measured
+> and no documentation changed. **③ The unanswered trust question stays attached to the decision it
+> would inform**, which is the decision to ship the hosted tier — deferred by this decision's own
+> first clause — rather than being discharged along with the v1 commitment. The entry changes owner;
+> it does not weaken.
+>
+> **One v1 obligation survives the reclassification and is not deferred with the tier**, because it is
+> a design constraint rather than a question: the credential broker MUST accept a short-lived
+> federated token *and* a long-lived key from its first version. The self-hosted customer with a
+> platform identity is the case that works today and the case that must keep working when the hosted
+> tier arrives, so relaxing it would be a foreclosure of the kind this decision's four disciplines
+> exist to prevent (D-20 discipline 2, D-07).
+>
+> **Propagated to** `research/14-architecture-synthesis.md` at the **U-05** row, at the §5.1 preamble
+> (which now records a second reclassified entry and names the two different successor gates), and at
+> the §5.1 confidence note, whose live v1-blocking list is corrected to **U-02, U-04, U-06 and
+> U-30** — the note's sentence *"U-05's own flag is untouched and still outstanding"* is superseded in
+> place rather than deleted. Also at that document's TL;DR item 15, at the **O-01** and **O-02** rows,
+> at the §2.9 adoption note, and at §6.5's *do not start these on Monday* list; and here at the *Open
+> items this plan does not resolve* section, where U-05's demotion flag was recorded as outstanding.
 
 ### OD-09 — The pre-registered pivot is honored: v1 is a runtime, not a generator
 
@@ -2028,12 +2097,20 @@ records *"Validation run 1 — 2026-08-03. One item failed: three `[NEEDS CLARIF
 FR-002, FR-025 and FR-029"* and then *"Validation run 2 — 2026-08-03, after `/speckit-clarify`. All
 three original markers are resolved"*; its marker table's fourth column is headed *"Resolved
 2026-08-03"*; and [`spec.md`](../002-spec-aware-agent-runtime/spec.md) carries `**Created**:
-2026-08-03` with its clarifications under a `Session 2026-08-03` heading. **No committed artifact
+2026-08-03` with its clarifications under a `Session 2026-08-03` heading. ~~**No committed artifact
 corroborates that date, because none of these files is committed** — the repository holds a single
 commit containing `.gitignore`, `LICENSE` and `README.md`, so no version-control timestamp exists for
 any document in `specs/` or `research/`. The date therefore rests on four in-repo dated statements
-that agree with each other, and on nothing stronger. It is also the same day as this record, so the
-gap being repaired is a gap in the register rather than a gap in time.
+that agree with each other, and on nothing stronger.~~ **Corrected 2026-08-03, later the same day and
+in the direction of more evidence rather than less: `specs/` and `research/` are now committed.**
+Commit `cee7ff8`, dated **2026-08-03**, contains every document named above, so the struck sentence
+is stale rather than wrong — it was true when written. **What the commit adds, and what it does not.**
+It establishes that the *text* existed on 2026-08-03, which corroborates the date without excluding
+an earlier decision; and because the entire corpus landed in one commit, version control supplies no
+ordering *among* these documents and cannot confirm that any dated statement was written when it
+says. The date rests on four agreeing in-repo statements plus one same-day commit containing all
+four. It is also the same day as this record, so the gap being repaired is a gap in the register
+rather than a gap in time. **OD-19, OD-20 and OD-21 inherit this paragraph and its correction.**
 
 **The decision.** A machine-readable specification the target itself publishes, at operation
 granularity, is an **admission criterion**. A target that publishes no such specification is **not a
@@ -2067,10 +2144,53 @@ operation-granularity specification, and this decision does not measure it eithe
 happens to the ones that do not.
 
 **Propagated to** `research/14-architecture-synthesis.md` (**U-39**, and the §5.1 confidence note,
-which is flagged rather than rewritten because thinning §5.1's pre-registered blocking set is an
-owner action — the same treatment U-05 received under OD-08); the production
+~~which is flagged rather than rewritten because thinning §5.1's pre-registered blocking set is an
+owner action — the same treatment U-05 received under OD-08~~ **— the flag was answered later the
+same day and both sites are now rewritten; see the reclassification annotation immediately below**);
+the production
 [`spec.md`](../002-spec-aware-agent-runtime/spec.md) at FR-002, FR-044, the Clarifications session,
 the Out of Scope row and the inherited-decisions table; and `docs/spec-kit-workflow.md`.
+
+> ### Annotation — **U-39 is reclassified as v2-blocking. Owner decision, 2026-08-03.**
+>
+> **This is an annotation on OD-18 and not a new decision row, and the choice is deliberate.** The
+> OD-15 through OD-21 precedent is to annotate an existing entry rather than mint a decision row
+> where nothing about the product changes, and nothing about the product changes here: OD-18 already
+> decided the admission criterion, and what is being decided now is which register the consequence
+> sits in. The **U-05 / OD-08 precedent points the same way and is weaker than it looks** — U-05's
+> narrowing under OD-08 was recorded as an in-place annotation on the U-05 row with no OD of its own,
+> and U-05 has never actually been demoted; it is still in §5.1, still flagged. So that precedent
+> establishes the *annotation style* and establishes that thinning §5.1 is an owner act. It does not
+> establish what an executed reclassification looks like, because none had been executed before this
+> one. *(**Dated rider, 2026-08-03, later the same day.** The clause ~~"U-05 has never actually been
+> demoted; it is still in §5.1, still flagged"~~ has since stopped being true: **U-05 was reclassified
+> as hosted-tier-blocking** by a separate owner act annotated on OD-08, which mirrored this
+> annotation's four site kinds. The rest of the paragraph is unaffected and the last sentence is the
+> one worth keeping — **this reclassification was still the first executed one**, and it is the
+> template U-05's followed.)*
+>
+> **The decision.** **U-39 stops blocking v1 and becomes v2-blocking.** It continues to block any
+> decision to widen admission beyond OD-18's criterion.
+>
+> **The reasoning, and each limb is load-bearing.** **① OD-18 discharged the promise question for
+> v1.** By making a published machine-readable specification an admission criterion, v1 declines the
+> schema-less target rather than choosing a point in U-39's trade space — so U-39's second recommended
+> action, *decide the promise explicitly*, is done, and no v1 commitment depends on it. **② The
+> prevalence measurement was never made.** How often the per-method-gated route shape occurs in real
+> codebases is uncounted, so **0.8000** is an existence proof and not a rate. That is U-39's *first*
+> recommended action and OD-18 did not touch it. **③ The unmeasured prevalence stays attached to the
+> decision it would inform**, which is the decision to widen admission — a v2 question — rather than
+> being discharged along with the v1 promise. The entry changes owner; it does not weaken.
+>
+> **Propagated to** `research/14-architecture-synthesis.md` at the **U-39** row, at the §5.1 preamble
+> (which now states that reclassification is annotated in place like resolution, so membership of
+> §5.1 no longer implies blocking v1), and at the §5.1 confidence note, whose live v1-blocking list
+> is corrected to **U-02, U-04, U-05, U-06 and U-30**. ~~**U-05 is not reached by this decision** and
+> its own demotion flag stays outstanding.~~ **Both sentences were true when written and both are
+> superseded later on 2026-08-03 by a second, independent owner act: U-05 is reclassified as
+> hosted-tier-blocking, annotated on OD-08.** The corrected live v1-blocking list is therefore
+> **U-02, U-04, U-06 and U-30**, and the confidence note carries that supersession in place. This
+> decision still reaches U-39 and nothing else; what changed is that something else reached U-05.
 
 ### OD-19 — a result v1 cannot verify is returned with its unverifiability marked, not withheld, and the share is measured
 
@@ -2130,7 +2250,7 @@ validated numbers, and **OD-14** already ships the drift capability without its 
 **Propagated to** the production [`spec.md`](../002-spec-aware-agent-runtime/spec.md) at FR-029,
 FR-046, the Clarifications session and the inherited-decisions table.
 
-> **A fourth decision from the same session has no record either, and it is out of these three
+> ~~**A fourth decision from the same session has no record either, and it is out of these three
 > records' scope rather than covered by them.** `checklists/requirements.md`'s marker table carries a
 > **marker 4**, opened by markers 1 and 3 interacting and resolved by the owner the same day: an
 > admitted target that stops publishing the specification which admitted it is served from the
@@ -2138,7 +2258,370 @@ FR-046, the Clarifications session and the inherited-decisions table.
 > availability property of the product, no feature 001 evidence bears on it, and it is the authority
 > behind **FR-047**, **FR-030**'s and **FR-031**'s narrowings and **SC-021**. It is **not** recorded
 > as an owner decision here, and recording it is an owner act rather than a propagation one. Noted so
-> that the gap is known rather than discovered later.
+> that the gap is known rather than discovered later.~~
+>
+> **Closed 2026-08-03 by OD-21 below.** The note was correct in every particular and is struck rather
+> than deleted, because what it was right about — that recording the decision was an owner act and
+> not a propagation one — is exactly what authorised OD-21. The owner authorised the record; the gap
+> it names is now filled and no longer has to be carried as a known one.
+
+### OD-21 — an admitted target that stops publishing its specification is served from the last-known-good set marked stale, and denied past a configured staleness ceiling
+
+**Decided 2026-08-03, at the same production-specification `/speckit-clarify` session as OD-18, OD-19
+and OD-20. Recorded retroactively 2026-08-03, and it is the fourth and last of that session's
+decisions rather than a new one.** The note struck immediately above this entry named the gap on the
+day OD-18 through OD-20 were written and declined to fill it, because filling it required owner
+authority that a propagation pass does not have. That authority was given; this is the record. As
+with its three siblings, nothing about the decision is new here and nothing is revised — what changes
+is that **FR-047**, the narrowings at **FR-030** and **FR-031**, and **SC-021** now rest on a citable
+authority instead of on requirement text that recorded its own answer.
+
+**The date is established from the same four in-repo dated statements as OD-18, and unlike OD-18 it
+now also has a committed artifact behind it.** [`checklists/requirements.md`](../002-spec-aware-agent-runtime/checklists/requirements.md)'s
+marker table heads its fourth column *"Resolved 2026-08-03"* and carries marker 4 in it; the same
+document's *"The one failing item, restated"* section is struck as *"closed 2026-08-03"* with the
+note *"Marker 4 in the table above carries the decision"*;
+[`spec.md`](../002-spec-aware-agent-runtime/spec.md) records the disposition as the fourth answer
+under its `Session 2026-08-03` clarifications heading; and the same document states that *"FR-044
+through FR-047 were added by the clarification session of 2026-08-03."*
+**What is new since OD-18 was written: `specs/` and `research/` are now committed.** Commit
+`cee7ff8`, dated **2026-08-03**, contains every document named above, so the claim no longer rests on
+in-repo prose alone. **Two limits on how much that adds, stated because the temptation is to treat a
+commit as proof.** A commit establishes that the *text* existed by its date, not when the *decision*
+was taken, so it corroborates the date without excluding an earlier one. And the whole corpus landed
+in a single commit, so version control supplies no ordering *among* these documents and cannot
+confirm that the four dated statements were written when they say they were. The date rests on four
+agreeing in-repo statements and one same-day commit containing all four.
+
+**The decision.** **(a) — continue on the last-known-good set, marked stale, under a configured
+staleness ceiling; deny past it.** A target admitted under FR-002 whose published specification later
+becomes absent, unreadable or empty is **not** read as a deployment that serves nothing. For the
+interval that follows, the runtime keeps resolving calls against the last-known-good served-operation
+set with that set **marked stale on every result**, and **denies** once the ceiling — measured from
+the last successful fetch — is crossed. The rejected alternative was **(b)**, deny on the first
+failed re-fetch.
+
+**Authorises** the production specification's **FR-047**, the **narrowings of FR-030 and FR-031**
+that FR-047 makes (FR-030's disable-the-affected-operation clause does not reach the case where the
+observation channel itself fails; FR-031's *after* term is the specification state found rather than
+an artifact version when the drift signal is a failed re-fetch), the corresponding narrowing of
+**FR-001**, and **SC-021**, which measures both limbs — served-and-marked below the ceiling, denied
+above it.
+
+**Why (a), and it is a consistency argument rather than a preference.** This corpus has twice
+already decided that the right response to a thing it cannot presently stand behind is to **return it
+marked**, not to withhold it: **OD-19 / FR-025** for a result the verifier cannot verify, and
+**D-17**'s provisional marking for a derived field with no independent validation, which reaches this
+specification as **FR-026**. Choosing (b) here would have been the one place the corpus reversed a
+rule it had already applied twice, and it would have reversed it in the direction that makes a gap
+invisible — a self-inflicted outage on a transient blip, with no signal distinguishing "the
+specification moved" from "the specification endpoint blipped." The marking discipline is inherited
+whole rather than re-invented: stale is carried on the same caller-visible record as FR-025's
+verification state, machine-distinguishably, and as a **separate field** rather than as a fourth
+value of that state, because a result may be verified and stale at once.
+
+**What this decision does not do, and the residual risk it accepts openly.** It supplies **no measured
+number**. The **fifteen-minute default ceiling is a configured default and not a measurement** — no
+feature 001 evidence bears on how long a served-operation set stays honoured after its specification
+stops being published — and it is bound to **FR-043** so it cannot travel externally as a validated
+figure, the same treatment FR-046's detection window carries under OD-20 and FR-049's caps carry with
+no default at all. It also **accepts a real risk rather than eliminating one**: below the ceiling the
+runtime resolves calls against a set the deployment may already have stopped honouring. That is the
+cost of (a), the ceiling is what bounds it, and this decision records it as accepted rather than as
+absent. Nothing here weakens **FR-030** for an operation actually observed to have drifted; FR-047 is
+a **specialization** of FR-030 and not an exception to it.
+
+**Propagated to** the production [`spec.md`](../002-spec-aware-agent-runtime/spec.md) at FR-047, the
+FR-030 and FR-031 narrowing notes, the Clarifications session and the inherited-decisions table;
+[`checklists/requirements.md`](../002-spec-aware-agent-runtime/checklists/requirements.md) at the
+marker-4 row and at the superseded failing-item note; `docs/spec-kit-workflow.md`; and
+`research/14-architecture-synthesis.md` at **O-04**, which is **annotated rather than replaced by a
+new register row** — the precedent OD-15, OD-16 and OD-17 set. O-04 asked for two refresh triggers
+and said "pick one and say which"; OD-20 picked, and this decision supplies the case O-04 never
+reached, which is what the runtime does when the picked trigger *fails to fetch*. No `D-`, `C-`, `U-`
+or `O-` row is added, and none changes state: O-04 stays open, because the trigger question it holds
+is wider than the one deployment-clock failure mode settled here.
+
+### OD-22 — constitution amendment to Principle VI: applied as v1.3.0, restating the traced unit as tier-relative
+
+**Decided and applied 2026-08-03.** The production specification's plan phase recorded deviation
+records for Principles II, III and VII on the ground that each addresses *an emitted agent stack* and
+v1 emits none. **Principle VI has the same exposure and never got the record**, because the pass that
+wrote those three worked from the list of *unmapped* principles and Principle VI was mapped —
+[`checklists/requirements.md`](../002-spec-aware-agent-runtime/checklists/requirements.md) found it
+and entered it as a fourth exposure. The owner amended rather than recorded.
+`.specify/memory/constitution.md` is at **v1.3.0**.
+
+**What the exposure actually was, and it is two clauses with two different defects.** The field list
+opened *"Every **emitted system** MUST produce, from day one: one span per node…"* — scoped, and so
+without a v1 subject, exactly like the three that got records. The ship gate —
+*"a capability that cannot be attributed to a versioned node MUST NOT ship"* — carried **no scope
+qualifier at all**, and on a literal reading blocked every v1 capability, because v1 has no nodes.
+
+**Why an amendment rather than a fourth deviation record, and the second ground is the one that
+decided it.** First: **a deviation record cannot fix an unscoped `MUST NOT`.** A record states that a
+principle does not reach this tier; the ship gate says nothing about tiers, so there is nothing for a
+record to scope. Second, and more consequential: the principle's own unit word was already *"span"*.
+The graph assumption sat in the **qualifier** — *per node*, *a versioned node* — rather than in the
+unit. A v1-scoped record would have left that wording in force and **re-armed it the moment v2 emits
+a topology**, which is the failure mode this corpus keeps recording under a different name.
+
+**What changed.** Principle VI's field list is restated over a **traced unit**, a term the principle
+now defines as **tier-relative**: the shipping tier declares what its unit is, and each tier's unit is
+the finest thing that tier can attribute an outcome to. **v1's declared unit is the span; v2's is the
+node.** Four obligations are stated over that unit, all four required: the tier MUST **declare a
+closed set of unit kinds** and every traced unit MUST carry one of them; a trace MUST be emitted at
+**the finest unit the tier declares**, carrying that unit's identity, a typed outcome and cost; a
+**named terminal state** and a decision record carrying the inputs its predicate matched on; and unit
+identity MUST be **kept separate from the artifact versions in force**, which are recorded alongside
+rather than folded into it. The ship gate becomes *"a capability that cannot be attributed to a
+**traced unit of the shipping tier's declared kind** MUST NOT ship."*
+
+**The gate is scoped, not weakened, and the argument turns on which term moved.** The obligation has
+three parts: a capability MUST be attributable, the thing it is attributable to MUST be a declared
+unit, and a capability failing that MUST NOT ship. **Only the second moved**, and it moved from a
+fixed unit to a tier-declared one. The modality is untouched — still `MUST NOT`, still no exception,
+still no escape for an unattributable capability. And the tier's declaration is not free: it must be a
+**closed set**, declared in advance, at the **finest** granularity the tier has. A tier cannot satisfy
+the gate by declaring one coarse unit covering everything, because that fails the finest-unit clause.
+**The amended gate is strictly harder to satisfy than the original on any tier that has nodes**,
+because it adds the closed-set and finest-unit obligations the original never stated; what it stops
+doing is being unsatisfiable on a tier that has none.
+
+**Why 1.3.0 and not 1.2.1 or 2.0.0**, and this one is harder to place than OD-03's or OD-13's was.
+Not PATCH: the four obligations are substantive, and the closed-kind-set and finest-unit clauses are
+new duties, not restatements. Not MAJOR, on the two grounds OD-13 held together — **no artifact is
+invalidated because none exists**, and **nothing compliant becomes non-compliant**. But this
+amendment is genuinely different in kind from the two before it, and the difference is recorded
+rather than smoothed over: **OD-03 and OD-13 both strengthened, while this one *relaxes* in one
+direction** by giving the ship gate a subject it could be satisfied against. What makes it MINOR
+anyway is that the relaxation is of an **unsatisfiable** clause rather than of a met one — no
+configuration that passed the old gate fails the new one, because on v1 no configuration could pass
+the old gate at all — and it arrives packaged with obligations the old text did not carry. Materially
+expanded guidance inside an existing principle, which is MINOR. Same instrument as OD-03 and OD-13:
+explicit owner approval, an empty migration plan, and a Sync Impact Report at the top of the file.
+
+**What the amendment does *not* do.** It does not make Principle VI's field list a v1 *deliverable* by
+itself — **FR-038** is what v1 must build, and the principle is what FR-038 answers to. It does not
+retire **SC-012**, which measures the gate and is the reason the gate has a v1 referent at all. And it
+does not touch any other principle, including the three that carry deviation records; those records
+stand, because their principles' scope clauses are untouched.
+
+**Propagated to** `.specify/memory/constitution.md` (Sync Impact Report, Principle VI, the review-gate
+sentence under Development Workflow, version line); the production
+[`spec.md`](../002-spec-aware-agent-runtime/spec.md) (Clarifications, the FR-038 note, the
+Dependencies clause-by-clause disposition, the Observability per-unit wording);
+[`plan.md`](../002-spec-aware-agent-runtime/plan.md)'s Constitution Check;
+[`research.md`](../002-spec-aware-agent-runtime/research.md);
+[`contracts/trace-record.md`](../002-spec-aware-agent-runtime/contracts/trace-record.md);
+[`checklists/requirements.md`](../002-spec-aware-agent-runtime/checklists/requirements.md), where the
+fourth-exposure entry is struck and annotated rather than deleted; `research/14-architecture-synthesis.md`;
+and `docs/spec-kit-workflow.md`.
+
+### OD-23 — FR-024's request-declared precision rung: ~~becomes a ratchet, admissible only where it tightens~~ **admissible only where the ladder would otherwise refuse** *(revised 2026-08-03)*
+
+> #### ⚠️ REVISED 2026-08-03, later the same day — the ratchet is superseded by the narrower variant this entry itself recorded as available and not taken. *Revised, not wrong.*
+>
+> **Struck, not deleted.** Everything below about *why* a request-derived rung is dangerous on a
+> contract-derived product was true when written and is still true. What is superseded is the
+> **admissibility test** the decision drew from it. The ratchet was verified inert — this entry said
+> so on the day, in the box below, and the revision is the owner acting on that verification rather
+> than a reversal of it.
+>
+> **The two tests are complementary, and only one of them has a non-empty domain.** The ratchet fires
+> only where a non-request comparand **exists**; the rung is only ever reached where **none** does.
+> So the ratchet's admissibility set is empty by construction on any first-match ladder, and the
+> variant's is exactly the set of quantities that reach the rung. The revision keeps the half that
+> can do something.
+>
+> **The variant is *stricter* than the ratchet wherever the ratchet had any purchase.** Where an
+> artifact source does supply a precision, the ratchet would admit a declaration that tightened it;
+> the variant **ignores the declaration outright**. Nothing the ratchet protected is weakened to make
+> room for this — the region the ratchet governed is governed more tightly now, and it is the empty
+> region either way.
+
+**Decided 2026-08-03**, answering the second of the two questions the production specification left
+open at its Clarifications section, and **revised 2026-08-03** on the same question in the same day's
+session. FR-024 pins verification precision to a six-rung ladder whose last rung is refusal. One rung
+accepted **a precision declared in the caller's own request**. The question put to the owner was admit
+or exclude; **the owner took neither**, twice — first the ratchet, then, once the ratchet was measured
+inert, the narrower variant.
+
+**~~The decision.~~ The decision as first taken — superseded, and kept because the revision is only
+legible against it.** ~~A caller-declared precision is admissible **only where it is strictly tighter
+than the best comparison the ladder derives from a non-request source** for that same quantity. Where
+it is not strictly tighter — equal, looser, or facing no non-request comparand at all — it is
+**ignored**, and the ladder proceeds as if the declaration were absent. Because the request rung sits
+directly above refusal, that means the quantity refuses, with the declaration named as considered and
+rejected. A declared precision may never convert a refusal into a verified state.~~
+
+**The decision as revised.** A caller-declared precision is admissible **only where no artifact source
+supplies any precision for that quantity at all** — that is, only where the ladder would otherwise
+**refuse**. Where any artifact source does supply one, the declaration is **ignored** and the ladder
+proceeds exactly as if it were absent, whether the declaration is tighter, equal or looser. Where none
+does, the declaration is admitted, and the verification **MUST** be marked provisional on its own
+provenance. The last clause of the superseded text — *a declared precision may never convert a refusal
+into a verified state* — is the one sentence the revision reverses, and it is reversed deliberately:
+converting a refusal into a **provisionally** verified state, at a precision attributable to a named
+source, is the whole of what the variant buys.
+
+**Why the variant, and why it is not the weakening the ratchet was built to stop.** The weakening
+vector is a caller loosening a check that would otherwise have been stricter. Where no artifact source
+supplies a precision **there is no such check to loosen** — the alternative is refusal, which checks
+nothing. So the rung adds a comparison where none existed and cannot degrade one that did. The vector
+is absent **by construction** rather than by comparison, which is a stronger guarantee than the
+ratchet's and is why the ratchet is not merely relaxed but replaced.
+
+**Why, and the weakening vector is the whole of it.** The rung was request-derived in a product sold
+on **contract-derived** verification, and as written it let the party being verified weaken their own
+verification by asking for fewer decimal places. The published-specification alternative was closed by
+measurement rather than by preference: [finding 015](./findings/015-verifier-vs-judge-not-run.md)
+records the target declaring **no numeric precision anywhere across 243 component schemas**. ~~A
+ratchet removes the vector structurally rather than by review.~~ **The variant removes it structurally
+too, and by domain restriction rather than by direction test** — which is what makes it effective
+where the ratchet was not.
+
+> #### ⚠️ The premise was verified and holds. The cost estimate was verified and does not. ~~This is why the decision is not costless.~~ **This is what the revision acts on.**
+>
+> **The owner's premise — that the request rung was the sole catcher of the three sub-one-percent
+> near-misses — is confirmed.** Finding 015 records all three as **one submission**, a mean of `3.23`
+> against a recomputed `3.201754`, a relative error of **0.882%**, answered by the same arm at three
+> battery versions; and its projection is the **sole** entry on that rung in the census of 61.
+>
+> **The accompanying expectation — that requiring the rung to tighten "preserves the detection
+> capability" — does not survive contact with the census, and this entry says so rather than claiming
+> the decision is costless.** Two facts combine. The ladder **takes the first rung it reaches**, so
+> the request rung is only ever reached when no artifact source applies, which means the comparand the
+> ratchet needs is **empty in precisely the case the ratchet can fire**. And the one declaration ever
+> measured was **looser** than the comparison it would now be tested against: two decimal places
+> admits `3.20` where exact comparison rejects `3.201754`. So it does not tighten, it is ignored, and
+> the quantity refuses. ~~**On the one census available the ladder now refuses eighteen of 61 rather
+> than 17, and the three near-miss records move from detected to not verifiable.**~~ **Superseded by
+> the revision — see the census paragraph below; the refusal count returns to its as-measured value
+> and the three records return to detected.**
+>
+> **This is a loss of discriminative capability and not a detection failure.** A refused quantity is
+> returned not verifiable under FR-025 with a named reason, which is the honest state and is why the
+> last rung is a refusal at all. But it is the **numeric half of the surviving discriminative set**
+> that finding 015's Amendment B2.2 invited a strict reader to discount, and the decision is the
+> product accepting that invitation. ~~**The owner should know the ratchet costs this**, and a
+> narrower variant that would keep it — admitting a declaration where no artifact source supplies any
+> precision at all, on the ground that there is no check there to weaken — is recorded at FR-024 as
+> available and **not taken**, because taking it is an owner act and it is exactly the residual vector
+> this decision names.~~ **The owner was told the ratchet cost this and has taken the variant.** It is
+> the variant named in the struck sentence, unchanged in substance; what has changed is that the owner
+> act the sentence said was required has occurred.
+
+**The census, remeasured against the variant rather than asserted.** Counted directly from the
+harness's own machine-readable rung assignments in
+`harness/verifier-vs-judge/c2_derivations.json`, which records the ladder rung every one of the 61
+projections rests on: **28** integer-closed exactness, **9** text or set identity, **6** the
+application's own serialisation, **1** request-declared, and **17** refused. Under the ratchet the
+single request-declared entry moved to refusal and the count went to eighteen. **Under the variant it
+does not move, and the ladder as now specified refuses 17 of 61 — the as-measured figure, restored.**
+The entry qualifies on its own recorded reasoning rather than on a reading of the rule: its stored
+derivation states that rung P1 is empty on this target and that the application's own serialisation
+does not apply because a mean introduces precision the application never serialised, so **no artifact
+source supplies any precision for that quantity**, which is exactly the variant's condition. The three
+sub-one-percent near-miss records return from not verifiable to **detected**.
+
+**Provisional marking is retained, and the question was reached again under the variant rather than
+carried over.** The conclusion survives. **One limb of the argument for it does not, and the limb is
+replaced rather than repeated.**
+
+- **Survives, and is strengthened.** The ratchet governed **direction**; marking governs
+  **provenance**, and a precision admitted under the variant is still supplied by the party being
+  verified. Constitution Principle I at v1.1.0 requires a derived field either validated against an
+  artifact its own derivation did not produce or marked provisional with provenance and confidence,
+  and *no artifact source was available* is the premise of the variant's own admissibility test — so
+  under the variant the field is, by construction, one that **cannot** be validated against an
+  independent artifact. Marking is not merely still required; it is the only thing Principle I leaves
+  available. The ratchet made the rung inert and so gave marking nothing to do. The variant makes the
+  rung live, so marking now does more work than it did, not less.
+- ~~**The residual failure also points the opposite way from the one the ratchet closes: a declaration
+  tighter than the quantity genuinely supports produces a false alarm, not a missed fault, and
+  SC-005 scores a false-alarm rate of no worse than 1%.**~~ **This limb does not survive the variant
+  and is struck rather than carried over.** It was sound for the ratchet, which admitted **only**
+  tightenings, so over-tightness was the only residual. The variant admits a declaration **whatever
+  its direction**, so a second residual appears that the ratchet did not have: a declaration
+  **looser** than the quantity genuinely supports lets a fault smaller than the declared granularity
+  pass as verified — a **missed fault**. It is not hypothetical. The one declaration ever measured was
+  the loose kind, and it caught its near-miss only because `3.23` and `3.20` differ at two decimal
+  places; a submission of `3.20` against the same true `3.201754` would have passed.
+- **What replaces it, and it does not rescue the limb by restating it.** Measured against the
+  **refusal** the variant displaces, no fault is newly missed, because refusal detects nothing. What
+  changes is the **label**: an honest *not verifiable* becomes an affirmative that can be wrong. That
+  is a real cost and it is the price of the restored catch. It is also precisely what the provisional
+  marking exists to carry, which is why the conclusion holds on a **stronger** footing than the struck
+  limb gave it — under the ratchet, marking guarded a residual that could only produce false alarms;
+  under the variant it guards an affirmative that can fail in **either** direction. Both directions
+  are scored by **SC-005**, which the variant also returns to a testable state: the admitted quantity
+  re-enters the denominator, so a missed fault counts against the **95%** detection rate and a false
+  alarm against the **1%** false-alarm rate, and neither is scored at all while the quantity refuses.
+- **Retiring the marking was reached and refused, on the same ground as before.** A safeguard that can
+  no longer fire reads exactly like one that has been satisfied. That ground now cuts twice, because
+  **the ratchet had itself become an instance of it** — a test whose admissibility set is empty is a
+  safeguard that cannot fire, and the revision is what stops the specification carrying one.
+
+**Authorises** the production specification's **FR-024** property 5 and property 6, and the
+stratification added to **SC-005**.
+
+**Why this is a revision of OD-23 and not a new decision row.** It is the **same question** — whether a
+request-declared precision is admissible on FR-024's ladder — revisited in the same day's session, and
+the answer taken is the alternative **this entry's own text** named and set aside pending an owner act.
+A new row would leave OD-23 standing as a live decision the specification no longer implements, and
+every existing citation of OD-23 — at the Clarifications section, at FR-024 and at SC-005 — would go on
+resolving cleanly while pointing at a superseded rule, which is the dangling-citation failure the
+corpus's identifier checks exist to surface and cannot see when the identifier still resolves. The
+precedent runs the same way: **OD-08** took a dated annotation in place when a later owner act revisited
+it, and **OD-12** was revised in place when it was ratified, whereas **OD-21** got its own number because
+it answered a *different* question. Struck text is retained under the house convention so the ratchet
+stays readable as history.
+
+**SC-005 changed, and not in the place the decision predicted.** Its denominator *rule* is unchanged —
+it already read *"the faults injected into quantities the precision ladder does not refuse"* rather
+than naming a number, so a growing refusal set is already handled. What the ratchet exposed is
+sharper: SC-005's first sentence requires the corpus to include **faults smaller than one percent**,
+and a refused quantity leaves both numerator and denominator, so **if the sub-one-percent faults are
+concentrated in quantities the ladder refuses, that clause becomes vacuous while the criterion still
+reports 95%**. On the one census available they are so concentrated — ~~the single measured
+sub-one-percent catch is the one this decision moves to refusal~~ **the corpus's only measured
+sub-one-percent catch is a single quantity, so whether that clause has any subject at all turns on
+whether that one quantity refuses**. SC-005 therefore now requires the
+refusal share be reported **broken out for the sub-one-percent stratum** and not only in aggregate.
+That is a tightening of the criterion's reporting, prompted by this decision rather than required by
+it, and it is the reason the decision does not silently make its own cost invisible.
+
+**The stratum requirement survives the revision unchanged, and the reason it survives is not the
+reason it was added.** It was added because the ratchet moved the corpus's only sub-one-percent catch
+into the refusal set; the variant moves it back, so the *instance* that prompted the requirement is
+gone. **The hazard is not.** It is structural and independent of which way this decision went: a
+refused quantity leaves both numerator and denominator whatever put it there, so any corpus whose
+sub-one-percent faults happen to sit in refused quantities reports a healthy aggregate over a stratum
+it never tested. Retiring the requirement now, on the ground that the one known instance has been
+repaired, would be the same error the marking discussion above refuses — mistaking *a safeguard with
+nothing currently to catch* for *a safeguard that is no longer needed*. It stays, and its wording
+needs no change, because it was written against the hazard and not against the instance.
+
+**Propagated to** the production [`spec.md`](../002-spec-aware-agent-runtime/spec.md) at FR-024, at
+SC-005, and at the Clarifications section, whose second open question is now answered and whose
+heading is retitled rather than emptied.
+
+**Revision propagated 2026-08-03 to the same four sites, plus this document's own summary of the
+register above.** In the production specification: **FR-024 property 5**, rewritten to the
+admissibility test with the ratchet struck in place and a new clause requiring the refusal reason to
+distinguish *ignored because an artifact source applied* from *no declaration present*; the property-5
+note, where the superseded census figure and the false-alarm-only limb are struck and replaced; the
+census paragraph, restored to the as-measured refusal count with the source of the count named; the
+**SC-005** note, which gains a dated confirmation that the stratum requirement is intact and why it
+survives the instance being repaired; and the **Clarifications** section at both the preamble and the
+question entry. No requirement other than FR-024 changes, and **SC-005's text is unchanged** — only its
+note gains the confirmation. The sites citing FR-024 for its *source-sharing* clause —
+[`data-model.md`](../002-spec-aware-agent-runtime/data-model.md),
+[`contracts/result-record.md`](../002-spec-aware-agent-runtime/contracts/result-record.md),
+[`plan.md`](../002-spec-aware-agent-runtime/plan.md) and
+[`checklists/requirements.md`](../002-spec-aware-agent-runtime/checklists/requirements.md) — were
+checked and are **untouched**, because none of them cites the precision ladder.
 
 ## Open items this plan does not resolve
 
@@ -2156,9 +2639,15 @@ FR-046, the Clarifications session and the inherited-decisions table.
   struck**); `research/08-auth-identity-and-secrets.md` (§0 cross-reference, §6.1, §6.2, §8.1 items 9 /
   10 / 13 / 16 and the deferred table, §8.3, §9 items 1 and 7); `research/07-product-vision.md` (§3.6,
   §4 item 5, Q2, **Q3 answered**); and two skills — `.cursor/skills/integration-surface-design/` and
-  `.cursor/skills/credential-and-env-injection/`. **U-05 is flagged for demotion out of the §5.1
+  `.cursor/skills/credential-and-env-injection/`. ~~**U-05 is flagged for demotion out of the §5.1
   blocking set rather than moved, because §5.1's membership is pre-registered and thinning it is an
-  owner action.**
+  owner action.**~~ **Flag discharged 2026-08-03 — the owner action was taken and is recorded as a
+  dated annotation on OD-08 above.** **U-05 is reclassified as hosted-tier-blocking**: it stops
+  blocking v1 and continues to block the hosted tier. It **stays in §5.1**, annotated in place under
+  that section's convention, rather than moving to §5.2 — §5.2 is *high-impact, non-blocking* and a
+  tier-blocking entry is neither. The flag's diagnosis was right and its stated destination was wrong,
+  and both are recorded rather than one silently corrected. **Nothing was measured**: the trust
+  question at U-05's core is exactly as open as it was on 2026-08-02.
 - **Which agent class ships first** — operating *on* the codebase versus *through* the running
   application. E7 and E10 inform it; neither decides it alone.
 - ~~**The ceiling-test target application.** Needs to be real, external, data-driven, dockerized,

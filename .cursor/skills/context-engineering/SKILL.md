@@ -146,7 +146,7 @@ fails for write-heavy interdependent work — see `multi-agent-topology-review`.
 
 **Context folding** is the in-process variant: branch to handle a subtask, then fold it on
 completion, collapsing intermediate steps and retaining a concise outcome. Same benefit, no separate
-actor, no 15× multiplier.
+actor, no 15× multiplier ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)).
 
 ## Applying this to this project
 

@@ -41,18 +41,38 @@ finding 006 explicitly did not test the session service under concurrent writers
 
 ### 1.1 `Deployment`
 
-The admitted pairing of a running application and the source that produced it. Created by admission
-(FR-001, FR-002, FR-003), and nothing downstream exists without one.
+The admitted pairing of a running application and the source ~~that produced it~~ **the operator
+declares produced it**. Created by admission (FR-001, FR-002, ~~FR-003~~ **FR-057**), and nothing
+downstream exists without one.
 
 | Field | Notes |
 |---|---|
 | `deployment_id` | stable identity carried by every artifact, trace, signal and report (FR-031) |
-| `source_ref` | repository and commit — the source clock's anchor |
+| `source_ref` | repository and commit — the source clock's anchor. **Required configuration and an operator declaration, never verified** (FR-057) |
 | `target_base_url` | the target's real origin. **Held by the enforcement point and the drift scheduler. Never presented to the agent** (T-09) |
 | `pinned_addresses` | resolved host and port set, pinned at admission (FR-016) |
 | `published_spec_artifact` | the target's own specification. An admission criterion (FR-002), and the independent artifact that validates derived contracts (T-14) |
-| `correspondence_evidence` | what established that this source produced this deployment (FR-003) |
+| ~~`correspondence_evidence`~~ **removed 2026-08-03** | ~~what established that this source produced this deployment (FR-003)~~ **The field had no producer. See the note below** |
 | `admission_state` | `admitted` \| `refused`, with the reason and the missing criterion on refusal |
+
+> **Corrected 2026-08-03. This entity claimed an admission step that no requirement stated and no
+> mechanism performs.** Two things were wrong and they are different sizes. The small one: **FR-003
+> was miscited** — it is the access-path requirement (act through the target's external interface,
+> not in process, not into its datastore, from **D-01**) and says nothing about source commits. The
+> large one: **`correspondence_evidence` had no producer anywhere in v1.** Nothing reads a commit
+> identity from a running instance, and **OD-06** is why nothing does — reachability sits above
+> analysis specifically so that analysis stays rebuildable from the codebase alone, and a verified
+> deployment-to-commit binding would reintroduce the running-deployment dependency that decision
+> removed. A field that can only ever be empty, on the entity gating every session, invites a
+> downstream reader to treat an empty value as a passed check.
+>
+> **`source_ref` stays, and is now required rather than assumed**: FR-028 and FR-031 model two
+> clocks, and the source clock has no anchor without it. **FR-057** states it, requires it as
+> configuration, and requires it to be carried and presented as an **operator declaration**.
+> Divergence between the declared source and the running deployment is detected afterwards by the
+> drift machinery (FR-028–FR-031, FR-046) — that is detection of divergence, not establishment of
+> correspondence. A wrongly declared `source_ref` is a **named residual risk** carried in
+> [`spec.md`](./spec.md), not something admission catches.
 
 **Invariant.** No session may start against a deployment that is not `admitted`. Enforced at the type
 level: the session constructor takes an `AdmittedDeployment`, which has no other constructor.
@@ -135,7 +155,7 @@ CREATED ─▶ RUNNING ─┬─▶ completed
                     ├─▶ terminated.memory_bound_exhausted
                     ├─▶ terminated.cpu_bound_exhausted
                     ├─▶ terminated.process_bound_exhausted
-                    ├─▶ terminated.no_progress            (FR-006 stall condition)
+                    ├─▶ terminated.no_progress            (FR-006 stall condition — defined at FR-006)
                     ├─▶ terminated.denied_operation
                     └─▶ interrupted ─▶ RUNNING            (resume — the same session, FR-007)
 ```
@@ -144,6 +164,13 @@ CREATED ─▶ RUNNING ─┬─▶ completed
 session keeps its `session_id` and its capability handle; resume renews the lease and never issues a
 new capability. Every exit is a named member of the taxonomy — the suite fails on a terminal state
 not in it, which is what stops a generic failure from being introduced later.
+
+> **`terminated.no_progress` gained a definition 2026-08-03 and it lives at FR-006, not here.** This
+> lifecycle named the state and called it *"the FR-006 stall condition"*, and FR-006 defined no stall
+> condition — so the one member of this taxonomy with no producer was the one this diagram implied
+> was already specified. FR-006 now defines progress per turn, requires the consecutive-turn count as
+> configuration with no default, and records why an unset count fails startup even though FR-005's
+> turn ceiling would bound the session anyway.
 
 ### 2.2 `TurnRecord`
 

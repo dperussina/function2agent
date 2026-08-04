@@ -1,6 +1,93 @@
 <!--
-SYNC IMPACT REPORT — AMENDMENT 1.2.0
+SYNC IMPACT REPORT — AMENDMENT 1.3.0
 ====================================
+Version change: 1.2.0 → 1.3.0
+Bump rationale: MINOR. Materially expanded guidance within an existing
+principle. No principle removed, nothing redefined in a way that invalidates an
+artifact, and no migration owed.
+
+**This amendment differs from 1.1.0 and 1.2.0 in one respect, and it is stated
+rather than smoothed over, because it is the respect a reviewer should check.**
+Both prior amendments only *narrowed* what counts as compliant. This one also
+gives a clause that was literally unsatisfiable a subject: the ship gate read
+"a capability that cannot be attributed to a versioned node MUST NOT ship",
+carried no scope qualifier, and on a literal reading blocked every v1
+capability, because v1 emits no graph and therefore has no nodes
+(specs/002-spec-aware-agent-runtime/spec.md Dependencies; checklists/
+requirements.md, fourth exposure). Making that gate satisfiable is a
+relaxation in one direction. It is still MINOR on the versioning policy's own
+terms: MAJOR is reserved for backward-incompatible governance changes,
+principle removals, and redefinitions that invalidate existing artifacts, and
+this invalidates none — no product code and no emitted agent pack exists — and
+**nothing that was compliant becomes non-compliant**, which is the direction
+MAJOR protects. The obligation itself is not relaxed at all; only the unit it
+attaches to becomes tier-relative, and three obligations are added alongside
+it (see below).
+
+Principle amended:
+  - VI. Observability Is a Prerequisite — both clauses, and nothing else in the
+    principle's rationale or in any other principle.
+    - **The field list** opened "Every **emitted system** MUST produce, from
+      day one: one span per node…" and named versioned node identity, the
+      routing decision with its predicate inputs *for every conditional edge*,
+      and per-node cost. It is restated over a **traced unit** whose kind is
+      tier-relative, so it governs a v1 span and a v2 node without privileging
+      either.
+    - **The ship gate** binds attributability to the emitting tier's own
+      declared unit rather than to "a versioned node".
+    - **Three obligations are added** and they are what keep the unit-neutral
+      wording from being an escape hatch: a tier MUST declare a **closed set of
+      unit kinds**; it MUST trace at the **finest unit it executes that has an
+      outcome and a cost**, so a coarser declaration is non-compliant; and
+      **identity and version are separated into two terms**, because the prior
+      phrase "versioned node identity" collapsed *which unit ran* and *which
+      version of it ran* into one word and only the second survives a
+      configuration change.
+  - Development Workflow and Quality Gates — the review-gate sentence quoted
+    the superseded field list verbatim ("traces carry versioned node identity,
+    typed terminals, and recorded routing decisions") and is restated in the
+    same unit-neutral terms. Left unamended it would have kept the graph
+    wording in force in the governance section, which is the trap this
+    amendment exists to remove.
+
+Owner approval: obtained 2026-08-03. Principle VI is not marked
+NON-NEGOTIABLE, so the amendment procedure does not require owner approval or a
+migration plan for it; both are supplied anyway, matching OD-03 and OD-13,
+because an unscoped MUST NOT is a governance-surface change whatever principle
+carries it. Recorded as OD-22 in specs/001-discovery-validation/plan.md.
+
+Migration plan for artifacts emitted under 1.2.0: none required. No product
+code exists and no agent pack has been emitted. Identical in substance to the
+1.1.0 and 1.2.0 migration plans and empty for the same reason.
+
+Evidence base for the amendment:
+  - specs/002-spec-aware-agent-runtime/spec.md Dependencies — the clause-by-
+    clause reading that established the two clauses have different scopes, and
+    that only the field list is graph-bound.
+  - specs/002-spec-aware-agent-runtime/checklists/requirements.md — recorded
+    this as a fourth Constitution Check exposure, open, and stated that the
+    checklist could not close it. Retired by this amendment.
+  - specs/002-spec-aware-agent-runtime/spec.md FR-038 and
+    contracts/trace-record.md — the span, its closed seven-kind set, and the
+    per-term substitutions v1 had already made. The amended field list is
+    checked term by term against FR-038 rather than written from the
+    principle's summary.
+  - research/04-self-improving-agents.md §11.2 — "if invocations aren't
+    attributable to a versioned node, the entire flywheel in §3 is
+    unbuildable." The attributability obligation is inherited from here intact;
+    what the amendment changes is only what the invocation is attributed *to*.
+
+Rationale: the principle's own unit word was already "span" — "one span per
+node" — so the graph was in the *qualifier*, not in the unit. A deviation
+record was the alternative and was rejected for two reasons. It cannot fix an
+unscoped MUST NOT: a v1-scoped record leaves the sentence standing for every
+tier it does not name. And it would exempt v1 while leaving the graph wording
+armed, so the trap re-arms the moment v2 emits a topology. Unit-neutral wording
+binds both tiers now and needs no second act later.
+
+---
+PRIOR REPORT — AMENDMENT 1.2.0
+==============================
 Version change: 1.1.0 → 1.2.0
 Bump rationale: MINOR. Materially expanded guidance within an existing principle.
 No principle removed, nothing redefined, and no existing artifact invalidated —
@@ -281,22 +368,51 @@ provider-side background execution as a deliberate trade.
 
 ### VI. Observability Is a Prerequisite
 
-Tracing is built before, not after, the capability it observes. A capability
-that cannot be attributed to a versioned node MUST NOT ship.
+Tracing is built before, not after, the capability it observes. **A capability
+that cannot be attributed to a traced unit of the tier that ships it, at the
+artifact versions in force when it ran, MUST NOT ship.**
 
-Every emitted system MUST produce, from day one: one span per node with a
-**versioned node identity**; **typed terminals** (each success and failure
-outcome named, not a generic error); the **routing decision recorded with its
-predicate inputs** for every conditional edge; precondition and postcondition
-results; an explicit retry-versus-repair distinction; and per-node cost. The
-routing decision is the field teams most often omit and the one failure
-attribution most needs.
+**The traced unit is tier-relative, and it MUST be declared rather than
+assumed.** Every tier that emits or runs anything MUST declare a **closed set
+of unit kinds** and MUST trace at the **finest unit it executes that has an
+outcome and a cost**. For an emitted agent system that unit is the node; for a
+runtime executing a loop it is the span. A record of an undeclared kind MUST
+NOT be written, and **a tier MUST NOT satisfy this principle by declaring a
+unit coarser than the one it executes** — that is the one way unit-relativity
+could be used to evade the gate, and it is closed here rather than left to
+review.
+
+Every system this project emits or runs MUST produce, from day one, one record
+per traced unit, carrying:
+
+- **which unit it was** — its declared kind, and its position in the run,
+  sufficient to order every record in that run totally without reference to a
+  clock;
+- **the versions in force when it ran** — the content-addressed version of
+  every artifact governing it, together with the identity of the deployment it
+  ran in. **Identity and version are two obligations, not one.** Which unit ran
+  and which version of it ran MUST be separately recoverable, because a system
+  that versions its configuration rather than its units has the second and not
+  the first, and an attribution that cannot be reproduced after the
+  configuration has moved is not an attribution;
+- **a typed outcome** drawn from a declared set, and, for the run as a whole, a
+  **named terminal state**. Each success and failure outcome is named; a
+  generic error is neither an outcome nor a terminal state;
+- **every decision that selected among alternatives** — the decision itself,
+  the **inputs the predicate matched on**, and the **identity of the rule or
+  edge that produced it**. This is required for **every** such decision and not
+  only for the ones that denied or failed, because a permit resolved by the
+  wrong rule is the case attribution most needs to find. It is also the field
+  teams most often omit;
+- **precondition and postcondition results**;
+- an explicit **retry-versus-repair** distinction; and
+- **per-unit cost**.
 
 Rationale: failure localization is a query over traces grouped by
-`(terminal_type, failing_node, incoming_edge)`. Versioned node identity and
-content-addressed artifact versions are nearly free now and impossible to
-retrofit. Everything downstream — evaluation, prompt optimization, rollback —
-is unbuildable without them.
+`(terminal_type, failing_unit, deciding_rule)`. Unit identity, the versions in
+force, and content-addressed artifact versions are nearly free now and
+impossible to retrofit. Everything downstream — evaluation, prompt
+optimization, rollback — is unbuildable without them.
 
 ### VII. Test-First and Fixture-Backed (NON-NEGOTIABLE)
 
@@ -393,8 +509,10 @@ deviations block merge.
 
 **Review gates.** A change MUST NOT merge unless: tests were written first and
 initially failed; fixtures exist for any new language or node kind; topology
-invariant tests pass; traces carry versioned node identity, typed terminals,
-and recorded routing decisions; and no new capability crosses a permission tier
+invariant tests pass; traces carry the traced unit's identity and the artifact
+versions in force, typed outcomes and a named terminal state, and every
+decision recorded with the inputs its predicate matched on; and no new
+capability crosses a permission tier
 without a structural gate. Changes touching the sandbox boundary, permission
 tiers, human gates, or the invariant list require a second reviewer.
 
@@ -430,4 +548,4 @@ Runtime development guidance for agents working in this repository lives in the
 `.cursor/skills/speckit-*` skills and the templates under `.specify/templates/`;
 those are subordinate to this document.
 
-**Version**: 1.2.0 | **Ratified**: 2026-08-02 | **Last Amended**: 2026-08-03
+**Version**: 1.3.0 | **Ratified**: 2026-08-02 | **Last Amended**: 2026-08-03

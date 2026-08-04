@@ -243,6 +243,64 @@ are written as **English number words inside sentences of varying shape**
 than rewriting a digit span, and the rule has not produced the repeat-repair
 history the other two have. Left checked, not generated.
 
+### The register-provenance trap
+
+**Read this before writing any sentence that explains where the entries in a
+register came from.** It is the second trap in this directory that costs a pass
+before it is noticed — the other is the stale-`.pyc` trap under **Auditing a
+threshold** — and the two share a shape: a tool doing exactly what it was built
+to do, in a place nobody expected it to be looking.
+
+A prior pass needed to say that different groups of owner decisions have
+different provenance — some came out of feature 001's measurements, others out of
+owner sessions, others out of a clarify session recorded retroactively. The
+natural way to write that is one sentence carrying several ranges. **Several
+ranges together is exactly the shape the generator reads as a whole-register
+claim**, so the generator advanced one of the bounds to the register's real last
+entry and the sentence then asserted that the *whole* register came out of feature
+001's measurements. Every check passed. The sentence was false.
+
+**Two ways in, and only one of them is the one the rules advertise.** Both were
+confirmed against `_RANGE` and `_is_whole_register_claim` on 2026-08-03:
+
+- **Two or more different registers on one line.** `in_list` is
+  `len({namespace}) >= 2`, so `D-01 … D-22, C-01 … C-15` makes *every* range on
+  that line a site — including a third, deliberately-partial `OD-01 through
+  OD-14` sitting in the same sentence for a different purpose.
+- **A single range introduced by punctuation.** A range starting at entry 01
+  whose preceding text ends in `(`, `[`, `:`, an em dash or an en dash — after
+  `*~_` and spaces are stripped — is a site on its own. A provenance sentence of
+  the shape `…instead of by the bound: OD-01 through OD-14 came out of
+  measurement…` is caught by the colon, with no second register anywhere near
+  it.
+
+**Emphasis around the whole range does not save you; emphasis around each
+identifier does, and only by accident.** Verified on 2026-08-03 by running both
+functions over the four shapes. Bolding the range as a unit leaves it a site,
+because the leading `*` is stripped before the punctuation test and the closing
+one sits after the match. Bolding the two identifiers *separately* makes
+`_RANGE` fail outright, because the pattern needs the second identifier to
+follow the separator immediately and the intervening `**` breaks it — which is
+why `checklists/requirements.md`'s frozen site goes unread. **Do not rely on
+that.** It is a side effect of the pattern, not a marking, it looks identical to
+an unguarded range, and a later editor tidying the emphasis re-arms the site
+silently.
+
+**The workaround, and it is the one the prior pass used: write the bound in
+words.** *"The first fourteen came out of feature 001's measurements"* carries
+the same claim, is invisible to `_RANGE`, and — the part that matters — **stays
+true when the register grows**, because it is a claim about a fixed set of
+entries and not about the register's extent. That is the real distinction the
+generator is enforcing and the reason it is right to rewrite the digits: a range
+written in digits *is* an extent claim to this toolchain, whatever the sentence
+around it meant. If you need digits, strike the superseded bound and advance it
+in the house style, which makes the site history rather than a claim and is
+skipped.
+
+**Do not reach for a `MANUAL` marking here.** `MANUAL` is keyed on a live range
+sharing its line with a *struck* one, and a fresh provenance sentence has no
+struck range to trigger it.
+
 ## Roles: who is authoritative
 
 `config.json` sorts every file into one of four roles, and the roles decide which
@@ -430,6 +488,76 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   against "✅ DISCHARGED — D-17 is enforceable" in another is a direct
   contradiction with no numeric or structural signature. Nothing here sees it.
   This is the single largest gap.
+- **A contract citing requirements that do not govern its subject — attempted
+  2026-08-03 and *not* implemented, because no threshold separates it from clean
+  work.** This is the sharpest sub-case of semantic staleness above: two artifacts
+  written independently, each internally coherent, wrong only in relation to each
+  other. Four instances so far, two of them confirmed by hand against the
+  production contracts. `contracts/trace-record.md` cited **FR-030** and **FR-031**
+  for its span shape; those are the two drift requirements and neither mentions
+  spans, and **FR-038** governs it. `contracts/artifact-versioning.md` had canonical
+  serialization as its title subject and its first section, and none of **FR-027**,
+  **FR-028**, **FR-034** or **FR-054** says a word about it; **FR-055** governs it.
+  Three sibling contracts — `configuration.md`, `egress-policy.md`,
+  `result-record.md` — audited clean, giving a five-contract fixture set with
+  hand-established ground truth, two bad and three good.
+
+  **What was tried.** Significant-term overlap between a contract's title and
+  leading section and the text of each requirement it cites, scored against the
+  best-matching cited requirement. 288 configurations were swept — three stoplists,
+  stemming on and off, code-fence stripping on and off, three definitions of the
+  subject, two citation scopes, and four similarity metrics. 14 separated the two
+  bad contracts from the three good ones. Nine of those 14 were then eliminated by
+  two controls that a usable rule has to pass and a fitted one does not: the rule
+  must go **silent** on the repaired contracts, and it must go silent under a
+  citation-only ablation in which the governing requirement is added to the header
+  and nothing else in the file changes. Five survived, all sharing one shape —
+  Jaccard similarity, header-scope citations, subject taken as title plus leading
+  section.
+
+  **The surviving shape has real signal, which is why this entry is long.** Ranked
+  against all 57 requirements, the metric puts the hand-identified governing
+  requirement **first of 57** for `artifact-versioning` (FR-055) and **third of 57**
+  for `trace-record` (FR-038), unaided. For all three clean contracts the
+  best-scoring requirement corpus-wide is one they already cite; for both bad ones
+  it is not. The signal is not the illusion here.
+
+  **What killed it was the false-positive probe, and the probe is not adversarial.**
+  Contracts in this corpus cite between four and fifteen requirements, so a clean
+  contract that simply cites less densely is a style difference and not a defect.
+  Dropping one and two citations from each clean contract gives 187 clean cases, and
+  against those:
+
+  | Rule shape | Defect side | Worst clean case | Usable window |
+  |---|---|---|---|
+  | best-uncited advantage, fire when ratio ≥ T | `1.536` | `1.700` — `result-record` less two of its eight citations | **none** |
+  | rank of best cited requirement, fire when > T | 5 | 5 — `configuration` less two of seven | **none** |
+  | absolute similarity, fire when best cited < T | `0.0873` | `0.0913` — `result-record` less two of eight | `0.0040` wide |
+
+  The two relative shapes have **no window at all**: a clean contract that omits two
+  citations scores *worse* than the worse of the two real defects. The absolute shape
+  has a window `0.0040` wide in a Jaccard score — 0/187 false positives at `0.090`,
+  one at `0.092`, nine by `0.120`. A conjunction of the two appears to separate, and
+  does not: the ratio term fires at any value from `1.05` up, so the separation is
+  carried entirely by the same four-thousandths of absolute similarity. **That is a
+  number fitted to the third decimal place of a text-similarity score over five
+  documents, not a threshold**, and `threshold_probe.py` exists because this project
+  already learned what an unpinnable constant costs. It would fire on the sixth
+  contract someone writes, and a gate rule that fires on clean work gets disabled or
+  worked around, which costs more than the two defects it would have caught.
+
+  **The narrower version that is worth having is not a check.** The ranking is
+  useful precisely where the threshold is not: run as an **advisory listing** — for
+  each contract, the highest-scoring requirements it does *not* cite — it named the
+  right requirement first and third out of 57, with no false-positive cost, because
+  an advisory fails nothing. That is a human-run audit aid rather than a gate, so it
+  belongs beside `gen_claims.py` rather than in the check set, and it is deliberately
+  not built here: the instruction that produced this entry was to implement nothing
+  unless the gate bar was met. **A zero-overlap rule** — fire only where a contract's
+  best cited requirement shares no significant term at all with its subject — was
+  also considered and rejected: neither real defect reaches zero (`0.0873` and
+  `0.0515`), so it would have caught neither, and a branch no fixture can reach is
+  the unfalsifiable safeguard this file exists to warn about.
 - **Which of two mechanisms a claim names.** The recurring `M1`-versus-`M2`
   ablation error is a statement about which named thing causes an effect. Both
   names exist, both are defined, the sentence is well-formed. Undetectable
@@ -465,11 +593,37 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   another range, because the lexical cues do not work — `research/14`'s "U-01
   through U-06 are the ones that cost real money" starts at the first entry, sits
   four words after the phrase "the whole register", and is a subset. The cost is
-  that "the decision log OD-01 through OD-14" is not checked: two live sites in
-  `specs/002/spec.md` say exactly that and neither is read. Dropping the
+  that "the decision log OD-01 through OD-14" is not checked.
+  ~~Two live sites in `specs/002/spec.md` say exactly that and neither is read.~~
+  **Corrected 2026-08-03 — the residue is real and this entry named the wrong
+  files and the wrong state.** `spec.md`'s two sites do **not** say that: both carry
+  ranges whose superseded upper bounds are struck and whose live bound is
+  **OD-21** — so they are current, not stale. The genuinely unadvanced sites were in
+  `specs/002-spec-aware-agent-runtime/research.md` and
+  `specs/002-spec-aware-agent-runtime/checklists/requirements.md`, and the two have
+  since diverged. **`research.md` was corrected on 2026-08-03** and now carries the
+  same struck-and-advanced form, with a note recording that a prior pass had read
+  the sentence as a claim about *provenance* rather than about *extent* and left it
+  alone on that reading. **`checklists/requirements.md` is deliberately frozen at
+  the fourteenth entry**, because it records what a dated validation run read and
+  advancing it would claim coverage that run did not have. So of the corpus's five
+  OD-range sites, **four are current, one is deliberately frozen, and none is
+  stale** — the residue is a hole, not a live defect.
+  **All four unread sites fail at the same place, and it is earlier than this entry
+  first said.** Verified 2026-08-03 by running `_RANGE` and
+  `_is_whole_register_claim` over all five raw lines: the three struck-and-advanced
+  sites and the frozen one **all return zero regex matches**, because `_RANGE`
+  requires the second identifier to follow the separator immediately and **any
+  markup sitting between them breaks it** — `~~` at the advanced sites, `**` at the
+  frozen one. The whole-register test is never reached at any of the four, so an
+  earlier reading of this entry that attributed the frozen site to that test was
+  wrong. The one site that *is* read is `plan.md`'s parenthesised
+  `(OD-01 through OD-21, …)`, which matches and is judged a whole-register claim —
+  which is why the OD register is guarded at all. A future site written as plain
+  prose, unparenthesised and with no markup between the bounds, would be caught by
+  neither the regex path nor the guard. Dropping the parenthesised-or-listed
   requirement was measured — it reports nothing on the current corpus — but it is
-  free only because that U-01 counterexample happens to be struck. The OD
-  register is still guarded, at `plan.md`'s parenthesised site.
+  free only because that U-01 counterexample happens to be struck.
 - **A lone pipe row far from any table.** `table-no-delimiter` needs two
   consecutive pipe rows, and the orphan rule needs the row within two blank lines
   of a real table. A single stray `| a | b |` outside both windows is caught by

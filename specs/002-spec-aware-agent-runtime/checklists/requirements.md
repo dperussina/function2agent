@@ -84,7 +84,7 @@ no exposure had named. Results are under *What run 4 verified*.
 | 1 | FR-002 | ~~What the product supports when a target publishes no machine-readable specification.~~ Probing establishes served *paths* and cannot establish served *methods* without an introspectable target or an unverifiable declaration (**U-39**), and FR-009 denies what it cannot resolve. This sets the supported-target population | **A published machine-readable specification is an admission criterion.** Targets without one are rejected at admission by **FR-044**, which fails closed and states its reason; the exclusion is recorded in Out of Scope and the narrowing of the addressable population is stated in Assumptions. Probing is excluded for *method* discovery only — it executes handlers on at least one measured framework — and remains available at *path* level to FR-046 |
 | 2 | FR-025 | ~~Whether a result the verifier cannot verify is returned marked unverifiable, or refused.~~ Refusal on a substantial share of results changes the usable surface; returning weakens the claim the product is sold on | **Returned, marked not verifiable.** FR-024 is unchanged and is what creates the state. The share of results in that state becomes a measurement under **FR-045** and **SC-019**, with no threshold pre-registered because nothing estimates it |
 | 3 | FR-029 | ~~What triggers a deployment-drift check~~, given that the deployment moves under configuration, rollout and its installed package set and produces no commit (**O-04**). The choice sets the detection latency FR-042 must later measure | **Both manual and automated, with at least one automated trigger configurable.** The default is a scheduled re-fetch of the target's published specification at a five-minute interval, giving a stated detection window of one interval plus one check (**FR-046**, **SC-020**). A customer-emitted deployment event is admissible as a configured trigger and may not be the only one, because the ability to emit one cannot be assumed under self-hosting |
-| 4 | FR-047 | ~~What the runtime does while an *admitted* target is no longer publishing the specification that admitted it.~~ Opened by markers 1 and 3 interacting: FR-002 made a published specification an admission criterion and FR-046 re-checks it on a schedule, neither of which was true when FR-030 was written, so FR-030's disable-the-affected-operation clause resolved to denying everything while also declining to stop the runtime. The two candidates were **(a)** continue on the last-known-good set marked stale under a configured staleness ceiling, and **(b)** deny on the first failed re-fetch. This sets an availability property and no feature 001 evidence bears on it | **(a) — serve the last-known-good set marked stale, deny past a configured staleness ceiling.** Recorded as a *consistency* argument, not a preference: it is the third time the specification returns something marked rather than withholding it (FR-025, and FR-026 from **D-17**). The ceiling default is **fifteen minutes from the last successful fetch**, stated as a configured default and bound to **FR-043** so it cannot travel externally as a validated number. Marked stale on the same caller-visible record as FR-025's verification state and by the same machine-distinguishable discipline, as a separate field rather than a fourth verification value. FR-047 is a **specialization** of FR-030, not an exception, and FR-030, FR-031 and FR-001 are each marked where FR-047 narrowed them |
+| 4 | FR-047 | ~~What the runtime does while an *admitted* target is no longer publishing the specification that admitted it.~~ Opened by markers 1 and 3 interacting: FR-002 made a published specification an admission criterion and FR-046 re-checks it on a schedule, neither of which was true when FR-030 was written, so FR-030's disable-the-affected-operation clause resolved to denying everything while also declining to stop the runtime. The two candidates were **(a)** continue on the last-known-good set marked stale under a configured staleness ceiling, and **(b)** deny on the first failed re-fetch. This sets an availability property and no feature 001 evidence bears on it | **(a) — serve the last-known-good set marked stale, deny past a configured staleness ceiling.** Recorded as a *consistency* argument, not a preference: it is the third time the specification returns something marked rather than withholding it (FR-025, and FR-026 from **D-17**). The ceiling default is **fifteen minutes from the last successful fetch**, stated as a configured default and bound to **FR-043** so it cannot travel externally as a validated number. Marked stale on the same caller-visible record as FR-025's verification state and by the same machine-distinguishable discipline, as a separate field rather than a fourth verification value. FR-047 is a **specialization** of FR-030, not an exception, and FR-030, FR-031 and FR-001 are each marked where FR-047 narrowed them. **Recorded as an owner decision later the same day: `plan.md` OD-21**, after the propagation that wrote OD-18 through OD-20 declined to record it on the grounds that doing so was an owner act |
 
 Feature 001 carried two such markers and resolving them with the owner materially changed its scope.
 These were recorded rather than guessed for the same reason, and resolving marker 1 narrowed this
@@ -107,6 +107,12 @@ feature's supported-target population in exactly that way.
 > chose (a), and the argument that closed it was not a weighing of the two candidates but the
 > observation that (b) would have been the one place this corpus reversed a rule it had already
 > applied twice.
+>
+> **And recorded as a decision 2026-08-03, later the same day: `plan.md` **OD-21**.** For the interval
+> between the clarify session and that entry, the answer above lived only in requirement text and in
+> this table — the same defect OD-18, OD-19 and OD-20 close for the session's other three answers.
+> The decision is unchanged; **FR-047**, the narrowings at **FR-001**, **FR-030** and **FR-031**, and
+> **SC-021** now name an authority instead of recording their own.
 
 ### What run 3 verified
 
@@ -122,7 +128,12 @@ feature's supported-target population in exactly that way.
   success-criteria references. The registers outside this feature — **OD-01** through **OD-14** in
   feature 001's `plan.md`, and the `D-`, `C-`, `U-` and `O-` registers in
   `research/14-architecture-synthesis.md` — were each read at their defining row and matched against
-  the use made of them here.
+  the use made of them here. *(**Scope note added 2026-08-03**, and the bound above is deliberately
+  **not** advanced. It records what run 3 read, and run 3 read fourteen; the OD register now runs to
+  **OD-21**. Advancing it would claim a coverage this run did not have. **OD-15** through **OD-21**
+  are therefore outside every sweep on this list, and the four recorded retroactively — OD-18 through
+  OD-21 — are the ones whose references in `spec.md` were written before the decisions they cite
+  existed.)*
 - **Reachability of everything added after the specify phase.** **FR-044** is reachable from FR-002,
   FR-020, the Edge Cases, Out of Scope and Key Entities, and is exercised by **SC-018** and User
   Story 1 scenario 6. **FR-045** is reachable from FR-024, FR-025 and the Edge Cases, and is
@@ -217,6 +228,65 @@ came back to this document before `/speckit-plan` ran rather than after.
 | **Four principles have no disposition in the specification at all.** Dependencies maps I, IV, V and VI. Principles **II** (topology encodes protocol), **III** (default to the loop), **VII** (test-first and fixture-backed) and **VIII** (versioned artifacts) are unaddressed. The constitution's own preamble describes a product that emits a multi-agent system — which **OD-09** removed from v1 | II, III and much of VII's generator clause are *not applicable by scope* rather than satisfied, and saying so is a deviation record the plan must write. VII's fixture clause and VIII's versioning clause **do** apply and are only partly met: the Assumptions section carries the fixture discipline, and FR-026 and FR-027 carry content hashing and versioning, but nothing requires one-command rollback. Separately, the constitution's compliance-review section makes `/speckit-analyze` **mandatory** before `/speckit-implement` for any feature adding a permission tier, which this one does |
 
 </details>
+
+### ~~A fourth exposure, found 2026-08-03 and **open** — Principle VI~~ — **RETIRED 2026-08-03 by constitution amendment v1.3.0 (`OD-22`)**
+
+> **Retired, not deleted, and retired by the instrument this entry said it needed.** The entry below
+> was correct in every particular, it named the two clauses accurately, it named both available
+> remedies, and it correctly refused to close itself. **The owner took the second remedy — an
+> amendment — on 2026-08-03**, and `.specify/memory/constitution.md` is at **v1.3.0**. The field list
+> is restated over a **traced unit** whose kind the shipping tier declares, and the ship gate binds
+> attributability to that tier's own declared unit rather than to *a versioned node*. v1's declared
+> unit is the span, FR-038 declares the closed seven-kind set, and **SC-012** measures the gate. So
+> the exposure is discharged **at its source** rather than covered by a record: Principle VI needs no
+> deviation record, and the graph wording that a v1-scoped record would have left armed for v2 is
+> gone from the text.
+>
+> **Two things this retirement does not claim.** It does not add a fourth row to the table above —
+> that table's three exposures closed *in `spec.md`*, and this one closed *in the constitution*, which
+> is a different instrument and a different authority. And it does not revise the diagnosis: the
+> pass that wrote the three deviation records genuinely missed this one, for the reason stated below,
+> and that remains the useful thing in this entry. **Mapped is not the same as satisfied** is the
+> sentence worth keeping.
+>
+> The text below is unedited.
+
+**The heading above says three exposures and says they are closed. Both remain true of those three.
+This is a fourth, found later and by a different route**, while rewriting FR-038 against a v1
+subject, and it is recorded here rather than folded into the table above because **it is not closed
+and this checklist cannot close it.**
+
+Principle VI was never on the unmapped list — Dependencies maps it to FR-038 — so the previous runs
+had no reason to look at it. Mapped is not the same as satisfied. **Its terms presuppose a graph**,
+and it splits into two clauses with different scopes:
+
+- **The field list** opens *"Every **emitted system** MUST produce, from day one: one span per
+  node…"* and then names versioned node identity, the routing decision with its predicate inputs for
+  every conditional edge, and per-node cost. v1 emits no system, so this clause has **no v1 subject
+  at all** — which is the identical scope argument the table above accepted for Principles II, III
+  and VII. **It should have produced a fourth deviation record and did not**, because Principle VI
+  was mapped and the run that wrote those records was working from the unmapped list.
+- **The ship gate** — *"A capability that cannot be attributed to a versioned node MUST NOT ship"* —
+  carries **no scope qualifier**. Read literally, no v1 capability may ship, because v1 has no nodes.
+  A deviation record aimed only at the field list would leave this sentence standing.
+
+**What has been done, and what has not.** FR-038 and SC-012 were rewritten on 2026-08-03 against the
+**span**, which is the unit v1 actually executes and — worth noting — the unit the principle's own
+sentence already uses. The rewrite satisfies the principle's evident intent, which is a trace from
+which a failure can be attributed without re-running the session. **It does not settle the mapping**,
+and this checklist must not record it as though it did. The remedies are a v1-scoped deviation record
+covering both clauses, or an amendment restating identity and cost in unit-neutral terms; **both are
+owner acts under the constitution's governance section**, and the choice has a consequence beyond v1
+— an amendment binds v2's emitted graphs to the unit-neutral wording, a deviation record does not.
+
+~~**Status: open, and it is the plan phase's Constitution Check that meets it.** It is stated as a
+question under `spec.md`'s Clarifications and set out clause by clause in Dependencies.~~
+**Status 2026-08-03: CLOSED by amendment.** `spec.md`'s Clarifications entry is marked answered, its
+Dependencies reading is marked resolved, and the plan's Constitution Check for Principle VI now
+records a pass on the principle's own terms. **One consequence for whoever builds the tracing
+code**: the amendment separates *unit identity* from *artifact version*, so a trace carrying the
+versions in force but no span kind and no intra-turn position satisfies the superseded wording and
+fails the current one.
 
 ### What resolving the markers changed elsewhere in the spec
 

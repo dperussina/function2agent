@@ -5,8 +5,12 @@
 **Input**: Feature specification from `specs/002-spec-aware-agent-runtime/spec.md`
 (54 functional requirements, 28 success criteria, five user stories, four deviation records)
 
-**Constitution**: v1.2.0 | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ **OD-17**
-*(extended 2026-08-03 after the owner reviewed this gate — see the banner under Summary)*
+**Constitution**: ~~v1.2.0~~ **v1.3.0** *(amended 2026-08-03 by **OD-22**; Principle VI restated over a
+tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ **OD-21**
+*(extended 2026-08-03 after the owner reviewed this gate — see the banner under Summary — and
+extended again the same day: **OD-18** through **OD-21** were taken at the specification's clarify
+session and recorded retroactively, and this plan already relies on two of them, at FR-002's
+admission criterion and at FR-047's staleness ceiling)*
 ([feature 001 plan](../001-discovery-validation/plan.md)) | **Evidence base**:
 [feature 001 verdict](../001-discovery-validation/VERDICT.md)
 
@@ -326,12 +330,51 @@ document in this corpus has treated as one; keeping the driver thin is what keep
 
 ### Principle VI — Observability Is a Prerequisite
 
-**PASS.** Every model call, tool call, state transition and decision point is traced with inputs,
-outputs, timing and cost (FR-005, FR-030). Every denial carries the rule that produced it (FR-011),
-and FR-048's filesystem denials are recorded in the same shape — which is the clause that forces the
-syscall supervisor (**Q-09**), a cost this plan reports rather than avoids by weakening the clause.
-The budget ledger is journalled outside the container as consumption accrues, so a cgroup kill loses
-no accounting. **U-47**'s four-part fix is adopted verbatim in the measurement harness, per FR-053.
+**PASS, and as of the v1.3.0 amendment it passes on the principle's own terms rather than needing a
+record.** ~~Every model call, tool call, state transition and decision point is traced with inputs,
+outputs, timing and cost (FR-005, FR-030).~~ **Two corrections 2026-08-03, and the citation one is
+the more serious of them.**
+
+**The citation was wrong.** FR-030 is a **drift** requirement — it disables an operation observed to
+have drifted — and it says nothing about traces. The tracing requirement is **FR-038**, and this
+gate had been citing a requirement that does not govern it. Same defect, same day, as the one
+corrected in [`contracts/trace-record.md`](./contracts/trace-record.md), and found by the same
+sweep. Restated: every model call, tool call, egress decision, filesystem decision, state
+transition, verification and drift check is a **span** of a declared closed set, traced with its
+kind, its position in the session, the artifact versions in force, a typed outcome, per-span cost
+and the running total against FR-005's ceilings (**FR-038**, FR-005, FR-035, FR-054).
+
+**And the gate this section had to record as unmet is now met.** When this Constitution Check was
+first written, Principle VI's field list was scoped to *"every emitted system"* and had no v1
+subject, and its ship gate — *"a capability that cannot be attributed to a versioned node MUST NOT
+ship"* — was unscoped and on a literal reading blocked every v1 capability. Neither was recorded as
+a deviation. **OD-22 amends the principle to v1.3.0** rather than recording one: the field list is
+restated over a **traced unit** whose kind is tier-relative, and the ship gate binds attributability
+to the emitting tier's own declared unit. v1's declared unit is the span, FR-038 declares the closed
+seven-kind set, and **SC-012** is the measurement that the ship gate is met. Nothing was weakened —
+the amendment adds a closed-unit-set requirement, a finest-unit rule, and the separation of unit
+identity from artifact version, all three of which FR-038 already satisfies.
+
+> ⚠️ **One build consequence falls out of the amendment and it is flagged here because it is the
+> only one.** The superseded field list asked for the routing decision's predicate inputs *for every
+> conditional edge*; the amended one asks for them for **every decision that selected among
+> alternatives**, which is wider than FR-038's enumeration of egress and filesystem decisions. The
+> span kind it reaches that FR-038 does not is **`state_transition`**. If v1's transitions are fully
+> determined by the prior state and the typed outcome already on the span, nothing selected among
+> alternatives and there is nothing to add. If a transition consults a retry budget, a ceiling or a
+> policy result, those are predicate inputs and the principle requires them recorded with the
+> identity of the rule that produced the transition. **The span writer should carry the field rather
+> than discover later that it needed it** — it is cheap now and a schema change afterwards. Recorded
+> at FR-038 in the same terms.
+
+Every denial carries the rule that produced it (FR-011), and FR-048's filesystem denials are
+recorded in the same shape — which is the clause that forces the syscall supervisor (**Q-09**), a
+cost this plan reports rather than avoids by weakening the clause. **FR-038 goes one term further
+than FR-011 does and the plan must build to the wider one:** a decision span is required for every
+egress and filesystem decision, **permits included**, because a permit resolved by the wrong rule is
+what an attribution has to be able to find. The budget ledger is journalled outside the container as
+consumption accrues, so a cgroup kill loses no accounting. **U-47**'s four-part fix is adopted
+verbatim in the measurement harness, per FR-053.
 
 ### Principle VII — Test-First and Fixture-Backed · deviation record **ACCEPTED IN PART, REJECTED IN PART**
 
@@ -494,6 +537,7 @@ Everything the plan cannot satisfy, in the section that records it.
 | **FR-048's recording clause forces a syscall supervisor whose overhead is unmeasured** | SC-022 requires **100%** of refusals recorded, and a mount namespace records nothing — the attempt fails inside the container and nothing outside learns. Reported as a cost; measured on the reference application before commitment (**Q-09**) | Namespace-only satisfies the enforcement clause and fails the recording clause. Inferring denials from command output is heuristic and would be classification, which FR-013 forbids |
 | **A second language (Go) at the enforcement point** | A parser differential between the proxy and the target defeats FR-018 completely, and FR-018 is what makes the method allowlist meaningful (**Q-01**) | Python keeps one toolchain and gives a weaker framing-ambiguity posture at the one component where that bug class is fatal. Envoy is strong but puts a large dependency in a self-hosted install for a single-upstream policy, and the security-critical decision stays ours regardless |
 | **Deployment-clock drift latency is not measurable on real traffic** unless the customer emits a deployment event, which FR-046 says may not be assumed | A property of the world: a deployment change generally has no observable change time. Measurable on the committed synthetic corpus, which controls the change time, and on real traffic only where the optional trigger exists | Inferring the change time from first observation measures the detector against itself |
+| **FR-047 ships unmeasured — no experiment has ever run the scenario it governs** *(added 2026-08-03)*. Feature 001's only drift experiment is **E13**, whose three named mutations are *rename a route, change a parameter type, delete an endpoint*: all three move the **source**. It has **no arm in which the source is unchanged and the deployment stops serving an operation**, and none in which an admitted target's **published specification is withdrawn** — which is the case FR-047 actually governs. **E13 never ran at all.** So FR-047's disposition (serve the last-known-good set marked stale, deny past the ceiling), its fifteen-minute ceiling, and its deployment-clock detection latency all ship with **zero** supporting evidence | **Recorded as a departure from this project's prove-before-build discipline, on `plan.md` OD-14's precedent, not as coverage.** The measurement requires the artifact to exist: the deciding quantity is how often a published specification stops being reachable *transiently* rather than permanently, which is a property of real deployments and real networks and cannot be manufactured here. **The obligation is therefore deferred to production against real traffic** — instrument re-fetch outcomes with their duration and their recovery, and report the transient-versus-permanent split against the configured ceiling — and it is stated plainly rather than folded into FR-042's drift instrumentation, whose two committed corpora are about drift being *detected* and not about the observation channel *failing*. **The authorising decision, OD-21, is unaffected**; what is recorded is that it rests on a consistency argument and not on a measurement, which OD-21 says of itself. `research/14-architecture-synthesis.md` **O-04** carries the same statement and stays **open** | **SC-021 is not the measurement and must not be read as it.** It scores an implementation's conformance to FR-047 against a fixture derived from FR-047 — a conformance test, not evidence the disposition is right. Calling it coverage would be the substitution this corpus has caught repeatedly. Manufacturing the corpus here is worse than absent: any withdrawal schedule we invent would encode the transient-versus-permanent ratio the measurement exists to discover |
 | **FR-041's threshold is left unset** | Pre-registration for a **per-call** gate is an owner act preceding measurement. **OD-10** records why the superseded per-tool number does not travel: different base rate, different blast radius | Inventing a threshold here is the inherited-number failure arriving through a new door — the failure this corpus has caught repeatedly |
 | **Linux-only, with no degraded mode elsewhere** (~~**Q-11**~~ → **OD-17**, 2026-08-03) | All three FR-048/049/050 mechanisms are kernel facilities | A degraded mode is a sandbox missing one of Principle IV bullet 1's terms, and the bullet's own words are that a configuration missing any term does not satisfy it |
 

@@ -49,7 +49,7 @@ simultaneously.
 |---|---|
 | Chat interaction | 1× |
 | Single agentic loop with tools | **~4×** |
-| Multi-agent system | **~15×** |
+| Multi-agent system | **~15×** ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)) |
 
 ([Anthropic, *How we built our multi-agent research system*](https://www.anthropic.com/engineering/multi-agent-research-system))
 
@@ -63,7 +63,7 @@ factors explained 95% of performance variance, and **token usage alone explained
 count and model choice made up the rest. Coordination sophistication is not on the list.
 
 So the correct control experiment is **not** "multi-agent vs. single agent." It is **"multi-agent vs.
-single agent with a 15× larger turn/token budget."** Most published multi-agent wins never ran that
+single agent with a 15× larger turn/token budget."** ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)) Most published multi-agent wins never ran that
 comparison. Ask for it. Anthropic further notes that *upgrading the model* beat doubling the token
 budget — so the cheapest lever is usually neither architecture nor budget but a better model on a
 single loop.

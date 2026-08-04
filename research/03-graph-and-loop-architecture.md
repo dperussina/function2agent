@@ -536,7 +536,7 @@ The genuinely useful 2026 result is **conditional branching**: don't search at e
 | Best-of-N + programmatic scorer | N× | Yes | ✅ | Cheap gen, cheap check, high variance |
 | Best-of-N + LLM judge | N×+ | No | ⚠️ Bias-prone | Only with pairwise + order swap |
 | Debate | 3–5× | No | ❌ | Not vs. self-consistency at equal compute |
-| ToT / GoT / LATS / MCTS | 5–100× | **Yes** | ⚠️ Narrow | Partial states cheaply scorable; gate branching |
+| ToT / GoT / LATS / MCTS | 5–100× ([2305.10601](https://arxiv.org/abs/2305.10601)) | **Yes** | ⚠️ Narrow | Partial states cheaply scorable; gate branching |
 
 ---
 

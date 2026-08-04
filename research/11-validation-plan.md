@@ -118,7 +118,7 @@ Each hypothesis has a claim, a measurement, a **pre-registered failure condition
 
 **Success condition.** TSR(best multi) ≥ TSR(A5) + 10 pp.
 
-**Failure condition — and the likely one.** TSR(A5) ≥ TSR(best multi). Given that token spend explained ~80% of performance variance in Anthropic's BrowseComp data, and multi-agent runs ~15× the tokens of a chat, the A5 control is where this hypothesis most plausibly dies. If it does: **do not build execution-time multi-agent.** Boundary inference becomes a representation artifact (a map shown to the user and used for tool grouping), not a runtime topology.
+**Failure condition — and the likely one.** TSR(A5) ≥ TSR(best multi). Given that token spend explained ~80% of performance variance in Anthropic's BrowseComp data, and multi-agent runs ~15× the tokens of a chat ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)), the A5 control is where this hypothesis most plausibly dies. If it does: **do not build execution-time multi-agent.** Boundary inference becomes a representation artifact (a map shown to the user and used for tool grouping), not a runtime topology.
 
 **Decides:** topology — represent-always/execute-when-nontrivial vs. uniform graphs.
 

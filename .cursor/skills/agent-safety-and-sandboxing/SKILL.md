@@ -370,7 +370,7 @@ is.
 Codex Auto-review replaces human approval at the sandbox boundary with a separate grading agent. In
 a 10,000-action snapshot: **9,280 ran inside the sandbox with no review at all, 720 escalated, the
 reviewer denied 7, and the acting agent recovered on its own for 4 of those.** Sessions stop for a
-human roughly **200× less often** than in manual mode.
+human roughly **200× less often** than in manual mode ([OpenAI Alignment, Auto-review](https://alignment.openai.com/auto-review)).
 
 Two constraints that make it work, both structural:
 

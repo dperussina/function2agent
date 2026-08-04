@@ -2,7 +2,7 @@
 
 **Feature**: `002-spec-aware-agent-runtime` | **Date**: 2026-08-03 | **Phase**: 0 (`/speckit-plan`)
 
-**Spec**: [`spec.md`](./spec.md) · **Plan**: [`plan.md`](./plan.md) · **Constitution**: v1.2.0
+**Spec**: [`spec.md`](./spec.md) · **Plan**: [`plan.md`](./plan.md) · **Constitution**: ~~v1.2.0~~ **v1.3.0** *(OD-22, 2026-08-03)*
 
 ---
 
@@ -12,8 +12,28 @@ This is the first artifact in the feature that is allowed to name a technology. 
 deliberately did not: the specification names no language, framework, library or wire protocol, and
 its own quality checklist scored that as a deliberate pass.
 
-Most of the stack is **not** decided here. It was decided by measurement in feature 001 and recorded
-as owner decisions **OD-01** through **OD-14**. §1 records how each binding one is honoured, and —
+Most of the stack is **not** decided here. It was decided in feature 001 and recorded as owner
+decisions **OD-01** through ~~**OD-14**~~ **OD-21** in that feature's
+[`plan.md`](../001-discovery-validation/plan.md), which is the authority for the register's extent.
+*(**Range corrected 2026-08-03**, and the reasoning is recorded because a prior pass deliberately
+left it alone. The sentence was read as a claim about **provenance** — which decisions came out of
+measurement in feature 001 — on which reading stopping at OD-14 was defensible, since what followed
+came from owner sessions instead. **It is an extent claim.** The corpus uses this exact construction
+at three other live sites — twice in [`spec.md`](./spec.md) and once in the header of
+[`plan.md`](./plan.md) — and maintains each of them by striking the superseded bound and advancing
+it, so this one is corrected to match rather than reworded around. *(A fourth occurrence, in
+[`checklists/requirements.md`](./checklists/requirements.md), is left at OD-14 on purpose: it records
+what a dated validation run read, and advancing it would claim coverage that run did not have.)* The provenance point is true and
+is now carried in words instead of by the bound: **the first fourteen came out of feature 001's
+measurements and adjudications; OD-15, OD-16 and OD-17 are the owner's answers to §5 below; and
+OD-18, OD-19, OD-20 and OD-21 came from the production specification's clarify session and were
+recorded retroactively.** The words `by measurement` were dropped from the sentence above for the
+same reason — true of the first fourteen, not of the seven after them, and the split is now stated
+rather than smuggled into a bound. **And a note on what guards this, which is nothing**: `tools/README.md`
+records `register-range` as unable to read a whole-register claim written as ordinary prose, and
+neither the checker nor `gen_claims.py` treats the sentence above as a site — verified 2026-08-03 by
+running both. This bound is maintained by a reader noticing, which is how it came to be seven entries
+behind while the corpus's other three sites were kept current.)* §1 records how each binding one is honoured, and —
 *(**Updated 2026-08-03.** The owner has since answered every question in §5, and three answers became
 **OD-15**, **OD-16** and **OD-17**. OD-15 partially reverses OD-01 and is annotated at §1.1, T-01,
 T-02, T-03, T-04, T-06 and T-08. Nothing below is deleted and no measurement is amended.)* —
@@ -859,6 +879,15 @@ say which population it is measured on.
 
 **T-12 is a precondition of all of this.** Without canonical serialization the source-derived
 artifact's hash changes on every run and drift detection reports a false alarm every interval.
+
+> **Added 2026-08-03 — a third fixture is owed here, and the two corpora above must not be read as
+> covering it.** Both corpora are about drift being *detected*; **FR-047** is about the observation
+> channel *failing*, which is a different condition and needs the fixture **SC-021** describes —
+> withdraw an admitted target's published specification, then restore it. **That fixture measures
+> conformance to FR-047 and measures nothing about whether FR-047's disposition is correct**, because
+> feature 001 never ran the scenario: E13's three mutations all move the source and E13 never ran.
+> **FR-047 therefore ships unmeasured**, recorded as such in [`plan.md`](./plan.md)'s Complexity
+> Tracking table and at `research/14-architecture-synthesis.md` **O-04**, which stays open.
 
 ---
 
