@@ -120,7 +120,13 @@ analyses of one fixture (T-12).
 notification. The three mechanisms of FR-048, FR-049 and FR-050 are kernel facilities with no
 equivalent elsewhere, so under FR-053 every other platform is **unsupported rather than
 best-effort** — operators run the bundle in a Linux VM (~~**Q-11**~~ — **ratified 2026-08-03 as
-OD-17**, so this is a recorded product limit rather than a plan assumption).
+OD-17**, so this is a recorded product limit rather than a plan assumption). **Minimum release: Linux
+5.14, DERIVED and NOT TESTED — the two halves are one claim.** The bound is `cgroup.kill`;
+`SECCOMP_USER_NOTIF_FLAG_CONTINUE` (5.5) and the corrected `SECCOMP_IOCTL_NOTIF_ID_VALID` ioctl
+number (5.9) bind lower. Every run to date was on 6.12, so this is a lower bound on what *could*
+work rather than a statement that 5.14 does; the boots that would make it tested are named as an
+outstanding obligation below. See [`spec.md`](./spec.md) FR-053, which is the site that states it in
+full and which no restatement may be weaker than.
 
 **Project Type**: Self-hosted multi-container service (**OD-08**): analysis, runtime, supervisor and
 enforcement point, plus a per-session sandbox image, shipped as OCI images with a compose bundle we
@@ -158,6 +164,20 @@ FR-046's detection window, and the credential lease interval this plan introduce
 > mattered enough to state — **OD-15** removed ADK's `max_llm_calls`, so nothing occupies the position
 > at all until this plan's budget channel is built, and **U-31** is the seam on which the cumulative
 > property becomes enforceable rather than merely stated.
+
+> **Extended again 2026-08-03 — the kernel floor belongs on the list a reader consults to find out
+> which numbers have nothing measured behind them, and it is a third kind.** It is neither a
+> configured value nor a required-and-unset one: **5.14 is a constant in the preflight, derived from
+> documented feature introduction and never run.** So the count of *configured values with nothing
+> behind them* is unchanged at four — the floor is not one of them, and
+> [`contracts/README.md`](./contracts/README.md)'s "four such values" stays correct — while the
+> number of figures this product states without a measurement behind it is one higher. The
+> distinction is the same shape as the one drawn above: an unvalidated staleness ceiling is a number
+> nobody has checked, a required-and-unset ceiling is a number the product refuses to invent, and a
+> derived kernel floor is a number **read out of documentation instead of a boot**. All three fail
+> loudly; only the third could be closed by running something, which is why it is carried as an
+> outstanding measurement rather than as a marking obligation. The measurement that would close it is
+> a boot matrix over 5.14, 5.15 LTS, 6.1 LTS and 6.6 LTS, and it does not exist.
 
 ---
 
@@ -272,7 +292,7 @@ v1.2.0 *because* v1 did not satisfy the original, so it gets the closest reading
 | Bullet-1 term | v1 mechanism |
 |---|---|
 | filesystem scope declared positively | per-session mount namespace containing exactly the declared set; a location outside it is **absent**, not permission-denied ([`research.md`](./research.md) §3.1, FR-048) |
-| bounded processor and memory, enforced from outside | cgroup v2 created and owned by the supervisor before the container starts; no writable `cgroup` mount inside; `memory.max` with `memory.oom.group`, `cpu.max` as a rate, cumulative `cpu.stat` as a total, `pids.max` (§3.2, FR-049) |
+| bounded processor and memory, enforced from outside | cgroup v2 created and owned by the supervisor before the container starts, **every bound written before the workload process exists and the workload blocked before `execve` until it is a member** *(pre-exec barrier, added 2026-08-03 — attaching after spawn leaves a fork-unbounded window)*; no writable `cgroup` mount inside; `memory.max` with `memory.oom.group`, `cpu.max` as a rate, cumulative `cpu.stat` as a total, `pids.max` (§3.2, FR-049) |
 | egress default-deny with an explicit allowlist | the mandatory re-originating proxy; the sandbox's only route (**OD-12**, FR-014 through FR-019) |
 | no credential that outlives the session | the environment holds no long-lived credential at all — the proxy authenticates on its behalf — and its session capability is an opaque handle resolved against a lease on every request (§3.3, FR-050) |
 

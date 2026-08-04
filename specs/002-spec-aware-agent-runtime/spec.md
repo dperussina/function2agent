@@ -852,6 +852,24 @@ question.
   not a measurement, and MUST be marked unvalidated wherever it appears externally under FR-043 —
   the same discipline FR-046's detection window and FR-047's staleness ceiling already carry, and for
   the same reason.
+
+  > **Extended 2026-08-03 with a pre-exec barrier — extended, not narrowed. Every clause above is
+  > unchanged; what this adds is the moment by which they must already hold.** "Enforced from
+  > outside" said nothing about *when*, and a bound that exists from outside but only after the
+  > workload is running is not the bound the requirement describes.
+  >
+  > The session cgroup MUST be created and every bound written before the workload process is
+  > created, and the workload MUST NOT execute its first instruction until it is a member of that
+  > cgroup. Attaching after spawn leaves a window in which the workload can fork unbounded. A test
+  > that spawns, attaches, and then observes the bound holding does NOT demonstrate this, because it
+  > never exercises the window; the test MUST show the workload blocked before `execve` and released
+  > only after membership is established.
+  >
+  > The last sentence is the load-bearing one and it is written against a specific way of getting
+  > this wrong. Attach-after-spawn passes every assertion an ordinary bound test makes — the bound is
+  > present, exhaustion still ends the session in its named terminal state, and **SC-023** is
+  > satisfied end to end — because none of those observations is taken during the window. The failure
+  > is only visible to a test constructed to sit inside it.
 - **FR-050**: No credential that outlives a session MAY be present in, or retrievable from, the
   agent's execution environment. "Does not outlive the run" is a lifetime property and a lifetime is
   not directly inspectable, so this requirement states it as three observable ones and is satisfied
@@ -888,8 +906,39 @@ question.
 - **FR-016**: Destinations MUST be pinned to specific addresses at configuration time, at
   host-**and**-port granularity. Names MUST NOT be re-resolved per request. Name resolution MUST be
   unavailable from the execution environment or mediated entirely by the enforcement point.
-- **FR-017**: Loopback, private, link-local and cloud-metadata addresses MUST be denied even when
-  they are reached through an allowlisted host.
+- **FR-017**: ~~Loopback, private, link-local and cloud-metadata addresses MUST be denied even when
+  they are reached through an allowlisted host.~~ **The private-address clause was replaced
+  2026-08-03 — replaced on that class only, and the link-local class is strengthened rather than
+  loosened in the same edit.** The struck sentence's **loopback** clause is carried forward verbatim
+  below rather than dropped, because the replacement does not name that class and deleting it here
+  would retire a denial nobody decided to retire.
+
+  Loopback addresses MUST be denied even when they are reached through an allowlisted host.
+
+  The enforcement point MUST deny any destination resolving to a link-local address (including the
+  cloud metadata service at 169.254.169.254) unconditionally, with no exemption path. It MUST deny
+  any destination resolving to an RFC1918 address other than the single explicitly declared target
+  origin. The exemption is keyed to that one declared address and MUST NOT be expressible as a
+  range, a prefix, or a configuration toggle.
+
+  > **Why one class gained an exemption and the other lost the possibility of one.** The struck
+  > sentence denied RFC1918 unconditionally, which forbids a pinned upstream on a private address —
+  > and that is the ordinary self-hosted topology FR-049 and **OD-08** already require the design to
+  > survive, so the requirement as written was unsatisfiable against the deployment shape v1 sells
+  > into. The exemption is therefore keyed to **one address**, the origin FR-016 already pins at
+  > configuration time, and is deliberately not expressible as a range, a prefix or a toggle: each of
+  > those three is a shape in which a single declared exemption becomes a class exemption without
+  > anyone editing this requirement. **The link-local clause moves the other way.** 169.254.169.254
+  > is inside `169.254.0.0/16` and would be denied by the class rule regardless; it is named because
+  > reaching it is credential theft rather than exfiltration, and an exemption path that exists for
+  > any reason is one an operator can be talked into using.
+  >
+  > ⚠️ **One reading is left open rather than settled here, and it is an owner question.** A
+  > same-host deployment reached at `127.0.0.1` is a plausible reading of the co-located topology
+  > **OD-08** describes, and under the text above it is denied with no exemption while the same
+  > deployment one hop away on an RFC1918 address is permitted. The replacement wording names the
+  > RFC1918 class only, so extending the exemption to loopback would be this document choosing a
+  > scope the decision did not grant. Recorded as a gap, not closed.
 - **FR-018**: The enforcement point MUST be able to read the method and path of every request it
   allows, and MUST achieve that without requiring a trust anchor inside the execution environment or
   a certificate pin the operator must maintain. Any traffic it cannot interpret as an individual
@@ -1446,6 +1495,24 @@ question.
   > and postcondition results* and the *retry-versus-repair distinction* had v1 subjects already and
   > are carried through unchanged.
   >
+  > ⚠️ **The import is a hazard for any later evaluation, and it has already caused one. Read this
+  > before scoring anything against this requirement.** The subject above was taken *from*
+  > [`contracts/trace-record.md`](./contracts/trace-record.md), so this requirement and that contract
+  > share vocabulary by construction rather than by agreement. **Any instrument that measures
+  > term overlap between the two is therefore measuring the repair and not the artifact.** That is
+  > not hypothetical: the citation advisory scored the *pre-fix* state of that contract against the
+  > *rewritten* text of this requirement and appeared to rank it **third of 57**, where against the
+  > contemporaneous requirement text — the only state in which the defect it was detecting was ever
+  > live — it ranks **tenth of 55** and clears no plausible cutoff. The tool's other known positive,
+  > FR-055 against `artifact-versioning.md`, is byte-identical at both revisions and is clean; this
+  > one is not, which is why the advisory finds one of its two known defects rather than two.
+  > [Finding 017](../001-discovery-validation/findings/017-evaluation-contemporaneity.md) records the
+  > account in full, and the transferable half is that **reconstruction has to cover every side of
+  > the comparison** — checking the contract out of version control and reading the requirement from
+  > the working tree produces a real number, from real historical text, with a revision quoted beside
+  > it, and it is contaminated. This clause exists so a future evaluation does not have to rediscover
+  > that.
+  >
   > ~~**What this does not do, stated because a substitution is easy to read as a discharge.** It does
   > not decide whether Principle VI is *satisfied* by the substitution.~~ **CLOSED 2026-08-03 by the
   > constitution amendment at v1.3.0 (OD-22). The paragraph below was accurate when written and the
@@ -1604,6 +1671,36 @@ question.
   not a freeze, which this corpus learned from a trace corpus that silently re-joined to whatever the
   task file said that day. This restates as a requirement what the Assumptions section carried as an
   expectation: constitution Principle VII's analyzer clause is not satisfied by an assumption.
+
+  > **The Linux kernel floor, recorded 2026-08-03, and it is DERIVED rather than TESTED. The two
+  > halves of that sentence are one claim and MUST NOT be quoted apart.** **OD-17** makes Linux the
+  > only supported platform and [`plan.md`](./plan.md)'s Technical Context names the three facilities
+  > v1 needs; neither states a minimum release, and the implementation needs one because the
+  > alternative is letting an unknown kernel through a preflight that then passes vacuously.
+  >
+  > **The floor is Linux 5.14**, bound by `cgroup.kill`, the atomic group kill FR-049's session-as-a-
+  > unit termination rests on. Two further facilities bind lower and are verified rather than
+  > assumed: `SECCOMP_USER_NOTIF_FLAG_CONTINUE`, which FR-048's whole recording design rests on,
+  > arrives at 5.5; and `SECCOMP_IOCTL_NOTIF_ID_VALID`'s ioctl number was corrected from `_IOR` to
+  > `_IOW` at 5.9. The second is a property of our own code rather than of the kernel — the
+  > implementation defines the corrected number, so on 5.5 through 5.8 that ioctl returns `EINVAL`
+  > from a call site where the failure is invisible, which is the shape this specification treats as
+  > worse than an outright missing facility.
+  >
+  > ⚠️ **5.14 is a derived lower bound on what could work. It is not a claim that 5.14 does work, and
+  > nothing here may be restated as one.** Every run to date was on 6.12. *The facility exists in
+  > 5.14* is a weaker statement than *this code works on 5.14*: cgroup delegation semantics,
+  > `pivot_root` inside a user namespace, and `seccomp` notification behaviour all moved across the
+  > intervening releases. Turning the derived bound into a tested one needs boots on 5.14, 5.15 LTS,
+  > 6.1 LTS and 6.6 LTS — a CI matrix that does not exist and is not scheduled. **Under this
+  > requirement's own rule, a release with no committed fixture is unsupported rather than
+  > best-effort, so the only *supported* kernel today is the one the fixtures run on.** The floor is
+  > the preflight's refusal threshold, not a support claim.
+  >
+  > The preflight states the caveat wherever it states the floor, and a removal proof fires if the
+  > caveat is dropped from the code. **Nothing that quotes 5.14 anywhere else may be weaker than
+  > that**, which is why this note states the derivation and the untested status in the same breath
+  > rather than footnoting the second.
 
 **Artifact versioning and rollback**
 
@@ -1809,6 +1906,24 @@ question.
   attempts against the effect-gate rule set, against the egress policy, and against another session's
   artifacts — **zero** partially succeed, and **100%** of the refusals are recorded in the trace with
   the rule that produced them.
+
+  > **Narrowed 2026-08-03 to the record's existence — narrowed on what the record guarantees, not on
+  > how many records there must be.** The clauses above are unchanged and the recording clause is
+  > still total. What was never stated, and is stated now, is which *fields* of that record the
+  > criterion is evaluable against: the supervisor reads a path out of the workload's own memory, so
+  > a field derived from that read is not something the supervisor can vouch for.
+  >
+  > A filesystem decision on an undeclared path produces a record. The record's `path` is disclosed
+  > on a best-effort basis and is marked with its provenance; enforcement does not depend on it. The
+  > mount namespace makes an undeclared path absent, so a workload that rewrites the path in its own
+  > memory between the supervisor's read and the kernel's resolution misattributes an audit entry and
+  > cannot obtain access.
+  >
+  > **What this criterion is therefore scored on**: the record's existence and the rule identifier
+  > FR-048 and FR-011 require, both of which are the supervisor's own and neither of which the
+  > workload can influence. A battery arm that asserts the recorded `path` equals the path the
+  > adversary asked for is measuring something this design does not claim, and would fail against a
+  > correctly-behaving supervisor.
 - **SC-023**: Under a workload that deliberately exhausts each declared bound in turn, **100%** of
   affected sessions end in a named terminal state and **zero** end by generic error; **zero** sessions
   exceed the declared processor or memory bound; work already performed still counts against the

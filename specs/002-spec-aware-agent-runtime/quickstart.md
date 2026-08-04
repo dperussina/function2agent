@@ -18,6 +18,15 @@ Every other platform is **unsupported** under FR-053, because all three of FR-04
 FR-050's mechanisms are kernel facilities (**Q-11**). Operators elsewhere run the bundle in a Linux
 VM.
 
+**Minimum release: 5.14 — DERIVED and NOT TESTED, and the operator is told both** *(added
+2026-08-03)*. `cgroup.kill` binds the floor; `SECCOMP_USER_NOTIF_FLAG_CONTINUE` (5.5) and the
+corrected `SECCOMP_IOCTL_NOTIF_ID_VALID` ioctl number (5.9) bind lower. Startup refuses anything
+below 5.14, and refuses a release it cannot parse rather than assuming it is new enough. **Every run
+to date was on 6.12**, so 5.14 is a lower bound on what could work and not a statement that it does;
+the boot matrix that would settle it does not exist. An operator on a kernel between 5.14 and 6.12 is
+running a configuration nothing has exercised, and the preflight says so rather than passing
+silently. Stated in full at [`spec.md`](./spec.md) FR-053.
+
 ---
 
 ## The operator path
@@ -123,7 +132,10 @@ on the reference application before it is committed (**Q-09**).
 kill is still counted against FR-005's ceilings, and assert a co-located workload on the same host
 keeps serving throughout. That last assertion is why FR-049's one bound is implemented as two — a
 cumulative ceiling does not protect a co-tenant and a rate quota never ends a session
-([`research.md`](./research.md) §3.2).
+([`research.md`](./research.md) §3.2). **A fourth assertion, added 2026-08-03 with FR-049's pre-exec
+barrier**: show the workload **blocked before `execve`** and released only once it is a member of the
+session cgroup. Driving a running workload past its bounds does not demonstrate this — the bound is
+already in force by then, and the window the barrier closes is the one before it.
 
 **Credential lifetime** — the replay fixture, both arms. Capture the capability handle during a
 session; `SIGKILL` the session **from a separate process**, so no cleanup path can run — the

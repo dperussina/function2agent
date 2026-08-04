@@ -678,6 +678,14 @@ which is worth revisiting if **Q-09** goes the wrong way.
 before the container starts, the container has no writable `cgroup` mount and no delegation, so
 nothing running inside can raise, extend or evade a bound.
 
+**Before the container starts is not the whole of it, and this section said only that until
+2026-08-03.** FR-049's pre-exec barrier clause fixes the other end: every bound is written before the
+workload process is created, **and the workload does not execute its first instruction until it is a
+member of the cgroup**. Creating the cgroup early and attaching after spawn satisfies the sentence
+above and still leaves a window in which the workload can fork unbounded. The barrier is what closes
+it, and it has a test shape attached at FR-049 because the ordinary bound test cannot see the
+window — see the note there before implementing this.
+
 **Why "processor time" is implemented as two bounds and not one.** FR-049 asks for one, and SC-023
 asks for two different things from it: *zero sessions exceed the declared processor bound*, and *a
 co-located reference workload on the same host keeps serving throughout*. A cumulative CPU-seconds
@@ -1059,3 +1067,14 @@ declared rather than hidden:
   Every one of them is bound to FR-043 and none may travel externally as a validated number. The
   lease interval is the only one this plan adds, and it is added because the alternative is a
   self-describing credential that a crash cannot revoke.
+- **One derived bound with no measurement and no scheduled measurement, and it is a different kind
+  from the four above** *(added 2026-08-03)*: **the Linux kernel floor of 5.14, DERIVED and NOT
+  TESTED.** The four above are values an operator configures; this one is a constant in the
+  preflight, read out of documented feature introduction rather than out of a boot. `cgroup.kill`
+  binds it, with `SECCOMP_USER_NOTIF_FLAG_CONTINUE` (5.5) and the corrected
+  `SECCOMP_IOCTL_NOTIF_ID_VALID` ioctl number (5.9) binding lower. Everything was run on 6.12 and
+  nothing on 5.14, so the claim it supports is *this could work at 5.14*, never *this works at 5.14*.
+  It is listed separately so the count of configured values stays four, and it is listed at all
+  because it is the one entry here that a scheduled measurement would actually close: boots on 5.14,
+  5.15 LTS, 6.1 LTS and 6.6 LTS. That matrix is not scheduled. §3.1, §3.2; stated in full at
+  [`spec.md`](./spec.md) FR-053.

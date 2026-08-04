@@ -32,16 +32,25 @@ Each stage is fail-closed; reaching the next stage requires an explicit allow.
 3. **Destination** — origin-form paths, or absolute-form `http` targets naming the pinned origin,
    which is how a URL echoed out of a response body still works ([`../research.md`](../research.md)
    §1.3(a)). Absolute `https` is denied with a **named reason and a counter**. Anything else denied.
-4. **Method** — against the allowlist. Destination and method are evaluated **together**, never
+4. **Address class** *(stated 2026-08-03; FR-017 governs it and this pipeline did not name it)* —
+   the resolved address is checked against the denied classes. **Loopback and link-local, including
+   the cloud metadata address at 169.254.169.254, are denied unconditionally with no exemption
+   path.** RFC1918 is denied except for the single explicitly declared target origin, and that
+   exemption is keyed to the one address FR-016 already pins — it is **not** a range, a prefix or a
+   configuration toggle, because each of those turns one declared exemption into a class exemption
+   with no edit to the requirement. Stage 3 checks the *name and form* of the destination; this
+   stage checks what it *resolves to*, and the two are separate because an allowlisted host is
+   exactly how a denied address gets reached.
+5. **Method** — against the allowlist. Destination and method are evaluated **together**, never
    separately: this is the property **OD-12** tested for and the reason a `CONNECT`-oriented proxy
    was rejected, since it sees a host and a port and silently degrades a method allowlist into a
    destination one.
-5. **Effect resolution** — match the path against the served-operation set; consult the deny list of
+6. **Effect resolution** — match the path against the served-operation set; consult the deny list of
    known side-effecting reads; resolve the tier **per call** (FR-008, FR-009, FR-010). Resolution
    **blocks** the call — the disposition is decided before anything is sent (FR-008).
-6. **Unresolvable** — an operation the served set does not describe is **denied**, not guessed
+7. **Unresolvable** — an operation the served set does not describe is **denied**, not guessed
    (FR-010).
-7. **Re-originate** — inject the target credential, connect out to the pinned address, validate the
+8. **Re-originate** — inject the target credential, connect out to the pinned address, validate the
    certificate.
 
 ## Denials
@@ -51,7 +60,9 @@ and the named reason (FR-011). A denial with no rule identifier fails the invari
 
 Named reasons include, at minimum: `capability_not_honoured`, `session_terminated`, `lease_expired`,
 `method_not_allowed`, `destination_not_allowed`, `absolute_https_denied`, `connect_denied`,
-`upgrade_denied`, `ambiguous_framing`, `operation_unresolvable`, `known_side_effecting_read`.
+`upgrade_denied`, `ambiguous_framing`, `operation_unresolvable`, `known_side_effecting_read`, and
+— added 2026-08-03 with stage 4 — `address_class_denied`, carrying the class that matched so a
+loopback denial and a link-local denial are distinguishable in the record.
 
 `absolute_https_denied` carries a counter deliberately. If it dominates real traffic that is evidence
 for revisiting the posture in v2 — which is why the failure is counted rather than worked around
@@ -96,6 +107,11 @@ an assertion about intent.
 - Method-and-destination evaluated together: a permitted method to a non-pinned destination denied,
   and a non-permitted method to the pinned destination denied.
 - An unresolvable operation denied rather than passed.
+- **The address-class stage, both directions** (FR-017): loopback, link-local and the metadata
+  address denied through an allowlisted host and with no configuration that admits them; an RFC1918
+  address that is *not* the declared origin denied; the declared origin itself permitted. The
+  exemption set is asserted to be **exactly one address** — a test that admits a prefix or a range
+  is testing a different rule from the one FR-017 states.
 - The replay fixture, both arms: a handle captured during a session and replayed from inside a later
   session's environment is **denied and recorded**; replayed from a position with no path to the
   enforcement point it is refused by unreachability and recorded only as a drop counter (SC-024,

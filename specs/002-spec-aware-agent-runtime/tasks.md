@@ -12,7 +12,8 @@
 **Inherited decisions**: **OD-01** onward, in
 [feature 001's plan](../001-discovery-validation/plan.md)
 
-**Total tasks**: 204, in nine phases · **Estimate**: derived for
+**Total tasks**: ~~204~~ **205**, in nine phases *(T205 added 2026-08-03 — the kernel boot matrix
+that would turn the derived 5.14 floor into a tested one)* · **Estimate**: derived for
 [the nine capabilities U-48 opened](#the-re-derived-estimate-for-u-48s-nine-capabilities), **not**
 derived for anything else, and the reason is stated there rather than left as an omission.
 
@@ -80,6 +81,7 @@ supported platform, so both are settled at initialization rather than discovered
   - **PARTIAL** — the pin and the schema-digest check are implemented and fail closed; `CODEGRAPH_SCHEMA_SHA256` is deliberately `None` until a hash is observed from a real `codegraph` database, so the check currently fails loudly rather than passing vacuously.
 - [X] T005 [P] CI running `pytest`, `go test` and the invariants suite on every change, in `.github/workflows/ci.yml`
 - [X] T006 [P] Linux-facility preflight — cgroup v2, user and mount namespaces, `seccomp` user notification — failing loudly on any missing facility, in `src/supervisor/preflight.py` (**OD-17**, FR-053)
+  - **Kernel floor added 2026-08-03: 5.14, DERIVED and NOT TESTED.** Bound by `cgroup.kill`; `SECCOMP_USER_NOTIF_FLAG_CONTINUE` (5.5) and the corrected `SECCOMP_IOCTL_NOTIF_ID_VALID` ioctl number (5.9) bind lower, and the second is a property of our own definition — 5.5 through 5.8 return `EINVAL` from a call site where the failure is invisible. An unparseable release fails rather than being assumed new enough. The check states the derivation and the untested status in the same string and a removal proof fires if the caveat is dropped; T205 is the boot matrix that would make the floor tested, and it does not exist
 - [X] T007 [P] Development container image identical to the runtime image, so the toolchain question finding 003 raised for a laptop never reaches the shipped configuration, in `deploy/images/dev.Dockerfile`
 - [X] T008 [P] Declare FR-053's committed-fixture discipline and the fixture inventory each capability owes, in `tests/fixtures/README.md`
 
@@ -359,6 +361,16 @@ it lowered the transport half.
 **No band on this row.** The transport is measured on all four providers. T060 is the one unanchored
 figure and it is 3–4 days, inside the row's own spread.
 
+> ⚠️ **Reopened 2026-08-03 by Phase 2's measured defect density, and deliberately not re-quantified.**
+> The sentence above is a judgement about *transport*, and T059 is not transport — it is the
+> never-merged, never-interpreted, never-logged-readably discipline over an opaque field, which is a
+> serialization boundary and therefore in the class where Phase 2 measured defects roughly six times
+> denser than assumed. Finding 016's own negative control is the argument: chaining **succeeded with
+> the correct answer** while the opaque field was being dropped, so this row's silent-failure mode is
+> demonstrated rather than hypothesised. Re-quantifying needs a cost per defect that nothing in this
+> corpus has measured; see
+> [Phase 2's measured defect density](#phase-2s-measured-defect-density--the-first-calibration-anchor-this-section-said-it-did-not-have).
+
 > **Two things finding 016 establishes that belong outside this document**, reported here because
 > this pass may not edit the files that carry them. First, **SC-010's provider-capability half now
 > has direct evidence under OD-15 and OD-16** — the four-provider result no longer rests only on a
@@ -366,6 +378,101 @@ figure and it is 3–4 days, inside the row's own spread.
 > sized**, and the finding is the anchor. Neither
 > [`spec.md`](./spec.md) nor [`research/14-architecture-synthesis.md`](../../research/14-architecture-synthesis.md)
 > is edited here.
+
+### Phase 2's measured defect density — the first calibration anchor this section said it did not have
+
+**Added 2026-08-03, after Phase 2 completed.** It is recorded here rather than in a phase heading
+because this is the section that explains why the other phases carry no number, and one of its three
+reasons has partially moved.
+
+**First, what did *not* change, because a re-sizing was asked for and none is possible.** Nothing in
+this document, and nothing in [`plan.md`](./plan.md), sizes anything against a defect rate. The nine
+rows above are engineer-days derived per task from task shape, each anchored to a named finding or to
+a superseded sizing; no row multiplies a line count by a defect density, and Phases 1, 2 and 4
+through 9 carry no estimate at all. **So there is no figure here that a corrected defect rate makes
+stale, and no total moves below.** Anyone arriving with a corrected rate should read the next two
+paragraphs for what it *does* bear on.
+
+**Second, and this is the part that blocks arithmetic rather than merely complicating it: a defect
+rate predicts defects, not days.** Converting one into the other needs a cost per defect, and this
+corpus has never measured one. Deriving days from a defect density here would introduce a second
+unmeasured number to launder the first, which is the inherited-number failure this section already
+refuses twice in its own text.
+
+**What was measured.** Phase 2 produced **five real defects across roughly 2,300 lines** — about
+**one per 460**. The line count is the new Phase 2 sources in the working tree; the defect count is
+the implementation pass's own, and **neither has a findings document behind it**, which is recorded
+below as an outstanding item rather than glossed. Against a working assumption of one per 3,000 that
+is roughly six times denser.
+
+**Why, and the *why* is what makes this usable rather than just alarming.** The five were: a
+non-reentrant lock that deadlocked only under a nesting pattern one caller uses; a rollback that
+split its restoration record and its ref move across two transactions; a volatility scanner with **no
+positive control**, which could have returned the empty list unconditionally and passed every test; a
+redaction marker that did not name which credential it stood for, making a redacted trace useless for
+the diagnosis it was kept for; and a benchmark that overwrote its own committed measurement on every
+run, so a real regression would arrive as ordinary noise.
+
+Not one of those is caught by the thing that catches kernel-mechanism defects. **Kernel mechanism
+code fails loudly — the kernel returns `EPERM` and the test stops.** Serialization and storage code
+fails quietly: it returns a plausible value, the assertion passes, and the defect is in what the
+value *means*. Three of the five are instruments that would have reported success while measuring
+nothing, which is the failure class this repository already has a name for.
+
+**So the rate is not one number, and applying one per 500 uniformly would overcorrect exactly as
+badly as one per 3,000 underestimated.** The working split:
+
+| Rate | Applies to | Why |
+|---|---|---|
+| **~1 per 500** | anything crossing a storage or serialization boundary — persisted records, cross-process handoffs, canonical form, redaction, ledgers and journals, and **any instrument whose output is a measurement** | The failure is a plausible wrong value, and nothing outside the code checks it. All five Phase 2 defects are here |
+| **~1 per 3,000** | code the kernel checks for you — namespaces, cgroups, `seccomp`, capabilities, file descriptors | A wrong call fails at the syscall with a named errno, so the defect surfaces on first execution rather than at review |
+
+**Classifying the remaining phases against that split, because the point of an anchor is that
+somebody can use it.** Phase 4 is the one that matters and it is **mixed, not predominantly either**:
+
+| Phase 4 group | Tasks | Rate |
+|---|---|---|
+| Execution-environment mechanisms | T097, T099, T102–T106, T109, T110 | kernel-checked |
+| Enforcement-point protocol stages | T083–T091, T094 | kernel-checked in part only — T085 and T094 are parser-differential work, where a wrong parse is a plausible value and the failure is silent |
+| Admission, effect rules, pinning | T073–T082 | storage boundary — every one persists a versioned record another stage reads |
+| Decision log, trace ingest, spans | T092, T093, T100 | storage boundary, and cross-process |
+| Capability, lease, session state | T107, T108, T111, T112 | storage boundary |
+| Batteries, fixtures, instruments | T101, T114–T118 | **instrument** — the volatility-scanner defect is this class exactly |
+
+Phases 5, 6, 8 and 9 are **predominantly storage-and-instrument**: derivation provenance, result
+records, drift artifacts, the measurement substrate and the reporting surfaces are all persisted or
+all instruments. Phase 7 is the serving surface and is mixed on the same pattern as Phase 4. **No
+phase is predominantly kernel-checked except the execution-environment group inside Phase 4**, which
+is a smaller share of the remaining work than the loud failures it produces makes it feel.
+
+**What this does to the two rows that were unknown in the first pass.** Both are affected and neither
+can be re-derived here. Row 4 is storage-shaped almost throughout — T051 is a journal and T053 a
+durable ledger, and both are named above as the tasks a hostile probe result would force rework of.
+Row 5 contains one storage-boundary task, T059's opaque-state handling, whose whole discipline is
+*never merged, never interpreted, never logged readably* — a discipline whose violations are silent
+by construction, and finding 016's negative control already demonstrated that chaining **succeeds
+with the correct answer** while the field is being dropped. **Row 5's "no band on this row" was
+written before Phase 2 measured anything and rests on the assumption this section has just
+contradicted.** It is flagged rather than replaced: putting a number on it needs the cost per defect
+nobody has.
+
+**The honest effect on the interval is to widen it, not to shift it, and the widening is not
+quantified here.** A six-fold miss on the one phase with a measurement is evidence about the spread
+of these estimates and not only about their centre — but the nine rows were derived by task shape
+rather than by density, so there is no multiplier to apply to them, and inventing one would be worse
+than leaving the interval honestly unbounded on the high side. What is stated instead: **59–82 is a
+lower bound whose upper end is now less trustworthy than its lower end**, and row 5's absent band is
+the specific place to start when someone re-derives with a cost per defect in hand.
+
+**Two outstanding items this creates**, both flagged rather than resolved:
+
+- **The measurement has no findings document.** Five defects in roughly 2,300 lines is a
+  measurement of this project's own output and it currently lives only in this section and in the
+  implementation pass that produced it. Feature 002 has no `findings/` directory, so filing it is a
+  structural act rather than a propagation one.
+- **The classification is reasoned, not measured.** One phase produced the split. Whether kernel
+  code really is six times cleaner, or whether Phase 2 was simply the harder phase, is not
+  established by a single phase, and the next phase to complete is the one that tests it.
 
 ### Nothing else in this task list is sized, and that is a statement rather than an omission
 
@@ -462,7 +569,7 @@ pointed at live data inside the operator's own trust boundary.
 - [X] T087 [US1] Stage 4, method: the method allowlist evaluated **together with** the destination on the same request, and identically whether the request originated in the runtime or in a command the agent composed, in `src/proxy/method.go` (FR-015)
 - [X] T088 [US1] Stage 5, effect: match the path against the served-operation set, consult the deny list, resolve the tier **per call**, and block before anything is sent, in `src/proxy/effect.go` (FR-008, FR-009, FR-010)
 - [X] T089 [US1] Stage 6: an operation the served set does not describe is **denied, not guessed**, in `src/proxy/effect.go` (FR-010)
-- [X] T090 [US1] Deny loopback, private, link-local and cloud-metadata addresses even when reached through an allowlisted host, in `src/proxy/addresses.go` (FR-017)
+- [X] T090 [US1] ~~Deny loopback, private, link-local and cloud-metadata addresses even when reached through an allowlisted host~~ **Deny loopback and link-local (including the cloud metadata address) unconditionally with no exemption path, and deny every RFC1918 address other than the single explicitly declared target origin — the exemption keyed to that one address and not expressible as a range, a prefix or a toggle**, in `src/proxy/addresses.go` (FR-017 as replaced 2026-08-03 on the private-address class; the struck wording forbade a pinned upstream on an RFC1918 address, which is the ordinary self-hosted topology)
 - [X] T091 [US1] Stage 7: re-originate with target-credential injection and ordinary certificate validation, with **no TLS interception and no response-body rewriting**, in `src/proxy/reoriginate.go` (**OD-12**, and rewriting is rejected rather than deferred because it would transform untrusted bytes on the enforcement path)
 - [X] T092 [US1] Decision log carrying the rule identifier, method, path, resolved tier, session and named reason for every disposition, in `src/proxy/decisionlog.go` (FR-011)
 - [ ] T093 [US1] Ingest the proxy's decision log into the trace stream, the proxy owning its own database and the runtime reading it, in `src/runtime/proxy_ingest.py` (T-06)
@@ -479,6 +586,7 @@ pointed at live data inside the operator's own trust boundary.
 - [ ] T101 [US1] **Measure the syscall supervisor's overhead on the reference application before the mechanism is committed**, recording the figure and the shell-heavy arm that stresses it, in `tests/batteries/test_seccomp_overhead.py` (**Q-09** — accepted *with* the measurement, not with a prediction of its result; if it is prohibitive the recorded fallback is an audit channel that keeps SC-022 and loses the before-execution property)
   - **PARTIAL — the figure is measured and recorded** in `tests/batteries/results/seccomp-overhead.json`, on three proxy workloads. T101 asks for the **reference application**, which does not exist, so that clause is **outstanding**.
 - [X] T102 [US1] Session cgroup created and owned by the supervisor **before the container starts**, in `src/supervisor/cgroup.py` (FR-049)
+  - **Extended 2026-08-03 by FR-049's pre-exec barrier clause, and this task as written does not discharge it.** Creating the cgroup before the container starts is one end; the other is that every bound is written before the workload process exists and the workload does not execute its first instruction until it is a member. The test that demonstrates it must show the workload **blocked before `execve`** and released only after membership — a test that spawns, attaches, and then observes the bound holding never enters the window and proves nothing about it
 - [X] T103 [US1] The four controls — `memory.max` with `memory.oom.group`, `cpu.max` as a rate, cumulative `cpu.stat` against a declared total, and `pids.max` — in `src/supervisor/bounds.py` (FR-049; processor time is two bounds because **SC-023** asks two different things of one requirement, and `pids.max` is an addition marked as one because a fork bomb is the cheapest way to defeat the co-located-workload clause)
 - [X] T104 [US1] No writable `cgroup` mount and no delegation inside the container, so nothing running inside can raise, extend or evade a bound, in `src/supervisor/cgroup.py` (FR-049's enforced-from-outside clause)
 - [X] T105 [US1] Bound exhaustion ends the session in the matching named terminal state — `terminated.memory_bound_exhausted`, `terminated.cpu_bound_exhausted`, `terminated.process_bound_exhausted` — never by generic error, in `src/supervisor/bounds.py` (FR-049, FR-006)
@@ -497,6 +605,7 @@ pointed at live data inside the operator's own trust boundary.
 - [ ] T113 [US1] The runtime's own default-deny egress plane pinned to the model provider, in `src/runtime/egress.py` (T-10 — an addition beyond what the specification requires, because FR-014 through FR-019 scope to the execution environment and the principle's concern is the process that puts attacker-influenceable text into a model)
 - [ ] T114 [P] [US1] Adversarial battery for **SC-002** and **SC-003**: zero calls that did not resolve read-only reach the target, 100% of denials state their rule, zero outbound connections leave for a destination outside the pinned set including those a command opened itself, and zero requests allowed whose method could not be read, in `tests/batteries/test_adversarial_egress.py`
 - [ ] T115 [P] [US1] Adversarial battery for **SC-022**: zero reads and zero writes succeed outside the declared set — including against the effect-gate rule set, the egress policy and another session's artifacts — zero partially succeed, and 100% of refusals are recorded with their rule, in `tests/batteries/test_adversarial_filesystem.py`
+  - **Scored on the record's existence and its rule, per SC-022's 2026-08-03 narrowing.** No arm may assert that the recorded `path` equals the path the adversary asked for: the supervisor reads that path out of the workload's own memory, so a workload rewriting it between the read and the kernel's resolution misattributes an audit entry — and obtains no access, because the mount namespace makes an undeclared path absent. An arm asserting path equality would fail against a correctly-behaving supervisor. The `path` is best-effort and carries its provenance; the rule identifier is the supervisor's own and is what this battery scores
 - [ ] T116 [US1] Reference application with seeded state and known-correct answers, plus its **stated size**, in `tests/fixtures/reference-app/` (FR-053)
 - [ ] T117 [US1] Unattended first-verified-answer harness measuring the **SC-001** path from starting configuration, in `tests/integration/test_sc001_first_answer.py`
 - [ ] T118 [US1] **Instrument analysis wall time separately from the rest of the SC-001 window, and state the reference application's size wherever SC-001 is reported**, in `src/analysis/timing.py` — SC-001 is a compound of a bounded step and an unbounded one, **U-21** records `codegraph`'s scale claim as untested, and reporting the two together is what makes the criterion quietly true on small inputs and quietly false on large ones
@@ -658,6 +767,8 @@ false-alarm rate and latency on each clock.
 - [ ] T190 [P] [US5] Audit every statement of what the product supports for a language, framework or target shape with no committed fixture and asserted expected output, in `docs/support-audit.md` (FR-053, **SC-027**)
 - [ ] T191 [US5] Measure, per deployed runtime, whether it is still serving traffic four weeks after installation, recording an installed-demonstrated-then-unused runtime as a **non-adoption** rather than an install, in `src/runtime/reports/adoption.py` (**SC-017**)
 - [ ] T192 [US5] Standing report of every value still marked unvalidated — FR-046's detection window, FR-047's staleness ceiling, FR-049's two bounds, the lease interval — in `src/runtime/reports/unvalidated.py` (FR-043)
+  - **Extended 2026-08-03**: the report also carries **the Linux kernel floor of 5.14 as DERIVED and NOT TESTED**, listed as a distinct kind rather than folded in with the four. The four are values an operator configures; the floor is a preflight constant read out of documented feature introduction rather than out of a boot, and it is the only entry a measurement would close (T205). Whatever wording the report uses, it may not be weaker than the preflight's own, which states the derivation and the untested status together and has a removal proof behind it (**OD-17**, FR-053, FR-043)
+- [ ] T205 [US5] **Boot the supported-kernel matrix and convert the derived floor into a tested one** — 5.14, 5.15 LTS, 6.1 LTS and 6.6 LTS, running the FR-048, FR-049 and FR-050 mechanism batteries on each — in `.github/workflows/kernel-matrix.yml` (**OD-17**, FR-053). Until this exists, **every run to date was on 6.12** and 5.14 is a lower bound on what *could* work rather than a statement that it does. Recording the boots is the whole task: cgroup delegation semantics, `pivot_root` in a user namespace and `seccomp` notification behaviour all moved across the intervening releases, so a green 6.12 run is evidence about 6.12 and about nothing below it
 
 **Checkpoint**: every claim the product makes either traces to a measurement or is marked
 unvalidated, and the instruments that would close the three unmeasured ones exist.

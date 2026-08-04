@@ -116,7 +116,7 @@ Three instances found by accident is not a base rate. What follows is a delibera
 measurements this corpus relies on, ranked by how much rests on the figure. **Clean results are
 included and are worth as much as the dirty ones.**
 
-### S1 — the verifier's zero-false-alarm figure. Suspect; medium confidence; a cheap check settles it
+### S1 — the verifier's zero-false-alarm figure. ~~Suspect; medium confidence; a cheap check settles it~~ **RESOLVED 2026-08-03 — checked, clean, and the check found a separate defect in the denominator**
 
 **What rests on it.** [`VERDICT.md`](../VERDICT.md) describes the verifier as the one v1 capability
 that is *"softer than unmeasured suggests"*, and the evidence it gives is that the postcondition arm
@@ -143,6 +143,24 @@ the records whose run manifest reports the current battery version, and report t
 pooled one. Read-only, no model, no credential. If it is still zero the claim is *stronger* than it
 currently reads and should be restated on the narrower denominator. If it is not, the exclusion of 6
 was insufficient and the headline needs rewriting.
+
+**The check was run the same day, at $0.0000, and it came back clean.**
+[Finding 018](./018-verifier-false-alarm-attested-denominator.md) reports it. The arm raises **0
+false alarms on the 96 oracle-positives whose own run manifest declares the battery under test**, 93
+of which it compared — and the cross-battery half kept in scope by the value test is separately
+clean at 0 of 82 compared, which is the split this entry's suspicion predicted might not hold. It
+holds. The confidence stated above was right in both directions: the figure did need a caveat, and
+it was not wrong.
+
+**The check found something this entry did not look for, and it is the more useful half.** A
+false-alarm denominator of 220 counts **45 records the arm declined as `unverifiable`**, 40 of them
+the entire unattested class. A declined record cannot enter the numerator, so those 45 tighten the
+interval and supply no evidence: *0 of 220 is a true statement and not a rate*, and the pooled rate
+is 0 of 175 compared. That is a reporting defect rather than a contemporaneity one, and it would
+have survived any amount of provenance work on the denominator. **A survey aimed at one failure
+class found a different one because re-running the instrument was the step both required** — which
+is [S6](#s6--the-documentations-own-account-of-the-checkers-live-output-confirmed-contaminated-fixed-in-this-pass)'s
+lesson arriving a second time in the same document.
 
 ### S2 — the consistency checker's rules and the fixtures pinning them. Structurally undecidable, but largely clean by construction
 
@@ -262,7 +280,10 @@ what it found is not a survey.
   denominator is unmeasured.
 - **S1 is not a defect finding.** It is a suspicion with a named check attached. Nothing here says
   the verifier's false-alarm figure is wrong, and the arm's behaviour on the six stale records is
-  evidence in its favour rather than against it.
+  evidence in its favour rather than against it. *(Updated 2026-08-03: the check has since been run
+  — [finding 018](./018-verifier-false-alarm-attested-denominator.md) — and the figure is clean on
+  the attested denominator. The defect it did surface is that the denominator counts records the arm
+  never compared, which is a reporting rule and not contamination.)*
 - **S2 cannot be closed.** The undecidability is a property of the repository's history and no
   amount of further work changes it. Any future statement that those fixtures were written
   independently of the fixes would be an assertion, not a finding.
@@ -272,6 +293,9 @@ what it found is not a survey.
   than measured.
 - **No re-scoring of any prior finding was performed.** This document changes how several figures
   should be read; it does not change any of them, and none of the numbers in `findings/` was edited.
+  *(Still true of this pass. S1's named check was run separately and is reported in
+  [finding 018](./018-verifier-false-alarm-attested-denominator.md), which does re-score — and
+  reproduces every figure it re-scored.)*
 
 ## Reproduction
 
@@ -288,6 +312,10 @@ python3 /tmp/at-cee/tools/check_corpus.py --root /tmp/at-cee --report-only --for
 
 # S2 — which perturbations are discriminated
 python3 tools/threshold_probe.py
+
+# S1 — the false-alarm census, stratified by attestation, and the reproduction assertion
+cd specs/001-discovery-validation/harness/verifier-vs-judge
+python3 census_c2_false_alarms.py --verify-pooled
 ```
 
 The FR-038 and FR-055 word counts and body hashes are reproduced by parsing each revision's

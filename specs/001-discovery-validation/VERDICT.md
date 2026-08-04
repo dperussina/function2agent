@@ -167,13 +167,37 @@ Stated before the adjudication tables, because everything below inherits it.
 >
 > - **Softer than "unmeasured" suggests: the verifier.** Its *mechanism* is demonstrated and was not
 >   fitted. The postcondition arm detects **all 9 numeric value errors, including all 3 sub-1%
->   near-misses, with zero false alarms across 220 clean positives** — *the offline full-corpus
->   sweep; the `FPR_c2 = 0/60` quoted elsewhere is the judge-scored sample and a smaller population,
->   and the two must never be merged ([14](../../research/14-architecture-synthesis.md) §3.2)* —
+>   near-misses**, ~~with zero false alarms across 220 clean positives~~ **and raises zero false
+>   alarms on the 96 oracle-positives whose own run manifest declares the battery under test, 93 of
+>   which it actually compared** — *the offline full-corpus sweep, restricted to records that need no
+>   cross-battery join to attest; the `FPR_c2 = 0/60` quoted elsewhere is the judge-scored sample and
+>   a smaller population again, and the three must never be merged
+>   ([14](../../research/14-architecture-synthesis.md) §3.2,
+>   [finding 018](./findings/018-verifier-false-alarm-attested-denominator.md))* —
 >   through a six-rung precision
 >   ladder committed before any derivation was written that **contains no numeric constant**. What is
 >   unmeasured is strictly the *comparison*: no judge call was ever billed, and every judge figure in
 >   the committed artifacts is a stub. **The verifier works; nobody knows whether it is needed.**
+>
+>   > *(Restated 2026-08-03 on the attested denominator — **the result is stronger, not weaker, and
+>   > the struck figure was not wrong.**
+>   > [Finding 017](./findings/017-evaluation-contemporaneity.md)'s survey ranked this sentence its
+>   > top suspect, because 220 of the 226 oracle-positives sit in a corpus where 143 of 246 records
+>   > ran under a superseded battery: 124 of the 220 are cross-battery, and 84 of those are kept in
+>   > scope only by a value test that
+>   > [finding 015](./findings/015-verifier-vs-judge-not-run.md) shows is blind to wording
+>   > drift. The census was re-run under that restriction and
+>   > [finding 018](./findings/018-verifier-false-alarm-attested-denominator.md) reports it: **the
+>   > narrow rate is also zero**, and the value-attested half is separately zero too, so the pooled
+>   > figure was not carried by the unattestable records. **Two things did change.** The pooled 220
+>   > counts 45 records the arm declined as `unverifiable` and therefore could never have raised an
+>   > alarm on — 40 of them the entire unattested class — so **0 of 220 is not a rate**; the pooled
+>   > rate is 0 of 175 compared. And the sentence had been pairing a detection numerator over the
+>   > eligible population with a false-alarm denominator over the clean-positive population, which
+>   > are different populations. On the attested population alone both sides share one denominator
+>   > and read **2 of 2 false successes flagged, 0 false alarms on 96 positives**. The narrow figure
+>   > buys its provenance with a wider interval — 0.0–3.8 pp against 0.0–1.7 pp — and with thinner
+>   > coverage of `R4`, the family the drift touched.)*
 > - **Sharper than "unmeasured" suggests: drift detection.** It has no mechanism demonstrated, no
 >   harness, no pre-registration, and **no experiment scheduled**. The other two at least have a
 >   named measurement and a reason it did not happen.

@@ -428,6 +428,18 @@ c2 raises 6 alarms; all 6 are the stale positives of the packaging defect, so on
 positives** it raises none, and on the 180 *eligible* positives it raises none. Its false alarms
 are not noise — they are the corpus defect, detected.
 
+> *(Annotated 2026-08-03 — **not a correction. Every figure in this section reproduces exactly**,
+> and [finding 018](./018-verifier-false-alarm-attested-denominator.md) asserts that reproduction
+> mechanically rather than by inspection. Two readings of the 220 do need narrowing, both raised by
+> [finding 017](./017-evaluation-contemporaneity.md)'s survey. **The 220 is a mixed population**:
+> most of its members are cross-battery and are kept in scope by the same value test this document
+> shows is blind to wording drift. Re-run restricted to records whose manifest declares the current
+> battery, the census gives **0 alarms on 96 positives, 93 of them compared** — and the
+> value-attested half is separately clean, so the pooled zero was not resting on the unattestable
+> records. **And 0 of 220 is not a rate**: 45 of the 220 are `unverifiable`, 40 of them the entire
+> unattested class, and a record the arm declined to compare cannot appear in the numerator. The
+> pooled rate is 0 of 175 compared.)*
+
 **And the mechanism has no tunable threshold.** The target declares no numeric precision anywhere —
 no `multipleOf`, no numeric `format`, across 243 component schemas — so §4.5's "compare at the
 schema's declared precision" has no referent (Amendment B2). What replaced it is a six-rung
@@ -464,7 +476,7 @@ verdict exists and none ever will. So:
 |---|---|
 | A postcondition verifier detects value errors a schema-derived one structurally cannot | **Demonstrated**, 10 of 10, model-free |
 | Its comparison mechanism has no fitted or tunable threshold | **Demonstrated** by inspection of the committed ladder |
-| It raises no false alarms on clean traces | **Demonstrated**, 0 of 220 |
+| It raises no false alarms on clean traces | **Demonstrated**, ~~0 of 220~~ **0 of 96 attested positives (93 compared); 0 of 175 compared across all 220 clean positives** *(restated 2026-08-03, [finding 018](./018-verifier-false-alarm-attested-denominator.md))* |
 | **It catches failures an LLM judge would miss** | **UNMEASURED, and deferred to production** |
 
 The fourth row is the product claim. Nothing in E8 speaks to it. `D_c2` = 10/15 = 66.7% raw and

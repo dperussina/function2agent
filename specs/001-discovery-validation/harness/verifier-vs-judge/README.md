@@ -55,6 +55,7 @@ python3 freeze.py --verify              # the frozen corpus is intact, or refuse
 python3 selftest.py                     # 169 checks: every control fires and stays quiet
 python3 runner.py --dry-run --leak-audit   # pre-flight the leak assertion over all 80 traces
 python3 runner.py --dry-run             # the whole pipeline, stub judge, $0.00
+python3 census_c2_false_alarms.py --verify-pooled   # c2's false alarms by attestation stratum
 ```
 
 None of that needs a credential, a network, or a running container.
@@ -110,6 +111,7 @@ key material and for absolute home paths, and fails if it finds either.
 | `analyze.py` | the report, and the assertions that void the run. |
 | `runner.py` | the driver. |
 | `selftest.py` | proves every check fires on planted-bad input and stays quiet on known-good. |
+| `census_c2_false_alarms.py` | *added 2026-08-03.* Arm (c2)'s false-alarm census over all 246 frozen records, stratified by how each record's join is attested, with each rate carrying the `metrics` Wilson interval and the count of records the arm actually compared. `--verify-pooled` asserts the pooled stratum still reproduces the figures finding 015 published. A driver only: no verdict, eligibility or rate logic is reimplemented here. Finding 018. |
 | `fixtures/` | the planted-bad and known-good inputs the self-test runs against. |
 | `results/<run_id>/` | `manifest.json`, `judge_calls.jsonl`, `verdicts.jsonl`, `analysis.json`, `report.md`. |
 
@@ -331,9 +333,19 @@ Both were found by planted fixtures, not by the corpus.
 The postcondition arm is now complete, and with it the answer to the question the experiment
 exists to ask.
 
-**c2 detects all 9 numeric value errors, including all 3 sub-1% near-misses, with zero false
-alarms on 220 clean positives.** These are the failures `c1` is structurally blind to by
-construction.
+**c2 detects all 9 numeric value errors, including all 3 sub-1% near-misses,** ~~with zero false
+alarms on 220 clean positives.~~ **and raises zero false alarms on the 96 clean positives whose run
+manifest declares the battery under test, 93 of which it compared.** These are the failures `c1` is
+structurally blind to by construction.
+
+> *(Restated 2026-08-03 on the attested denominator — **stronger, not weaker; the struck figure was
+> not wrong.** `census_c2_false_alarms.py` re-runs the sweep stratified by how each record's join is
+> attested. The narrow rate is zero, the value-attested half is separately zero, and the pooled
+> figure was therefore not carried by records kept in scope by a test blind to wording drift. What
+> changed is that **0 of 220 is not a rate** — 45 of the 220 are `unverifiable`, 40 of them the whole
+> unattested class, and a declined record cannot enter the numerator, so the pooled rate is 0 of 175
+> compared. Run `python3 census_c2_false_alarms.py --verify-pooled` for both, and for the assertion
+> that the pooled stratum still reproduces every figure finding 015 published. Finding 018.)*
 
 > *(Labelled 2026-08-03 — **not a correction; both figures are zero and both were right.** The
 > corpus quotes "zero false alarms on **220** clean positives" and `FPR_c2 = **0/60**`
@@ -343,7 +355,9 @@ construction.
 > oracle-positives less the 6 stale ones. **60** is the **seeded stratified sample** that
 > `select.select` draws for a run, and it is the population every `FPR_c` figure in every
 > `report.md` under `results/` is computed on — sized for the judge, whose calls are what cost
-> money. Quote the 220 for a claim about the mechanism and the 60 for anything set beside a
+> money. ~~Quote the 220 for a claim about the mechanism~~ **Quote the attested 96 for a claim about
+> the mechanism — finding 018, and see the restatement above the labelling note** — and the 60 for
+> anything set beside a
 > judge-scored metric. **The distinction is load-bearing, not pedantic:** `FPR_c1` reads a
 > perfect `0/60` in every dry run while `c1` was raising two false alarms elsewhere in the
 > corpus that the sample had not drawn. Finding 015.)* ~~On the frozen corpus, excluding the stale traces of Amendment B3, `D_c2` is

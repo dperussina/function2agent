@@ -1770,10 +1770,13 @@ decision — only its measurement is relocated.**
 > **These two statements are about different things and only one of them is unmeasured.**
 >
 > **DEMONSTRATED — the mechanism, and it was not fitted to the corpus.** The postcondition arm (`c2`)
-> **detects all 9 numeric value errors, including all 3 sub-1% near-misses, with zero false alarms
-> across 220 clean positives** — *the offline full-corpus sweep, model-free and part of no run's
+> **detects all 9 numeric value errors, including all 3 sub-1% near-misses**, ~~with zero false alarms
+> across 220 clean positives~~ **and raises zero false alarms on the 96 oracle-positives whose run
+> manifest declares the battery under test, 93 of which it compared** — *the offline full-corpus
+> sweep, model-free and part of no run's
 > reported metrics* ~~(`FPR_c2 = 0/60` on the scored sample, `D_c2 = 10/10` on `N_fs`)~~ *(both
-> figures restated, apart, in the labelling note at the foot of this box).* It
+> figures restated, apart, in the labelling note at the foot of this box; the denominator is restated
+> in the attestation note below it).* It
 > does this through a **six-rung precision ladder committed before any derivation was written, which
 > contains no numeric constant** — each rung names a *source* of precision, never a value, and the
 > last rung is a refusal rather than a default tolerance. 28 projections land on integer-closed
@@ -1797,8 +1800,14 @@ decision — only its measurement is relocated.**
 > [11](../../research/11-validation-plan.md) §8 now require:
 >
 > - **220** — every clean oracle-positive in the frozen corpus, swept offline against the committed
->   fixture. Model-free, no sampling, and **part of no run's reported metrics**. Quote it for a
->   claim about the *mechanism*, which is what this box is making.
+>   fixture. Model-free, no sampling, and **part of no run's reported metrics**. ~~Quote it for a
+>   claim about the *mechanism*, which is what this box is making.~~ **Quote the 96 below for that;
+>   see the attestation note.**
+> - **96** — *added 2026-08-03* — the subset of those clean positives whose **own run manifest
+>   declares the battery under test**, so no cross-battery join is performed and nothing rests on the
+>   value-comparison test. 93 of the 96 were compared and none raised an alarm
+>   ([finding 018](./findings/018-verifier-false-alarm-attested-denominator.md)). **This is the
+>   denominator a mechanism claim should be quoted on.**
 > - **60** — the seeded stratified sample `select.select` draws from the pinned seed, sized for the
 >   judge because judge calls are what cost money. **Every reported false-alarm rate in this feature
 >   is computed on it**, including `FPR_c2 = 0/60`. Quote it against anything judge-scored.
@@ -1812,6 +1821,20 @@ decision — only its measurement is relocated.**
 > never drawn ([finding 015](./findings/015-verifier-vs-judge-not-run.md); **C-19**). A denominator
 > that excludes the failure is indistinguishable from one that contains none — which is exactly the
 > inference the adjacency above invited a reader to make about `c2`.
+>
+> **Attestation note added 2026-08-03 — the 220 is a rate over a mixed population and it counts 45
+> records the arm never compared.** [Finding 017](./findings/017-evaluation-contemporaneity.md)
+> ranked this figure its top suspect and
+> [finding 018](./findings/018-verifier-false-alarm-attested-denominator.md) settles it by re-running
+> the census restricted to same-battery records. **The narrow rate is also zero**, and so is the
+> value-attested half taken on its own, so the pooled figure was not being carried by the records
+> whose provenance rests on a test blind to wording drift. Two things nonetheless need saying beside
+> the 220. **It is not a rate**: 45 of the 220 are `unverifiable`, including all 40 unattested
+> positives, and a record the arm declined cannot appear in the numerator — the pooled rate is 0 of
+> 175 compared. **And this box pairs two populations**: `D_c2` is over the eligible population and
+> the false-alarm denominator is over the clean positives. On the attested population both sides
+> share one denominator and read **2 of 2 false successes flagged and 0 false alarms on 96
+> positives**, at the cost of a wider interval and of 12 rather than 34 compared `R4` records.
 >
 > **NOT DEMONSTRATED — the margin.** *Whether a general-purpose LLM judge would have caught the same
 > failures.* No judge call was ever made. Every judge figure in the committed dry-run artifacts is a
