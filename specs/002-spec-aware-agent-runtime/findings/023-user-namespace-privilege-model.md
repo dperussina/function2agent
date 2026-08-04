@@ -6,7 +6,7 @@
 [`src/supervisor/cgroup.py`](../../../src/supervisor/cgroup.py) and
 [`src/supervisor/seccomp.py`](../../../src/supervisor/seccomp.py) against the kernel, before any of
 them is changed.
-**User Story**: US1, by way of FR-048, FR-049, FR-050, FR-017 and SC-022.
+**User Story**: US1, by way of FR-048, FR-049, FR-017 and SC-022.
 **Owner decision**: **none is recorded here, and the register was deliberately not edited.** The
 owner's decision is not yet in the register; where it appears below it is written as `OD-24` in a
 code span, which the corpus checker does not read as an identifier, because writing it as a live
@@ -34,6 +34,23 @@ and `022` was still free when this file was written. Another pass filed
 free. `findings/README.md` says of the single-sequence scheme that *"two features filing on the same
 day can collide"* and that the numbering note is *"a convention, not a mechanism — the duplicate is
 caught after the fact"*. That is exactly what happened, and the after-the-fact catch worked.
+
+> ### ⚠️ Corrected 2026-08-04 — a label, not a result. Every measurement in this document stands.
+>
+> Seven sites below cited FR-050 for seccomp user-notification. FR-050 is the credential-lifetime
+> requirement; the seccomp listener serves **FR-048**, whose recording clause requires an attempted
+> read or write outside the declared set to be recorded with the rule that produced it, and which
+> `spec.md` names directly: `SECCOMP_USER_NOTIF_FLAG_CONTINUE` is what *"FR-048's whole recording
+> design rests on."* No probe, posture, verdict or cost figure changes — this document measured the
+> right mechanism under the wrong heading. Surfaced by
+> [finding 024](./024-deployment-surface-permission-census.md).
+>
+> **Corrected in place rather than struck.** This file's strike-and-supersede convention is reserved
+> for a claim that fell — a number, or an inferential limb, as at the `⚠️ CORRECTED` block further
+> down. Nothing here fell, and two of the seven sites cannot carry a strikethrough at all: one is a
+> heading, whose anchor a strike would corrupt, and one is a comment inside a fenced `bash` block,
+> where `~~` does not render. The seven read correctly below; this note is the record that they
+> once did not.
 
 ---
 
@@ -76,12 +93,12 @@ caught after the fact"*. That is exactly what happened, and the after-the-fact c
 |---|---|---|
 | **FR-048 mount namespaces** | **Works with a named change.** The full `enter()` sequence runs, but the `mode="rw"` remount fails with `EPERM` when the source lies under a mount inherited read-only from the parent namespace | uid 1000, `--cap-drop=ALL`, no `--privileged` |
 | **FR-049 cgroup v2** | **Works with a named change.** The pre-exec barrier and `cgroup.kill` are unaffected; delegation requires an explicit `chown` of four files to the mapped uid, and without it every write is `EACCES` | container root with the default capability set, `--cgroupns=host`, writable cgroupfs, no `--privileged` |
-| **FR-050 seccomp user-notification** | **Works unchanged, in both listener positions.** `RECV`, `ID_VALID`, `SEND` with `SECCOMP_USER_NOTIF_FLAG_CONTINUE` and `ADDFD` all succeed with the workload in a user namespace | uid 1000, `--cap-drop=ALL`, no `--privileged` |
+| **FR-048 seccomp user-notification** — the recording half | **Works unchanged, in both listener positions.** `RECV`, `ID_VALID`, `SEND` with `SECCOMP_USER_NOTIF_FLAG_CONTINUE` and `ADDFD` all succeed with the workload in a user namespace. FR-048 has two mechanisms and this is the second: the mount namespace above **enforces** the boundary, this listener **records** the attempt, and they are deliberately not collapsed | uid 1000, `--cap-drop=ALL`, no `--privileged` |
 
 All three rows are **observed on `6.12.76-linuxkit`, aarch64.** None is an x86_64 claim; see
 [What remains unverified](#what-remains-unverified-and-where-the-host-is-not-the-target).
 
-## FR-050 — the one you doubted, and why the doubt was misdirected
+## FR-048's recorder — the one you doubted, and why the doubt was misdirected
 
 ### The source, read at six tags rather than one
 
@@ -306,8 +323,8 @@ implemented.
 | `namespaces` | **Becomes load-bearing rather than advisory, and needs a third assertion.** It reads `max_user_namespaces` today. Under this model it should additionally attempt an actual `unshare(CLONE_NEWUSER)` in a forked child, because a distribution can permit the namespace and still refuse it by LSM or by `sysctl`, and it should check that the supervisor holds `CAP_SETUID` — the capability the multi-line map needs |
 | `seccomp_user_notification` | **Unchanged and correct as written.** It probes `SECCOMP_GET_NOTIF_SIZES`, which needs no privilege and no filter install. The source read above says the facility's availability does not depend on the caller's capabilities |
 
-**What `sudo -E` becomes.** The two seccomp and mount jobs no longer need it: every FR-048 and
-FR-050 result in this document was taken at uid 1000 with `--cap-drop=ALL`. The cgroup work still
+**What `sudo -E` becomes.** The two seccomp and mount jobs no longer need it: every FR-048 result in
+this document — mount and seccomp both — was taken at uid 1000 with `--cap-drop=ALL`. The cgroup work still
 does, for the same reason the CI comment already gives — the cgroup root is root-owned. So the
 honest end state is **a split, not a removal**: the mount and seccomp batteries run unprivileged and
 are stronger for it, because running them as root asserts a capability the supervisor will not have;
@@ -329,7 +346,7 @@ Sized the way `tasks.md` sizes its rows: per task, from task shape, each anchore
 | uid/gid map plumbing and the `CAP_SETUID` decision | 3–4 | **The largest row, and it is a design decision before it is code.** A multi-line map is mandatory — a single-entry map has no uid to drop to and makes the workload the supervisor's own kernel uid — and writing one needs `CAP_SETUID`. That means choosing between a supervisor that holds it, a `newuidmap` helper, and a subuid allocation scheme, then the `setgroups`-`deny`-first protocol and the child barrier that keeps the parent from writing the map before the namespace exists. Two of this pass's probes were invalid on ordering alone |
 | `CLONE_NEWPID` and the post-unshare fork | 2–3 | The flag is one constant; the fork placement is the whole task, and getting it wrong produces a mitigation that silently does not mitigate. Carries a `/proc` remount inside the session, because a workload in a new pid namespace looking at the host's `/proc` still sees processes it cannot signal |
 | cgroup delegation `chown` set | 2–3 | Measured small: four paths, and the bounds correctly stay unwritable. Costed above one day because the failure mode is a probe that passes for the wrong reason, so the test needs a distinct map and a negative arm proving the un-`chown`ed case refuses |
-| FR-050 constraint written down and tested | 1–2 | The mechanism needs no change. The work is the `pivot_root`-versus-`/proc` constraint recorded as a constraint, with a test that fails if a future change moves the listener inside |
+| FR-048 listener-position constraint written down and tested | 1–2 | The mechanism needs no change. The work is the `pivot_root`-versus-`/proc` constraint recorded as a constraint, with a test that fails if a future change moves the listener inside |
 | Preflight reshape | 2–3 | Two checks grow assertions, one of which is a real `unshare` in a forked child; five are unchanged. Each new assertion needs a removal proof |
 | CI posture split | 2–3 | Mount and seccomp batteries move off `sudo -E`, cgroup and `preflight` keep it. The residue is the removal proofs written against the privileged path |
 | | **13–20** | low 1+3+2+2+1+2+2; high 2+4+3+3+2+3+3 |
@@ -494,7 +511,8 @@ The probes are standalone and were written to `/tmp/f2a-od24/`; they are not com
 with finding 021, and each prints its own posture as part of its output. The container shapes:
 
 ```bash
-# FR-048 and FR-050: the unprivileged posture. No --privileged, no capabilities.
+# FR-048, both halves (mount and seccomp): the unprivileged posture.
+# No --privileged, no capabilities.
 docker run --rm --user 1000:1000 --cap-drop=ALL --security-opt seccomp=unconfined \
   -v /tmp/f2a-od24:/probe:ro python:3.12-slim python3 -u /probe/p1_mounts.py
 
@@ -523,7 +541,7 @@ Nothing here was applied. Four places carry statements this finding bears on:
 - **`filesystem-decision.md`** still says a location outside the declared set is *absent*. Finding
   021 falsified that; this document shows the user namespace does not repair it. The repair is the
   drop, or `MS_RDONLY` on the root `tmpfs`, or `MS_REC` on the read-only remount.
-- **FR-050 and SC-022** are unaffected in substance and gain a constraint: the listener must retain
+- **FR-048 and SC-022** are unaffected in substance and gain a constraint: the listener must retain
   a `/proc` that shows the notifying process.
 - **FR-049's** enforced-from-outside clause is satisfied under delegation, and the delegation set is
   now a named list of four paths rather than an unstated one.

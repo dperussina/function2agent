@@ -1,10 +1,14 @@
 """T006 — the Linux-facility preflight. **OD-17**: Linux only, no degraded mode.
 
-All three of FR-048, FR-049 and FR-050's mechanisms are kernel facilities. A
-host missing one of them cannot supply the corresponding term of constitution
-Principle IV bullet 1, and the bullet's own words are that a configuration
-missing any term does not satisfy it. So this check fails loudly rather than
-degrading, and there is no flag that turns it off.
+Each of FR-048, FR-049 and FR-050 depends on a kernel facility, and **the mapping
+is not one facility per requirement.** FR-048 has two mechanisms — a mount
+namespace that enforces its boundary and a `seccomp` user-notification listener
+that records attempts against it, deliberately not collapsed into one; see
+`seccomp.py` for why the recorder cannot be the enforcer. So the checks below
+outnumber the requirements, and a host missing any one facility cannot supply the
+term of constitution Principle IV bullet 1 that rests on it. The bullet's own
+words are that a configuration missing any term does not satisfy it. So this
+check fails loudly rather than degrading, and there is no flag that turns it off.
 
 Every check reports what it looked for and what it found, because a preflight
 that says only "unsupported" makes an operator guess.

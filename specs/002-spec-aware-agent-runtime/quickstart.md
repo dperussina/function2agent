@@ -14,9 +14,10 @@ describes the intended shape of the experience so that the design can be checked
 here is built yet.
 
 **Prerequisite**: Linux with cgroup v2, user and mount namespaces, and `seccomp` user notification.
-Every other platform is **unsupported** under FR-053, because all three of FR-048, FR-049 and
-FR-050's mechanisms are kernel facilities (**Q-11**). Operators elsewhere run the bundle in a Linux
-VM.
+Every other platform is **unsupported** under FR-053, because each of FR-048, FR-049 and FR-050
+depends on a kernel facility with no equivalent elsewhere (**Q-11**) — four facilities rather than
+three, because FR-048 needs the mount namespace to enforce its boundary *and* the `seccomp` listener
+to record attempts against it. Operators elsewhere run the bundle in a Linux VM.
 
 **Minimum release: 5.14 — DERIVED and NOT TESTED, and the operator is told both** *(added
 2026-08-03)*. `cgroup.kill` binds the floor; `SECCOMP_USER_NOTIF_FLAG_CONTINUE` (5.5) and the
