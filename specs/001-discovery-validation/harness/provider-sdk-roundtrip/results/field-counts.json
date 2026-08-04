@@ -1,0 +1,42 @@
+{
+  "counting_rule": "source lines containing the identifier (grep -c), per package",
+  "comparison": {
+    "source": "finding 003 result 7, google-adk==2.6.1, module google/adk/models/lite_llm.py",
+    "adk_litellm_adapter": {
+      "thought_signature": 35,
+      "thinking_blocks": 16,
+      "reasoning_content": 9,
+      "encrypted_content": 0
+    }
+  },
+  "vendor_sdks": {
+    "anthropic": {
+      "package": "anthropic",
+      "field": "signature",
+      "source_lines": 54,
+      "files_containing": 27,
+      "py_files_scanned": 1083
+    },
+    "openai": {
+      "package": "openai",
+      "field": "encrypted_content",
+      "source_lines": 48,
+      "files_containing": 27,
+      "py_files_scanned": 1497
+    },
+    "google": {
+      "package": "google.genai",
+      "field": "thought_signature",
+      "source_lines": 28,
+      "files_containing": 9,
+      "py_files_scanned": 325
+    },
+    "xai": {
+      "package": "xai_sdk",
+      "field": "encrypted_content",
+      "source_lines": 31,
+      "files_containing": 5,
+      "py_files_scanned": 114
+    }
+  }
+}

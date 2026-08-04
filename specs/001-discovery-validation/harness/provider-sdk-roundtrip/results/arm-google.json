@@ -1,0 +1,36 @@
+{
+  "provider": "google",
+  "sdk": "google-genai",
+  "sdk_version": "2.16.0",
+  "model": "gemini-3-flash-preview",
+  "credential_var": "GEMINI_API_KEY_2",
+  "credential_fp": "e12e5a55cce2",
+  "opaque_field": "Part.thought_signature",
+  "ok": true,
+  "failure_kind": null,
+  "error": null,
+  "opaque_state_present": true,
+  "sdk_preserved": true,
+  "provider_accepted": true,
+  "chained": true,
+  "answer_correct": true,
+  "digests_in": [
+    "6c85d21844411b53c012b493b535902a87398fb84c91cc954a1d8d55daf8882e",
+    "027ac02901e04fcd504e800f2d80d2a0081fb7192202496a766b7d8be62141d2"
+  ],
+  "digests_out": [
+    "6c85d21844411b53c012b493b535902a87398fb84c91cc954a1d8d55daf8882e",
+    "027ac02901e04fcd504e800f2d80d2a0081fb7192202496a766b7d8be62141d2"
+  ],
+  "tool_calls": [
+    "lookup_customer_order",
+    "get_order_total"
+  ],
+  "turns": 3,
+  "final_text": "149.99",
+  "input_tokens": 1057,
+  "output_tokens": 221,
+  "cost_usd_reported_by_provider": null,
+  "elapsed_s": 3.35107421875,
+  "notes": []
+}

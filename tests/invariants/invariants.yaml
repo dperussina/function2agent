@@ -1,0 +1,138 @@
+# T022 — the versioned, machine-checkable invariants file.
+#
+# Constitution Principle II's second paragraph, adopted by plan.md as an
+# obligation the specification did not state. Every entry carries an
+# identifier, the principle or requirement it discharges, and the test that
+# checks it.
+#
+# Two rules about this file, both enforced by T198's reconciliation pass:
+#   1. Every invariant here has a test.
+#   2. Every test in tests/invariants/ has an invariant here.
+#
+# And one rule about the tests themselves, which is the harder one and the one
+# this corpus has been burned by: **a passing fixture is not evidence a
+# mechanism works.** Each entry below names a `removal_proof` — the specific
+# edit that must make the test fail. A test with no removal proof is a test
+# that would pass against an empty implementation.
+
+# The removal proofs named below are also executable as a set:
+#     bash tests/removal_proofs.sh
+# which edits each mechanism out of a copy of the tree, runs the test that is
+# supposed to depend on it, and reports UNPROVEN for any test that still passes.
+
+schema_version: "1.0.0"
+version: "1.1.0"
+updated: "2026-08-03"
+
+invariants:
+  - id: INV-001
+    discharges: FR-025
+    statement: >
+      No code path constructs a caller-visible result without a verification
+      outcome.
+    test: tests/invariants/test_result_constructor.py
+    removal_proof: >
+      Give Result.verification a default, or remove the __post_init__ type
+      check in src/contracts/result.py. The test asserts construction raises.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-002
+    discharges: FR-052, constitution Principle I
+    statement: >
+      The result-record and gate-decision modules do not import the judge
+      module. The model-judge boundary is structural, not a policy.
+    test: tests/invariants/test_import_graph.py
+    removal_proof: >
+      The test plants a synthetic module that imports the judge and asserts the
+      checker reports it. Deleting the forbidden-edge table makes the planted
+      case pass silently.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-003
+    discharges: FR-014
+    statement: >
+      No HTTP client reachable from the sandbox can name any address but the
+      enforcement point.
+    test: tests/invariants/test_sandbox_reachability.py
+    removal_proof: >
+      Add a literal URL or hostname to any module under src/sandbox/ that is
+      not the enforcement point's configured base. The test scans for them.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-004
+    discharges: FR-011
+    statement: >
+      Every deny disposition carries a rule identifier, on both sides of the
+      language boundary. A disposition with no rule identifier fails the suite,
+      because FR-011 makes the rule part of the record and not an annotation on
+      it. The Python arm checks that a rule-less deny cannot be constructed;
+      the Go arm reads src/proxy/rules.go and asserts every deny site names a
+      registered constant rather than a bare string, and that the FS-* and EG-*
+      namespaces do not collide.
+    test: tests/invariants/test_rule_id_present.py
+    removal_proof: >
+      Remove the deny/rule_id check from FilesystemDecision.__post_init__ in
+      src/supervisor/fs_decisions.py; or write a bare string at any denyResult
+      call site in src/proxy/.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-005
+    discharges: FR-006
+    statement: >
+      Every session terminal state is a named member of the declared taxonomy.
+      No generic error is a terminal state.
+    test: tests/invariants/test_terminal_taxonomy.py
+    removal_proof: >
+      Make src/contracts/terminal.py's is_terminal() a prefix match on
+      "terminated."; the test asserts an invented name is rejected.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-006
+    discharges: FR-005, FR-049, Q-10
+    statement: >
+      No bound and no ceiling has a shipped default. Startup fails loudly when
+      any is unset.
+    test: tests/invariants/test_no_default_bounds.py
+    removal_proof: >
+      Give any FR-005 or FR-049 key a default in src/contracts/config.py; the
+      test walks the declared schema and asserts default is None for each.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-007
+    discharges: FR-036
+    statement: >
+      A credential value has no serializer. str, repr, format, json, pickle and
+      copy all yield a redaction marker or raise.
+    test: tests/invariants/test_secret_has_no_serializer.py
+    removal_proof: >
+      Add a __str__ that returns the value, or remove __reduce__, in
+      src/contracts/secret.py.
+    runtime: milliseconds
+    model_in_loop: false
+
+  - id: INV-008
+    discharges: FR-014, FR-050
+    statement: >
+      The supervisor and the enforcement point agree about the capability
+      boundary. The digest is SHA-256 over the presented handle string as
+      bytes — not over the bytes the hex decodes to — and the session table's
+      column names are what the proxy queries. Both are cross-language
+      agreements that nothing structural enforces, and both fail totally and
+      silently: every request denied capability_not_honoured, with no partial
+      signal to notice it by. The Python arm asserts the committed fixture is
+      what today's supervisor produces; the Go arm reads that same
+      supervisor-written database with the production read-only store.
+    test: tests/unit/test_session_conformance.py
+    also: src/proxy/conformance_test.go
+    removal_proof: >
+      Four, all in tests/removal_proofs.sh — change capability_digest to hash
+      the decoded bytes on either side, rename capability_sha256 in the proxy's
+      query, or make stage 1 check only the lease and not the state.
+    runtime: milliseconds
+    model_in_loop: false

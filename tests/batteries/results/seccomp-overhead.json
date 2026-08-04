@@ -1,0 +1,60 @@
+{
+  "arms": {
+    "compute_only": {
+      "baseline_seconds": 0.260272,
+      "microseconds_per_notification": 80.65,
+      "notifications_observed": 116,
+      "overhead_seconds": 0.009355,
+      "ratio": 1.0359,
+      "supervised_seconds": 0.269627
+    },
+    "path_heavy": {
+      "baseline_seconds": 0.009528,
+      "microseconds_per_notification": 51.49,
+      "notifications_observed": 2116,
+      "overhead_seconds": 0.108962,
+      "ratio": 12.4363,
+      "supervised_seconds": 0.11849
+    },
+    "shell_heavy": {
+      "baseline_seconds": 0.025185,
+      "microseconds_per_notification": 58.67,
+      "notifications_observed": 539,
+      "overhead_seconds": 0.031625,
+      "ratio": 2.2557,
+      "supervised_seconds": 0.05681
+    }
+  },
+  "environment": {
+    "audit_arch": "0xc00000b7",
+    "cpu_count": 10,
+    "kernel": "6.12.76-linuxkit",
+    "machine": "aarch64",
+    "platform": "Linux-6.12.76-linuxkit-aarch64-with-glibc2.36",
+    "python": "3.12.13",
+    "watched_syscalls": [
+      "chdir",
+      "faccessat",
+      "faccessat2",
+      "fchmodat",
+      "mkdirat",
+      "newfstatat",
+      "openat",
+      "readlinkat",
+      "renameat2",
+      "statx",
+      "truncate",
+      "unlinkat"
+    ]
+  },
+  "measured_at": "2026-08-03T23:24:21+0000",
+  "question": "Q-09",
+  "repeats_per_arm": 5,
+  "task": "T101",
+  "what_this_is_a_property_of": [
+    "Docker Desktop's linuxkit VM on this host, not a bare Linux host. Syscall-interception overhead is the measurement most sensitive to that difference and it may not transfer.",
+    "A CPython supervisor doing one ioctl and one /proc/<pid>/mem read per notification. A Go or C supervisor would be faster by an unmeasured amount.",
+    "These three workloads, which are proxies for 'shell-heavy'. T101 asks for the measurement on the reference application; the reference application does not exist yet, so that part of T101 is OUTSTANDING and this does not discharge it.",
+    "SECCOMP_USER_NOTIF_FLAG_CONTINUE as the response. A supervisor that denied or rewrote arguments would pay more."
+  ]
+}

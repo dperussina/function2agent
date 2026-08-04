@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "function2agent-runtime"
+version = "0.1.0"
+description = "Spec-aware agent runtime — analysis, runtime, supervisor (Python) and the enforcement point (Go, src/proxy)"
+requires-python = ">=3.12"
+
+# FR-021: every dependency is pinned and fully resolved at build time. The
+# resolved set with hashes is `requirements.lock`, which is what the images
+# install from. Nothing resolves a dependency at run time; the egress policy
+# denies a package fetch anyway, because it is an outbound request to a
+# destination that is not the target (contracts/egress-policy.md).
+#
+# The runtime path deliberately has no third-party dependency. Everything below
+# is a build- or test-time tool. Provider SDKs arrive with T058 and are not here
+# yet, so the list is short on purpose rather than incomplete.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "PyYAML==6.0.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "linux_only: requires Linux kernel facilities (cgroup v2, mount namespaces, seccomp user notification). OD-17.",
+    "privileged: requires CAP_SYS_ADMIN. Runs inside the dev/runtime image, never on a developer's host.",
+]

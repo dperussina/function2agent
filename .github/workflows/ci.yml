@@ -1,0 +1,73 @@
+# T005 — `pytest`, `go test` and the invariants suite on every change.
+#
+# Three jobs, and the split is deliberate. The invariants suite runs on its own
+# because it is the fastest signal in the repository — milliseconds, no model,
+# no kernel — and a contributor should not wait on a container build to learn
+# that the model-judge boundary was crossed.
+#
+# **OD-17 shapes this file.** The kernel mechanisms need a Linux host with
+# cgroup v2, mount namespaces and seccomp user notification. GitHub's
+# `ubuntu-latest` runner has all three, so the mechanisms run natively here
+# rather than inside Docker Desktop's linuxkit VM — which is the same reason
+# `tests/batteries/results/seccomp-overhead.json` records what its numbers are
+# a property of. **A CI figure and a laptop figure are different measurements
+# and must not be compared.**
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  invariants:
+    name: invariants (milliseconds, no model)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned dependencies
+        run: pip install --require-hashes -r requirements.lock
+      - name: Run the invariant runner
+        run: python tests/invariants/runner.py
+
+  python:
+    name: pytest (kernel mechanisms included)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --require-hashes -r requirements.lock
+      - name: Confirm the Linux facilities are present
+        # OD-17 has no degraded mode. If the runner lacks a facility the run
+        # fails here rather than silently skipping the tests that need it.
+        run: python -m src.supervisor.preflight
+      - name: Unprivileged suite
+        run: python -m pytest tests -q -m "not privileged"
+      - name: Privileged suite — FR-048, FR-049, FR-050
+        run: sudo -E env "PATH=$PATH" python -m pytest tests -q -m privileged
+
+  go:
+    name: go test (the enforcement point)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.3"
+          cache-dependency-path: src/proxy/go.sum
+      - name: Vet
+        working-directory: src/proxy
+        run: go vet ./...
+      - name: Test
+        working-directory: src/proxy
+        run: go test ./... -race
+      - name: Build the single static binary
+        working-directory: src/proxy
+        env:
+          CGO_ENABLED: "0"
+        run: go build -o /tmp/f2a-proxy ./...

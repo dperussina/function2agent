@@ -1,0 +1,69 @@
+{
+  "probe": "does an adaptive-thinking model emit opaque state deterministically?",
+  "model": "claude-sonnet-5",
+  "repeats": 6,
+  "opaque_state_present": 2,
+  "opaque_state_absent": 4,
+  "chained": 6,
+  "preserved_whenever_present": 2,
+  "deterministic": false,
+  "input_tokens": 13407,
+  "output_tokens": 1032,
+  "runs": [
+    {
+      "opaque_state_present": false,
+      "sdk_preserved": null,
+      "chained": true,
+      "answer_correct": true,
+      "n_digests": 0,
+      "input_tokens": 2281,
+      "output_tokens": 204
+    },
+    {
+      "opaque_state_present": true,
+      "sdk_preserved": true,
+      "chained": true,
+      "answer_correct": true,
+      "n_digests": 1,
+      "input_tokens": 2231,
+      "output_tokens": 169
+    },
+    {
+      "opaque_state_present": false,
+      "sdk_preserved": null,
+      "chained": true,
+      "answer_correct": true,
+      "n_digests": 0,
+      "input_tokens": 2199,
+      "output_tokens": 152
+    },
+    {
+      "opaque_state_present": true,
+      "sdk_preserved": true,
+      "chained": true,
+      "answer_correct": true,
+      "n_digests": 1,
+      "input_tokens": 2231,
+      "output_tokens": 169
+    },
+    {
+      "opaque_state_present": false,
+      "sdk_preserved": null,
+      "chained": true,
+      "answer_correct": true,
+      "n_digests": 0,
+      "input_tokens": 2199,
+      "output_tokens": 148
+    },
+    {
+      "opaque_state_present": false,
+      "sdk_preserved": null,
+      "chained": true,
+      "answer_correct": true,
+      "n_digests": 0,
+      "input_tokens": 2266,
+      "output_tokens": 190
+    }
+  ],
+  "reading": "If `deterministic` is false, a conformance fixture that asserts opaque state is present will be flaky on this model. The fixture must assert the conditional instead: whenever the field IS present it must survive the round-trip byte-identical. `preserved_whenever_present` is that conditional, and it is the assertion worth shipping."
+}

@@ -1,0 +1,24 @@
+{
+  "control": "drop-opaque-field-on-reinjection",
+  "provider": "xai",
+  "sdk": "xai-sdk",
+  "model": "grok-4.5",
+  "credential_var": "XAI_API_KEY",
+  "credential_fp": "968361f222a4",
+  "digests_in": [
+    "a5e95e4f98e798075602ffd52457ff352cdc4aa78bff693edda7dad47be655a1",
+    "e7b2c8ec52b0e00a06c6297d8166f058c9f7ac8c1a23cbe0624d57de0b699336"
+  ],
+  "digests_out": [],
+  "detector_fired": true,
+  "chained_without_opaque_state": true,
+  "answer_correct_without_opaque_state": true,
+  "provider_errored": false,
+  "error": null,
+  "input_tokens": 1449,
+  "output_tokens": 93,
+  "notes": [
+    "detector fired: the sdk_preserved check can distinguish a drop",
+    "chaining still succeeded with the field dropped \u2014 a two-hop pass is NOT sensitive to opaque-state loss, confirming finding 003's caution by measurement"
+  ]
+}

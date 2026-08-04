@@ -1,0 +1,111 @@
+"""T035 — a `Secret` with no serializer, so redaction is structural (FR-036).
+
+Pulled forward into the enforcement-point slice because the supervisor and the
+proxy both hold credentials in Phase 4, and a redaction *filter* added later
+would be exactly the mitigation this type exists to replace: a filter has to be
+remembered at every call site and a missing serializer cannot be forgotten.
+
+The rule: there is no way to get the value out except `reveal()`, which is a
+verb an author has to type. Every implicit path — `str`, `repr`, `format`,
+`json.dumps`, `%`-formatting, f-strings, pickling, copying — yields the
+redaction marker or raises.
+"""
+
+from __future__ import annotations
+
+import hashlib
+from typing import Any, NoReturn
+
+REDACTED = "<redacted:Secret>"
+
+
+class SecretSerializationError(TypeError):
+    """Something tried to serialize a credential. That is always a defect."""
+
+
+class Secret:
+    """An opaque credential holder.
+
+    >>> s = Secret("hunter2", name="F2A_TARGET_CREDENTIAL")
+    >>> str(s)
+    '<redacted:Secret>'
+    >>> f"{s}"
+    '<redacted:Secret>'
+    >>> s.reveal()
+    'hunter2'
+    """
+
+    __slots__ = ("_value", "_name")
+
+    def __init__(self, value: str, *, name: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError("Secret wraps a str")
+        self._value = value
+        self._name = name
+
+    # --- the one way out -------------------------------------------------
+    def reveal(self) -> str:
+        """The value. Call sites are greppable; that is the point."""
+        return self._value
+
+    def fingerprint(self) -> str:
+        """A stable handle that is not the credential.
+
+        Twelve hex characters of SHA-256 — enough for a record to say *which*
+        credential authenticated, not enough to be one. Same convention as the
+        feature 001 harnesses.
+        """
+        return hashlib.sha256(self._value.encode("utf-8")).hexdigest()[:12]
+
+    @property
+    def name(self) -> str:
+        """The configuration key it came from. Never the value."""
+        return self._name
+
+    def __bool__(self) -> bool:
+        return bool(self._value)
+
+    def __len__(self) -> int:
+        # Length is a weak oracle on a short secret; refuse rather than leak it.
+        raise SecretSerializationError(
+            f"len() on Secret({self._name}) would disclose credential length"
+        )
+
+    # --- every implicit path is closed -----------------------------------
+    def __str__(self) -> str:
+        return REDACTED
+
+    def __repr__(self) -> str:
+        return REDACTED
+
+    def __format__(self, spec: str) -> str:
+        return REDACTED
+
+    def _refuse(self, *_a: Any, **_k: Any) -> NoReturn:
+        raise SecretSerializationError(
+            f"Secret({self._name}) has no serializer. If a credential value "
+            "genuinely has to leave this process, call .reveal() at the exact "
+            "line that needs it so the call site is greppable (FR-036)."
+        )
+
+    __reduce__ = _refuse
+    __reduce_ex__ = _refuse
+    __getstate__ = _refuse
+    __copy__ = _refuse
+    __deepcopy__ = _refuse
+    for_json = _refuse
+    to_json = _refuse
+    __html__ = _refuse
+
+    # Comparison is constant-time and never yields the value.
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Secret):
+            return NotImplemented
+        import hmac
+
+        return hmac.compare_digest(self._value, other._value)
+
+    def __hash__(self) -> int:
+        # Hash the fingerprint, not the value, so a Secret in a dict key does
+        # not put the value into any hash-collision debug output.
+        return hash(("Secret", self.fingerprint()))

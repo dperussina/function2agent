@@ -1,0 +1,34 @@
+{
+  "provider": "anthropic",
+  "sdk": "anthropic",
+  "sdk_version": "0.120.2",
+  "model": "claude-sonnet-4-5-20250929",
+  "credential_var": "ANTHROPIC_API_KEY",
+  "credential_fp": "b4bcb5a4b7d7",
+  "opaque_field": "thinking.signature",
+  "ok": true,
+  "failure_kind": null,
+  "error": null,
+  "opaque_state_present": true,
+  "sdk_preserved": true,
+  "provider_accepted": true,
+  "chained": true,
+  "answer_correct": true,
+  "digests_in": [
+    "56a34c765014ed732a351c9d1cf323756f612a2cfa4835d1284507a9a6ff92fb"
+  ],
+  "digests_out": [
+    "56a34c765014ed732a351c9d1cf323756f612a2cfa4835d1284507a9a6ff92fb"
+  ],
+  "tool_calls": [
+    "lookup_customer_order",
+    "get_order_total"
+  ],
+  "turns": 3,
+  "final_text": "The order total for Dana Whitfield is 149.99",
+  "input_tokens": 2771,
+  "output_tokens": 258,
+  "cost_usd_reported_by_provider": null,
+  "elapsed_s": 6.728889226913452,
+  "notes": []
+}

@@ -1,0 +1,32 @@
+{
+  "provider": "anthropic",
+  "sdk": "anthropic",
+  "sdk_version": "0.120.2",
+  "model": "claude-sonnet-5",
+  "credential_var": "ANTHROPIC_API_KEY",
+  "credential_fp": "b4bcb5a4b7d7",
+  "opaque_field": "thinking.signature",
+  "ok": true,
+  "failure_kind": null,
+  "error": null,
+  "opaque_state_present": false,
+  "sdk_preserved": null,
+  "provider_accepted": null,
+  "chained": true,
+  "answer_correct": true,
+  "digests_in": [],
+  "digests_out": [],
+  "tool_calls": [
+    "lookup_customer_order",
+    "get_order_total"
+  ],
+  "turns": 3,
+  "final_text": "Dana Whitfield's order total is $149.99.",
+  "input_tokens": 2199,
+  "output_tokens": 137,
+  "cost_usd_reported_by_provider": null,
+  "elapsed_s": 4.499135971069336,
+  "notes": [
+    "no thinking signature emitted; round-trip untestable on this configuration"
+  ]
+}

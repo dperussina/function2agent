@@ -1,0 +1,57 @@
+{
+  "comment": "Cross-language conformance vectors for the capability boundary. Regenerate with `python tests/fixtures/session_conformance.py`. The digest is SHA-256 over the presented handle string as bytes, hex-encoded.",
+  "now": 1760000000.0,
+  "database": "session_conformance.sqlite3",
+  "sessions": [
+    {
+      "session_id": "sess-honoured",
+      "handle": "0000000000000000000000000000000000000000000000000000000000000000",
+      "state": "RUNNING",
+      "lease_expires_at": 1760000300.0,
+      "honoured_at_now": true,
+      "why": "running, lease in the future \u2014 the only shape that is honoured",
+      "capability_sha256": "60e05bd1b195af2f94112fa7197a5c88289058840ce7c6df9693756bc6250f55",
+      "terminal_state": null
+    },
+    {
+      "session_id": "sess-starting",
+      "handle": "1111111111111111111111111111111111111111111111111111111111111111",
+      "state": "STARTING",
+      "lease_expires_at": 1760000300.0,
+      "honoured_at_now": false,
+      "why": "not yet RUNNING; the lease is irrelevant while the state is not",
+      "capability_sha256": "3138bb9bc78df27c473ecfd1410f7bd45ebac1f59cf3ff9cfe4db77aab7aedd3",
+      "terminal_state": null
+    },
+    {
+      "session_id": "sess-terminated",
+      "handle": "2222222222222222222222222222222222222222222222222222222222222222",
+      "state": "TERMINATED",
+      "lease_expires_at": 0.0,
+      "honoured_at_now": false,
+      "why": "terminated by the supervisor, which also zeroes the lease",
+      "capability_sha256": "4f2e8d65483c641648cdb374ae9d8abd368d269e4ddffe092a8237b8162cddd6",
+      "terminal_state": "OPERATOR_TERMINATED"
+    },
+    {
+      "session_id": "sess-terminated-live-lease",
+      "handle": "4444444444444444444444444444444444444444444444444444444444444444",
+      "state": "TERMINATED",
+      "lease_expires_at": 1760000300.0,
+      "honoured_at_now": false,
+      "why": "the SC-024 replay shape. The supervisor does not currently produce this row \u2014 `terminate()` zeroes the lease \u2014 so it is written directly, bypassing that writer. Without it the fixture cannot tell a state check from an expiry check, and an enforcement point that only checked expiry would pass every other row here.",
+      "capability_sha256": "f435f2420b50c70ec80865cf8e20b169874165fb8576b48633caf2a8176d2e4a",
+      "terminal_state": "OPERATOR_TERMINATED"
+    },
+    {
+      "session_id": "sess-expired",
+      "handle": "3333333333333333333333333333333333333333333333333333333333333333",
+      "state": "RUNNING",
+      "lease_expires_at": 1759999999.0,
+      "honoured_at_now": false,
+      "why": "running but the lease lapsed \u2014 FR-050's ceasing-to-act revocation",
+      "capability_sha256": "79bd7d7fd684b399857c582b1b7172ddf277d4fe1b027ec52b28da3ae381e675",
+      "terminal_state": null
+    }
+  ]
+}

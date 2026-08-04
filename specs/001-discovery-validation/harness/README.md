@@ -32,6 +32,7 @@ ever**, and say so at the top of their own README.
 | [`deployment-reachability`](./deployment-reachability/) | E14 — deployment reachability | [010](../findings/010-deployment-reachability.md) | $0.00 | committed at the time | yes |
 | [`reachability-without-schema`](./reachability-without-schema/) | E15 — reachability without a published schema | [011](../findings/011-reachability-without-schema.md) | $0.00 | committed at the time | yes |
 | [`provider-credentials`](./provider-credentials/) | (outside the ladder) — live credential probe | [002](../findings/002-provider-credentials.md) | $0.00 | **recovered from `/tmp` 2026-08-02** | **no — one person's credentials** |
+| [`provider-sdk-roundtrip`](./provider-sdk-roundtrip/) | E16 — opaque-state round-trip through each vendor's own SDK | [016](../findings/016-provider-sdk-roundtrip.md) | 25,214 tokens; **no dollar total** — one arm measured at $0.001860, [see below](#the-e16-row-added-2026-08-03) | committed at the time | yes — with your own credentials |
 
 `runtime-provider-agnosticism` and `graph-loop-primitives` are the harnesses behind
 **OD-01** (adopt Google ADK for graph execution, build our own safety layer) and **OD-02**
@@ -110,6 +111,34 @@ This is why the row's **Numbers reproducible** column can still read *yes*. Betw
 finding 014 being written and this script being committed it could not: that finding
 names the gap in its own threats section, and the column was overstated for as long as
 the gap was open.
+
+## The E16 row, added 2026-08-03
+
+E16 ran after the index above was written, so the "Eight experiments ran" count at the top of
+this file is now **nine**, and the nine positions are ten.
+
+Its **Model spend** cell is the only one in the table that is not a dollar figure, and that is
+deliberate rather than an omission. Tokens are measured exactly, from each provider's own usage
+field. Converting them to dollars needs a per-provider price table, and the per-provider cost
+table is one of the nine capabilities **U-48** records as having **no owner** — it was supplied
+by the dependency **OD-15** removed. Hardcoding four price lists into a harness so that a
+spend column could look like the others would manufacture exactly the unsourced number this
+tree refuses to carry.
+
+One provider reports a server-side cost: xAI's usage proto carries `cost_in_usd_ticks`, and
+**the xAI arm's three turns total $0.001860**. That figure is the provider's, not ours, and it
+covers one of eight artifacts — the xAI spend inside the negative control is not captured,
+because cost extraction was added to the arm and not the control. The other three providers
+report tokens only, and a null in that harness's artifacts means *not reported*, never *zero*.
+
+The self-imposed ceiling was **$2.00**. Two of E16's eight artifacts — the model-list probe and
+the static field count — run no model at all, in the same spirit as finding 006's twelve
+model-free arms.
+
+E16 also uses its **own** virtualenv at `/tmp/f2a-probe-e16` rather than the shared
+`/tmp/f2a-probe-runtime`, so that installing four vendor SDKs could not disturb the pinned
+`google-adk` / `litellm` environment that findings 003 and 006 depend on. It is therefore
+absent from the [Scratch directories](#scratch-directories) table's shared-venv row by design.
 
 ## What "recovered" means, and what it does not
 
@@ -219,6 +248,7 @@ Harnesses write to `/tmp` and never into the repository or into `examples/` (FR-
 | Variable | Default | Used by |
 |---|---|---|
 | `F2A_PROBE_DIR` | `/tmp/f2a-probe-runtime` | `runtime-provider-agnosticism`, `graph-loop-primitives` (shared virtualenv, session databases, side-effect logs) |
+| `F2A_PYTHON` | `python3` | `provider-sdk-roundtrip` — selects the interpreter. Its committed results used a **separate** virtualenv at `/tmp/f2a-probe-e16`, deliberately not the shared one; see [the E16 row](#the-e16-row-added-2026-08-03) |
 | — | `/tmp/f2a-recall` | `recall-adk-fastapi`, `contract-extraction`, `deployment-reachability` (shared index and virtualenv; passed as `run.sh`'s first argument) |
 
 `runtime-provider-agnosticism` and `graph-loop-primitives` share one virtualenv, exactly

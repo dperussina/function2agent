@@ -1,0 +1,134 @@
+{
+  "experiment": "E16 - provider-SDK opaque-state round-trip under chained tool use",
+  "arms_run": 4,
+  "arms_measured": [
+    "anthropic",
+    "openai",
+    "google",
+    "xai"
+  ],
+  "environmental_failures": [],
+  "capability_failures": [],
+  "fr037_roundtrip_holds": [
+    "anthropic",
+    "openai",
+    "google",
+    "xai"
+  ],
+  "sc010_four_providers_chained": [
+    "anthropic",
+    "openai",
+    "google",
+    "xai"
+  ],
+  "negative_control": {
+    "detector_fired": true,
+    "chained_without_opaque_state": true
+  },
+  "tokens": {
+    "input": 7616,
+    "output": 823,
+    "total": 8439,
+    "note": "Tokens are measured from each provider's own usage field. They are NOT converted to dollars: that needs a per-provider price table, which is one of the nine capabilities U-48 records as unowned. No price is invented here."
+  },
+  "cost_usd_reported_by_provider": {
+    "xai": 0.00186,
+    "note": "Only xAI reports a server-side cost (usage.cost_in_usd_ticks). The other three report tokens only. A null is 'not reported', never 'zero'."
+  },
+  "per_arm": {
+    "anthropic": {
+      "model": "claude-sonnet-4-5-20250929",
+      "sdk": "anthropic",
+      "sdk_version": "0.120.2",
+      "opaque_field": "thinking.signature",
+      "ok": true,
+      "failure_kind": null,
+      "opaque_state_present": true,
+      "sdk_preserved": true,
+      "provider_accepted": true,
+      "chained": true,
+      "answer_correct": true,
+      "turns": 3,
+      "input_tokens": 2771,
+      "output_tokens": 258
+    },
+    "openai": {
+      "model": "gpt-5-mini",
+      "sdk": "openai",
+      "sdk_version": "2.52.1",
+      "opaque_field": "reasoning.encrypted_content",
+      "ok": true,
+      "failure_kind": null,
+      "opaque_state_present": true,
+      "sdk_preserved": true,
+      "provider_accepted": true,
+      "chained": true,
+      "answer_correct": true,
+      "turns": 3,
+      "input_tokens": 735,
+      "output_tokens": 113
+    },
+    "google": {
+      "model": "gemini-3-flash-preview",
+      "sdk": "google-genai",
+      "sdk_version": "2.16.0",
+      "opaque_field": "Part.thought_signature",
+      "ok": true,
+      "failure_kind": null,
+      "opaque_state_present": true,
+      "sdk_preserved": true,
+      "provider_accepted": true,
+      "chained": true,
+      "answer_correct": true,
+      "turns": 3,
+      "input_tokens": 1057,
+      "output_tokens": 221
+    },
+    "xai": {
+      "model": "grok-4.5",
+      "sdk": "xai-sdk",
+      "sdk_version": "1.17.0",
+      "opaque_field": "message.encrypted_content",
+      "ok": true,
+      "failure_kind": null,
+      "opaque_state_present": true,
+      "sdk_preserved": true,
+      "provider_accepted": true,
+      "chained": true,
+      "answer_correct": true,
+      "turns": 3,
+      "input_tokens": 1604,
+      "output_tokens": 138
+    }
+  },
+  "vendor_field_counts": {
+    "anthropic": {
+      "package": "anthropic",
+      "field": "signature",
+      "source_lines": 54,
+      "files_containing": 27,
+      "py_files_scanned": 1083
+    },
+    "openai": {
+      "package": "openai",
+      "field": "encrypted_content",
+      "source_lines": 48,
+      "files_containing": 27,
+      "py_files_scanned": 1497
+    },
+    "google": {
+      "package": "google.genai",
+      "field": "thought_signature",
+      "source_lines": 28,
+      "files_containing": 9,
+      "py_files_scanned": 325
+    },
+    "xai": {
+      "package": "xai_sdk",
+      "field": "encrypted_content",
+      "source_lines": 31,
+      "files_containing": 5,
+      "py_files_scanned": 114
+    }
+  }
+}
