@@ -137,8 +137,8 @@ class ByteTokenizer:
     """The fallback when no tokenizer is in force. One byte, one token.
 
     Conservative for the same reason `conservative_byte_ceiling` is: it cannot
-    under-count. Named rather than inlined so that a reader looking for the
-    `4.0` divisor FR-058 disqualifies finds this instead.
+    under-count. Named rather than inlined so that a reader reaching for the kind
+    of average divisor FR-058 disqualifies finds this instead.
     """
 
     name = "bytes-conservative"

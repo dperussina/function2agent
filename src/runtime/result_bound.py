@@ -19,9 +19,13 @@ because the context window is. Where the tokenizer of the model in force is not
 available, a byte figure MAY stand in **only if derived so it can never admit
 more tokens than the bound** — and an average bytes-per-token divisor is
 disqualified by name, because minified JSON, base64, dense identifiers and
-tabular numerics are exactly the content an average under-counts. There is a
-`4.0` divisor elsewhere in this repository; `conservative_byte_ceiling` exists so
-that nothing here reaches for it. The safe derivation is one byte per token: a
+tabular numerics are exactly the content an average under-counts. The `4.0`
+divisor a reader may be looking for is **not in this repository's own code** — it
+is E17's, recorded in `findings/022-e7-tool-result-truncation-cap.md`, whose own
+open question is whether 4.0 holds for the payloads it measured.
+`conservative_byte_ceiling` exists so that it stays a finding about somebody
+else's runtime rather than becoming an import. The safe derivation is one byte
+per token: a
 token cannot be shorter than a byte, so N bytes can never be more than N tokens.
 It is conservative by a factor of three or four on ordinary prose, and that is
 the correct direction for a bound.
@@ -87,9 +91,9 @@ def conservative_byte_ceiling(bound_tokens: int) -> int:
 
     One byte per token. Not an approximation of a real ratio and not intended to
     be one: it is the floor of the ratio, which is the only derivation FR-058
-    permits. A bytes-per-token *average* — the `4.0` this repository has
-    elsewhere — admits four times the bound on base64 and on minified numerics,
-    which is exactly the content the bound exists for.
+    permits. A bytes-per-token *average* — the `4.0` finding 022 records against
+    E17 — admits four times the bound on base64 and on minified numerics, which
+    is exactly the content the bound exists for.
     """
     return bound_tokens
 
