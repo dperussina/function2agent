@@ -413,6 +413,56 @@ Two questions, no numbers attached.
    reading `SESSION_CEILING_WALL_CLOCK_SECONDS=900` in its configuration is being told something that
    is not true of the runtime.
 
+> **⚠️ BOTH DISCHARGED 2026-08-05, later the same day, and neither by an owner — recorded here because
+> a reader arriving at the heading above would otherwise wait for two decisions that are not coming.**
+> The questions stand as written; this note says what answered them.
+>
+> **Question 1 was determined by FR-005, and this finding's premise for asking it was wrong.** The
+> premise — *"FR-005's crash clause settles the direction for consumption and is silent for elapsed
+> time"* — does not survive reading the requirement whole. Only running intervals count; the dead
+> interval between a crash and its resume does not. Three independent readings converge, and the third
+> is the one that decides it: the clause *"a session that crashes and resumes repeatedly MUST NOT be
+> able to exceed a ceiling by any number of resumes"* **has no subject under a deadline reading** — a
+> ceiling measured as *now minus session start* cannot be reduced by a crash and cannot be raised by
+> any number of resumes, so a requirement spending a sentence forbidding both is not describing one.
+> The same follows from *"the cumulative total against it, MUST be recorded"*, since a deadline has no
+> cumulative total. So the clause this finding read as leaving the question open is in fact evidence
+> for one answer. The derivation is recorded at `AgentLoop._accrue_elapsed`.
+>
+> **Question 2 is moot: the numerator landed rather than waiting for T064.** `src/runtime/loop.py` now
+> measures two intervals per turn — the model call, reconciled in the same transaction that releases
+> the reservation, and the remainder of the turn — and a turn re-entered after a crash accrues from
+> re-entry. Running this finding's own probe unchanged, **7 of 7 arms now terminate on the dimension
+> the arm made absurd, where 3 of 7 did.** The wall-clock arm ran 0.408 s under a ceiling of 0.001 s
+> and the ledger recorded 0.4067 s.
+>
+> **One correction to §6, which framed the crash-only route as a second defect.** It is not, and the
+> distinction matters for anyone reading this as precedent. Measured with the ceiling set equal to the
+> reservation and a `SIGKILL` inside the model call, **all four dimensions kill the resume
+> identically** — `spend_usd`, `tokens` and `turns` no less than `wall_clock_seconds`. The wall-clock
+> arm was never anomalous in *mechanism*, only in being the sole route in. What separates a protective
+> over-count from a fatal one is not the size of the estimate but **whether the dimension measures
+> anything else**: an over-count is protective when it over-estimates a quantity the dimension also
+> counts, and this one was the whole count, leaving the dimension monotone in the number of crashes
+> and constant in the work done — a ceiling on failure rather than on consumption. Releasing the
+> orphaned reservation would therefore have been the wrong repair; T053 holds it deliberately and
+> FR-005 requires it held.
+>
+> **A destination in [§7](#7-owed-edits-to-the-register-and-to-tasksmd-quoted-not-made) was named
+> wrongly and is recorded rather than silently fixed.** Its second block is headed *"To `plan.md`"*
+> while its body says *"the U-30 area of `14` §5.1"*. Only the body is right: U-30 is **defined** in
+> [`research/14-architecture-synthesis.md`](../../../research/14-architecture-synthesis.md) §5.1, and
+> `specs/001-discovery-validation/plan.md` carries only dated references to it. The annotation was
+> made at the definition. This is the third instance this week of a propagation note naming a
+> destination the sentence did not mean, and it is the failure
+> [`tools/README.md`](../../../tools/README.md)'s *shared basename* entry describes — link resolution
+> asks whether a path exists, not whether it is the path the sentence meant, so no gate can see it.
+> The annotation written there also **differs from the text quoted in §7**, in two ways that could not
+> have been known when §7 was written: the numerator has since landed, so it is a record of why rather
+> than work outstanding, and U-30's own closing clause *"still unbuilt and still unmeasured"* had gone
+> stale for **spend** — T053 and T055 build and measure it across three resumes — so that clause was
+> struck as part of the same pass.
+
 ## 9. An open, unexplained, non-reproducing observation — the `BROKEN` classification
 
 Recorded because it happened, not because it is understood.
