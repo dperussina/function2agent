@@ -201,11 +201,11 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 
 ### Capability 1 — the agent loop
 
-- [x] T041 Turn loop: turn dispatch, the model-response-to-tool-call step, and `TurnRecord` construction, in `src/runtime/loop.py` (FR-004, [`data-model.md`](./data-model.md) §2.2)
-- [x] T042 Context assembler and truncation policy, in `src/runtime/context.py`
-- [x] T043 Parallel tool-call dispatcher: execute concurrently, journal and record in the **provider's declared index order** and never in completion order, in `src/runtime/dispatch.py` (T-08, FR-007)
-- [x] T044 Explicit per-key merge rules for shared state a concurrent step writes, with last-write-wins forbidden, in `src/runtime/state_merge.py` (T-08)
-- [x] T045 [P] Invariant tests for declared-order recording and for a concurrent write that cannot be lost, in `tests/invariants/test_fanout_ordering.py`
+- [X] T041 Turn loop: turn dispatch, the model-response-to-tool-call step, and `TurnRecord` construction, in `src/runtime/loop.py` (FR-004, [`data-model.md`](./data-model.md) §2.2)
+- [X] T042 Context assembler and truncation policy, in `src/runtime/context.py`
+- [X] T043 Parallel tool-call dispatcher: execute concurrently, journal and record in the **provider's declared index order** and never in completion order, in `src/runtime/dispatch.py` (T-08, FR-007)
+- [X] T044 Explicit per-key merge rules for shared state a concurrent step writes, with last-write-wins forbidden, in `src/runtime/state_merge.py` (T-08)
+- [X] T045 [P] Invariant tests for declared-order recording and for a concurrent write that cannot be lost, in `tests/invariants/test_fanout_ordering.py`
 
 > **FR-058 landed inside capability 1 on 2026-08-04 and is named in none of its task lines, and the
 > seam is recorded here rather than absorbed. Added 2026-08-05.** FR-058 bounds every result either of
@@ -243,8 +243,8 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 
 ### Capability 2 — the runner
 
-- [x] T046 Runner: session start and attach, loop invocation, cancellation, and the teardown handshake with the supervisor, in `src/runtime/runner.py`
-- [x] T047 [P] Cancellation test asserting a cancelled consumer leaves no error on the stream and no partial state, in `tests/unit/test_cancellation.py` — cancellation is routine in an agent product, which is why finding 006 reported a teardown defect against the runtime it probed
+- [X] T046 Runner: session start and attach, loop invocation, cancellation, and the teardown handshake with the supervisor, in `src/runtime/runner.py`
+- [X] T047 [P] Cancellation test asserting a cancelled consumer leaves no error on the stream and no partial state, in `tests/unit/test_cancellation.py` — cancellation is routine in an agent product, which is why finding 006 reported a teardown defect against the runtime it probed
 
 > **T047's "on the stream" is discharged against the trace, not against a stream.** The event stream
 > is capability 9 (T077–T079) and does not exist, so there is no stream for a cancelled consumer to
@@ -255,18 +255,18 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 
 ### Capability 3 — the session store
 
-- [x] T048 Session store: create, load and persist `Session` with `session_id`, `state`, `terminal_state`, `lease_expires_at` and the four ceilings, in `src/runtime/session_store.py` (**OD-15** — ours, on no framework)
-- [x] T049 Session state machine and named-terminal recording over [`data-model.md`](./data-model.md) §2.1's lifecycle, in `src/runtime/session_state.py` (FR-006)
-- [x] T050 Concurrent-writer probe for **our own** store under the three processes, in `tests/integration/test_store_concurrent_writers.py` — finding 006 states it did not test this, and T-06's narrowing records that what it observed on SQLite was a session service v1 does not ship
+- [X] T048 Session store: create, load and persist `Session` with `session_id`, `state`, `terminal_state`, `lease_expires_at` and the four ceilings, in `src/runtime/session_store.py` (**OD-15** — ours, on no framework)
+- [X] T049 Session state machine and named-terminal recording over [`data-model.md`](./data-model.md) §2.1's lifecycle, in `src/runtime/session_state.py` (FR-006)
+- [X] T050 Concurrent-writer probe for **our own** store under the three processes, in `tests/integration/test_store_concurrent_writers.py` — finding 006 states it did not test this, and T-06's narrowing records that what it observed on SQLite was a session service v1 does not ship
 
 ### Capability 4 — checkpoint and resume · **12–17 days, band +0 to +4**
 
-- [ ] T051 Write-ahead intent journal keyed `(session_id, turn_index, step_index)` with an idempotency key per effectful step — intent committed before the effect, outcome committed after — in `src/runtime/journal.py` (T-07)
-- [ ] T052 Resume reconstruction at **turn-and-step granularity**, so a resumed session skips completed inner turns, in `src/runtime/resume.py` — finding 006 measured a loop hosted inside a checkpointed node re-executing **4 of 4** completed inner turns, which is what this granularity exists to avoid
-- [ ] T053 Reserve-then-reconcile budget ledger — reserved before the model call, reconciled after — so a crash **over**-counts rather than under-counts, in `src/runtime/ledger.py` (T-07, **U-30**)
-- [ ] T054 Induced-crash resume battery: `SIGKILL` from a separate process at a turn boundary and inside a step, asserting no completed inner turn re-executes and no recorded local effect repeats, in `tests/integration/test_resume_sigkill.py` (FR-007, SC-011)
-- [ ] T055 Repeated crash-and-resume ceiling battery — **at least three resumes**, on each of the four dimensions in turn, asserting the cumulative total after every resume is never lower than the total before the crash that preceded it, in `tests/batteries/test_ceilings_under_resume.py` (**SC-030** second clause; finding 006 measured a ceiling of 3 permitting **6** cycles because the counter lived on a context rebuilt per attempt, and the failure is invisible in review because every individual attempt is compliant)
-- [ ] T056 Extend the opaque-state conformance fixture across a **resume boundary**, in `tests/conformance/test_provider_state_resume.py` — finding 006's *What this does NOT establish* records provider-opaque reasoning state surviving a resume as untested, and with the journal and the envelope now both ours that boundary is inside one mechanism instead of across two
+- [X] T051 Write-ahead intent journal keyed `(session_id, turn_index, step_index)` with an idempotency key per effectful step — intent committed before the effect, outcome committed after — in `src/runtime/journal.py` (T-07)
+- [X] T052 Resume reconstruction at **turn-and-step granularity**, so a resumed session skips completed inner turns, in `src/runtime/resume.py` — finding 006 measured a loop hosted inside a checkpointed node re-executing **4 of 4** completed inner turns, which is what this granularity exists to avoid
+- [X] T053 Reserve-then-reconcile budget ledger — reserved before the model call, reconciled after — so a crash **over**-counts rather than under-counts, in `src/runtime/ledger.py` (T-07, **U-30**)
+- [X] T054 Induced-crash resume battery: `SIGKILL` from a separate process at a turn boundary and inside a step, asserting no completed inner turn re-executes and no recorded local effect repeats, in `tests/integration/test_resume_sigkill.py` (FR-007, SC-011)
+- [X] T055 Repeated crash-and-resume ceiling battery — **at least three resumes**, on each of the four dimensions in turn, asserting the cumulative total after every resume is never lower than the total before the crash that preceded it, in `tests/batteries/test_ceilings_under_resume.py` (**SC-030** second clause; finding 006 measured a ceiling of 3 permitting **6** cycles because the counter lived on a context rebuilt per attempt, and the failure is invisible in review because every individual attempt is compliant)
+- [X] T056 Extend the opaque-state conformance fixture across a **resume boundary**, in `tests/conformance/test_provider_state_resume.py` — finding 006's *What this does NOT establish* records provider-opaque reasoning state surviving a resume as untested, and with the journal and the envelope now both ours that boundary is inside one mechanism instead of across two
 
 ### Capability 5 — provider transport and tool-schema translation · **15–20 days**
 

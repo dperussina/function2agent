@@ -1067,6 +1067,47 @@ proof "T053 outstanding reservations — the totals ignore the call in flight" \
   "tests/contract/test_budget_ledger.py::test_an_unreconciled_reservation_keeps_counting" \
   's = s.replace("        committed = self.journal.totals(session_id)\n        held = self.outstanding(session_id)", "        committed = self.journal.totals(session_id)\n        held = ()")'
 
+# T056. FR-037 **across a crash**, which is a different mechanism from FR-037
+# within one attempt: the state a resumed process injects came out of the journal
+# rather than out of the response object still in memory. The tamper is confined
+# to the decode path, so nothing on the non-resume path changes — which is the
+# point. A run that never crashes cannot tell whether this line is there.
+proof "T056 state across resume — a resumed turn is handed no provider state" \
+  src/runtime/resume.py \
+  "tests/conformance/test_provider_state_resume.py::test_the_state_a_killed_process_recorded_is_injected_by_the_next_one" \
+  's = s.replace("            provider_state=step.provider_state,", "            provider_state=None,")'
+
+# T056, the other end of the same round trip: the *column*. The tamper above
+# stops the decode reading it; this one stops the commit writing it. Two
+# mechanisms, and either one alone is enough to lose the state — so a single
+# proof covering both would be the doubly-covered shape, unable to say which was
+# load-bearing. The arm reads the table directly rather than through the loop,
+# because a live attempt never consults the column it just wrote.
+proof "T056 state on disk — a committed model outcome stores no provider state" \
+  src/runtime/loop.py \
+  "tests/conformance/test_provider_state_resume.py::test_a_half_finished_turns_state_comes_off_disk_and_not_from_the_provider" \
+  's = s.replace("            provider_state=response.provider_state, at=self.clock())", "            provider_state=None, at=self.clock())")'
+
+# T056. The nullable column. Collapsing `None` into `b\"\"` reports a fact the
+# provider did not state — an *empty* state where it returned *no* state — and
+# every byte-equality assertion in the suite still passes, because the sessions
+# that matter never produce both in one run. `or b\"\"` is the natural version of
+# this defect, which is why the tamper is written that way rather than as a
+# deletion.
+proof "T056 absent is not empty — no state and empty state are stored the same" \
+  src/runtime/journal.py \
+  "tests/conformance/test_provider_state_resume.py::test_no_state_and_empty_state_stay_distinguishable_across_the_boundary" \
+  's = s.replace("                \"provider_state\": (None if provider_state is None\n                                   else bytes(provider_state)),", "                \"provider_state\": bytes(provider_state or b\"\"),")'
+
+# T056. FR-037'"'"'s third clause — never logged *readably*. The span carries a
+# digest, and the tamper replaces it with the bytes, which is the change somebody
+# debugging a state mismatch would make on purpose. Nothing else in the suite
+# notices: the detail dict is still populated, still JSON, still the right shape.
+proof "T056 digest not bytes — the opaque state is written to the trace readably" \
+  src/runtime/loop.py \
+  "tests/conformance/test_provider_state_resume.py::test_the_opaque_bytes_are_never_readable_on_the_trace_or_in_the_payload" \
+  's = s.replace("                \"provider_state_digest\": state_digest(response.provider_state),", "                \"provider_state_digest\": (response.provider_state or b\"\").hex(),")'
+
 # FR-037 and T-02. The opaque state is round-tripped; a loop that drops it still
 # produces plausible answers, which is why the arm asserts the bytes.
 proof "T041 opaque state — the provider state is not carried into the next turn" \
