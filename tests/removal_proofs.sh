@@ -1094,6 +1094,70 @@ proof "T054 resumed intent — the retry path re-intends a step that already has
 # mechanism another test already refuses would report the battery as load-bearing on
 # evidence that belongs to the other test.
 
+# T064, the model call'"'"'s interval. FR-005'"'"'s fourth ceiling had no numerator
+# until this pass: finding 029 measured a session run 2.044s against a ceiling of
+# 0.001s completing, with `ledger_total_wall_clock_seconds: 0.0`. The tamper is
+# that state exactly, and it is not a strawman — the literal `0.0` it restores is
+# the text this argument replaced. Nothing about the ceiling machinery changes
+# under it, which is the finding'"'"'s point: the comparison still runs, and still
+# compares against nothing.
+proof "T064 measured call time — the duration of the model call reconciles as zero" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_the_elapsed_time_a_turn_took_is_accrued_to_the_ledger" \
+  's = s.replace("            wall_clock_seconds=_interval(call_started, call_finished),", "            wall_clock_seconds=0.0,")'
+
+# T064, the rest of the turn. A second mechanism, not a second reading: the call
+# is measured on `reconcile`, everything after it — tool execution, journal
+# writes, context assembly — by the accrual at the end. Either alone leaves the
+# dimension under-counting, so a single proof over both could not say which was
+# load-bearing.
+#
+# The tamper is a **narrowing**, and the narrowest available: the interval keeps
+# being measured and accrued, from a mark taken one line later. That is the
+# plausible defect (a mark at the wrong end), it leaves every other property of
+# the row intact, and it makes the arm report on the mark rather than on whether
+# the file still imports.
+proof "T064 the turn tail — the interval after the call is measured from its end" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_the_wall_clock_ceiling_stops_a_session_that_ran_too_long" \
+  's = s.replace("        self._accrue_elapsed(turn_index, since=call_finished)", "        self._accrue_elapsed(turn_index, since=self.clock())")'
+
+# T064 on the resume path, and **this one no single-process test can carry**. A
+# turn whose model call is already on disk re-enters at `_finish_turn`, and the
+# interval that turn'"'"'s tools take is the only wall clock it will ever accrue.
+# Within one attempt the mark is redundant with the one above, so nothing in a
+# live process can tell: 645 unit and contract tests pass with this tamper
+# applied, the sole exception being `test_tamper_matching`, which reports that
+# the source moved and is therefore reading the tamper rather than its effect.
+# It is detected by the SIGKILL battery, whose third turn is the one that
+# resumed. Same narrowing shape as the arm above, and for the same reason.
+proof "T064 resumed turns — a turn finished after a crash accrues no wall clock" \
+  src/runtime/loop.py \
+  "tests/batteries/test_ceilings_under_resume.py::test_the_permitted_turn_count_is_a_real_bound" \
+  's = s.replace("        self._accrue_elapsed(turn_index, since=resumed_at)", "        self._accrue_elapsed(turn_index, since=self.clock())")'
+
+# T064. The accrual row is one dimension'"'"'s measurement and nothing else. Setting
+# `turns=1` is what a reader who thinks of a ledger row as "a turn happened"
+# would write, and it double-counts every turn against a ceiling FR-005 requires
+# be exact — the reservation already carried it. The arm asserts the turn total
+# rather than a terminal state, so it reports the count and not a consequence of
+# the count.
+proof "T064 one dimension only — the elapsed-time row counts a turn of its own" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_a_ceiling_is_not_restarted_by_a_second_loop_over_the_same_session" \
+  's = s.replace("            turns=0,\n            at=now,", "            turns=1,\n            at=now,")'
+
+# T064 / FR-005'"'"'s refusal of unstated figures. The tamper restores the default
+# this pass removed — `wall_clock_seconds: float = 0.0` — which is the state
+# finding 029 §4 measured: a deployment that never mentioned the dimension wrote
+# nothing to it on any path, and nothing said so. It is a *narrowing* of the
+# refusal rather than a deletion of the field, so `ReservationPolicy` still
+# constructs and every other test in the suite still passes.
+proof "T064 no invented estimate — an unstated wall-clock reservation defaults to zero" \
+  src/runtime/ledger.py \
+  "tests/contract/test_budget_ledger.py::test_every_estimated_figure_is_refused_when_it_is_omitted" \
+  's = s.replace("    wall_clock_seconds: float\n    turns: int = 1", "    wall_clock_seconds: float = 0.0\n    turns: int = 1")'
+
 # T056. FR-037 **across a crash**, which is a different mechanism from FR-037
 # within one attempt: the state a resumed process injects came out of the journal
 # rather than out of the response object still in memory. The tamper is confined
