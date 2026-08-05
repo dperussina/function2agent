@@ -253,6 +253,22 @@ jobs:
         # control that separates those — Rule 8 of the `experiment-design`
         # skill, and the discipline finding 025's own NC-1..NC-7 follow.
         #
+        # **FALSIFIED, run 30970910828 (2026-08-05) — and the step stays as
+        # written.** The unprivileged arm reported `namespaces=available` at
+        # `euid=1001 CapEff=0000000000000000`, with
+        # `apparmor_restrict_unprivileged_userns` reading **`1`** and AppArmor
+        # present in `/sys/kernel/security/lsm`. So the switch is on, the LSM is
+        # loaded, no capability was held, and the namespace was created anyway.
+        # `PREDICTED_LAYER` is deliberately NOT updated to match — see the
+        # paragraph below, which is the instruction this run was a test of. The
+        # `kernel-sysctl-or-lsm` cell therefore remains unconstructed on every
+        # surface available to this project, and it is now open whether this
+        # probe can construct it at all: Ubuntu's restriction may permit the
+        # `unshare` and confine the result, moving the refusal to the `uid_map`
+        # write. Finding 026's correction result 7 carries the full readings and
+        # the two candidate mechanisms. The `_apparmor_policy()` readings added
+        # to the tool are what the next run needs to separate them.
+        #
         # **The prediction is derived and may be wrong.** It is written into
         # `tools/unshare_pair_observation.py` as `PREDICTED_LAYER` before the
         # run, and whatever comes out is published beside it. If the arm

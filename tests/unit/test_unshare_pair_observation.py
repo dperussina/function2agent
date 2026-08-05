@@ -223,6 +223,112 @@ def test_an_arm_that_raises_still_leaves_a_record_behind(monkeypatch, tmp_path, 
     assert "no such thing" in written["error"]
 
 
+def _apparmor_reader(listing, label="unconfined"):
+    """Stand in for `/sys`, so the AppArmor cells run on a host with none."""
+    def read(path):
+        if path == obs._APPARMOR_PROFILES:
+            return listing
+        if path == "/proc/self/attr/current":
+            return label
+        return None
+    return read
+
+
+def test_the_loaded_profile_list_is_read_rather_than_inferred(monkeypatch):
+    """CI run 30970910828's gap: the sysctl said `1` and nothing said why.
+
+    The restriction is implemented by transitioning an unconfined process onto a
+    profile the AppArmor *userspace* package ships. Whether that profile is
+    loaded is the reading that separates "switched on with nothing to enforce"
+    from "enforcing and permitted this anyway", and the sysctl value cannot
+    answer it.
+    """
+    monkeypatch.setattr(obs, "_read", _apparmor_reader(
+        "unconfined (unconfined)\nunprivileged_userns (enforce)\n/usr/bin/man (enforce)\n"
+    ))
+
+    policy = obs._apparmor_policy()
+
+    assert policy["profiles_readable"] is True
+    assert policy["loaded_profile_count"] == 3
+    assert policy["restriction_profile_loaded"] is True
+    assert policy["/proc/self/attr/current"] == "unconfined"
+
+
+def test_a_long_profile_list_without_the_restriction_profile_is_not_an_empty_one(
+    monkeypatch,
+):
+    """`False` has to mean "looked, and it is not there"."""
+    monkeypatch.setattr(obs, "_read", _apparmor_reader(
+        "unconfined (unconfined)\n/usr/bin/man (enforce)\n"))
+
+    policy = obs._apparmor_policy()
+
+    assert policy["restriction_profile_loaded"] is False
+    assert policy["loaded_profile_count"] == 2, (
+        "the count is what keeps 'no profiles loaded' distinguishable from "
+        "'profiles loaded and this one absent'; they have different remedies"
+    )
+
+
+def test_an_unreadable_profile_list_is_none_rather_than_not_loaded(monkeypatch):
+    """The unprivileged arm cannot read it, and must not conclude from that.
+
+    `/sys/kernel/security/apparmor/profiles` is root-readable only, so the arm
+    actually under test is the one that will report `None` here. Reporting
+    `False` instead would have that arm assert the restriction's policy is
+    absent — a claim it has no evidence for, and the exact shape of finding
+    024's inferred-posture bug.
+    """
+    monkeypatch.setattr(obs, "_read", lambda path: None)
+
+    policy = obs._apparmor_policy()
+
+    assert policy["profiles_readable"] is False
+    assert policy["restriction_profile_loaded"] is None, (
+        "an unreadable list was reported as the profile not being loaded"
+    )
+    assert policy["loaded_profile_count"] is None
+
+
+def test_the_run_page_carries_the_apparmor_policy_reading(capsys, tmp_path):
+    """The readings have to reach a human, not just the artifact."""
+    record = _record("unprivileged", 1001, "available")
+    record["apparmor_policy"] = {
+        "/proc/self/attr/current": "unconfined",
+        "profiles_readable": False,
+        "loaded_profile_count": None,
+        "restriction_profile_loaded": None,
+        "restriction_profile_name": "unprivileged_userns",
+    }
+    path = tmp_path / "u.json"
+    path.write_text(json.dumps(record))
+
+    code, out = _render(capsys, [str(path)])
+
+    assert code == 0
+    assert "unprivileged_userns" in out
+    assert "AppArmor policy" in out
+
+
+def test_a_record_taken_before_the_apparmor_readings_existed_still_renders(
+    capsys, tmp_path
+):
+    """The artifacts of run 30970910828 have no `apparmor_policy` key.
+
+    They are the records this change was made in response to, they are retained
+    for 90 days, and a renderer that raised on them would make the evidence
+    unreadable at exactly the moment somebody went back for it.
+    """
+    path = tmp_path / "old.json"
+    path.write_text(json.dumps(_record("unprivileged", 1001, "available")))
+
+    code, out = _render(capsys, [str(path)])
+
+    assert code == 0
+    assert "AppArmor policy" in out
+
+
 @pytest.mark.skipif(sys.platform != "linux", reason="reads /proc/self/status")
 def test_on_linux_the_arm_records_the_uid_the_kernel_reports():
     import os

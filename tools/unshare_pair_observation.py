@@ -37,6 +37,49 @@ of this runner at all. If the arm reports anything else, **that is the result**.
 Do not adjust this file until it agrees with the prediction; an experiment whose
 only acceptable outcome is the predicted one measures nothing.
 
+THE PREDICTION WAS RUN AND IT WAS FALSIFIED. `PREDICTED_LAYER` IS LEFT ALONE.
+
+CI run 30970910828 published the reading: the unprivileged arm reported
+**`available`** at `euid=1001` with `CapEff=0000000000000000`, and
+`max_user_namespaces=63838`. The unprivileged user namespace was **permitted**
+and AppArmor did not refuse. `PREDICTED_LAYER` is deliberately **not** edited —
+changing it now would rewrite the prediction to match the result, which is the
+one thing the paragraph above forbids. The record of the falsification belongs in
+finding 026, and it is there.
+
+**The reading that makes it interesting rather than boring**, and the reason the
+sysctl is read at all: the switch is **present and enabled**. The same arm read
+`kernel.apparmor_restrict_unprivileged_userns` = `1`, AppArmor enabled = `Y`, and
+`lsm` = `lockdown,capability,landlock,yama,apparmor,ima,evm`. So this is not "the
+runner does not have the restriction". It is "the runner has the restriction
+switched on, and the namespace was created anyway", which is a different and much
+more consequential result — and the two must never be collapsed into "AppArmor
+did not refuse".
+
+**Two mechanisms explain that and this run's readings cannot separate them**, so
+both are named and neither is asserted:
+
+  1. The `unprivileged_userns` profile is not loaded. Ubuntu implements the
+     restriction by transitioning an unconfined process onto a hard-coded
+     profile named `unprivileged_userns`, which the AppArmor *userspace* package
+     ships as `/etc/apparmor.d/unprivileged_userns`. A kernel with the sysctl on
+     and that policy never loaded has nothing to transition to.
+  2. The restriction does not refuse `unshare(CLONE_NEWUSER)` in the first
+     place. On the published reading of Ubuntu's patch it **permits** the
+     namespace and confines the result, so the denial lands later — on the
+     `CAP_SYS_ADMIN` the confining profile withholds, which surfaces at the
+     `uid_map` write rather than at the `unshare`. If that is what it does, this
+     probe cannot construct `kernel-sysctl-or-lsm` on **any** Ubuntu 24.04 host,
+     because the mechanism the cell was written for is not a refusal of the
+     syscall the probe issues.
+
+Both are **DERIVED** — 1 from AppArmor's packaging, 2 from a third-party reading
+of Ubuntu's kernel patch alongside an audit trace — and neither is measured here.
+`_APPARMOR_PATHS` below is the addition that lets the next run tell them apart:
+the loaded-profile list settles 1, and this process's own label settles whether it
+was confined at all. Recording the two readings is the point; guessing between
+them on the strength of a sysctl value is what this file exists not to do.
+
 THE PAIRED ARM IS THE CONTROL, AND IT IS THE POINT OF RUNNING BOTH
 
 The positive result here is a **refusal**, and Rule 8 of the `experiment-design`
@@ -95,6 +138,27 @@ _LSM_PATHS = (
     "/sys/module/apparmor/parameters/enabled",
 )
 
+#: The readings that separate "the restriction is switched on but has no policy
+#: to enforce with" from "the restriction is enforcing and permitted this
+#: anyway". Added after CI run 30970910828 read the sysctl as `1` with the
+#: namespace permitted, which the readings above could not explain.
+#:
+#: `profiles` is the kernel's list of *loaded* profiles and is root-readable
+#: only, so the unprivileged arm is expected to report it unreadable — that is
+#: itself worth recording, and it is why the privileged arm carries the reading
+#: even though the unprivileged arm is the one under test. `attr/current` is this
+#: process's own label; `unconfined` there is the branch Ubuntu's hook keys on.
+_APPARMOR_PROFILES = "/sys/kernel/security/apparmor/profiles"
+_APPARMOR_PATHS = (
+    "/proc/self/attr/current",
+    "/sys/module/apparmor/parameters/mode",
+)
+
+#: The profile Ubuntu transitions an unconfined process onto when the
+#: restriction is enabled. Named as a literal because the question the next run
+#: has to answer is whether *this* name is loaded, not how many profiles are.
+_RESTRICTION_PROFILE = "unprivileged_userns"
+
 _STATUS_FIELDS = (
     "Uid", "Gid", "CapEff", "CapBnd", "CapPrm",
     "Seccomp", "Seccomp_filters", "NoNewPrivs",
@@ -106,6 +170,37 @@ def _read(path: str) -> str | None:
         return Path(path).read_text().strip()
     except OSError:
         return None
+
+
+def _apparmor_policy() -> dict:
+    """Whether AppArmor has the restriction's profile loaded, and this label.
+
+    Three states for `restriction_profile_loaded`, and the third is the point:
+    `True` and `False` are readings, `None` means the list could not be read and
+    licenses no conclusion either way. An unreadable list reported as `False`
+    would let an unprivileged arm — which cannot read it — assert that the
+    policy is absent, which is the failure mode this whole file is written
+    against.
+
+    The profile *names* are not stored. A hosted runner image can carry dozens,
+    the record is published to a run page, and the only question is whether one
+    named profile is among them; a count is kept so that "the list was empty" and
+    "the list was long and did not contain it" stay distinguishable.
+    """
+    out: dict[str, object] = {p: _read(p) for p in _APPARMOR_PATHS}
+    out["profiles_path"] = _APPARMOR_PROFILES
+    listing = _read(_APPARMOR_PROFILES)
+    if listing is None:
+        out["profiles_readable"] = False
+        out["loaded_profile_count"] = None
+        out["restriction_profile_loaded"] = None
+        return out
+    names = [line.split(" ", 1)[0] for line in listing.splitlines() if line]
+    out["profiles_readable"] = True
+    out["loaded_profile_count"] = len(names)
+    out["restriction_profile_loaded"] = _RESTRICTION_PROFILE in names
+    out["restriction_profile_name"] = _RESTRICTION_PROFILE
+    return out
 
 
 def _posture() -> dict:
@@ -153,6 +248,7 @@ def observe(label: str) -> dict:
         "uid": os.getuid(),
         "sysctls": {p: _read(p) for p in _SYSCTLS},
         "lsm": {p: _read(p) for p in _LSM_PATHS},
+        "apparmor_policy": _apparmor_policy(),
     }
 
     for name, fn in (("namespaces", preflight._check_namespaces),
@@ -268,6 +364,19 @@ def render(paths: list[str]) -> int:
                   r["label"], knob,
                   r["sysctls"].get("/proc/sys/user/max_user_namespaces"),
                   r["lsm"].get("/sys/kernel/security/lsm")))
+        # The switch being *on* while the namespace is permitted is a different
+        # result from the switch being absent, and these are the readings that
+        # separate the two explanations. Printed for every arm, including when
+        # unreadable, because "could not read the profile list" is the reading
+        # the unprivileged arm is expected to produce.
+        policy = r.get("apparmor_policy") or {}
+        print("  - AppArmor policy — this process's label = `{}`, `{}` loaded = "
+              "`{}` (of `{}` loaded profiles; list readable = `{}`)".format(
+                  policy.get("/proc/self/attr/current"),
+                  policy.get("restriction_profile_name", _RESTRICTION_PROFILE),
+                  policy.get("restriction_profile_loaded"),
+                  policy.get("loaded_profile_count"),
+                  policy.get("profiles_readable")))
     print()
 
     if unpriv:
