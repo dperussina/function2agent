@@ -43,12 +43,37 @@ graph, and the topology is a `while` with a ceiling check at the top of it.
    which is finding 006's 4-of-4 measurement; a turn half-done has only its
    outstanding steps handed back out.
 
-**What this slice still does not do.** Wall-clock consumption is not accrued —
-`wall_clock_seconds` reaches the ledger only through the reservation policy — and
-the reservation figures are the operator's declaration until T062's cost table
-exists. `src/runtime/ledger.py` states what that costs: the crash window loses
-`actual − reserved` when the actual is larger, which is a residue this ordering
-reduces rather than removes.
+7. **The elapsed time a turn took is measured and accrued** (FR-005's fourth
+   ceiling). It goes on in two pieces and both are deliberate.
+   [finding 029](../../specs/002-spec-aware-agent-runtime/findings/029-wall-clock-ceiling-unenforced.md)
+   measured what happened when neither did: a session that ran for 2.044
+   seconds under a ceiling of 0.001 seconds ended `terminated.completed`, while
+   three controls on the same harness fired on `spend`, `tokens` and `turns`.
+   The comparison, the wiring and `terminated.wall_clock_ceiling_reached` all
+   worked; the numerator was missing.
+
+   - **The model call's interval rides on `reconcile`**, in the same
+     transaction as the release of its reservation. Accruing it afterwards
+     would open a window in which the estimate has been released and the
+     measurement is not yet written — the only ordering that makes a total go
+     *down* across a crash, which is what FR-005's crash clause forbids.
+   - **The rest of the turn is accrued at the end of it**, which is the case
+     `BudgetLedger.accrue`'s own docstring names: a figure already known when
+     it is written has nothing to estimate. It is one span for the whole
+     fan-out rather than a sum over branches, because summing parallel tool
+     calls would count four seconds of wall clock for a two-second turn.
+
+   **The residue, stated because it is real.** The interval is accrued at two
+   points per turn, so a `SIGKILL` between them loses the part since the last
+   one — bounded by one turn's tool phase, and covered in the other direction
+   by `ReservationPolicy.wall_clock_seconds`, which is required for that
+   reason. Time in which no attempt is running is **not** counted; see
+   `_accrue_elapsed` for the clause of FR-005 that decides it.
+
+**What this slice still does not do.** The reservation figures are the
+operator's declaration until T062's cost table exists. `src/runtime/ledger.py`
+states what that costs: the crash window loses `actual − reserved` when the
+actual is larger, which is a residue this ordering reduces rather than removes.
 """
 
 from __future__ import annotations
@@ -95,6 +120,7 @@ from src.runtime.trace import (
     SpanWriter,
     TOOL_CALL,
 )
+from src.runtime.trace_budget import Consumption
 
 # Re-exported rather than defined here: `resume.py` builds a `TurnRecord` and
 # this module reads a `ResumePlan`, which would be an import cycle. See
@@ -311,14 +337,22 @@ class AgentLoop:
             at=self.clock())
         reservation = self.budget.reserve(
             self.session_id, turn=turn_index, at=self.clock())
+        call_started = self.clock()
         response = self.model(context)
+        call_finished = self.clock()
         # Reconciled after, which is where the estimate is replaced by the
         # measurement. A crash between the two lines above and this one leaves
         # the reservation standing, and that is the point: the spend is counted
         # at its estimate rather than not at all (U-30).
+        #
+        # All three measurable dimensions are handed over together. Wall clock
+        # used to be passed as `0.0` here, which is why the reservation was the
+        # only figure that ever reached it and why an orphaned reservation was
+        # the only way to fire the ceiling (finding 029).
         self.budget.reconcile(
             reservation, spend_usd=response.spend_usd, tokens=response.tokens,
-            wall_clock_seconds=0.0, at=self.clock())
+            wall_clock_seconds=_interval(call_started, call_finished),
+            at=call_finished)
         self.journal.commit_outcome(
             session_id=self.session_id, turn_index=turn_index,
             step_index=MODEL_STEP_INDEX,
@@ -327,6 +361,7 @@ class AgentLoop:
         self._write_model_span(turn_index, response)
 
         results = self._run_calls(turn_index, response.tool_calls)
+        self._accrue_elapsed(turn_index, since=call_finished)
         return self._record(turn_index, response, results)
 
     def _finish_turn(
@@ -352,6 +387,7 @@ class AgentLoop:
         ordering invariant.
         """
         turn_index = pending.turn_index
+        resumed_at = self.clock()
         results = list(pending.completed)
         for call in pending.pending:
             # `intend_once`, not `intend`. A pending call is pending for either
@@ -364,6 +400,12 @@ class AgentLoop:
             self._write_tool_span(turn_index, result)
             results.append(result)
         results.sort(key=lambda result: result.index)
+        # The time this attempt spent finishing the turn, and only that. The
+        # model call belonging to this turn was made and paid for by an earlier
+        # attempt, which reconciled its interval or died holding the
+        # reservation for it; re-counting it here would charge one call's
+        # duration twice.
+        self._accrue_elapsed(turn_index, since=resumed_at)
         return self._record(turn_index, pending.response, results)
 
     def _run_calls(
@@ -384,6 +426,53 @@ class AgentLoop:
             record=lambda result: self._record_call(turn_index, result),
         )
         return list(outcome.results)
+
+    def _accrue_elapsed(self, turn_index: int, *, since: float) -> None:
+        """Put the interval `since..now` on the ledger as measured wall clock.
+
+        **Only intervals in which an attempt was running are accrued, and that
+        is derived from FR-005 rather than chosen here.** The requirement
+        states what the counted total is made of: *"**A crash MUST NOT reduce
+        the total counted against any of the four ceilings** — consumption
+        already incurred before a crash MUST still be counted after the resume,
+        so a session that crashes and resumes repeatedly MUST NOT be able to
+        exceed a ceiling by any number of resumes."* Three things follow.
+
+        The counted total is *consumption incurred*, and the interval between a
+        crash and its resume is not incurred by the session — nothing of it is
+        running to incur anything. FR-049's extension note to FR-005 says so in
+        the same word, of all four ceilings at once: they are *"consumption
+        ceilings on a session"*, as against the processor and memory bounds,
+        which are *"properties of the execution environment rather than of a
+        session's consumption"*.
+
+        The mischief the last clause names is a **reset**, and a durable sum of
+        running intervals has none: every attempt adds to the same total, so no
+        number of resumes buys more than the ceiling. Counting downtime is
+        therefore not required to satisfy it.
+
+        And the clause only has a subject at all under an accrual reading. A
+        ceiling measured as *now minus session start* is a deadline, and a
+        crash cannot reduce a deadline, nor can any number of resumes raise
+        one — so a requirement that spends a sentence forbidding both is not
+        describing one. The same follows from *"the cumulative total against
+        it, MUST be recorded"*: a deadline has no cumulative total.
+
+        `turns=0` and no spend or tokens: this row is one dimension's
+        measurement and nothing else, and a turn counted here would be a second
+        count of the turn the reservation already carries.
+        """
+        now = self.clock()
+        self.budget.accrue(Consumption(
+            session_id=self.session_id,
+            turn=turn_index,
+            ordinal=TURN_TAIL_ORDINAL,
+            spend_usd=0.0,
+            tokens=0,
+            wall_clock_seconds=_interval(since, now),
+            turns=0,
+            at=now,
+        ))
 
     def _record_call(self, turn_index: int, result: ToolResult) -> None:
         """The journal first, then the span.
@@ -569,6 +658,20 @@ class AgentLoop:
         )
 
 
+def _interval(started: float, finished: float) -> float:
+    """`finished - started`, floored at zero.
+
+    Floored rather than trusted, because the clock is a caller's callable and
+    `Consumption` refuses a negative figure — *"a ledger that can be
+    decremented is a ledger a ceiling can be walked back under"*. A clock that
+    stepped backwards would otherwise take the whole turn down with a
+    `BudgetError` raised from the accounting rather than from the clock, which
+    is a long way from where the fault is. Floored, a non-monotonic clock
+    under-counts an interval and nothing else.
+    """
+    return max(0.0, finished - started)
+
+
 def _contributions(results: Sequence[ToolResult]) -> list[Contribution]:
     """The merge contributions a turn's results carry.
 
@@ -587,6 +690,12 @@ def _contributions(results: Sequence[ToolResult]) -> list[Contribution]:
 # therefore no state to carry. Not `""`, so that a provider that somehow reports
 # an empty name cannot accidentally match it.
 _ANY_PROVIDER = "\x00no-prior-provider"
+
+# The ledger ordinal the turn's post-model interval is accrued at. Ordinal 0 is
+# the model call's — reserved before it, reconciled after it — so the tail takes
+# the next position rather than appending a second row at the same coordinates
+# that no reader of `entries()` could tell from the first.
+TURN_TAIL_ORDINAL = 1
 
 
 @dataclass(frozen=True)

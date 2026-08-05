@@ -108,6 +108,48 @@ class Paused(Exception):
     """Raised nowhere. The child never leaves a pause; it is killed there."""
 
 
+class WorkClock:
+    """A clock that moves when the session does work, and not when it is read.
+
+    **Why the fixture needs one, now that the loop accrues elapsed time.** The
+    wall-clock arm of T055 has to state how many turn positions its ceiling can
+    pay for, and that number has to be *derived* — an expectation copied off a
+    run is a change detector. Under `time.time` the figure is a property of how
+    fast the machine was, so the arm would assert something about the host and
+    pass or fail accordingly. That is the defect this corpus has recorded twice.
+
+    Reading is free and advancing is explicit, so a turn costs
+    `step × (1 + tools)` on every machine. It is not a read-counter, which the
+    previous comment here rejected and was right to: a counter that moved on
+    every read would make the accrued figure a property of how many times the
+    loop happened to ask, and a refactor adding one `self.clock()` would change
+    the measurement.
+
+    Seeded from the real clock so lease and transition timestamps stay
+    plausible and stay ordered across the four processes an arm runs.
+    """
+
+    def __init__(self, step: float) -> None:
+        self.step = step
+        self.t = time.time()
+
+    def __call__(self) -> float:
+        return self.t
+
+    def advance(self) -> None:
+        self.t += self.step
+
+
+def _clock(step: float):
+    """The real clock, or a work-advanced one when a step is declared.
+
+    `0.0` means `time.time` rather than a `WorkClock` with a zero step: the two
+    differ for every arm that is *not* about wall clock, and a frozen clock
+    would give every span in a session the same timestamp.
+    """
+    return time.time if step <= 0.0 else WorkClock(step)
+
+
 def _append(path: Path, line: str) -> None:
     """Append one line and force it to the platter before returning.
 
@@ -149,10 +191,9 @@ class Child:
         self.turns = args.turns
         self.tools = args.tools
         self.pause = _parse_pause(args.pause)
-        # Overridable because T055's wall-clock arm has no other channel: the
-        # loop reconciles `wall_clock_seconds=0.0` and nothing else accrues that
-        # dimension, so the reservation is the only place a wall-clock figure
-        # reaches the ledger at all. Its own docstring records the gap.
+        # All three estimates are stated. `ReservationPolicy` refuses an
+        # omitted one, including `wall_clock_seconds`, which used to default to
+        # zero and therefore left the crash window on that dimension uncovered.
         self.policy = ReservationPolicy(
             spend_usd=args.reserve_spend, tokens=args.reserve_tokens,
             wall_clock_seconds=args.reserve_wall_clock)
@@ -162,10 +203,7 @@ class Child:
         self.ceilings = Ceilings(
             spend_usd=args.ceiling_spend, tokens=args.ceiling_tokens,
             wall_clock_seconds=args.ceiling_seconds, turns=args.ceiling_turns)
-        # A wall clock rather than a monotonic counter: T055 asserts on the
-        # wall-clock dimension, and a counter would make the figure a property
-        # of how many times the loop happened to ask.
-        self.clock = time.time
+        self.clock = _clock(args.clock_step)
         self.model_calls = 0
 
     # -- construction ------------------------------------------------------
@@ -231,7 +269,17 @@ class Child:
         if kind == "turn" and turns == first:
             self._wait_to_be_killed(f"turn:{first}")
 
+    def _tick(self) -> None:
+        """One unit of declared time, if this arm declared one.
+
+        Called from the two places the session does work the loop times: the
+        provider call and a tool body. A no-op under the real clock.
+        """
+        if isinstance(self.clock, WorkClock):
+            self.clock.advance()
+
     def model(self, context) -> ModelResponse:
+        self._tick()
         # One *behind* `next_turn_index`, because the loop journals this turn's
         # model intent before calling the provider: the highest journalled turn
         # is already this one. Reading it forward was the fixture's own first
@@ -260,6 +308,7 @@ class Child:
             spend_usd=SPEND_PER_TURN, tokens=TOKENS_PER_TURN)
 
     def execute(self, call: ToolCall) -> str:
+        self._tick()
         turn = self.journal.next_turn_index(self.session) - 1
         kind, want_turn, want_call = self.pause
         if kind == "step" and turn == want_turn and call.index == want_call:
@@ -415,6 +464,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--reserve-spend", type=float, default=RESERVE_SPEND)
     parser.add_argument("--reserve-tokens", type=int, default=RESERVE_TOKENS)
     parser.add_argument("--reserve-wall-clock", type=float, default=0.0)
+    parser.add_argument("--clock-step", type=float, default=0.0)
     return Child(parser.parse_args(argv)).run()
 
 

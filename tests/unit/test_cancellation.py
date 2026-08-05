@@ -80,7 +80,8 @@ class Rig:
             # Small but non-zero: the reservation wiring is exercised without
             # a reservation being large enough to reach a ceiling on its own,
             # which would make every arm here a budget test.
-            policy=ReservationPolicy(spend_usd=0.001, tokens=1))
+            policy=ReservationPolicy(spend_usd=0.001, tokens=1,
+                                     wall_clock_seconds=0.001))
         self.journal = TurnJournal(self.repo)
         self.spans = SpanWriter(self.repo)
         self.machine = SessionStateMachine(self.lifecycle)

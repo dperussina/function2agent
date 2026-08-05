@@ -1054,7 +1054,7 @@ proof "T052 completed turns — a resumed attempt re-executes the turns it alrea
 proof "T053 reserve before the call — the spend is only counted once it returns" \
   src/runtime/loop.py \
   "tests/unit/test_loop.py::test_the_reservation_counts_the_call_in_flight" \
-  's = s.replace("        reservation = self.budget.reserve(\n            self.session_id, turn=turn_index, at=self.clock())\n        response = self.model(context)", "        response = self.model(context)\n        reservation = self.budget.reserve(\n            self.session_id, turn=turn_index, at=self.clock())")'
+  's = s.replace("        reservation = self.budget.reserve(\n            self.session_id, turn=turn_index, at=self.clock())\n        call_started = self.clock()\n        response = self.model(context)", "        call_started = self.clock()\n        response = self.model(context)\n        reservation = self.budget.reserve(\n            self.session_id, turn=turn_index, at=self.clock())")'
 
 
 # T053, the durability half. An outstanding reservation has to keep counting, and

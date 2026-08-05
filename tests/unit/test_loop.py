@@ -71,7 +71,7 @@ class Harness:
     """Everything a loop needs, built over one temporary directory."""
 
     def __init__(self, tmp_path, *, ceilings: Ceilings | None = None,
-                 bound_tokens: int = 500):
+                 bound_tokens: int = 500, reserve_wall_clock: float = 0.0):
         self.tmp_path = tmp_path
         self.lifecycle = SessionTable(tmp_path / "session.sqlite3")
         self.lifecycle.create(
@@ -87,7 +87,14 @@ class Harness:
             # Small but non-zero. Zero would exercise the reserve/reconcile
             # wiring while asserting nothing about it; large enough to reach a
             # ceiling would make every arm in this file a budget test.
-            policy=ReservationPolicy(spend_usd=0.001, tokens=1))
+            #
+            # `wall_clock_seconds` is **zero by default here and stated rather
+            # than omitted**, because the arms below measure what the loop
+            # *accrues*: a non-zero reservation would put a figure on that
+            # dimension that no elapsed interval produced, and an arm asserting
+            # an exact elapsed total could then pass on the estimate alone.
+            policy=ReservationPolicy(spend_usd=0.001, tokens=1,
+                                     wall_clock_seconds=reserve_wall_clock))
         self.journal = TurnJournal(self.repo)
         self.spans = SpanWriter(self.repo)
         self.machine = SessionStateMachine(self.lifecycle)
@@ -97,7 +104,7 @@ class Harness:
         self.retention = RetentionStore(root=tmp_path / "scratch",
                                         session_id=SESSION, max_bytes=1_000_000)
 
-    def loop(self, model, execute) -> AgentLoop:
+    def loop(self, model, execute, *, clock=None) -> AgentLoop:
         return AgentLoop(
             session_id=SESSION,
             store=self.store,
@@ -110,7 +117,7 @@ class Harness:
             model=model,
             execute=execute,
             versions=VERSIONS,
-            clock=_clock(),
+            clock=clock or _clock(),
         )
 
     def close(self):
@@ -126,6 +133,33 @@ def _clock():
         return counter["n"]
 
     return now
+
+
+class WorkClock:
+    """A clock that moves when work happens and not when it is read.
+
+    The default `_clock()` above advances on every read, which is fine for the
+    arms that only need distinct timestamps and **wrong** for any arm about
+    *how much* time a turn took: under it the elapsed figure is a property of
+    how many times the loop happened to call `self.clock()`, so a refactor that
+    added one read would change the measurement.
+    `tests/fixtures/resume_session.py` records the same hazard from the other
+    side.
+
+    Here reading is free and the test says when time passes, from inside the
+    model stub and the tool body. So a turn's elapsed total is exactly the work
+    that turn did, on any host — which is what lets the arms below assert an
+    equality rather than an inequality against a wall clock they do not own.
+    """
+
+    def __init__(self, start: float = 1_000.0) -> None:
+        self.t = start
+
+    def __call__(self) -> float:
+        return self.t
+
+    def advance(self, seconds: float) -> None:
+        self.t += seconds
 
 
 def _model(*turns):
@@ -396,6 +430,197 @@ def test_a_loop_on_a_session_that_is_not_running_is_refused(tmp_path) -> None:
     h = Harness(tmp_path)
     with pytest.raises(LoopError, match="STARTING"):
         h.loop(_model(_finish()), lambda c: "").run("p")
+    h.close()
+
+
+# ---------------------------------------------------------------------------
+# FR-005's fourth dimension: the elapsed time a turn actually took.
+#
+# `findings/029-wall-clock-ceiling-unenforced.md` measured a session run for
+# 2.044 s under a ceiling of 0.001 s ending `terminated.completed`, against
+# three controls on the same harness that fired and a fourth that fires this
+# very ceiling at a ceiling of 0.0. So the comparison, the wiring and
+# `terminated.wall_clock_ceiling_reached` all worked and the **numerator** was
+# absent. These arms are that numerator, stated as behaviour.
+
+
+def _timed_model(clock: WorkClock, *responses, seconds: float):
+    """A provider stub whose call takes `seconds` of the test's clock."""
+    inner = _model(*responses)
+
+    def call(context):
+        clock.advance(seconds)
+        return inner(context)
+
+    call.seen = inner.seen
+    return call
+
+
+def _timed_tool(clock: WorkClock, *, seconds: float):
+    def run(_call) -> str:
+        clock.advance(seconds)
+        return "r"
+
+    return run
+
+
+def test_the_elapsed_time_a_turn_took_is_accrued_to_the_ledger(tmp_path) -> None:
+    """The numerator, asserted as an exact figure rather than as `> 0`.
+
+    Three turns; the first two ask for one tool each and the third finishes.
+    Every model call costs 4 and every tool call costs 6, so the session spends
+    `(4 + 6) + (4 + 6) + 4 = 24`. Both halves of a turn are named on purpose:
+    an implementation that timed only the model call would produce 12 and pass
+    a `> 0` assertion, and a session whose time goes into a tool that sleeps is
+    the exact shape finding 029's arm 1 had.
+
+    Read off `committed()` rather than `totals()`, because `totals()` includes
+    outstanding reservations and this arm is about what was **measured**.
+    """
+    clock = WorkClock()
+    h = Harness(tmp_path)
+    h.machine.start(SESSION, at=1.0)
+
+    outcome = h.loop(
+        _timed_model(clock, _asks("t"), _asks("t"), _finish(), seconds=4.0),
+        _timed_tool(clock, seconds=6.0),
+        clock=clock,
+    ).run("p")
+
+    assert outcome.terminal_state == terminal.COMPLETED.name
+    assert h.budget.committed(SESSION).wall_clock_seconds == pytest.approx(24.0), (
+        "the session spent 24 seconds of the clock it was handed and the "
+        f"ledger recorded {h.budget.committed(SESSION).wall_clock_seconds}. "
+        "FR-005's fourth ceiling is compared against this number."
+    )
+    h.close()
+
+
+def test_the_wall_clock_ceiling_stops_a_session_that_ran_too_long(tmp_path) -> None:
+    """Finding 029's arm 1, inverted: the session must now stop.
+
+    Twenty turns are available and the wall-clock ceiling permits three.
+    `evaluate_ceilings` is `>=` and is read at the top of the loop, so the turn
+    that takes the total to or past 25 is the last one that runs.
+
+    **The other three ceilings are held far out of reach**, and the turn
+    ceiling explicitly: the default is 10, and at 10 seconds a turn this arm
+    would otherwise have ended `terminated.turn_ceiling_reached` — failing
+    today for a reason that has nothing to do with wall clock, and passing
+    tomorrow for one.
+    """
+    clock = WorkClock()
+    h = Harness(tmp_path,
+                ceilings=_ceilings(wall_clock_seconds=25.0, turns=100))
+    h.machine.start(SESSION, at=1.0)
+
+    outcome = h.loop(
+        _timed_model(clock, *[_asks("t")] * 20, seconds=4.0),
+        _timed_tool(clock, seconds=6.0),
+        clock=clock,
+    ).run("p")
+
+    assert outcome.terminal_state == terminal.WALL_CLOCK_CEILING.name, (
+        f"the session ended {outcome.terminal_state!r} after spending "
+        f"{h.budget.totals(SESSION).wall_clock_seconds} against a ceiling of "
+        "25. This is the arm finding 029 measured completing at 2.044 s under "
+        "a ceiling of 0.001 s."
+    )
+    assert len(outcome.turns) == 3, (
+        f"{len(outcome.turns)} turns at 10 seconds each under a ceiling of 25"
+    )
+    h.close()
+
+
+def test_the_wall_clock_terminal_is_decided_by_duration_and_not_by_the_reservation(
+    tmp_path,
+) -> None:
+    """The defect finding 029 called the **inverse** of a ceiling, as one arm.
+
+    Two sessions, identical in every input a ceiling reads — same ceiling, same
+    reservation policy, same turn count available — and differing only in **how
+    long a turn takes**. A dimension that is enforced distinguishes them. A
+    dimension whose only content is the reservation estimate cannot, because
+    the estimate is a property of the configuration and not of the run: before
+    this arm both sessions ended `terminated.completed`, at any duration.
+
+    Written as a pair rather than as a single slow session on purpose. A single
+    session terminating proves the ceiling can fire; only the fast arm beside
+    it proves that what fired it was the time and not the configuration the two
+    share. The turn ceiling is lifted on both, so neither can end on the one
+    ceiling that would make the two look different for another reason.
+    """
+    slow_clock, fast_clock = WorkClock(), WorkClock()
+    ceilings = _ceilings(wall_clock_seconds=25.0, turns=100)
+    slow = Harness(tmp_path / "slow", ceilings=ceilings)
+    fast = Harness(tmp_path / "fast", ceilings=ceilings)
+    slow.machine.start(SESSION, at=1.0)
+    fast.machine.start(SESSION, at=1.0)
+
+    slow_outcome = slow.loop(
+        _timed_model(slow_clock, *[_asks("t")] * 20, seconds=4.0),
+        _timed_tool(slow_clock, seconds=6.0),
+        clock=slow_clock,
+    ).run("p")
+    fast_outcome = fast.loop(
+        _timed_model(fast_clock, _asks("t"), _asks("t"), _finish(), seconds=0.4),
+        _timed_tool(fast_clock, seconds=0.6),
+        clock=fast_clock,
+    ).run("p")
+
+    assert slow_outcome.terminal_state == terminal.WALL_CLOCK_CEILING.name
+    assert fast_outcome.terminal_state == terminal.COMPLETED.name
+    assert slow_outcome.terminal_state != fast_outcome.terminal_state, (
+        "two sessions with the same ceiling and the same reservation ended the "
+        "same way at 10 seconds a turn and at 1 second a turn. The dimension "
+        "is blind to duration, which is what makes it fire on failure rather "
+        "than on time."
+    )
+    slow.close()
+    fast.close()
+
+
+def test_a_crash_inside_a_model_call_still_counts_its_wall_clock_estimate(
+    tmp_path,
+) -> None:
+    """The over-count T053 built, held in place while the numerator lands.
+
+    FR-005: *"A crash MUST NOT reduce the total counted against any of the
+    four ceilings."* The reservation is what supplies that on this dimension,
+    and the tempting repair for finding 029's crash arm — release the orphan,
+    since it describes a call that never returned — would delete it.
+
+    The turn below has a model-call intent and no outcome, and a reservation
+    that was never reconciled: the state a `SIGKILL` inside `self.model(...)`
+    leaves. Its estimate must still be in the total after the loop that
+    resumes past it has finished, alongside the elapsed time the resumed
+    attempt really spent. Both, not either.
+    """
+    clock = WorkClock()
+    h = Harness(tmp_path, reserve_wall_clock=5.0)
+    h.machine.start(SESSION, at=1.0)
+    _abandoned_turn(h, 0)
+    h.budget.reserve(SESSION, turn=0, at=100.0)
+
+    h.loop(
+        _timed_model(clock, _finish(), seconds=4.0),
+        _timed_tool(clock, seconds=6.0),
+        clock=clock,
+    ).run("p")
+
+    committed = h.budget.committed(SESSION).wall_clock_seconds
+    total = h.budget.totals(SESSION).wall_clock_seconds
+    assert committed == pytest.approx(4.0), (
+        f"the resumed attempt measured {committed} seconds; its one turn made "
+        "a 4-second model call and no tool call"
+    )
+    assert total == pytest.approx(9.0), (
+        f"the total is {total}. The orphaned reservation of 5 has to keep "
+        "counting — that is the over-count FR-005's crash clause requires — "
+        "and the 4 seconds the resume really spent has to be counted beside "
+        "it. A total of 4 means the orphan was released; a total of 5 means "
+        "nothing was measured."
+    )
     h.close()
 
 

@@ -52,7 +52,8 @@ class Rig:
         self.store = SessionStore(self.repo, lifecycle=self.lifecycle)
         self.budget = BudgetLedger(
             BudgetJournal(self.repo, session_root=tmp_path / "root"),
-            policy=ReservationPolicy(spend_usd=0.001, tokens=1))
+            policy=ReservationPolicy(spend_usd=0.001, tokens=1,
+                                     wall_clock_seconds=0.001))
         self.journal = TurnJournal(self.repo)
         self.spans = SpanWriter(self.repo)
         self.machine = SessionStateMachine(self.lifecycle)

@@ -36,7 +36,8 @@ from src.runtime.ledger import (
 from src.runtime.trace_budget import BudgetJournal, Consumption
 
 TENANT, DEPLOYMENT, SESSION = "t-1", "d-1", "sess-1"
-POLICY = ReservationPolicy(spend_usd=0.50, tokens=2_000)
+POLICY = ReservationPolicy(spend_usd=0.50, tokens=2_000,
+                           wall_clock_seconds=3.0)
 
 
 def _ledger(tmp_path, *, policy: ReservationPolicy = POLICY) -> BudgetLedger:
@@ -58,9 +59,31 @@ def test_the_policy_has_no_default(tmp_path) -> None:
         ReservationPolicy()  # type: ignore[call-arg]
 
 
+@pytest.mark.parametrize("supplied", [
+    {"spend_usd": 0.5, "tokens": 1},
+    {"spend_usd": 0.5, "wall_clock_seconds": 1.0},
+    {"tokens": 1, "wall_clock_seconds": 1.0},
+])
+def test_every_estimated_figure_is_refused_when_it_is_omitted(supplied) -> None:
+    """All three estimates, each omitted in turn, rather than the empty call.
+
+    `test_the_policy_has_no_default` above omits everything at once, which
+    passes as soon as *any one* figure is required — so it cannot see a second
+    figure quietly acquiring a default. `wall_clock_seconds` had one:
+    [finding 029](../../specs/002-spec-aware-agent-runtime/findings/029-wall-clock-ceiling-unenforced.md)
+    §4 measured that the `0.0` it defaulted to was why a deployment that did
+    not set it wrote literally nothing to that dimension, and §5 recorded the
+    class as *"not uniform"* without settling it. `turns` is deliberately not
+    in this list: one call is one turn, which is exact rather than estimated,
+    and the docstring defends it.
+    """
+    with pytest.raises(TypeError):
+        ReservationPolicy(**supplied)  # type: ignore[call-arg]
+
+
 def test_a_negative_reservation_is_refused() -> None:
     with pytest.raises(LedgerError, match="negative"):
-        ReservationPolicy(spend_usd=-1.0, tokens=1)
+        ReservationPolicy(spend_usd=-1.0, tokens=1, wall_clock_seconds=1.0)
 
 
 def test_a_reservation_that_counts_no_turn_is_refused() -> None:
@@ -71,7 +94,8 @@ def test_a_reservation_that_counts_no_turn_is_refused() -> None:
     exact estimate is available.
     """
     with pytest.raises(LedgerError, match="turn"):
-        ReservationPolicy(spend_usd=0.5, tokens=1, turns=0)
+        ReservationPolicy(spend_usd=0.5, tokens=1, wall_clock_seconds=1.0,
+                          turns=0)
 
 
 # ---------------------------------------------------------------------------

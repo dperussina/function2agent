@@ -31,22 +31,36 @@ least once in each, because it is the only one that leaves a reservation
 outstanding, and an arm that crashed only at turn boundaries would never exercise
 the half of the ledger T053 exists for.
 
-## The wall-clock arm is partial, and says so
+## The wall-clock arm was partial and is not any more
 
-`src/runtime/loop.py`'s docstring records that wall-clock consumption is **not
-accrued**: `reconcile` passes `wall_clock_seconds=0.0` and nothing else writes
-that dimension. So the only wall-clock figure that reaches the ledger is the
-reservation, which is released on every successful reconcile — the committed
-wall-clock total is permanently zero and **the wall-clock ceiling cannot fire.**
+It used to assert clause 1 over the reservation channel alone and report the gap
+through `note_vacuous_invariant`, because nothing accrued measured elapsed time:
+`reconcile` passed `wall_clock_seconds=0.0`, so the committed total was
+permanently zero and the ceiling could not fire.
+[finding 029](../../specs/002-spec-aware-agent-runtime/findings/029-wall-clock-ceiling-unenforced.md)
+measured what that was worth — a session run for 2.044 s under a ceiling of
+0.001 s ending `terminated.completed` — and `src/runtime/loop.py` now measures
+the interval and reconciles it. The old arm carried an assertion that it would
+fail on the day that happened rather than quietly keep passing; it did, and this
+is what replaced it. **All four dimensions now take the same three clauses**,
+which is why there is no fourth test below.
 
-That arm therefore asserts clause 1 over the reservation channel and reports the
-gap through `note_vacuous_invariant`, rather than being written to pass. Two
-other shapes were available and both were rejected: skipping the dimension, which
-would leave a green run reading as coverage of all four; and having the fixture
-call `accrue()` with an elapsed figure, which would be the test supplying the
-mechanism it claims to measure. **How wall clock should be measured — session
-elapsed time including idle, or the sum of the model calls — is an owner's
-decision and not this battery's**, and picking one here would settle it silently.
+**Which intervals count is FR-005's answer and not this battery's.** The old
+docstring recorded the choice — session elapsed including idle, or only the time
+an attempt was running — as an owner's decision. It is not one:
+`AgentLoop._accrue_elapsed` sets out the clause that decides it and the two
+readings it rules out. Time between a crash and its resume does not count.
+
+## Why the wall-clock arm runs on a declared clock
+
+Its `permitted` figure is arithmetic over a per-turn cost, and under a real
+clock that cost is a property of the machine — so the arm would assert
+something about the host, and pass or fail with it. That is the defect this
+corpus has now recorded twice, and time is where it is easiest to make. The
+fixture's `--clock-step` advances a clock by a declared amount per model call
+and per tool call, so a turn costs `step × (1 + tools)` everywhere. Every arm
+gets it, not only the wall-clock one, so the four still differ in exactly one
+variable.
 """
 
 from __future__ import annotations
@@ -59,7 +73,6 @@ from pathlib import Path
 
 import pytest
 
-import tests.conftest as conftest
 from src.contracts import terminal
 from src.contracts.repository import Repository
 from src.runtime.journal import TurnJournal
@@ -77,6 +90,12 @@ TIMEOUT = 60
 # that no arm can pass by only ever crashing at the cheapest point.
 KILLS = ("model:0", "turn:2", "step:3:0")
 
+# One tool per turn, and a declared amount of clock per model call and per tool
+# call. Named rather than inlined into `_argv` because the wall-clock arm's
+# per-turn cost is derived from both.
+TOOLS_PER_TURN = 1
+CLOCK_STEP = 0.25
+
 # Per-turn consumption, imported rather than restated so an arm cannot drift out
 # of step with the fixture that produces the figures.
 from tests.fixtures.resume_session import (  # noqa: E402
@@ -86,10 +105,12 @@ from tests.fixtures.resume_session import (  # noqa: E402
     TOKENS_PER_TURN,
 )
 
-# Reserved wall clock for the partial arm. Non-zero so the reservation channel
-# has something in it; the figure itself carries no meaning, which is exactly
-# what makes the arm partial.
-RESERVE_WALL_CLOCK = 0.5
+# The declared estimate for a model call in flight, on the one dimension whose
+# crash window has no other cover. Set equal to a whole turn's cost so that the
+# `model:0` kill contributes the same figure a completed turn would, which is
+# what makes the arithmetic in `_permitted` come out exact for this arm.
+WALL_CLOCK_PER_TURN = CLOCK_STEP * (1 + TOOLS_PER_TURN)
+RESERVE_WALL_CLOCK = WALL_CLOCK_PER_TURN
 
 
 def _permitted(ceiling: float, per_turn: float, reserved: float) -> int:
@@ -120,11 +141,10 @@ class Dimension:
     """One of FR-005's four, with what it takes to drive a session past it."""
 
     def __init__(self, name: str, ceiling: float, *, per_turn: float,
-                 reserved: float, enforceable: bool = True):
+                 reserved: float):
         self.name = name
         self.ceiling = ceiling
         self.permitted = _permitted(ceiling, per_turn, reserved)
-        self.enforceable = enforceable
 
     @property
     def terminal_state(self) -> str:
@@ -157,10 +177,16 @@ DIMENSIONS = {
                            reserved=RESERVE_SPEND),
     "tokens": Dimension("tokens", 70, per_turn=TOKENS_PER_TURN,
                         reserved=RESERVE_TOKENS),
-    # A ceiling this arm can never reach; see the module docstring.
+    # Exact too, and the derivation is worth stating because a crash *does*
+    # cost this dimension something. A turn accrues its model interval when the
+    # call is reconciled and the rest of the turn when the turn ends, so a
+    # crash inside the tool phase loses that phase's elapsed — but the resume
+    # re-runs the same tool and accrues its own, which lands the turn back on
+    # `WALL_CLOCK_PER_TURN`. The under-count is against the wall, not against
+    # this arithmetic.
     "wall_clock_seconds": Dimension(
-        "wall_clock_seconds", 2.0, per_turn=RESERVE_WALL_CLOCK,
-        reserved=RESERVE_WALL_CLOCK, enforceable=False),
+        "wall_clock_seconds", 3.0, per_turn=WALL_CLOCK_PER_TURN,
+        reserved=RESERVE_WALL_CLOCK),
     # The exact one: a turn costs one turn and reserves one turn, so no rounding
     # sits between the ceiling and the count. It is the arm the tightness control
     # below asserts equality on.
@@ -203,8 +229,9 @@ def _argv(root: Path, dim: Dimension, pause: str) -> list[str]:
         "--root", str(root), "--pause", pause,
         # Far more turns than any ceiling here permits, so a session that ended
         # did so because a ceiling fired and not because the script ran out.
-        "--turns", "400", "--tools", "1",
+        "--turns", "400", "--tools", str(TOOLS_PER_TURN),
         "--reserve-wall-clock", repr(RESERVE_WALL_CLOCK),
+        "--clock-step", repr(CLOCK_STEP),
     ] + dim.flags()
 
 
@@ -286,16 +313,18 @@ def _assert_monotonic(dim: Dimension, boundaries: list[tuple]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# The three enforceable dimensions.
+# All four dimensions.
 
 
-@pytest.mark.parametrize("name", ["spend_usd", "tokens", "turns"])
+@pytest.mark.parametrize("name", list(CEILING_ORDER))
 def test_a_ceiling_holds_across_three_crashes_and_resumes(name, tmp_path, killer):
-    """SC-030's second clause, on the three dimensions the runtime accrues.
+    """SC-030's second clause, on all four dimensions the runtime accrues.
 
-    Parametrised rather than written out three times, because the three differ
-    only in which ceiling is tight — and a copy per dimension is how one of them
-    quietly stops asserting clause 3 while the other two still do.
+    Parametrised rather than written out four times, because they differ only
+    in which ceiling is tight — and a copy per dimension is how one of them
+    quietly stops asserting clause 3 while the others still do. Taken from
+    `CEILING_ORDER` rather than from a list written here, so a fifth dimension
+    could not be added to FR-005 and left uncovered by this battery.
     """
     dim = DIMENSIONS[name]
     root = tmp_path / name
@@ -332,73 +361,6 @@ def test_a_ceiling_holds_across_three_crashes_and_resumes(name, tmp_path, killer
 
 
 # ---------------------------------------------------------------------------
-# The fourth dimension, partial, and reported as such.
-
-
-def test_the_wall_clock_dimension_is_monotonic_but_cannot_yet_fire(
-    tmp_path, killer
-):
-    """Clause 1 on the wall-clock dimension; clauses 2 and 3 are **not** met.
-
-    The reason is upstream of this battery and is recorded in
-    `src/runtime/loop.py`: nothing accrues measured wall clock, so the committed
-    wall-clock total is always zero and only outstanding reservations move it.
-    That still gives clause 1 a subject — the reservation of an abandoned turn
-    is never released, so the total is non-decreasing across resumes — and it
-    gives clauses 2 and 3 none at all.
-
-    Written to fail if that ever changes silently. The final assertion is that
-    the session did **not** end on the wall-clock ceiling: the day wall clock is
-    accrued, this test fails and points at the arm that then needs writing,
-    rather than continuing to pass while describing a state of affairs that no
-    longer holds.
-    """
-    dim = DIMENSIONS["wall_clock_seconds"]
-    root = tmp_path / "wall"
-    root.mkdir()
-
-    boundaries: list[tuple] = []
-    for pause in KILLS:
-        before = _read(root, dim.name)
-        _crash_at(root, dim, pause, killer)
-        boundaries.append((pause, before, _read(root, dim.name)))
-
-    _assert_monotonic(dim, boundaries)
-
-    # The one crash that leaves a reservation standing is the only thing that
-    # moves this dimension at all, so the arm asserts it moved.
-    assert boundaries[0][2][0] > 0.0, (
-        "the wall-clock total is still zero after a crash inside a model call. "
-        "The reservation channel is the only one that writes this dimension, so "
-        "with it silent the monotonicity above holds over nothing."
-    )
-
-    repo, ledger, _ = _reader(root)
-    try:
-        committed = ledger.committed(SESSION).wall_clock_seconds
-        held = ledger.totals(SESSION).wall_clock_seconds
-    finally:
-        repo.close()
-
-    assert committed == 0.0, (
-        f"measured wall clock now accrues ({committed}), so this arm's premise "
-        "is stale and the wall-clock ceiling has become enforceable. Write the "
-        "full three-clause arm for it and delete this one — do not relax this "
-        "assertion."
-    )
-    assert held > committed
-
-    conftest.note_vacuous_invariant(
-        "SC-030/wall_clock_seconds",
-        "the wall-clock ceiling cannot fire: nothing accrues measured wall "
-        "clock (src/runtime/loop.py reconciles 0.0), so only the reservation "
-        "channel moves that total. Clause 1 is asserted over the reservation; "
-        "clauses 2 and 3 — the named terminal state and the bound on turns — "
-        "are NOT discharged for this dimension.",
-    )
-
-
-# ---------------------------------------------------------------------------
 # The controls.
 
 
@@ -430,27 +392,75 @@ def test_the_boundary_reading_is_taken_from_the_store_and_moves(tmp_path, killer
     assert after[1] == 2
 
 
-def test_the_permitted_turn_count_is_a_real_bound(tmp_path, killer):
+@pytest.mark.parametrize("name", ["turns", "wall_clock_seconds"])
+def test_the_permitted_turn_count_is_a_real_bound(name, tmp_path, killer):
     """Clause 3's expectation has to be capable of being exceeded.
 
     `permitted` is derived from the ceiling and the per-turn charge, and the
     assertion `issued <= permitted` is worthless if `permitted` is generously
-    above anything the runtime could reach. This asserts the two are close: the
-    turn arm, whose arithmetic is exact, must land on its bound rather than
-    comfortably inside it.
+    above anything the runtime could reach. This asserts the two are equal on
+    the two arms whose arithmetic is exact, so they must land *on* the bound
+    rather than comfortably inside it.
+
+    **Wall clock joins this control rather than only the looser one**, and it
+    can only do so because `--clock-step` makes a turn cost the same everywhere.
+    Under a real clock this equality would be a claim about the machine.
     """
-    dim = DIMENSIONS["turns"]
-    root = tmp_path / "bound"
+    dim = DIMENSIONS[name]
+    root = tmp_path / f"bound-{name}"
     root.mkdir()
     _drive(root, dim, killer)
-    _, issued = _read(root, "turns")
+    _, issued = _read(root, name)
     assert issued == dim.permitted, (
-        f"the turn arm issued {issued} positions under a ceiling of "
-        f"{dim.ceiling}. Anything below the bound would mean clause 3 is "
-        "asserting a ceiling the session never approached, and finding 006's "
-        "defect — six cycles under a ceiling of three — would sail past it."
+        f"the {name} arm issued {issued} positions under a ceiling of "
+        f"{dim.ceiling}, which pays for {dim.permitted}. Anything below the "
+        "bound would mean clause 3 is asserting a ceiling the session never "
+        "approached, and finding 006's defect — six cycles under a ceiling of "
+        "three — would sail past it."
     )
     assert TOKENS_PER_TURN > 0 and SPEND_PER_TURN > 0, (
         "the fixture charges nothing per turn, so the spend and token arms "
         "could not reach their ceilings at all"
+    )
+
+
+def test_the_wall_clock_dimension_carries_a_measurement_and_not_only_an_estimate(
+    tmp_path, killer
+):
+    """The distinction finding 029's crash arm turned on, kept assertable.
+
+    Before this pass the only figure that ever reached this dimension was the
+    reservation, and it was released on every reconcile — so the *committed*
+    total was permanently zero and the ceiling was reachable by exactly one
+    route, crashing. Both halves are asserted here because either alone is
+    satisfiable by the broken state: a positive total is satisfied by an
+    orphaned estimate, and a session that ends on the ceiling is too.
+
+    So: the committed total — reservations excluded — must be positive, and it
+    must be strictly below the total, because the `model:0` crash left an
+    estimate outstanding that nothing may release. A measurement without the
+    estimate beside it would mean the crash stopped counting.
+    """
+    dim = DIMENSIONS["wall_clock_seconds"]
+    root = tmp_path / "measured"
+    root.mkdir()
+    _drive(root, dim, killer)
+
+    repo, ledger, _ = _reader(root)
+    try:
+        committed = ledger.committed(SESSION).wall_clock_seconds
+        total = ledger.totals(SESSION).wall_clock_seconds
+    finally:
+        repo.close()
+
+    assert committed > 0.0, (
+        "the committed wall-clock total is zero, so nothing measured any "
+        "elapsed time and every wall-clock assertion in this file is holding "
+        "over the reservation channel alone (finding 029 §4)."
+    )
+    assert total == pytest.approx(committed + RESERVE_WALL_CLOCK), (
+        f"the total is {total} against a committed {committed}. The `model:0` "
+        f"crash left exactly one reservation of {RESERVE_WALL_CLOCK} "
+        "outstanding and FR-005 forbids a crash reducing the counted total, "
+        "so the difference is that estimate and nothing else."
     )

@@ -77,11 +77,27 @@ class ReservationPolicy:
     is therefore fixed at one or more, and a policy claiming zero is refused —
     that would leave the turn ceiling accruing only after the call returns,
     which is an under-count on the one dimension where no estimate is needed.
+
+    **`wall_clock_seconds` carried a default of `0.0` and no longer does, and
+    the reason it had to go is measured rather than tidy.**
+    [finding 029](../../specs/002-spec-aware-agent-runtime/findings/029-wall-clock-ceiling-unenforced.md)
+    §4 recorded that the default made a deployment which did not set it write
+    *literally nothing* to that dimension on any path, and §5 left open whether
+    `0.0` was the identity element or an invented number. It is an invented
+    number, and the argument that settles it is the one already in the
+    paragraph above: a call in flight has been running for some interval
+    greater than zero, so `0.0` is not "reserve nothing", it is *an estimate of
+    zero* for a quantity that is never zero. Unlike `turns`, no exact figure is
+    available without knowing how long the call will take. So it is refused on
+    exactly the ground `spend_usd` and `tokens` are refused, and refusing it
+    matters more than either: this is the dimension whose crash window has no
+    other cover, because a `SIGKILL` inside the call destroys the interval
+    measurement the reconcile would have written.
     """
 
     spend_usd: float
     tokens: int
-    wall_clock_seconds: float = 0.0
+    wall_clock_seconds: float
     turns: int = 1
 
     def __post_init__(self) -> None:
