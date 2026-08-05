@@ -107,6 +107,8 @@ prediction for reasons of its own.
 
 from __future__ import annotations
 
+import ctypes
+import errno
 import json
 import os
 import platform
@@ -203,6 +205,193 @@ def _apparmor_policy() -> dict:
     return out
 
 
+#: `CLONE_NEWUSER`. The one flag whose refusal finding 025's pair exists to
+#: attribute, and the namespace whose uid map finding 023 measured.
+_CLONE_NEWUSER = 0x10000000
+
+
+def _uid_map_probe() -> dict:
+    """What happens *after* the unshare, which is where finding 023's limb lives.
+
+    **Why this exists.** Finding 026 measured `kernel.apparmor_restrict_unprivileged_userns`
+    reading `1` on this runner, AppArmor enforcing, the `unprivileged_userns`
+    profile loaded, and an unprivileged user namespace created anyway at
+    `CapEff=0`. The surviving explanation was that Ubuntu's hook *permits* the
+    namespace and confines the result, moving the denial to the `uid_map` write
+    — which is finding 023's territory, not 026's. This probe is the reading
+    that separates that from the ordinary capability check, and it can only be
+    taken on a host with AppArmor enforcing, which is this runner and nothing
+    else available.
+
+    **The decisive reading is the label, not the errno.** If Ubuntu's
+    restriction works by transitioning the process onto a confining profile,
+    then `/proc/self/attr/current` read *inside the new namespace* is no longer
+    `unconfined`. That is a direct observation of the mechanism rather than an
+    inference from a denial, and it is why the label is read before either map
+    is written. An errno alone cannot distinguish an LSM from the capability
+    check that was always there.
+
+    **Two maps, because they are refused by different things.** A single-line
+    map of the writer's own uid is the case `user_namespaces(7)` permits without
+    `CAP_SETUID`; a map naming a *different* uid is the case finding 023
+    measured at `EPERM` from uid 1000 and `ok` from a capable writer. If the
+    self-map is refused too, something beyond the ordinary capability check is
+    refusing, and that is the result this probe is looking for.
+
+    Each write gets its own child because a `uid_map` may be written once.
+
+    **Not attempted off Linux, and that is reported rather than answered.**
+    `unshare` and `/proc/self/uid_map` are Linux's, so on any other kernel this
+    has nothing to ask and says so — the same three-state discipline as
+    `_read_cap_sys_admin`. It also keeps the fork out of the test suite on a
+    macOS laptop, where a forked child inside pytest is a source of flake and
+    not a source of evidence.
+    """
+    if platform.system() != "Linux":
+        return {
+            "attempted": False,
+            "why": (
+                f"platform.system()={platform.system()!r} is not Linux. "
+                "unshare(CLONE_NEWUSER) and /proc/<pid>/uid_map are Linux "
+                "interfaces, so no reading was taken. This is an absence of "
+                "evidence, not a refusal."
+            ),
+        }
+    libc = ctypes.CDLL(None, use_errno=True)
+
+    def in_child(work) -> dict:
+        read_fd, write_fd = os.pipe()
+        pid = os.fork()
+        if pid == 0:  # pragma: no cover - never returns to the collector
+            os.close(read_fd)
+            out: dict = {}
+            try:
+                ctypes.set_errno(0)
+                if libc.unshare(_CLONE_NEWUSER) != 0:
+                    err = ctypes.get_errno()
+                    out = {"unshare": errno.errorcode.get(err, str(err))}
+                else:
+                    out = {"unshare": "ok"}
+                    out.update(work())
+            except BaseException as exc:  # noqa: BLE001 - reported, not raised
+                out = {"probe_error": repr(exc)}
+            os.write(write_fd, json.dumps(out).encode())
+            os.close(write_fd)
+            os._exit(0)
+        os.close(write_fd)
+        raw = b""
+        while chunk := os.read(read_fd, 4096):
+            raw += chunk
+        os.close(read_fd)
+        os.waitpid(pid, 0)
+        try:
+            return json.loads(raw or b"{}")
+        except ValueError:
+            return {"probe_error": f"unreadable child output {raw!r}"}
+
+    def write_map(contents: str) -> dict:
+        # setgroups must be denied before a gid_map write, and denying it is
+        # itself refusable, so its answer is reported rather than assumed.
+        result = {
+            "label_inside_userns": _read("/proc/self/attr/current"),
+            "capeff_inside_userns": next(
+                (ln.split(":", 1)[1].strip()
+                 for ln in (_read("/proc/self/status") or "").splitlines()
+                 if ln.startswith("CapEff:")), None),
+            "uid_map_written": contents,
+        }
+        for path, payload, key in (
+            ("/proc/self/setgroups", "deny", "setgroups_deny"),
+            ("/proc/self/uid_map", contents, "uid_map_write"),
+        ):
+            try:
+                with open(path, "w") as handle:
+                    handle.write(payload)
+                result[key] = "ok"
+            except OSError as exc:
+                name = errno.errorcode.get(exc.errno, str(exc.errno))
+                result[key] = f"{name} (errno {exc.errno}: {exc.strerror})"
+        return result
+
+    def parent_writes_distinct_map() -> dict:
+        """The capable-writer arm, and the reason it cannot be done in the child.
+
+        `map_write_uid_map()` checks `file_ns_capable(f_cred, ns->parent,
+        CAP_SETUID)` — the capability is required **in the parent namespace**,
+        and it is read from the credentials that *opened* the file. A child that
+        has already unshared holds its credentials in the new namespace, which
+        is a descendant of the one being checked, so it fails that test no
+        matter what capabilities it holds. Measured on this laptop: the
+        `--privileged` arm with `CapEff=000001ffffffffff` inside the namespace
+        still answered `EPERM`.
+
+        Finding 023's "ok from a capable process" was therefore the **parent**
+        writing `/proc/<child>/uid_map` from outside, and that is the only shape
+        in which the capable arm means anything. The child unshares, reports,
+        and blocks; the parent writes; the child is released.
+        """
+        up_r, up_w = os.pipe()
+        down_r, down_w = os.pipe()
+        pid = os.fork()
+        if pid == 0:  # pragma: no cover - never returns to the collector
+            os.close(up_r), os.close(down_w)
+            ctypes.set_errno(0)
+            rc = libc.unshare(_CLONE_NEWUSER)
+            err = ctypes.get_errno()
+            os.write(up_w, json.dumps({
+                "unshare": "ok" if rc == 0 else errno.errorcode.get(err, str(err)),
+                "label_inside_userns": _read("/proc/self/attr/current"),
+            }).encode())
+            os.close(up_w)
+            os.read(down_r, 1)  # block until the parent has written the map
+            os._exit(0)
+        os.close(up_w), os.close(down_r)
+        raw = b""
+        while chunk := os.read(up_r, 4096):
+            raw += chunk
+        os.close(up_r)
+        try:
+            result = json.loads(raw or b"{}")
+        except ValueError:
+            result = {"probe_error": f"unreadable child output {raw!r}"}
+        result["written_by"] = "the parent, from outside the namespace"
+        result["uid_map_written"] = "0 100000 1"
+        if result.get("unshare") == "ok":
+            try:
+                with open(f"/proc/{pid}/setgroups", "w") as handle:
+                    handle.write("deny")
+                result["setgroups_deny"] = "ok"
+            except OSError as exc:
+                result["setgroups_deny"] = (
+                    f"{errno.errorcode.get(exc.errno, exc.errno)} ({exc.strerror})")
+            try:
+                with open(f"/proc/{pid}/uid_map", "w") as handle:
+                    handle.write("0 100000 1")
+                result["uid_map_write"] = "ok"
+            except OSError as exc:
+                result["uid_map_write"] = (
+                    f"{errno.errorcode.get(exc.errno, str(exc.errno))} "
+                    f"(errno {exc.errno}: {exc.strerror})")
+        os.write(down_w, b"x")
+        os.close(down_w)
+        os.waitpid(pid, 0)
+        return result
+
+    uid = os.getuid()
+    return {
+        "attempted": True,
+        "what_this_asks": (
+            "whether Ubuntu's apparmor_restrict_unprivileged_userns lands on "
+            "the uid_map write rather than on the unshare, which would make "
+            "finding 023's CAP_SETUID limb and the LSM refusal one constraint "
+            "seen from two sides rather than two independent ones."
+        ),
+        "self_map": in_child(lambda: write_map(f"0 {uid} 1")),
+        "distinct_map_written_by_self": in_child(lambda: write_map("0 100000 1")),
+        "distinct_map_written_by_parent": parent_writes_distinct_map(),
+    }
+
+
 def _posture() -> dict:
     """The privilege posture, read from `/proc/self/status` in this process."""
     out: dict[str, str | None] = {f: None for f in _STATUS_FIELDS}
@@ -249,6 +438,7 @@ def observe(label: str) -> dict:
         "sysctls": {p: _read(p) for p in _SYSCTLS},
         "lsm": {p: _read(p) for p in _LSM_PATHS},
         "apparmor_policy": _apparmor_policy(),
+        "uid_map_probe": _uid_map_probe(),
     }
 
     for name, fn in (("namespaces", preflight._check_namespaces),
@@ -377,6 +567,17 @@ def render(paths: list[str]) -> int:
                   policy.get("restriction_profile_loaded"),
                   policy.get("loaded_profile_count"),
                   policy.get("profiles_readable")))
+        uid_map = r.get("uid_map_probe") or {}
+        for arm in ("self_map", "distinct_map_written_by_self",
+                    "distinct_map_written_by_parent"):
+            reading = uid_map.get(arm)
+            if not reading:
+                continue
+            print("  - uid_map `{}` — unshare = `{}`, label inside the "
+                  "namespace = `{}`, write = `{}`".format(
+                      arm, reading.get("unshare"),
+                      reading.get("label_inside_userns"),
+                      reading.get("uid_map_write")))
     print()
 
     if unpriv:
