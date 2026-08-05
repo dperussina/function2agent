@@ -1396,6 +1396,31 @@ proof "T060 exhaustion — a run that played one of six turns reports no news" \
   "tests/unit/test_cassette_harness.py::test_a_player_that_served_some_turns_reports_the_rest" \
   's = s.replace("        missing = sorted(\n            set(range(len(self.cassette.interactions))) - self._served)", "        missing = []")'
 
+# ---------------------------------------------------------------------------
+# The suite's own harness.
+#
+# `tests/conftest.py` is not a mechanism the specification names, and it is under
+# proof for the reason the rest of this file exists: it is infrastructure whose
+# failure destroys evidence rather than producing a red test. The basetemp
+# redirect deleted a *concurrent* run's live temporary tree, and the victim saw a
+# `FileNotFoundError` from whichever test next touched `tmp_path` — a fault in
+# one process surfacing as an unexplained failure in another, naming nothing
+# about the cause. That is the environmental-fault-wearing-a-result's-clothes
+# shape this harness was built for, so the repair gets the same treatment.
+
+# The narrowing under proof is the liveness predicate, not the per-pid keying.
+# Those are two mechanisms and only one of them can be removed while leaving the
+# module importable and the other five arms in the file green: reaping every
+# per-pid directory unconditionally is exactly the uid-keyed behaviour restated,
+# and it is also the edit a contributor would make if they read the `os.kill`
+# probe as defensive clutter. The named test is the only one of the six that
+# separates the two — `test_an_exited_process_directory_is_reaped` passes under
+# the tamper, because an unconditional reaper does still reap the dead.
+proof "e4ef6e6 basetemp reaping — a live process's directory is reaped too" \
+  tests/conftest.py \
+  "tests/unit/test_conftest_basetemp.py::test_a_live_process_directory_survives_another_runs_configure" \
+  's = s.replace("        try:\n            os.kill(int(name), 0)\n        except ProcessLookupError:\n            shutil.rmtree(os.path.join(root, name), ignore_errors=True)\n        except PermissionError:\n            continue  # Alive and owned by someone else.", "        shutil.rmtree(os.path.join(root, name), ignore_errors=True)")'
+
 echo
 if [ "$SKIP" -gt 0 ]; then
   echo "$PASS proved, $FAIL unproven, $SKIP skipped"
