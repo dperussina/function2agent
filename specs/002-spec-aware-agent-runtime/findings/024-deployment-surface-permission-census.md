@@ -14,8 +14,22 @@ before the register carries the entry is a hard `identifier-resolution` error, a
 using the code-span escape deliberately rather than quietly.
 **Corrected 2026-08-04 by the propagation pass, because the reservation collided rather than being
 free.** OD-24 was already taken by the privilege-model decision this document defers to throughout,
-and OD-25 by the per-result output bound; **the next free number is `OD-26`**, and the live `OD-24`
-tokens added to this document below denote the privilege-model entry rather than the reservation. The
+and OD-25 by the per-result output bound; ~~**the next free number is `OD-26`**~~ **the next free
+number is the register's high-water mark plus one, read from the register and not from here**, and the
+live `OD-24` tokens added to this document below denote the privilege-model entry rather than the
+reservation.
+
+> **Restated 2026-08-05 — the second time this one sentence has gone stale in as many days, which is
+> what disqualifies the value from being written at all.** `OD-26` was taken on 2026-08-05 by the
+> decision settling which artifact owns FR-006's terminal-state taxonomy, so the reservation named a
+> number that is not free *and* named it for a decision unrelated to this document's subject. A written
+> next-free number fails in the **dangerous** direction: it does not go quiet, it instructs the next
+> author to reuse a taken number — the exact collision the reservation exists to prevent. Stated as the
+> rule rather than the value it cannot rot. No generator guards it, and deliberately: the dated
+> corrections here assert what a number *was*, so any pattern matching a live claim would fire on them,
+> which is the `register-range` false-positive trap documented in `tools/README.md` one file over.
+
+The
 reserved token appears nowhere in the body, so nothing derived here rests on it and the correction is
 to the reservation alone. The precedent is the note under OD-21
 that recording an owner decision *"required owner authority rather than a propagation pass"*, and
