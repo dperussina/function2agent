@@ -28,20 +28,31 @@ graph, and the topology is a `while` with a ceiling check at the top of it.
 4. **Every tool result is bounded before it enters the context** (FR-058), and
    every `tool_call` span carries the seven fields whether or not the bound bit.
 
-**What this slice does not do, stated so it is not mistaken for done.** Turn
-records are held for the life of the run and are not written to `turn_journal` —
-that table, its `(session_id, turn_index, step_index)` key and the intent-before-
-effect commit points are T051's, and resume reconstruction over them is T052's.
-Consumption is accrued *after* the model call rather than reserved before it; the
-reserve-then-reconcile half is capability 4's, and the direction matters (a crash
-under this code under-counts the call in flight, where reserve-then-reconcile
-over-counts). Both are named here because a reader of this module would otherwise
-have to infer them from an absence.
+5. **Every effectful step is journalled before it happens and after it finishes**
+   (T051), and **every model call is reserved on the ledger before it is made**
+   (T053). Both are ordered that way round for the same reason: after a
+   `SIGKILL` there is no unwind, so anything recorded only afterwards is
+   recorded only when nothing went wrong. The consequences are asymmetric on
+   purpose — a crash leaves a step that *may* have run, and a spend counted at
+   its estimate rather than not at all.
+
+6. **A resumed attempt starts from the journal, not from zero** (T052). The plan
+   is built at the top of `run()` unconditionally, including on a fresh session
+   where it is empty, so there is no resume flag for a caller to forget. A turn
+   whose steps all have committed outcomes is reconstructed and never re-run,
+   which is finding 006's 4-of-4 measurement; a turn half-done has only its
+   outstanding steps handed back out.
+
+**What this slice still does not do.** Wall-clock consumption is not accrued —
+`wall_clock_seconds` reaches the ledger only through the reservation policy — and
+the reservation figures are the operator's declaration until T062's cost table
+exists. `src/runtime/ledger.py` states what that costs: the crash window loses
+`actual − reserved` when the actual is larger, which is a residue this ordering
+reduces rather than removes.
 """
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, Protocol, Sequence
 
@@ -53,7 +64,22 @@ from src.contracts.transition import (
 )
 from src.runtime.context import ByteTokenizer, Context, ContextAssembler
 from src.runtime.dispatch import ToolCall, ToolResult, dispatch
+from src.runtime.journal import (
+    MODEL_STEP_INDEX,
+    STEP_MODEL_CALL,
+    STEP_TOOL_CALL,
+    TurnJournal,
+    tool_step_index,
+)
+from src.runtime.ledger import BudgetLedger
 from src.runtime.result_bound import BoundFields, ResultBound, RetentionStore
+from src.runtime.resume import (
+    ResumePlan,
+    UnfinishedTurn,
+    encode_model_outcome,
+    encode_tool_outcome,
+    plan_resume,
+)
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import SessionStore
 from src.runtime.state_merge import Contribution, MergePolicy
@@ -69,102 +95,16 @@ from src.runtime.trace import (
     SpanWriter,
     TOOL_CALL,
 )
-from src.runtime.trace_budget import BudgetJournal, Consumption
 
-
-class LoopError(RuntimeError):
-    """A turn that cannot be run as described."""
-
-
-@dataclass(frozen=True)
-class ModelResponse:
-    """One provider turn, above the adapter.
-
-    `provider_state` is **opaque bytes, ours** (T-02, FR-037): captured
-    verbatim, re-injected verbatim, never merged across providers, never
-    interpreted. `None` is a provider that returned none, which is different
-    from empty bytes.
-    """
-
-    provider: str
-    provider_state: bytes | None
-    text: str
-    tool_calls: tuple[ToolCall, ...] = ()
-    spend_usd: float = 0.0
-    tokens: int = 0
-
-    def __post_init__(self) -> None:
-        if not self.provider:
-            raise LoopError("a model response must name the provider")
-        if self.provider_state is not None and not isinstance(
-            self.provider_state, (bytes, bytearray)
-        ):
-            raise LoopError(
-                "provider_state is opaque bytes. A str would have to be "
-                "encoded, and an encoding is an interpretation — FR-037 "
-                "requires the state re-injected verbatim."
-            )
-
-
-def state_digest(state: bytes | None) -> str | None:
-    """The only form of the opaque state that may reach a record.
-
-    A digest is what makes "re-injected verbatim" assertable without putting
-    provider reasoning into a trace. `trace-record.md`: never written in a
-    readable form.
-    """
-    if state is None:
-        return None
-    return "sha256:" + hashlib.sha256(bytes(state)).hexdigest()
-
-
-@dataclass(frozen=True)
-class TurnRecord:
-    """`data-model.md` §2.2."""
-
-    turn_index: int
-    provider: str
-    provider_state: bytes | None
-    tool_calls: tuple[ToolCall, ...]
-    tool_results: tuple[ToolResult, ...]
-    text: str
-    at: float
-
-    def __post_init__(self) -> None:
-        if self.turn_index < 0:
-            raise LoopError("turn_index is a position, not a counter")
-        declared = [c.index for c in self.tool_calls]
-        if declared != sorted(declared):
-            raise LoopError(
-                f"tool_calls are held {declared}; §2.2 says the field is in "
-                "the provider's declared index order, so a record holding "
-                "them in another order is a record of something else."
-            )
-        got = [r.index for r in self.tool_results]
-        if got != sorted(got):
-            raise LoopError(f"tool_results are out of declared order: {got}")
-
-    @property
-    def provider_state_digest(self) -> str | None:
-        return state_digest(self.provider_state)
-
-    def to_record(self) -> dict[str, Any]:
-        """**The opaque state is not in here, by construction.**
-
-        Not redacted on the way out — absent. A field that is present and
-        emptied is one somebody later fills in.
-        """
-        return {
-            "turn_index": self.turn_index,
-            "provider": self.provider,
-            "provider_state_digest": self.provider_state_digest,
-            "tool_calls": [
-                {"index": c.index, "call_id": c.call_id, "name": c.name}
-                for c in self.tool_calls
-            ],
-            "text": self.text,
-            "at": self.at,
-        }
+# Re-exported rather than defined here: `resume.py` builds a `TurnRecord` and
+# this module reads a `ResumePlan`, which would be an import cycle. See
+# `src/runtime/turn.py` for why the types moved down and the names did not.
+from src.runtime.turn import (  # noqa: F401 — the public names live here
+    LoopError,
+    ModelResponse,
+    TurnRecord,
+    state_digest,
+)
 
 
 @dataclass(frozen=True)
@@ -198,7 +138,8 @@ class AgentLoop:
         *,
         session_id: str,
         store: SessionStore,
-        budget: BudgetJournal,
+        budget: BudgetLedger,
+        journal: TurnJournal,
         spans: SpanWriter,
         machine: SessionStateMachine,
         bound: ResultBound,
@@ -213,7 +154,14 @@ class AgentLoop:
     ) -> None:
         self.session_id = session_id
         self.store = store
+        # A `BudgetLedger` rather than a `BudgetJournal`, and required rather
+        # than accepted as either: the journal alone accrues after the call,
+        # which is the under-count U-30 names. Taking the wider type would make
+        # reserve-then-reconcile an opt-in safety property, and
+        # `BudgetJournal.__init__`'s own docstring records what that cost the
+        # last time it happened here.
         self.budget = budget
+        self.journal = journal
         self.spans = spans
         self.machine = machine
         self.bound = bound
@@ -259,8 +207,22 @@ class AgentLoop:
                 "would run without authority."
             )
 
-        turns: list[TurnRecord] = []
+        # T052. Built unconditionally, including on a fresh session where it is
+        # empty. There is no `resume=True` for a caller to forget, and no branch
+        # here that a first attempt takes and a resumed one does not — the two
+        # differ only in what the journal already holds.
+        plan = plan_resume(self.journal, self.session_id)
+        turns: list[TurnRecord] = list(plan.records)
         merged: dict[str, Any] = {}
+        # The merged state is replayed from the reconstructed results rather
+        # than starting empty. A resumed session that lost it would re-derive it
+        # by re-running the tools that produced it, which is finding 006's
+        # re-execution arriving under a different name.
+        for record in plan.records:
+            writes = _contributions(record.tool_results)
+            if writes:
+                merged = self.merge_policy.merge(merged, writes)
+        pending_turn: UnfinishedTurn | None = plan.unfinished
         this_attempt = 0
 
         while True:
@@ -291,12 +253,24 @@ class AgentLoop:
                     turns=tuple(turns), terminal_state=None, text="",
                     merged_state=merged)
 
-            # The turn index is the journalled turn count, not `len(turns)`.
-            # `len(turns)` is this attempt's, and a resumed attempt would
-            # restart the numbering §2.2 requires to be dense and monotonic
-            # across the session.
-            turn_index = self.budget.totals(self.session_id).turns
-            record, writes = self._one_turn(prompt, turns, turn_index)
+            if pending_turn is not None:
+                # A turn whose model call finished before the crash. Its
+                # response is on disk, so the provider is not called again, and
+                # only its outstanding steps run.
+                record, writes = self._finish_turn(pending_turn)
+                pending_turn = None
+            else:
+                # The turn index is the **journal's**, not `len(turns)` and not
+                # the ledger's turn total. `len(turns)` is this attempt's, and a
+                # resumed attempt would restart the numbering §2.2 requires to be
+                # dense and monotonic across the session. The ledger's total is
+                # the wrong authority for a different reason: it deliberately
+                # over-counts (T053), so a turn abandoned mid-call inflates it
+                # and the next turn would skip a position the journal does not
+                # know about. Position and consumption are different questions
+                # and conflating them is what makes one of the two wrong.
+                turn_index = self.journal.next_turn_index(self.session_id)
+                record, writes = self._one_turn(prompt, turns, turn_index)
             turns.append(record)
             this_attempt += 1
             if writes:
@@ -322,28 +296,150 @@ class AgentLoop:
         context = self.assembler.assemble(
             prompt=prompt, turns=turns,
             provider=previous_provider or _ANY_PROVIDER)
-        response = self.model(context)
 
-        # Accrued after the call, and the turn is counted here so the ceiling
-        # check at the top of the next iteration sees it. Counting the turn
-        # anywhere else would put the number the ceiling reads somewhere a crash
-        # can lose.
-        self.budget.accrue(Consumption(
-            session_id=self.session_id, turn=turn_index, ordinal=0,
-            spend_usd=response.spend_usd, tokens=response.tokens,
-            wall_clock_seconds=0.0, turns=1, at=self.clock(),
-        ))
+        # **Intent, then reservation, then the call.** The intent goes first
+        # because the journal is what numbers turns: a reservation written
+        # against a turn the journal has never heard of would be a reservation
+        # for a position `next_turn_index` is about to hand out again. Between
+        # the two the crash costs nothing — an index consumed, no money spent.
+        self.journal.intend(
+            session_id=self.session_id, turn_index=turn_index,
+            step_index=MODEL_STEP_INDEX, step_kind=STEP_MODEL_CALL,
+            effect_id="model", effectful=True,
+            payload={"turns_in_context": len(turns),
+                     "dropped_turns": context.dropped_turns},
+            at=self.clock())
+        reservation = self.budget.reserve(
+            self.session_id, turn=turn_index, at=self.clock())
+        response = self.model(context)
+        # Reconciled after, which is where the estimate is replaced by the
+        # measurement. A crash between the two lines above and this one leaves
+        # the reservation standing, and that is the point: the spend is counted
+        # at its estimate rather than not at all (U-30).
+        self.budget.reconcile(
+            reservation, spend_usd=response.spend_usd, tokens=response.tokens,
+            wall_clock_seconds=0.0, at=self.clock())
+        self.journal.commit_outcome(
+            session_id=self.session_id, turn_index=turn_index,
+            step_index=MODEL_STEP_INDEX,
+            payload=encode_model_outcome(response),
+            provider_state=response.provider_state, at=self.clock())
         self._write_model_span(turn_index, response)
 
-        results: list[ToolResult] = []
-        if response.tool_calls:
-            outcome = dispatch(
-                response.tool_calls,
-                lambda call: self._bounded_body(call),
-                record=lambda result: self._write_tool_span(turn_index, result),
-            )
-            results = list(outcome.results)
+        results = self._run_calls(turn_index, response.tool_calls)
+        return self._record(turn_index, response, results)
 
+    def _finish_turn(
+        self, pending: UnfinishedTurn
+    ) -> tuple[TurnRecord, list[Contribution]]:
+        """Complete a turn the crash caught between its steps (T052).
+
+        Three things this deliberately does **not** do. It does not call the
+        model — the response is reconstructed, and re-calling it would be a
+        second charge for an answer already on disk. It does not reserve — the
+        earlier attempt's reservation for this turn was either reconciled or is
+        still outstanding, and a second one would count the turn twice. And it
+        does not re-run `pending.completed` — those are the recorded effects
+        FR-007 forbids repeating.
+
+        The outstanding calls run **sequentially** rather than through
+        `dispatch`. `dispatch` requires the declared indexes to be dense over
+        `0..n-1` and a pending subset is sparse by construction, so fanning out
+        would mean renumbering the calls and mapping them back — and the index a
+        span carries is the provider's declared one. Losing parallelism on a
+        crash-recovery path is a cost worth paying to keep that mapping from
+        existing; the parallel path itself is unchanged and still under T043's
+        ordering invariant.
+        """
+        turn_index = pending.turn_index
+        results = list(pending.completed)
+        for call in pending.pending:
+            # `intend_once`, not `intend`. A pending call is pending for either
+            # of two reasons — never intended, or intended and unrecorded — and
+            # the second already has its row. `intend` refuses a second intent
+            # and is right to; this path is the retry that row exists for.
+            self._reintend_call(turn_index, call)
+            result = self._bounded_body(call)
+            self._commit_call(turn_index, result)
+            self._write_tool_span(turn_index, result)
+            results.append(result)
+        results.sort(key=lambda result: result.index)
+        return self._record(turn_index, pending.response, results)
+
+    def _run_calls(
+        self, turn_index: int, calls: Sequence[ToolCall]
+    ) -> list[ToolResult]:
+        if not calls:
+            return []
+        # Every intent is committed **before the fan-out starts**, in declared
+        # order, rather than inside each branch. A branch that wrote its own
+        # intent would be writing it concurrently with the effect it precedes on
+        # another thread, and "before" would then be true per branch and
+        # unordered across them.
+        for call in calls:
+            self._intend_call(turn_index, call)
+        outcome = dispatch(
+            calls,
+            lambda call: self._bounded_body(call),
+            record=lambda result: self._record_call(turn_index, result),
+        )
+        return list(outcome.results)
+
+    def _record_call(self, turn_index: int, result: ToolResult) -> None:
+        """The journal first, then the span.
+
+        `dispatch` calls this in declared order and does not catch what it
+        raises, on the grounds that *"a journal that failed to record a step is
+        not something to carry on past"*. The journal is written first for the
+        same reason: a step recorded on the trace and not in the journal would
+        be re-run on resume with a trace already claiming it happened.
+        """
+        self._commit_call(turn_index, result)
+        self._write_tool_span(turn_index, result)
+
+    def _intend_call(self, turn_index: int, call: ToolCall) -> None:
+        self.journal.intend(**self._call_intent(turn_index, call))
+
+    def _reintend_call(self, turn_index: int, call: ToolCall) -> None:
+        """The resume path's intent. See `_finish_turn`."""
+        self.journal.intend_once(**self._call_intent(turn_index, call))
+
+    def _call_intent(self, turn_index: int, call: ToolCall) -> dict[str, Any]:
+        """One description of a tool step, for both of the ways to record it.
+
+        Built in one place because the two must agree on the `effect_id`: the
+        idempotency key is derived from it, and `intend_once` compares keys to
+        decide whether it is looking at a retry or at a different effect. Two
+        constructions of this dict would be two chances for a resumed attempt to
+        name the call slightly differently and be refused for it.
+        """
+        return {
+            "session_id": self.session_id,
+            "turn_index": turn_index,
+            "step_index": tool_step_index(call.index),
+            "step_kind": STEP_TOOL_CALL,
+            "effect_id": call.call_id,
+            "effectful": True,
+            "payload": {"name": call.name, "arguments": dict(call.arguments)},
+            "at": self.clock(),
+        }
+
+    def _commit_call(self, turn_index: int, result: ToolResult) -> None:
+        self.journal.commit_outcome(
+            session_id=self.session_id, turn_index=turn_index,
+            step_index=tool_step_index(result.index),
+            payload=encode_tool_outcome(
+                outcome=result.outcome, body=result.body,
+                started_at=result.started_at, finished_at=result.finished_at,
+                writes=result.writes),
+            at=self.clock())
+
+    def _record(
+        self,
+        turn_index: int,
+        response: ModelResponse,
+        results: Sequence[ToolResult],
+    ) -> tuple[TurnRecord, list[Contribution]]:
         record = TurnRecord(
             turn_index=turn_index,
             provider=response.provider,
@@ -353,11 +449,7 @@ class AgentLoop:
             text=response.text,
             at=self.clock(),
         )
-        contributions = [
-            Contribution(branch=r.call.call_id, index=r.index, writes=r.writes)
-            for r in results if r.writes
-        ]
-        return record, contributions
+        return record, _contributions(results)
 
     def _bounded_body(self, call: ToolCall) -> ToolResult:
         """Execute one call and bound its result before anything reads it.
@@ -391,8 +483,13 @@ class AgentLoop:
         The turn is the journalled count rather than a position in this attempt,
         so the span sits after the last turn it followed rather than at turn 0 of
         whichever attempt happened to observe the edge.
+
+        Read off the **journal** rather than the ledger's turn total, for the
+        reason `run()` gives: the ledger over-counts by design, so a turn
+        abandoned mid-call would place this span one position past the last turn
+        that actually exists.
         """
-        turn = self.budget.totals(self.session_id).turns
+        turn = self.journal.next_turn_index(self.session_id)
         self.spans.write(Span(
             kind=STATE_TRANSITION,
             session_id=self.session_id,
@@ -470,6 +567,20 @@ class AgentLoop:
             total_wall_clock_seconds=totals.wall_clock_seconds,
             total_turns=totals.turns,
         )
+
+
+def _contributions(results: Sequence[ToolResult]) -> list[Contribution]:
+    """The merge contributions a turn's results carry.
+
+    Shared by the live path and the reconstruction path so that a resumed
+    session's merged state is built by the same rule as a fresh one's. Two
+    implementations would be two chances for a resume to merge differently from
+    the attempt it is resuming.
+    """
+    return [
+        Contribution(branch=r.call.call_id, index=r.index, writes=r.writes)
+        for r in results if r.writes
+    ]
 
 
 # A sentinel provider for the first turn, where there is no prior provider and

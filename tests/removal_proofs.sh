@@ -301,6 +301,12 @@ proof () {
   elif echo "$output" | grep -qE '^(ERROR|INTERNALERROR)' && ! echo "$output" | grep -qE '[0-9]+ failed'; then
     # The test did not run: an import or collection error, not an assertion.
     echo "  BROKEN    $name — the tamper broke collection rather than the mechanism"
+    # The lines that produced that verdict, because the verdict alone is not
+    # actionable and the output is discarded a line later. **This was added after
+    # a BROKEN appeared once and then did not reproduce**: with nothing retained
+    # there was no way to tell a genuinely unparseable tamper from a flake in the
+    # environment, and those want opposite responses.
+    echo "$output" | grep -E '^(ERROR|INTERNALERROR)' | head -3 | sed 's/^/            /'
     _record unproven tamper-broke-collection
     FAIL=$((FAIL+1))
   else
@@ -979,10 +985,87 @@ proof "FR-058 retention bound — the location accepts bytes past its declared b
 # T041. The three load-bearing lines of the loop, one proof each. The turn-index
 # one is finding 006's measurement in miniature: the number a ceiling reads has
 # to come off the journal, and `len(turns)` is this attempt's count.
+#
+# **Retargeted twice by T052, and both moves are load-bearing.** The site moved:
+# the index now comes from `journal.next_turn_index` rather than from the budget
+# totals, because the ledger deliberately over-counts (T053) and is therefore the
+# wrong authority for a position. And the *arm* moved, because
+# `test_turn_indexes_continue_across_attempts` stopped being able to tell the two
+# apart: resume reconstruction seeds `turns` with the completed records, so on a
+# clean resume `len(turns)` and the journalled count coincide and the tamper is
+# vacuous. The arm below is a journal where they provably differ — turn 0
+# complete, turn 1 intended and abandoned — so `len(turns)` is 1 where the
+# journal says 2. Under the tamper the loop re-issues turn 1's index and T051's
+# unique key refuses it; the failure is the collision the old arm's docstring
+# predicted, not an accident.
 proof "T041 turn index — the loop numbers turns from this attempt rather than the journal" \
   src/runtime/loop.py \
-  "tests/unit/test_runner.py::test_turn_indexes_continue_across_attempts" \
-  's = s.replace("            turn_index = self.budget.totals(self.session_id).turns", "            turn_index = len(turns)")'
+  "tests/unit/test_loop.py::test_an_abandoned_turns_index_is_never_handed_back_out" \
+  's = s.replace("                turn_index = self.journal.next_turn_index(self.session_id)", "                turn_index = len(turns)")'
+
+# T051. The write-ahead half. **A reordering, not a deletion**: the intent still
+# gets written, just after the call it was supposed to precede. Deleting it would
+# make `commit_outcome` refuse for want of an intent and every turn-taking test in
+# the suite fail, which is the vacuous shape — a proof whose tamper breaks the
+# module cannot distinguish "write-ahead was load-bearing" from "the file no
+# longer works". Reordered, every path that does not crash is unaffected: the
+# table ends up holding both rows either way. The arm reads the journal from
+# *inside* the model call, which is the only moment the difference exists.
+proof "T051 write-ahead — the intent is committed after the effect instead of before" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_every_step_is_journalled_before_it_happens" \
+  'intent = "        self.journal.intend(\n            session_id=self.session_id, turn_index=turn_index,\n            step_index=MODEL_STEP_INDEX, step_kind=STEP_MODEL_CALL,\n            effect_id=\x22model\x22, effectful=True,\n            payload={\x22turns_in_context\x22: len(turns),\n                     \x22dropped_turns\x22: context.dropped_turns},\n            at=self.clock())\n"; s = s.replace(intent, ""); s = s.replace("        response = self.model(context)\n", "        response = self.model(context)\n" + intent)'
+
+# T051, the other end of the same key. **Not a second reading of the proof
+# above**: that one is about *when* the intent is written, this one is about
+# whether recording an outcome twice is refused. Two mechanisms, and the guard
+# under proof is the store's unique index rather than any check in Python —
+# which is why the tamper removes the index declaration and not a branch.
+proof "T051 no repeated outcome — a step's outcome can be recorded twice" \
+  src/runtime/journal.py \
+  "tests/contract/test_turn_journal.py::test_the_same_outcome_cannot_be_committed_twice" \
+  's = s.replace("        }, unique=[[\x22session_id\x22, \x22turn_index\x22, \x22step_index\x22, \x22kind\x22]])", "        })")'
+
+# T052. The granularity. A resume that hands back a step whose outcome is already
+# on disk is FR-007'"'"'s repeat, and the tamper is the natural simplification —
+# treat the whole turn as pending rather than checking each step. The arm counts
+# what `execute` was called with, because the reconstructed record looks
+# identical either way: the second run produces a body too.
+proof "T052 step granularity — a recorded tool result is re-executed on resume" \
+  src/runtime/resume.py \
+  "tests/unit/test_loop.py::test_a_recorded_tool_result_is_not_re_executed_on_resume" \
+  's = s.replace("            if step is not None and step.is_complete:", "            if False:")'
+
+# T052, the turn level — finding 006'"'"'s 4 of 4. Dropping the completed records
+# means the loop starts with an empty transcript and re-calls the provider for
+# every turn that already happened. A separate mechanism from the step check
+# above: one decides which turns come back, the other which steps inside a turn
+# are outstanding, and neither covers the other.
+proof "T052 completed turns — a resumed attempt re-executes the turns it already ran" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_a_completed_inner_turn_is_not_re_executed" \
+  's = s.replace("        turns: list[TurnRecord] = list(plan.records)", "        turns: list[TurnRecord] = []")'
+
+# T053. **U-30 in one line.** Reserving after the call is the same as not
+# reserving, and it is what the loop did before this task. The arm samples the
+# totals from inside the provider call, because that is the only moment a
+# reservation is distinguishable from an accrual — afterwards both have recorded
+# the measurement and the table looks the same.
+proof "T053 reserve before the call — the spend is only counted once it returns" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_the_reservation_counts_the_call_in_flight" \
+  's = s.replace("        reservation = self.budget.reserve(\n            self.session_id, turn=turn_index, at=self.clock())\n        response = self.model(context)", "        response = self.model(context)\n        reservation = self.budget.reserve(\n            self.session_id, turn=turn_index, at=self.clock())")'
+
+
+# T053, the durability half. An outstanding reservation has to keep counting, and
+# the tamper is the plausible reading of "reconcile replaces the estimate" —
+# count only what was committed. Distinct from the proof above: that one is about
+# *when* the reservation is made, this one about whether it is counted at all
+# once made. The arm is the crash-shaped one, where no reconcile ever happens.
+proof "T053 outstanding reservations — the totals ignore the call in flight" \
+  src/runtime/ledger.py \
+  "tests/contract/test_budget_ledger.py::test_an_unreconciled_reservation_keeps_counting" \
+  's = s.replace("        committed = self.journal.totals(session_id)\n        held = self.outstanding(session_id)", "        committed = self.journal.totals(session_id)\n        held = ()")'
 
 # FR-037 and T-02. The opaque state is round-tripped; a loop that drops it still
 # produces plausible answers, which is why the arm asserts the bytes.

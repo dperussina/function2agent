@@ -44,7 +44,20 @@ from src.contracts import terminal
 from src.contracts.config import Config
 from src.contracts.repository import Repository, UniquenessError
 from src.contracts.transition import PredicateInput
-from src.runtime.trace_budget import BudgetJournal, Totals
+from src.runtime.trace_budget import Totals
+
+
+class TotalsSource(Protocol):
+    """Whatever can answer *what has this session consumed so far*.
+
+    A protocol rather than the concrete `BudgetJournal`, because there are two
+    honest answers to that question and a ceiling wants the wider one: the
+    committed total (`BudgetJournal`) and the committed total plus the calls in
+    flight (`BudgetLedger`, T053). Naming the narrow class here would have made
+    the safe reading the harder one to pass in.
+    """
+
+    def totals(self, session_id: str) -> Totals: ...
 
 TABLE = "session_ceiling"
 
@@ -287,12 +300,19 @@ class SessionStore:
         )
 
     def ceiling_verdict(
-        self, session_id: str, journal: BudgetJournal
+        self, session_id: str, journal: TotalsSource
     ) -> CeilingVerdict:
         """The recorded ceilings against the journalled totals.
 
         Both halves come off disk on every call. That is what makes the answer
         survive a crash: nothing in this object is the count.
+
+        Typed as `TotalsSource` rather than as `BudgetJournal` so that T053's
+        `BudgetLedger` — the journal plus the reservations covering the calls in
+        flight — is what the loop actually passes. The narrower annotation would
+        have read as a claim that the *committed* total is the right one to
+        compare a ceiling against, and it is not: the reservation exists so that
+        a call in flight counts.
         """
         session = self.load(session_id)
         if session is None:

@@ -50,6 +50,8 @@ from src.runtime.trace import (
     ArtifactVersions,
     SpanWriter,
 )
+from src.runtime.journal import TurnJournal
+from src.runtime.ledger import BudgetLedger, ReservationPolicy
 from src.runtime.trace_budget import BudgetJournal
 from src.supervisor.session_table import SessionTable, capability_digest
 
@@ -73,7 +75,13 @@ class Rig:
         self.repo = Repository(tmp_path / "runtime.sqlite3", role="runtime",
                                tenant_id=TENANT, deployment_id=DEPLOYMENT)
         self.store = SessionStore(self.repo, lifecycle=self.lifecycle)
-        self.budget = BudgetJournal(self.repo, session_root=tmp_path / "root")
+        self.budget = BudgetLedger(
+            BudgetJournal(self.repo, session_root=tmp_path / "root"),
+            # Small but non-zero: the reservation wiring is exercised without
+            # a reservation being large enough to reach a ceiling on its own,
+            # which would make every arm here a budget test.
+            policy=ReservationPolicy(spend_usd=0.001, tokens=1))
+        self.journal = TurnJournal(self.repo)
         self.spans = SpanWriter(self.repo)
         self.machine = SessionStateMachine(self.lifecycle)
         self.runner = Runner(
@@ -81,6 +89,7 @@ class Rig:
             lifecycle=self.lifecycle,
             machine=self.machine,
             budget=self.budget,
+            journal=self.journal,
             spans=self.spans,
             bound=ResultBound(bound_tokens=500, context_window_tokens=10_000,
                               tokenizer=Tok()),

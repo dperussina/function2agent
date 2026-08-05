@@ -49,12 +49,17 @@ event that really is resumable: an attempt bounded short by
 > promised. `SessionStateMachine._move` is what actually refuses, it refuses
 > unconditionally, and it fails if it stops.
 
-**What is not here.** Resume *reconstruction* — replaying the journal to rebuild
-the turns an interrupted attempt had already produced — is T052's. `attach()`
-takes the resume edge and starts the next attempt against the same journal, so
-the ceilings and the turn numbering carry; the transcript of the earlier attempt
-does not come back yet, and the docstring says so rather than leaving a caller to
-discover it.
+**Resume reconstruction is now the loop's, and this is where it changed.** Until
+T052 this docstring said *"the transcript of the earlier attempt does not come
+back yet"*. It does now: `AgentLoop.run()` builds a `ResumePlan` from the journal
+at the top of every attempt, so a `RunOutcome` from `attach()` carries the
+reconstructed turns **and** the new ones. That is a caller-visible change —
+`outcome.turns` after a resume is the session's turns, not the attempt's — and it
+is deliberate: the alternative is a caller that has to read the journal itself to
+find out what it is continuing from.
+
+The runner's own part is unchanged: it takes the resume edge, and the journal and
+the ledger it hands the loop are the session's, not the attempt's.
 """
 
 from __future__ import annotations
@@ -78,8 +83,9 @@ from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import Ceilings, LifecycleGateway, SessionStore
 from src.runtime.state_merge import MergePolicy
+from src.runtime.journal import TurnJournal
+from src.runtime.ledger import BudgetLedger
 from src.runtime.trace import ArtifactVersions, SpanWriter
-from src.runtime.trace_budget import BudgetJournal
 from src.supervisor.session_table import capability_digest
 
 
@@ -155,7 +161,8 @@ class Runner:
         store: SessionStore,
         lifecycle: LifecycleGateway,
         machine: SessionStateMachine,
-        budget: BudgetJournal,
+        budget: BudgetLedger,
+        journal: TurnJournal,
         spans: SpanWriter,
         bound: ResultBound,
         retention: Callable[[str], RetentionStore],
@@ -171,6 +178,7 @@ class Runner:
         self.lifecycle = lifecycle
         self.machine = machine
         self.budget = budget
+        self.journal = journal
         self.spans = spans
         self.bound = bound
         # A factory rather than an instance: FR-058 requires the retention
@@ -249,9 +257,12 @@ class Runner:
         `attach` that accepted ceilings would be that measurement with a
         parameter, and every individual attempt would still be compliant.
 
-        The earlier attempt's turns do not come back. Reconstructing them from
-        the journal is T052's; what carries here is what the ceilings and the
-        turn numbering read, which is the journal itself.
+        **The earlier attempt's turns do come back**, since T052. `AgentLoop.run`
+        reconstructs them from the journal, so `RunOutcome.turns` here is the
+        session's transcript rather than this attempt's. A completed inner turn
+        is never re-run — that is finding 006's 4-of-4 measurement — and a turn
+        the crash caught between its steps has only its outstanding steps
+        performed.
         """
         token = _require_token(cancel)
         row = self.lifecycle.get(session_id)
@@ -419,6 +430,7 @@ class Runner:
             session_id=session_id,
             store=self.store,
             budget=self.budget,
+            journal=self.journal,
             spans=self.spans,
             machine=self.machine,
             bound=self.bound,

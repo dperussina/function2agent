@@ -25,6 +25,8 @@ from src.runtime.runner import Runner, RunnerError
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import Ceilings, SessionStore
 from src.runtime.trace import ArtifactVersions, SpanWriter
+from src.runtime.journal import TurnJournal
+from src.runtime.ledger import BudgetLedger, ReservationPolicy
 from src.runtime.trace_budget import BudgetJournal
 from src.supervisor.session_table import SessionTable, capability_digest
 
@@ -48,7 +50,10 @@ class Rig:
         self.repo = Repository(tmp_path / "runtime.sqlite3", role="runtime",
                                tenant_id=TENANT, deployment_id=DEPLOYMENT)
         self.store = SessionStore(self.repo, lifecycle=self.lifecycle)
-        self.budget = BudgetJournal(self.repo, session_root=tmp_path / "root")
+        self.budget = BudgetLedger(
+            BudgetJournal(self.repo, session_root=tmp_path / "root"),
+            policy=ReservationPolicy(spend_usd=0.001, tokens=1))
+        self.journal = TurnJournal(self.repo)
         self.spans = SpanWriter(self.repo)
         self.machine = SessionStateMachine(self.lifecycle)
         self.runner = Runner(
@@ -56,6 +61,7 @@ class Rig:
             lifecycle=self.lifecycle,
             machine=self.machine,
             budget=self.budget,
+            journal=self.journal,
             spans=self.spans,
             bound=ResultBound(bound_tokens=500, context_window_tokens=10_000,
                               tokenizer=Tok()),
@@ -198,9 +204,16 @@ def test_turn_indexes_continue_across_attempts(tmp_path) -> None:
     """`data-model.md` §2.2: dense and monotonic **across the session**.
 
     A second attempt that restarted numbering at 0 would collide on T051's
-    `(session_id, turn_index, step_index)` key, and until that table exists the
-    collision is invisible — the transcript simply has two turn 0s. Which is why
-    this reads the index and not the count.
+    `(session_id, turn_index, step_index)` key — which since T051 is a unique
+    index in the store, so the collision is now a refusal rather than a
+    transcript with two turn 0s in it.
+
+    **The expectation changed with T052 and the reason is worth stating.** This
+    used to assert `[2]`: the resumed attempt's own turns. Resume reconstruction
+    brings the earlier attempt's turns back, so the outcome now carries the
+    *session's* transcript. What the arm reads is therefore the whole sequence,
+    and the load-bearing part is that turn 2 follows turns 0 and 1 rather than
+    re-numbering from zero.
 
     The turn *ceiling* arm in `test_loop.py` does not cover this: the ceiling is
     compared against the journal directly and is indifferent to what a turn calls
@@ -215,11 +228,23 @@ def test_turn_indexes_continue_across_attempts(tmp_path) -> None:
     first = _start(rig, model=model, max_turns_this_attempt=2)
     assert [t.turn_index for t in first.turns] == [0, 1]
 
+    asked = {"n": 0}
+
+    def second_model(context):
+        asked["n"] += 1
+        return _finish()
+
     second = rig.runner.attach(session_id=SESSION, prompt="p",
-                               model=lambda c: _finish(), execute=lambda c: "r")
-    assert [t.turn_index for t in second.turns] == [2], (
+                               model=second_model, execute=lambda c: "r")
+    assert [t.turn_index for t in second.turns] == [0, 1, 2], (
         f"the resumed attempt numbered its turns {[t.turn_index for t in second.turns]}; "
-        "two turns already happened, so the next one is turn 2"
+        "two turns already happened, so the next one is turn 2 and the two "
+        "before it are reconstructed rather than renumbered"
+    )
+    assert asked["n"] == 1, (
+        f"the provider was called {asked['n']} times on the resumed attempt. "
+        "Two turns were already complete; calling for them again is finding "
+        "006's re-execution and the transcript would look identical either way."
     )
     rig.close()
 

@@ -36,6 +36,13 @@ from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import Ceilings, SessionStore
 from src.runtime.trace import ArtifactVersions, SpanWriter, TOOL_CALL
+from src.runtime.journal import (
+    MODEL_STEP_INDEX,
+    STEP_MODEL_CALL,
+    TurnJournal,
+)
+from src.runtime.ledger import BudgetLedger, ReservationPolicy
+from src.runtime.resume import encode_model_outcome
 from src.runtime.trace_budget import BudgetJournal
 from src.supervisor.session_table import SessionTable, capability_digest
 
@@ -75,7 +82,13 @@ class Harness:
                                tenant_id=TENANT, deployment_id=DEPLOYMENT)
         self.store = SessionStore(self.repo, lifecycle=self.lifecycle)
         self.store.create(session_id=SESSION, ceilings=ceilings or _ceilings())
-        self.budget = BudgetJournal(self.repo, session_root=tmp_path / "session-root")
+        self.budget = BudgetLedger(
+            BudgetJournal(self.repo, session_root=tmp_path / "session-root"),
+            # Small but non-zero. Zero would exercise the reserve/reconcile
+            # wiring while asserting nothing about it; large enough to reach a
+            # ceiling would make every arm in this file a budget test.
+            policy=ReservationPolicy(spend_usd=0.001, tokens=1))
+        self.journal = TurnJournal(self.repo)
         self.spans = SpanWriter(self.repo)
         self.machine = SessionStateMachine(self.lifecycle)
         self.bound = ResultBound(bound_tokens=bound_tokens,
@@ -89,6 +102,7 @@ class Harness:
             session_id=SESSION,
             store=self.store,
             budget=self.budget,
+            journal=self.journal,
             spans=self.spans,
             machine=self.machine,
             bound=self.bound,
@@ -337,22 +351,31 @@ def test_a_ceiling_is_not_restarted_by_a_second_loop_over_the_same_session(
     A loop counting its own turns lets the second one run three more — which is
     the ceiling of 3 permitting 6 that finding 006 measured, and every
     individual loop is compliant.
+
+    **What this arm counts changed with T052.** It used to count the records the
+    second attempt returned, which is now the session's transcript rather than
+    the attempt's, so the number would be three whether one turn ran or three
+    did. It counts **provider calls** instead — which is the thing the ceiling is
+    supposed to bound and the thing a restarted count would let happen more of.
     """
     h = Harness(tmp_path, ceilings=_ceilings(turns=3))
     h.machine.start(SESSION, at=1.0)
-    first = h.loop(_model(*[_asks("t")] * 2), lambda c: "r")
+    first_model = _model(*[_asks("t")] * 2)
+    first = h.loop(first_model, lambda c: "r")
     first.run("p", max_turns_this_attempt=2)
     assert h.budget.totals(SESSION).turns == 2
+    assert first_model.seen["i"] == 2
 
     del first
-    second = h.loop(_model(*[_asks("t")] * 10), lambda c: "r")
-    outcome = second.run("p")
+    second_model = _model(*[_asks("t")] * 10)
+    outcome = h.loop(second_model, lambda c: "r").run("p")
 
-    assert len(outcome.turns) == 1, (
-        f"the second attempt ran {len(outcome.turns)} turns. Two ran before "
-        "it, the ceiling is 3, so exactly one is left — more means the count "
-        "restarted with the loop."
+    assert second_model.seen["i"] == 1, (
+        f"the second attempt made {second_model.seen['i']} provider calls. Two "
+        "turns ran before it and the ceiling is 3, so exactly one is left — "
+        "more means the count restarted with the loop."
     )
+    assert [t.turn_index for t in outcome.turns] == [0, 1, 2]
     assert outcome.terminal_state == terminal.TURN_CEILING.name
     assert h.budget.totals(SESSION).turns == 3
     h.close()
@@ -373,6 +396,228 @@ def test_a_loop_on_a_session_that_is_not_running_is_refused(tmp_path) -> None:
     h = Harness(tmp_path)
     with pytest.raises(LoopError, match="STARTING"):
         h.loop(_model(_finish()), lambda c: "").run("p")
+    h.close()
+
+
+# ---------------------------------------------------------------------------
+# T051/T052/T053 at the loop: what a crash-shaped journal makes the loop do.
+
+
+def _abandoned_turn(h: Harness, turn_index: int, *, at: float = 100.0) -> None:
+    """Journal a turn's model-call intent and no outcome.
+
+    This is what a `SIGKILL` between the two commit points leaves behind, built
+    directly rather than by killing a process, so the arm reading it is a unit
+    test. The cross-process version is `tests/integration/test_resume_sigkill.py`
+    and neither substitutes for the other: this one asserts what the loop *does*
+    with the state, that one asserts the state is what a real kill produces.
+    """
+    h.journal.intend(
+        session_id=SESSION, turn_index=turn_index,
+        step_index=MODEL_STEP_INDEX, step_kind=STEP_MODEL_CALL,
+        effect_id="model", effectful=True, payload={"killed": True}, at=at)
+
+
+def _completed_turn(h: Harness, turn_index: int, response, *,
+                    at: float = 10.0) -> None:
+    h.journal.intend(
+        session_id=SESSION, turn_index=turn_index,
+        step_index=MODEL_STEP_INDEX, step_kind=STEP_MODEL_CALL,
+        effect_id="model", effectful=True, payload={}, at=at)
+    h.journal.commit_outcome(
+        session_id=SESSION, turn_index=turn_index,
+        step_index=MODEL_STEP_INDEX, payload=encode_model_outcome(response),
+        provider_state=response.provider_state, at=at + 1.0)
+
+
+def test_an_abandoned_turns_index_is_never_handed_back_out(tmp_path) -> None:
+    """The case where the journal's count and this attempt's count differ.
+
+    Turn 0 completed; turn 1's model call was intended and never came back. A
+    loop numbering from `len(turns)` sees one reconstructed record and calls the
+    next turn 1 — re-issuing a call that may already have reached the provider,
+    and colliding with turn 1's existing intent on T051's key.
+
+    Both halves are read: the new turn is 2, and turn 1's payload is still the
+    one the killed attempt wrote.
+    """
+    h = Harness(tmp_path)
+    h.machine.start(SESSION, at=1.0)
+    _completed_turn(h, 0, _asks("t"))
+    h.journal.intend(
+        session_id=SESSION, turn_index=0, step_index=1,
+        step_kind="tool_call", effect_id="c0", effectful=True,
+        payload={}, at=12.0)
+    h.journal.commit_outcome(
+        session_id=SESSION, turn_index=0, step_index=1,
+        payload={"outcome": "ok", "body": "r", "started_at": 12.0,
+                 "finished_at": 13.0, "writes": {}}, at=13.0)
+    _abandoned_turn(h, 1)
+
+    outcome = h.loop(_model(_finish("after the crash")), lambda c: "r").run("p")
+
+    assert [t.turn_index for t in outcome.turns] == [0, 2], (
+        f"turns {[t.turn_index for t in outcome.turns]}. Turn 1 was abandoned; "
+        "its index is consumed and the gap is the safe direction, because "
+        "reusing it would re-issue a paid call."
+    )
+    assert h.journal.step(SESSION, 1, MODEL_STEP_INDEX).intent == {"killed": True}
+    h.close()
+
+
+def test_a_completed_inner_turn_is_not_re_executed(tmp_path) -> None:
+    """Finding 006's 4-of-4, at the loop.
+
+    Four turns are journalled complete before the loop starts. The provider stub
+    holds exactly one response, so a loop that replayed any of the four would
+    raise from the stub rather than fail an assertion — which is the failure this
+    arm is for.
+    """
+    h = Harness(tmp_path)
+    h.machine.start(SESSION, at=1.0)
+    for turn in range(4):
+        _completed_turn(h, turn, _finish(f"turn {turn}"), at=10.0 + turn * 10)
+
+    model = _model(_finish("the fifth"))
+    outcome = h.loop(model, lambda c: "r").run("p")
+
+    assert model.seen["i"] == 1, (
+        f"the provider was called {model.seen['i']} times. Four turns were "
+        "already complete; finding 006 measured all four re-executing."
+    )
+    assert [t.turn_index for t in outcome.turns] == [0, 1, 2, 3, 4]
+    assert [t.text for t in outcome.turns[:4]] == [
+        "turn 0", "turn 1", "turn 2", "turn 3"]
+    h.close()
+
+
+def test_a_recorded_tool_result_is_not_re_executed_on_resume(tmp_path) -> None:
+    """The step half of the granularity, and FR-007's *no repeat* clause.
+
+    Turn 0's model call finished and declared two tools; the first ran and was
+    recorded, the second did not. On resume only the second may execute, and the
+    first's recorded body has to survive rather than being produced again.
+    """
+    h = Harness(tmp_path)
+    h.machine.start(SESSION, at=1.0)
+    _completed_turn(h, 0, _asks("a", "b"))
+    h.journal.intend(
+        session_id=SESSION, turn_index=0, step_index=1,
+        step_kind="tool_call", effect_id="c0", effectful=True,
+        payload={}, at=12.0)
+    h.journal.commit_outcome(
+        session_id=SESSION, turn_index=0, step_index=1,
+        payload={"outcome": "ok", "body": "ran before the crash",
+                 "started_at": 12.0, "finished_at": 13.0, "writes": {}},
+        at=13.0)
+
+    executed: list[str] = []
+
+    def execute(call: ToolCall) -> str:
+        executed.append(call.call_id)
+        return "ran after the crash"
+
+    outcome = h.loop(_model(_finish()), execute).run("p")
+
+    assert executed == ["c1"], (
+        f"the resumed attempt executed {executed}. c0's outcome is on disk, so "
+        "running it again is the repeat FR-007 forbids — and a tool with a "
+        "local effect would have performed it twice."
+    )
+    resumed_turn = outcome.turns[0]
+    assert resumed_turn.turn_index == 0
+    assert [r.body for r in resumed_turn.tool_results] == [
+        "ran before the crash", "ran after the crash"]
+    assert [r.index for r in resumed_turn.tool_results] == [0, 1], (
+        "the finished turn's results are out of declared order, so T-08's "
+        "ordering did not survive the resume"
+    )
+    h.close()
+
+
+def test_the_model_call_of_a_half_finished_turn_is_not_repeated(tmp_path) -> None:
+    """A turn caught between its model call and its tools costs one call, not two.
+
+    The provider stub holds one response and the run needs one — for the turn
+    *after* the reconstructed one. If the half-finished turn re-called the
+    provider it would consume that response and the run would end a turn early
+    with the wrong text.
+    """
+    h = Harness(tmp_path)
+    h.machine.start(SESSION, at=1.0)
+    _completed_turn(h, 0, _asks("a"))
+
+    model = _model(_finish("the turn after"))
+    outcome = h.loop(model, lambda c: "r").run("p")
+
+    assert model.seen["i"] == 1
+    assert [t.turn_index for t in outcome.turns] == [0, 1]
+    assert outcome.turns[0].text == "", "turn 0's reconstructed text is wrong"
+    assert outcome.turns[1].text == "the turn after"
+    h.close()
+
+
+def test_the_reservation_counts_the_call_in_flight(tmp_path) -> None:
+    """T053 at the loop, read from inside the model call.
+
+    The totals are sampled *during* the provider call — which is the only moment
+    the reservation is observable, and the moment a `SIGKILL` lands in the case
+    U-30 names. A loop that accrued after the call would report zero here.
+    """
+    h = Harness(tmp_path)
+    h.machine.start(SESSION, at=1.0)
+    during: list = []
+
+    def model(context):
+        during.append(h.budget.totals(SESSION))
+        return _finish(spend_usd=2.0, tokens=99)
+
+    h.loop(model, lambda c: "r").run("p")
+
+    assert during[0].turns == 1, (
+        "the turn in flight was not counted, so a crash during the call would "
+        "leave a resumed session believing the turn never happened"
+    )
+    assert during[0].spend_usd == pytest.approx(0.001)
+    assert h.budget.totals(SESSION).spend_usd == pytest.approx(2.0), (
+        "the reservation was not replaced by the measurement"
+    )
+    assert h.budget.outstanding(SESSION) == ()
+    h.close()
+
+
+def test_every_step_is_journalled_before_it_happens(tmp_path) -> None:
+    """The write-ahead ordering, observed from inside the effect.
+
+    Both callbacks read the journal at the moment they are called, so the
+    assertion is about what was already committed when the effect began rather
+    than about what the table holds afterwards.
+    """
+    h = Harness(tmp_path)
+    h.machine.start(SESSION, at=1.0)
+    at_model_time: list = []
+    at_tool_time: list = []
+
+    def model(context):
+        at_model_time.append(h.journal.step(SESSION, 0, MODEL_STEP_INDEX))
+        return _asks("a") if not at_model_time[1:] else _finish()
+
+    def execute(call: ToolCall) -> str:
+        at_tool_time.append(h.journal.step(SESSION, 0, 1))
+        return "r"
+
+    h.loop(model, execute).run("p")
+
+    assert at_model_time[0] is not None, (
+        "the model call was made with no intent journalled; a crash during it "
+        "would leave no record that the turn was ever attempted"
+    )
+    assert at_model_time[0].is_complete is False
+    assert at_tool_time[0] is not None, "the tool ran with no intent journalled"
+    assert at_tool_time[0].is_complete is False
+    assert h.journal.is_step_complete(SESSION, 0, 1) is True, (
+        "the outcome was never committed after the effect finished"
+    )
     h.close()
 
 
