@@ -677,6 +677,57 @@ proof "T207 preflight — an EPERM is blamed on seccomp without reading the capa
   "tests/unit/test_pivot_root_probe.py::test_eperm_without_the_capability_is_not_attributed_to_seccomp" \
   's = s.replace("    if attempt.errno == _EPERM and sys_admin is True:", "    if attempt.errno == _EPERM:")'
 
+# The three below are the generalisation of the EBUSY proof above, and they exist
+# because that proof was not enough. It pinned one errno of a class: EBUSY was
+# what all six of finding 026's container arms produced, so `EINVAL` — its
+# sibling, produced by the same argument-checking block one branch earlier — went
+# uncovered, and CI run 30970910828 reported `refused-unattributed` for a
+# permitted syscall on the ubuntu-latest runner. The first restores exactly that
+# defect. The second and third are the two ways the fix for it can be wrong in
+# opposite directions, and both leave the check present and confidently wrong.
+proof "T208 preflight — only EBUSY is resolved, so EINVAL reads as a refusal" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_einval_with_no_filter_installed_reached_the_kernel" \
+  's = s.replace("attempt.errno in _POST_AUTHORITY_ERRNOS and no_filter", "attempt.errno == _EBUSY and no_filter")'
+
+# Widening in the permissive direction. `defaultErrnoRet` can carry any errno, so
+# resolving one without reading the filter posture makes a seccomp refusal read
+# as available — the constraint the EINVAL fix was required to preserve.
+proof "T208 preflight — the seccomp-mode gate is dropped from the resolved class" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_einval_with_a_filter_installed_or_unreadable_stays_unresolved" \
+  's = s.replace("    if attempt.errno in _POST_AUTHORITY_ERRNOS and no_filter:", "    if attempt.errno in _POST_AUTHORITY_ERRNOS:")'
+
+# The mistake the obvious fix makes. "Any errno that is not EPERM proves the call
+# reached the kernel" is false: path_pivot_root() calls security_sb_pivotroot()
+# before every argument check and AppArmor's hook denies with EACCES, so admitting
+# EACCES to the resolved class reports containment working on a host where an LSM
+# refuses the syscall outright.
+# The verdict here was never wrong; the sentence was. An EINVAL under a filter is
+# an errno path_pivot_root() does produce, withheld because defaultErrnoRet could
+# have forged it — which is not the same as an errno nobody has a reading for, and
+# the remedy differs (re-read with the filter off vs. there is no remedy). Measured
+# by correction arm C, which put the unrecognised text out for a recognised errno.
+proof "T208 preflight — a withheld post-authority errno is reported as unrecognised" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_einval_under_a_filter_is_not_described_as_an_unrecognised_errno" \
+  's = s.replace("    if attempt.errno in _POST_AUTHORITY_ERRNOS:\n", "    if False:\n")'
+
+# Arm G measured the counterexample to a sentence this check printed from the
+# start: a profile with `pivot_root -> errnoRet: 16` produces EBUSY without the
+# syscall reaching the kernel, so "a filter never gets that far" is false under a
+# filter. The verdict is left as available on purpose (arm B2); the false reason
+# is not. Restoring the unconditional claim is restoring a measured falsehood.
+proof "T208 preflight — the EBUSY message claims a filter cannot have caused it" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_ebusy_under_a_filter_does_not_claim_a_filter_could_not_have_caused_it" \
+  's = s.replace("            \" — and a syscall refused by a seccomp filter never gets that far\"\n            if no_filter\n            else \"\"", "            \" — and a syscall refused by a seccomp filter never gets that far\"")'
+
+proof "T208 preflight — EACCES is admitted to the class that reads as permitted" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_eacces_is_never_read_as_reaching_the_kernel" \
+  's = s.replace("_POST_AUTHORITY_ERRNOS = frozenset({_EBUSY, _EINVAL})", "_POST_AUTHORITY_ERRNOS = frozenset({_EBUSY, _EINVAL, _EACCES})")'
+
 proof "FR-038 ordering — the span position has no unique index" \
   src/runtime/trace.py \
   "tests/contract/test_trace_spans.py::test_two_writers_over_one_repository_cannot_share_a_position" \

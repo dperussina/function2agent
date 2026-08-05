@@ -53,17 +53,73 @@ _PIVOT_ROOT_NR_BY_MACHINE = {
     "arm64": 41,
 }
 
-# The two errnos this classifier has a reading for. Written as literals rather
-# than read from the `errno` module because they must be *Linux's* numbers
-# whatever host is doing the reading; both happen to agree with macOS today,
-# which is exactly the kind of coincidence that stops being true silently.
+# The errnos this classifier has a reading for. Written as literals rather than
+# read from the `errno` module because they must be *Linux's* numbers whatever
+# host is doing the reading; all four happen to agree with macOS today, which
+# is exactly the kind of coincidence that stops being true silently.
+#
+# **The split below is `path_pivot_root()`'s own ordering, read from
+# `fs/namespace.c`, and it is the whole basis of the classification.** The
+# function runs its two authority gates first and every argument check after:
+#
+#   1. `if (!may_mount()) return -EPERM;`          <- the CAP_SYS_ADMIN gate
+#   2. `error = security_sb_pivotroot(old, new);`  <- the LSM hook
+#   3. `if (IS_MNT_SHARED(...)) return -EINVAL;`   <- first argument check
+#      ... `-EINVAL`, `-ENOENT`, `-EBUSY`, `-EINVAL` ...
+#
+# So an errno from step 3 onwards is *positive evidence that both authority
+# gates passed*. `_AUTHORITY_ERRNOS` is step 1 and step 2;
+# `_POST_AUTHORITY_ERRNOS` is what step 3 onwards produces for `("/", "/")`.
+#
+# **`EACCES` is in the authority set and that is not obvious.** The LSM hook at
+# step 2 returns whatever the LSM returns, and AppArmor's returns `-EACCES` —
+# `security/apparmor/mount.c`'s `build_pivotroot()` sets `error = -EACCES` and
+# clears it only for a profile carrying `AA_MAY_PIVOTROOT`. TOMOYO is the only
+# other LSM implementing `sb_pivotroot`; SELinux and Smack register no hook for
+# it at all. A classifier built on "any errno other than EPERM proves the call
+# reached the kernel" would therefore read an AppArmor refusal as `available`,
+# which is the same inverted verdict as scoring `EBUSY` a refusal, reached from
+# the other side.
+#
+# **Why `("/", "/")` answers `EINVAL` on one host and `EBUSY` on another, and
+# why that is not about authority.** Step 3's `MS_SHARED` propagation check
+# precedes the `new_mnt == root_mnt` check that yields `EBUSY`. On a systemd
+# host `/` is mounted shared, so the propagation check fires first and the
+# answer is `EINVAL`; inside a container whose root propagation is private it
+# does not fire and the answer is `EBUSY`. Docker gave `EBUSY` (finding 026
+# arms B2, B3) and the `ubuntu-latest` runner gives `EINVAL` (CI run
+# 30970910828) for exactly that reason. The man page documents `EBUSY` as the
+# answer for the `new_root == "/"` case and separately documents four `EINVAL`
+# causes including the `MS_SHARED` one; the kernel's ordering is what decides
+# which of the two a given host reports.
 _EPERM = 1
+_EACCES = 13
 _EBUSY = 16
+_EINVAL = 22
+
+#: Refusals by an authority gate. Never evidence the syscall is permitted, at
+#: any filter posture.
+_AUTHORITY_ERRNOS = frozenset({_EPERM, _EACCES})
+
+#: Errnos `path_pivot_root()` reaches only after both authority gates. Seeing
+#: one means the call got through them — *provided* no seccomp filter is
+#: installed to have manufactured it. Deliberately a closed list rather than
+#: "everything not in `_AUTHORITY_ERRNOS`": an errno nobody has placed in the
+#: kernel's control flow must fail closed. `ENOSYS` is the case that makes the
+#: difference — with no filter installed it means the kernel does not implement
+#: the syscall, which is the opposite of available.
+_POST_AUTHORITY_ERRNOS = frozenset({_EBUSY, _EINVAL})
 
 # `CAP_SYS_ADMIN` is capability bit 21. It is the kernel's own gate on
 # `pivot_root`, which is why the posture has to be read before an `EPERM` can
 # be attributed to anything.
 CAP_SYS_ADMIN_BIT = 21
+
+# `Seccomp` in `/proc/self/status`: 0 no filter, 1 strict mode, 2 filter mode.
+# Only `0` is load-bearing here — it is the one value that rules out a
+# `defaultErrnoRet` — so the other modes are not named as constants and are
+# handled as "some filter posture that is not none".
+SECCOMP_MODE_DISABLED = 0
 
 # seccomp(2) constants. Values are the kernel's UAPI numbers, identical on every
 # Linux architecture.
@@ -626,10 +682,22 @@ def _check_namespaces(
 #
 # **Permitted does not mean success, and that inverts the verdict if it is
 # missed.** `pivot_root("/", "/")` cannot succeed — the kernel refuses a new
-# root that is already the root — so the *permitted* reading here is a failure
-# with `EBUSY`, meaning the call passed the filter and the kernel rejected the
-# arguments. Finding 025 measured the pair as NC-6: `EPERM` under the default
-# profile, `EBUSY` under the bundle's profile, one flag changed.
+# root that is already the root — so the *permitted* reading here is a failure,
+# meaning the call passed the filter and the kernel rejected the arguments.
+# Finding 025 measured the pair as NC-6: `EPERM` under the default profile,
+# `EBUSY` under the bundle's profile, one flag changed.
+#
+# **Which failure is a property of the host's mount topology, not of its
+# authority, and pinning one errno cost this repository a red gate.** T207
+# resolved `EBUSY` and nothing else, on six container arms that all produced
+# it. CI run 30970910828 then produced `EINVAL` on the `ubuntu-latest` runner
+# while holding the full capability set with no filter installed, and the check
+# reported `refused-unattributed` — a refusal on a host that refuses nothing,
+# which is the inverted verdict T207's own removal proofs were written to catch,
+# arriving via a sibling errno the proof did not cover. `_POST_AUTHORITY_ERRNOS`
+# above is the generalisation, and the `_EPERM`/`_EACCES` split beside it is the
+# limit on it: the class is "errnos `path_pivot_root()` produces after its
+# authority gates", not "errnos that are not `EPERM`".
 #
 # **Why the capability posture is read.** The kernel's own gate on `pivot_root`
 # is `CAP_SYS_ADMIN` and it returns `EPERM` too, so `EPERM` has two sources and
@@ -700,6 +768,94 @@ _UNATTRIBUTED_PIVOT_ROOT = (
 )
 
 
+_EPERM_WITH_CAPABILITY_AND_NO_FILTER = (
+    "REFUSING LAYER: not determined, and specifically NOT the container "
+    "runtime's seccomp profile — there is no filter installed to be it. This "
+    "process holds CAP_SYS_ADMIN, so the kernel's own may_mount() gate is "
+    "satisfied, and Seccomp reads 0, so SCMP_ACT_ERRNO cannot have produced "
+    "this either. What is left is the LSM hook path_pivot_root() calls before "
+    "any argument check — security_sb_pivotroot(), which AppArmor answers with "
+    "EACCES rather than EPERM, and TOMOYO with EPERM — or a distribution "
+    "policy this check does not know about. "
+    "DO NOT SHIP A SECCOMP PROFILE ON THIS READING. The bundle's profile "
+    "would change nothing: no filter is refusing this. "
+    "MEASURED, in part (finding 026 arms B6 and T207 arm P5): an EPERM here "
+    "with Seccomp 0 and no filter to blame was observed, which is why naming a "
+    "profile in this posture is indefensible rather than merely unproven. "
+    "DERIVED, NOT MEASURED: those arms did not hold CAP_SYS_ADMIN, so the "
+    "combination of a held capability, no filter and an EPERM has not been "
+    "constructed anywhere, and the candidates named above are reasoned from "
+    "path_pivot_root()'s ordering in fs/namespace.c rather than observed."
+)
+
+_EACCES_IS_AN_AUTHORITY_REFUSAL = (
+    "REFUSING LAYER: an LSM, on the evidence of the errno itself. "
+    "path_pivot_root() calls security_sb_pivotroot() after may_mount() and "
+    "BEFORE every argument check, and AppArmor's hook denies with EACCES — "
+    "security/apparmor/mount.c's build_pivotroot() sets error = -EACCES and "
+    "clears it only for a profile carrying AA_MAY_PIVOTROOT. TOMOYO is the "
+    "only other LSM that registers sb_pivotroot; SELinux and Smack register no "
+    "hook for it. "
+    "THIS IS WHY EACCES IS NOT READ AS THE CALL REACHING THE KERNEL even when "
+    "no filter is installed: it is an authority refusal that happens to not be "
+    "EPERM, and resolving it into a permit would report containment working on "
+    "a host where an LSM refuses the syscall outright. "
+    "REMEDY: the bundle cannot supply one, and a seccomp profile is not it. "
+    "The host's LSM policy has to grant this profile pivot_root. "
+    "DERIVED, NOT MEASURED: no arm of T207, finding 024, finding 025 or "
+    "finding 026 produced EACCES here — no measuring surface available to this "
+    "project carries an enforcing AppArmor or SELinux policy — so this branch "
+    "is reasoned from the two source reads named above and not observed."
+)
+
+_UNKNOWN_ERRNO_UNDER_A_FILTER = (
+    "This errno is not one this check has a reading for, and a seccomp filter "
+    "is installed or its presence could not be read. EPERM is the kernel's "
+    "capability gate; EACCES is the LSM hook; EBUSY and EINVAL are the call "
+    "reaching the kernel's argument checks. Anything else is reported as found "
+    "rather than resolved into a layer: SCMP_ACT_ERRNO with a defaultErrnoRet "
+    "of ENOSYS — Podman's is — and a kernel that does not implement the "
+    "syscall produce the same errno by different mechanisms, and with a filter "
+    "in place this check cannot separate them."
+)
+
+_UNKNOWN_ERRNO_WITH_NO_FILTER = (
+    "This errno is not one this check has a reading for. No filter is "
+    "installed, so a defaultErrnoRet is not a candidate — but that does not "
+    "make this a permit. EBUSY and EINVAL are resolved under Seccomp 0 because "
+    "path_pivot_root() is known to produce them after its authority gates; an "
+    "errno absent from that control flow is resolved into nothing. ENOSYS is "
+    "the case that shows why: with no filter installed it means the kernel does "
+    "not implement pivot_root at all, which is the opposite of available. So "
+    "this cell fails closed rather than reasoning from an errno nobody has "
+    "placed in the kernel's path."
+)
+
+_POST_AUTHORITY_ERRNO_UNDER_A_FILTER = (
+    "This IS an errno path_pivot_root() produces after both of its authority "
+    "gates, so the kernel's own control flow would read it as the call getting "
+    "through — but a seccomp filter is installed or its presence could not be "
+    "read, and SCMP_ACT_ERRNO's defaultErrnoRet can carry this same errno. So "
+    "the reading exists and is being withheld, which is a different statement "
+    "from the errno being unrecognised: the check is not missing a cell here, it "
+    "is declining to choose between the kernel and the filter. "
+    "MEASURED (finding 026, correction arm C): a profile whose only rule is "
+    "pivot_root -> SCMP_ACT_ERRNO with errnoRet 22 produces EINVAL at "
+    "Seccomp: 2 while holding CAP_SYS_ADMIN, indistinguishable by errno alone "
+    "from the same EINVAL a shared-root host produces with no filter at all. "
+    "REMEDY: re-read this check with the filter removed — seccomp=unconfined on "
+    "Docker, or --security-opt seccomp=unconfined — and the same errno then "
+    "resolves. If it does, the filter was not the refusing layer."
+)
+
+_UNKNOWN_ERRNO_PROVENANCE = (
+    "DERIVED, NOT MEASURED: no arm of T207, finding 024, finding 025 or "
+    "finding 026 produced any errno here other than EPERM, EBUSY and EINVAL, "
+    "so this branch is reasoned from the profiles' defaultErrnoRet and from "
+    "path_pivot_root()'s source and not observed."
+)
+
+
 @dataclass(frozen=True)
 class PivotRootAttempt:
     """One forked-child `pivot_root("/", "/")` call, as the child reported it.
@@ -758,6 +914,38 @@ def _read_cap_sys_admin(status_path: Path | None = None) -> bool | None:
         except ValueError:
             return None
         return bool(value & (1 << CAP_SYS_ADMIN_BIT))
+    return None
+
+
+def _read_seccomp_mode(status_path: Path | None = None) -> int | None:
+    """This process's seccomp mode, read from the same `/proc` line block.
+
+    **`None` and `0` are the two answers that must not be confused, and only
+    one of them licenses anything.** `0` says no filter is installed, which is
+    what rules out a `defaultErrnoRet` and lets an otherwise-unreadable errno be
+    resolved. A `/proc/self/status` that could not be read says nothing at all —
+    and it is *absent* on every non-Linux host and hideable inside a container —
+    so defaulting it to `0` would turn "I could not tell" into "nothing is
+    filtering" and let a real refusal read as `available`. Same three-state
+    discipline, and same reason, as `_read_cap_sys_admin`.
+
+    Read from `/proc/self/status` rather than by calling
+    `prctl(PR_GET_SECCOMP)`, because that prctl is itself a syscall a filter can
+    refuse, and a probe whose answer can be forged by the thing it is measuring
+    is not a reading.
+    """
+    path = Path("/proc/self/status") if status_path is None else status_path
+    try:
+        text = path.read_text()
+    except OSError:
+        return None
+    for line in text.splitlines():
+        if not line.startswith("Seccomp:"):
+            continue
+        try:
+            return int(line.split(":", 1)[1].strip())
+        except ValueError:
+            return None
     return None
 
 
@@ -869,14 +1057,45 @@ def _attempt_pivot_root() -> PivotRootAttempt:
 
 
 def _classify_pivot_root(
-    attempt: PivotRootAttempt, sys_admin: bool | None
+    attempt: PivotRootAttempt,
+    sys_admin: bool | None,
+    seccomp_mode: int | None = None,
 ) -> tuple[bool, str, str]:
     """The cells of the reading, as `(ok, layer, message)`. No syscalls here.
 
     Kept separate from the probe so the table can be exercised on a host that
     cannot run any of it, which is every developer machine that is not Linux.
+
+    **Two readings, and each resolves a different ambiguity.** `sys_admin`
+    separates the kernel's capability gate from a filter when the errno is
+    `EPERM`. `seccomp_mode` separates a filter's manufactured errno from the
+    kernel's own when the errno is anything else — because `SCMP_ACT_ERRNO` can
+    carry *any* errno, and that is the entire reason this check refuses to
+    resolve an unfamiliar one. When `Seccomp` reads 0 there is no filter to have
+    manufactured anything, so the ambiguity the refusal exists for cannot arise
+    and an errno the kernel is known to produce after its authority gates can be
+    read as what it is. `seccomp_mode` defaults to `None` — "not read" — so a
+    caller that does not supply it gets the pre-existing conservative behaviour
+    rather than the permissive one.
     """
     observed = attempt.describe()
+    if seccomp_mode == SECCOMP_MODE_DISABLED:
+        filtering = (
+            "no seccomp filter is installed (Seccomp: 0, read from "
+            "/proc/self/status)"
+        )
+    elif seccomp_mode is not None:
+        filtering = (
+            f"a seccomp filter is installed (Seccomp: {seccomp_mode}, read "
+            "from /proc/self/status)"
+        )
+    else:
+        filtering = (
+            "this process's seccomp mode could not be read from "
+            "/proc/self/status, which is not the same as no filter being "
+            "installed"
+        )
+    no_filter = seccomp_mode == SECCOMP_MODE_DISABLED
     posture = {
         True: "this process holds CAP_SYS_ADMIN (read from /proc/self/status)",
         False: (
@@ -898,17 +1117,77 @@ def _classify_pivot_root(
             "reading here at all, and no remedy follows from one.",
         )
     if attempt.ok or attempt.errno == _EBUSY:
+        # The verdict is unconditional and the *justification* is not, because
+        # only one of the two survives a filter. MEASURED (finding 026, arm G): a
+        # profile whose only rule is pivot_root -> SCMP_ACT_ERRNO errnoRet 16
+        # produces this exact errno without the syscall reaching the kernel, so
+        # "a filter never gets that far" is false whenever a filter is installed.
+        # Arm B2 is why the verdict itself is left alone — a measured `available`
+        # at Seccomp: 2 — and arms B2 and G are indistinguishable in every
+        # reading available here. Finding 026 escalates that choice rather than
+        # resolving it inside a classifier.
+        because_no_filter = (
+            " — and a syscall refused by a seccomp filter never gets that far"
+            if no_filter
+            else ""
+        )
+        caveat = (
+            ""
+            if no_filter
+            else (
+                f" {filtering}, so this errno alone does not rule out a filter "
+                "having produced it: SCMP_ACT_ERRNO can return EBUSY without "
+                "the syscall reaching path_pivot_root() at all. This cell is "
+                "reported as available because a filter that permits pivot_root "
+                "yields the same reading (MEASURED, finding 026 arm B2) and the "
+                "two are indistinguishable from here. To separate them, re-read "
+                "with seccomp=unconfined."
+            )
+        )
         return (
             True,
             LAYER_AVAILABLE,
             f"{observed}. {posture}. pivot_root reached the kernel, which is "
             "the whole question: EBUSY is the kernel rejecting these "
             'arguments — pivot_root("/", "/") can never succeed, because the '
-            "new root may not be the current root — and a syscall refused by "
-            "a seccomp filter never gets that far. Attempted in a forked "
-            "child, so this process's mount namespace was not moved.",
+            f"new root may not be the current root{because_no_filter}. "
+            "Attempted in a forked child, so this process's mount namespace "
+            f"was not moved.{caveat}",
+        )
+    if attempt.errno in _POST_AUTHORITY_ERRNOS and no_filter:
+        return (
+            True,
+            LAYER_AVAILABLE,
+            f"{observed}. {posture}, and {filtering}. pivot_root reached the "
+            "kernel, which is the whole question. path_pivot_root() runs its "
+            "two authority gates first — may_mount() returning EPERM and "
+            "security_sb_pivotroot() returning whatever the LSM says — and "
+            "every argument check after them, so this errno is only reachable "
+            "once both have passed. With no filter installed there is no "
+            "defaultErrnoRet that could have manufactured it either. "
+            'pivot_root("/", "/") can never succeed, so a failure is the '
+            "permitted reading; which failure depends on the host's mount "
+            "topology and not on its authority — the MS_SHARED propagation "
+            "check yields EINVAL and precedes the same-root check that yields "
+            "EBUSY, so a systemd host whose / is shared answers EINVAL where a "
+            "container with private root propagation answers EBUSY. Attempted "
+            "in a forked child, so this process's mount namespace was not "
+            "moved.",
         )
     if attempt.errno == _EPERM and sys_admin is True:
+        # Narrowed by the filter posture rather than by the capability alone.
+        # Naming the profile when `Seccomp` reads 0 would tell an operator to
+        # ship a profile on a host that has none — the P5 failure the
+        # unattributed cell's own text has warned about since T207, which this
+        # check could not act on until it read the mode. No measured arm sits in
+        # this cell: B1 and P1 both read `Seccomp: 2`.
+        if no_filter:
+            return (
+                False,
+                LAYER_REFUSED_UNATTRIBUTED,
+                f"{observed}. {posture}, and {filtering}. "
+                f"{_EPERM_WITH_CAPABILITY_AND_NO_FILTER}",
+            )
         return (
             False,
             LAYER_RUNTIME_SECCOMP,
@@ -920,43 +1199,71 @@ def _classify_pivot_root(
             LAYER_REFUSED_UNATTRIBUTED,
             f"{observed}. {posture}. {_UNATTRIBUTED_PIVOT_ROOT}",
         )
+    if attempt.errno == _EACCES:
+        return (
+            False,
+            LAYER_REFUSED_UNATTRIBUTED,
+            f"{observed}. {posture}, and {filtering}. "
+            f"{_EACCES_IS_AN_AUTHORITY_REFUSAL}",
+        )
+    if attempt.errno in _POST_AUTHORITY_ERRNOS:
+        # Reachable only with a filter installed or its posture unreadable — the
+        # `no_filter` arm returned `available` above. Separated from the
+        # unrecognised-errno cell below because the two say different things to
+        # whoever reads the gate, and arm C is the measurement that showed the
+        # unrecognised text going out for an errno the check does have a reading
+        # for. Same verdict, different sentence, and the sentence is the product.
+        return (
+            False,
+            LAYER_REFUSED_UNATTRIBUTED,
+            f"{observed}. {posture}, and {filtering}. "
+            f"{_POST_AUTHORITY_ERRNO_UNDER_A_FILTER}",
+        )
+    unknown = (
+        _UNKNOWN_ERRNO_WITH_NO_FILTER if no_filter
+        else _UNKNOWN_ERRNO_UNDER_A_FILTER
+    )
     return (
         False,
         LAYER_REFUSED_UNATTRIBUTED,
-        f"{observed}. {posture}. This errno is not one of the two this check "
-        "has a reading for. EPERM is the kernel's capability gate or a "
-        "seccomp SCMP_ACT_ERRNO refusal; EBUSY is the call reaching the "
-        "kernel. Anything else is reported as found rather than resolved into "
-        "a layer: a profile whose defaultErrnoRet is ENOSYS — Podman's is — "
-        "and a kernel that does not implement the syscall produce the same "
-        "errno by different mechanisms, and this check cannot separate them. "
-        "DERIVED, NOT MEASURED: no arm of T207, finding 024 or finding 025 "
-        "produced any errno here other than EPERM and EBUSY, so this branch "
-        "is reasoned from the profiles' defaultErrnoRet and not observed.",
+        f"{observed}. {posture}, and {filtering}. {unknown} "
+        f"{_UNKNOWN_ERRNO_PROVENANCE}",
     )
 
 
 def _READ_FROM_PROC() -> None:  # pragma: no cover - a sentinel, never called
-    """Sentinel default for `_check_pivot_root(sys_admin=...)`.
+    """Sentinel default for `_check_pivot_root`'s two `/proc` readings.
 
-    `None` cannot be the default, because `None` is a real posture value —
-    "could not be read" — and a test must be able to inject it. A sentinel
-    keeps that cell reachable.
+    `None` cannot be the default for either, because `None` is a real value for
+    both — "the capability could not be read", "the seccomp mode could not be
+    read" — and a test must be able to inject it. A sentinel keeps those cells
+    reachable, and they are the cells that decide whether an unreadable `/proc`
+    can turn a refusal into a permit.
     """
 
 
-def _check_pivot_root(attempt=None, sys_admin=_READ_FROM_PROC) -> Check:
+def _check_pivot_root(
+    attempt=None, sys_admin=_READ_FROM_PROC, seccomp_mode=_READ_FROM_PROC
+) -> Check:
     """`pivot_root`, the step FR-048's containment actually rests on.
 
     Separate from `_check_namespaces` because it is a separate syscall with a
     separate refusal. The two disagree in exactly the configuration an operator
     is most likely to reach — `--cap-add=SYS_ADMIN` under the default profile —
     and collapsing them would make one of the two answers false.
+
+    Both postures come out of `/proc/self/status`, in two reads rather than one,
+    so each is separately injectable and separately testable. Neither is
+    inferred from the uid or asserted from the invocation: finding 024's probe
+    inferred a posture, wrote a uid map naming a uid it did not own, and every
+    later `ok` in that sequence was meaningless.
     """
     attempt = _attempt_pivot_root if attempt is None else attempt
     if sys_admin is _READ_FROM_PROC:
         sys_admin = _read_cap_sys_admin()
-    ok, layer, message = _classify_pivot_root(attempt(), sys_admin)
+    if seccomp_mode is _READ_FROM_PROC:
+        seccomp_mode = _read_seccomp_mode()
+    ok, layer, message = _classify_pivot_root(attempt(), sys_admin, seccomp_mode)
     return Check("pivot_root", ok, message, "FR-048", layer)
 
 

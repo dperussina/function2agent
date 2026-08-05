@@ -12,12 +12,30 @@ containment. Measured as arms A5/A6 and probe arms P1/P2 in
 `specs/002-spec-aware-agent-runtime/findings/025-preflight-unshare-pair-measured.md`.
 
 **The trap, and it inverts the verdict if you get it wrong.** `pivot_root`
-returns `EBUSY` when it *is* permitted and its preconditions are unmet — which
-is always, for `pivot_root("/", "/")`, because the new root may not be the
-current root. So `EBUSY` is the **success** reading: the call reached the kernel.
-Finding 025 measured exactly this as NC-6 — `EPERM` under the default profile,
-`EBUSY` under the bundle's profile, one flag changed. A check that scored
-`EBUSY` as failure would report a refusal on a host that permits the syscall.
+returns a *failure* when it **is** permitted and its preconditions are unmet —
+which is always, for `pivot_root("/", "/")`, because the new root may not be the
+current root. So that failure is the **success** reading: the call reached the
+kernel. Finding 025 measured exactly this as NC-6 — `EPERM` under the default
+profile, `EBUSY` under the bundle's profile, one flag changed. A check that
+scored it as failure would report a refusal on a host that permits the syscall.
+
+**And a proof that pins one errno of a class proves only that errno.** T207
+resolved `EBUSY` alone, because all six container arms produced it. CI run
+30970910828 produced `EINVAL` on the `ubuntu-latest` runner — full capability
+set, `Seccomp: 0` — and the check reported `refused-unattributed`, which is the
+inverted verdict this file's own removal proof exists to catch, arriving through
+a sibling errno the proof did not cover. `path_pivot_root()` checks `MS_SHARED`
+mount propagation (`-EINVAL`) *before* it checks for the same root (`-EBUSY`),
+so a systemd host whose `/` is shared answers `EINVAL` where a container with
+private root propagation answers `EBUSY`. Same authority, different topology.
+
+**The third trap, and it is the one the obvious fix walks into.** "Any errno
+other than `EPERM` proves the call reached the kernel" is false.
+`path_pivot_root()` calls `security_sb_pivotroot()` after `may_mount()` and
+before every argument check, and AppArmor's hook denies with **`EACCES`**. So the
+resolvable class is a closed list of errnos the kernel is known to produce after
+its authority gates, and everything off that list — including `ENOSYS`, which
+under no filter means the syscall is unimplemented — fails closed.
 
 **The second trap: `EPERM` alone does not name seccomp.** The kernel's own gate
 on `pivot_root` is `CAP_SYS_ADMIN` and it *also* returns `EPERM`, so the
@@ -31,11 +49,14 @@ keyword: the old `cgroup.kill` test asserted the id and the word "fork", never
 read the outcome, and passed identically for a probe that could not succeed.
 
 **Nothing here runs a real `pivot_root`.** Every cell is constructed by
-injecting the attempt and the capability posture, so the whole table is
-exercisable on a macOS laptop that can run none of it. T206's own first test
-called the real probe and asserted `not ok`, which was true on macOS only
-because libc exports no `unshare` symbol and false under `--privileged` — an
-expectation that was a property of the host it happened to run on.
+injecting the attempt, the capability posture **and the seccomp mode**, so the
+whole table is exercisable on a macOS laptop that can run none of it. T206's own
+first test called the real probe and asserted `not ok`, which was true on macOS
+only because libc exports no `unshare` symbol and false under `--privileged` — an
+expectation that was a property of the host it happened to run on. The seccomp
+mode is injected for the same reason and one more: read from this laptop it is
+`None`, which is the conservative branch, so every permissive cell would pass
+here without ever being evaluated.
 """
 
 from __future__ import annotations
@@ -45,8 +66,16 @@ import pytest
 from src.supervisor import preflight
 
 EPERM = 1
+EACCES = 13
 EBUSY = 16
+EINVAL = 22
 ENOSYS = 38
+
+# `Seccomp` as `/proc/self/status` reports it: 0 no filter, 1 strict, 2 filter.
+# Injected in every cell below, never read from the host, for the reason in this
+# module's docstring.
+NO_FILTER = 0
+FILTER_INSTALLED = 2
 
 # Read off finding 025's measured arms rather than invented. `CapEff` for
 # Docker's default capability set (A4) and for that set with CAP_SYS_ADMIN
@@ -78,9 +107,19 @@ def _returning(attempt):
     return probe
 
 
-def _check(attempt, sys_admin):
+def _check(attempt, sys_admin, seccomp_mode=FILTER_INSTALLED):
+    """Every cell, with both readings injected rather than taken from the host.
+
+    `seccomp_mode` defaults to `FILTER_INSTALLED` rather than to "read it from
+    /proc" because that is the posture **every measured arm but B3 and B6 was
+    taken under** — finding 026's arms B1, B2, B4, P1 and P2 all read
+    `Seccomp: 2` — so the assertions written against those arms keep meaning
+    what they meant when the mode became load-bearing. A default of "read the
+    host" would make each of them a statement about the laptop instead.
+    """
     return preflight._check_pivot_root(
-        attempt=_returning(attempt), sys_admin=sys_admin)
+        attempt=_returning(attempt), sys_admin=sys_admin,
+        seccomp_mode=seccomp_mode)
 
 
 # ---------------------------------------------------------------------------
@@ -171,6 +210,236 @@ def test_ebusy_is_permitted_because_the_call_reached_the_kernel():
     assert check.layer == preflight.LAYER_AVAILABLE
 
 
+@pytest.mark.parametrize("mode", [NO_FILTER, FILTER_INSTALLED, None])
+def test_ebusy_is_permitted_whatever_the_filter_posture(mode):
+    """`EBUSY`'s reading does not depend on the seccomp mode, and must not.
+
+    Measured under both postures: B2 and P2 read `Seccomp: 2`, B3 read
+    `Seccomp: 0`, and all three produced `EBUSY` and classified `available`.
+    The mode is what resolves `EINVAL` below; wiring it into `EBUSY` as well
+    would re-open a cell that three arms already closed.
+    """
+    check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True,
+                   seccomp_mode=mode)
+    assert check.ok is True, check.detail
+    assert check.layer == preflight.LAYER_AVAILABLE
+
+
+def test_einval_with_no_filter_installed_reached_the_kernel():
+    """The reading that turned CI red on a host where `pivot_root` is permitted.
+
+    CI run 30970910828, the privileged arm: `euid=0`,
+    `CapEff=000001ffffffffff`, `Seccomp: 0`, and
+    `pivot_root("/", "/")` returned **`EINVAL`**. The capability gate was
+    satisfied, no filter was installed, and the check reported
+    `refused-unattributed` — a refusal on a host that refuses nothing.
+
+    `EINVAL` is produced only *after* both of `path_pivot_root()`'s authority
+    gates, so with no filter installed it is positive evidence the call reached
+    the kernel's argument checks. `fs/namespace.c` orders the `MS_SHARED`
+    propagation check (`-EINVAL`) **before** the `new_mnt == root_mnt` check
+    (`-EBUSY`), which is why a systemd host whose `/` is shared answers `EINVAL`
+    where a container with private propagation answers `EBUSY`. Same authority,
+    different mount topology.
+    """
+    check = _check(_attempt(ok=False, errno=EINVAL), sys_admin=True,
+                   seccomp_mode=NO_FILTER)
+    assert check.ok is True, (
+        "EINVAL with no seccomp filter installed was scored as a refusal. "
+        "There is no defaultErrnoRet to blame when no filter exists, and "
+        "EINVAL comes from path_pivot_root() only after may_mount() and "
+        "security_sb_pivotroot() have both passed, so the syscall reached the "
+        "kernel. This is CI run 30970910828's privileged arm.\n"
+        f"detail was: {check.detail}"
+    )
+    assert check.layer == preflight.LAYER_AVAILABLE
+    assert "EINVAL" in check.detail
+
+
+@pytest.mark.parametrize("mode", [FILTER_INSTALLED, None])
+def test_einval_with_a_filter_installed_or_unreadable_stays_unresolved(mode):
+    """The guard the fix must not remove, and the reason it is mode-gated.
+
+    A seccomp profile's `defaultErrnoRet` can carry **any** errno, so under an
+    installed filter an `EINVAL` is indistinguishable from a filter refusal
+    dressed as one. That ambiguity is real and this check still refuses to
+    resolve it. `None` — a mode that could not be read — is not "no filter":
+    treating it as one would let an unreadable `/proc` turn a refusal into a
+    permit, which is the inversion the whole cell exists to prevent.
+    """
+    check = _check(_attempt(ok=False, errno=EINVAL), sys_admin=True,
+                   seccomp_mode=mode)
+    assert check.ok is False, (
+        "EINVAL was read as permitted while a filter was installed or while "
+        "the filter posture was unknown. SCMP_ACT_ERRNO can return any errno, "
+        "so this cell cannot be resolved from the errno alone."
+    )
+    assert check.layer == preflight.LAYER_REFUSED_UNATTRIBUTED, check.detail
+
+
+@pytest.mark.parametrize("mode", [FILTER_INSTALLED, None])
+def test_einval_under_a_filter_is_not_described_as_an_unrecognised_errno(mode):
+    """MEASURED arm C, and it caught a wrong sentence rather than a wrong verdict.
+
+    Arm C of finding 026's 2026-08-05 experiment installed a profile whose only
+    rule is `pivot_root -> SCMP_ACT_ERRNO, errnoRet: 22`, manufacturing the exact
+    errno the permissive branch resolves. The **verdict** was right —
+    `refused-unattributed`, the hole stayed shut. The **message** said "this errno
+    is not one this check has a reading for", which is false: the check has a
+    reading for `EINVAL` and is declining to *apply* it because a filter is
+    installed. Those are different statements and an operator acts on them
+    differently — the first says "nobody has thought about this errno", the second
+    says "this is the argument-check errno and a filter could have forged it".
+
+    **`EBUSY` is deliberately not parametrised here**, and the asymmetry is real
+    rather than an oversight: `EBUSY` resolves to `available` at *every* filter
+    posture, because arm **B2** measured exactly that — `Seccomp: 2`, a custom
+    profile permitting `pivot_root`, `EBUSY` from the kernel, `available`. Gating
+    `EBUSY` on the filter posture would move that measured row and produce the
+    inverted verdict this whole correction exists to remove. `EINVAL` has no such
+    arm, so the newly admitted cell takes the conservative gate. Finding 026
+    records the residual consequence: a systemd host with a permissive filter and
+    a shared `/` will read `refused-unattributed` here.
+
+    `ENOSYS` must still get the unrecognised text, which
+    `test_an_unexpected_errno_is_reported_rather_than_forced_into_a_cell` holds.
+    """
+    check = _check(_attempt(ok=False, errno=EINVAL), sys_admin=True,
+                   seccomp_mode=mode)
+
+    assert check.ok is False, check.detail
+    assert check.layer == preflight.LAYER_REFUSED_UNATTRIBUTED, check.detail
+    assert "not one this check has a reading for" not in check.detail, (
+        "a post-authority errno was described as unrecognised. path_pivot_root() "
+        "is known to produce it; what blocks resolving it is the filter, and the "
+        "message has to say which of the two it is."
+    )
+    assert "defaultErrnoRet" in check.detail, (
+        "the message must name the mechanism that makes this unresolvable, "
+        "because that is the reading the operator needs in order to act."
+    )
+
+
+@pytest.mark.parametrize("mode", [FILTER_INSTALLED, None])
+def test_ebusy_under_a_filter_does_not_claim_a_filter_could_not_have_caused_it(
+    mode
+):
+    """MEASURED arm G, and it falsifies a sentence this check has always printed.
+
+    The `EBUSY` message asserted "a syscall refused by a seccomp filter never
+    gets that far". Arm G built the counterexample: a profile whose only rule is
+    `pivot_root -> SCMP_ACT_ERRNO, errnoRet: 16`. It reads `available`, and the
+    printed justification is measurably false — the filter got exactly that far,
+    because `SCMP_ACT_ERRNO` returns an errno of the profile author's choosing
+    without the syscall ever reaching `path_pivot_root()`.
+
+    **The verdict is deliberately left as `available` here and the sentence is
+    what changes.** Gating `EBUSY` on the filter posture the way `EINVAL` is
+    gated would be the consistent move, and finding 026 records why it is not
+    made in this pass: arm **B2** is a measured `available` at `Seccomp: 2`, and
+    arms B2 and G are indistinguishable in every reading this check has. Choosing
+    between them means either a false permit (today) or a red gate on every
+    hardened deployment that ships a permitting profile. That is an operator's
+    decision about which failure they prefer, not a detail to settle silently
+    inside a classifier, so it is escalated rather than taken.
+
+    What is not defensible either way is printing a false reason, so the claim is
+    narrowed to the posture where it actually holds.
+    """
+    check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True,
+                   seccomp_mode=mode)
+
+    assert check.ok is True, (
+        "the verdict is not what this test governs — see the docstring. If this "
+        "fails, the EBUSY cell was gated on the filter posture, which moves "
+        "measured arm B2 and needs finding 026 updated rather than this "
+        "assertion relaxed."
+    )
+    assert "never gets that far" not in check.detail, (
+        "the message still claims a seccomp filter cannot produce this errno. "
+        "Arm G measured a profile doing exactly that with errnoRet 16, so this "
+        "sentence is false whenever a filter is installed or its posture is "
+        "unknown."
+    )
+
+
+def test_ebusy_with_no_filter_may_still_say_a_filter_could_not_have_caused_it():
+    """The other half, so the narrowing does not delete a true statement.
+
+    With `Seccomp: 0` there is no filter, so "a syscall refused by a seccomp
+    filter never gets that far" is sound and is the most useful thing the message
+    can say. Arm A is this cell: `/` private, no filter, `EBUSY`, `available`.
+    """
+    check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True,
+                   seccomp_mode=NO_FILTER)
+
+    assert check.ok is True, check.detail
+    assert "never gets that far" in check.detail, (
+        "the true form of the claim was removed along with the false one. With "
+        "no filter installed it is exactly right and it is the reading that "
+        "makes the permitted verdict legible."
+    )
+
+
+@pytest.mark.parametrize("mode", [NO_FILTER, FILTER_INSTALLED, None])
+def test_eacces_is_never_read_as_reaching_the_kernel(mode):
+    """The hole in "EPERM is the only authority refusal" — it is not.
+
+    `path_pivot_root()` calls `security_sb_pivotroot()` **after**
+    `may_mount()` and **before every argument check**, and AppArmor's hook
+    denies with **`-EACCES`**, not `EPERM`
+    (`security/apparmor/mount.c`, `build_pivotroot()`: `error = -EACCES` unless
+    the profile carries `AA_MAY_PIVOTROOT`). So a rule that read "any errno
+    other than EPERM proves the call reached the kernel" would report
+    `available` on a host where an LSM refused the syscall outright — the same
+    inverted verdict as scoring `EBUSY` a refusal, arriving from the other
+    direction.
+
+    This is asserted under **all three** filter postures, because the mode is
+    not what makes `EACCES` unsafe: it is unsafe because it is an authority
+    refusal, and no filter posture changes that.
+    """
+    check = _check(_attempt(ok=False, errno=EACCES), sys_admin=True,
+                   seccomp_mode=mode)
+    assert check.ok is False, (
+        "EACCES was read as the call reaching the kernel. It is what "
+        "AppArmor's security_sb_pivotroot() hook returns, and that hook runs "
+        "before every argument check in path_pivot_root(), so an EACCES is a "
+        "refusal by an LSM and not evidence of a permitted syscall."
+    )
+    assert check.layer == preflight.LAYER_REFUSED_UNATTRIBUTED, check.detail
+    assert "EACCES" in check.detail
+    assert "LSM" in check.detail or "AppArmor" in check.detail, (
+        "the message must name the layer that produces this errno, or the "
+        "operator is left with an unexplained refusal on a host whose seccomp "
+        "profile is irrelevant to it"
+    )
+
+
+def test_eperm_holding_the_capability_with_no_filter_does_not_name_the_profile():
+    """The mirror of the EINVAL fix, and it costs no measured row.
+
+    Finding 026 arm P5/B6 already measured that an `EPERM` can arrive with **no
+    filter installed** — `seccomp=unconfined`, `Seccomp: 0`. The message
+    recorded that as the reason not to name a profile, but the check never read
+    the mode, so it could not act on it. With the capability held and no filter
+    present, naming the seccomp profile would tell an operator to ship one on a
+    host that has none.
+
+    No arm of finding 026 was taken in this posture — B1 and P1 both read
+    `Seccomp: 2` — so narrowing the seccomp attribution changes the
+    classification of **no measured arm**.
+    """
+    check = _check(_attempt(ok=False, errno=EPERM), sys_admin=True,
+                   seccomp_mode=NO_FILTER)
+    assert check.ok is False
+    assert check.layer == preflight.LAYER_REFUSED_UNATTRIBUTED, check.detail
+    assert "427" not in check.detail, (
+        "the custom-profile remedy was offered on a host with no filter "
+        "installed, which is the P5 failure the message already warns about"
+    )
+
+
 def test_a_successful_pivot_root_is_also_permitted():
     """The cell no host produces, kept because the classifier must not fall
     through it into a refusal.
@@ -241,8 +510,11 @@ def test_the_seccomp_cell_says_which_arms_measured_it():
 # posture, and there is no no-op arm to substitute for it.
 
 
+@pytest.mark.parametrize("mode", [NO_FILTER, FILTER_INSTALLED, None])
 @pytest.mark.parametrize("posture", [False, None])
-def test_eperm_without_the_capability_is_not_attributed_to_seccomp(posture):
+def test_eperm_without_the_capability_is_not_attributed_to_seccomp(
+    posture, mode
+):
     """Two sources, one errno, and the check must not pick.
 
     `create_user_ns`'s sibling gate on `pivot_root` is `CAP_SYS_ADMIN` and
@@ -253,7 +525,8 @@ def test_eperm_without_the_capability_is_not_attributed_to_seccomp(posture):
     operator to ship a profile that may not be their problem, which is the
     failure `_check_namespaces` spends a whole extra syscall avoiding.
     """
-    check = _check(_attempt(ok=False, errno=EPERM), sys_admin=posture)
+    check = _check(_attempt(ok=False, errno=EPERM), sys_admin=posture,
+                   seccomp_mode=mode)
     assert check.ok is False
     assert check.layer == preflight.LAYER_REFUSED_UNATTRIBUTED, check.detail
     assert "427" not in check.detail, (
@@ -293,23 +566,38 @@ def test_the_unattributed_cell_names_the_arms_that_measured_the_ambiguity():
     )
 
 
-def test_an_unexpected_errno_is_reported_rather_than_forced_into_a_cell():
+@pytest.mark.parametrize("mode", [NO_FILTER, FILTER_INSTALLED, None])
+def test_an_unexpected_errno_is_reported_rather_than_forced_into_a_cell(mode):
     """Report what was found; do not resolve it into a remedy.
 
     A profile whose `defaultErrnoRet` is `ENOSYS` — Podman's is — refuses with
     a different errno, and a kernel that did not implement the syscall would
     too. The check has no way to separate those, so the errno goes in the
     message and the attribution does not.
+
+    **Removing the filter does not resolve this one, and that is deliberate.**
+    `EINVAL` reads as permitted under `Seccomp: 0` because `EINVAL` is an errno
+    `path_pivot_root()` is *known to produce* after its authority gates.
+    `ENOSYS` is not: with no filter installed it is evidence the kernel does not
+    implement the syscall at all, which is the opposite of available. So this
+    cell is resolved from a closed list of post-authority errnos rather than
+    from "anything that is not EPERM", and an errno off that list fails
+    closed — a red gate somebody reads beats a green one nobody checks.
     """
-    check = _check(_attempt(ok=False, errno=ENOSYS), sys_admin=True)
-    assert check.ok is False
+    check = _check(_attempt(ok=False, errno=ENOSYS), sys_admin=True,
+                   seccomp_mode=mode)
+    assert check.ok is False, (
+        "ENOSYS was resolved into a permit. With no filter installed it means "
+        "the kernel does not implement pivot_root, which is not availability."
+    )
     assert check.layer == preflight.LAYER_REFUSED_UNATTRIBUTED, check.detail
     assert "ENOSYS" in check.detail or str(ENOSYS) in check.detail
     assert "DERIVED, NOT MEASURED" in check.detail, (
-        "no arm ever produced an errno here other than EPERM and EBUSY, so "
-        "this branch must not read as though the path was observed"
+        "no arm ever produced an errno here other than EPERM, EBUSY and "
+        "EINVAL, so this branch must not read as though the path was observed"
     )
-    eperm = _check(_attempt(ok=False, errno=EPERM), sys_admin=True)
+    eperm = _check(_attempt(ok=False, errno=EPERM), sys_admin=True,
+                   seccomp_mode=mode)
     assert check.detail != eperm.detail, (
         "two different errnos produced an identical message, so the check is "
         "not reporting what it found"
@@ -427,6 +715,44 @@ def test_an_unreadable_posture_is_none_rather_than_false(tmp_path):
         _status(tmp_path / "no-capeff", "Name:\tpy\nUid:\t0\t0\t0\t0\n")) is None
     assert preflight._read_cap_sys_admin(
         _status(tmp_path / "malformed", "CapEff:\tnot-a-number\n")) is None
+
+
+def test_the_seccomp_mode_is_read_from_the_same_file_as_the_capability(tmp_path):
+    """The filter posture is a reading, not an assumption, for the same reason.
+
+    The bodies below are the shape `/proc/self/status` actually carries — the
+    unprivileged CI arm of run 30970910828 read `Seccomp: 0` with
+    `Seccomp_filters: 0`, and finding 026's arms B1, B2 and B4 read
+    `Seccomp: 2`. Both are constructed here rather than sampled from the host,
+    so the whole table runs on a laptop with no `/proc` at all.
+    """
+    body = "Name:\tpy\nCapEff:\t{}\nSeccomp:\t{}\nSeccomp_filters:\t{}\n"
+    no_filter = _status(
+        tmp_path / "unconfined", body.format(CAPEFF_WITH_SYS_ADMIN, 0, 0))
+    assert preflight._read_seccomp_mode(no_filter) == 0
+    filtered = _status(
+        tmp_path / "filtered", body.format(CAPEFF_DOCKER_DEFAULT, 2, 1))
+    assert preflight._read_seccomp_mode(filtered) == 2
+    # Strict mode. No arm produced it and nothing this check does distinguishes
+    # it from filter mode; it is here so that "some filter posture other than
+    # the two I thought of" cannot silently read as "no filter".
+    assert preflight._read_seccomp_mode(
+        _status(tmp_path / "strict", body.format("0", 1, 0))) == 1
+
+
+def test_an_unreadable_seccomp_mode_is_none_rather_than_zero(tmp_path):
+    """`None` and `0` are the two readings that must never be confused.
+
+    `0` licenses resolving an unknown errno into a permit; a `/proc` that could
+    not be read licenses nothing. Defaulting an unreadable mode to `0` would
+    make an absent `/proc/self/status` — which is every non-Linux host, and any
+    container that hides it — turn a real refusal into `available`.
+    """
+    assert preflight._read_seccomp_mode(tmp_path / "absent") is None
+    assert preflight._read_seccomp_mode(
+        _status(tmp_path / "no-seccomp", "Name:\tpy\nCapEff:\t0\n")) is None
+    assert preflight._read_seccomp_mode(
+        _status(tmp_path / "malformed", "Seccomp:\tnot-a-number\n")) is None
 
 
 # ---------------------------------------------------------------------------
