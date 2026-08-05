@@ -153,6 +153,16 @@ caught after the fact"*. That is exactly what happened, and the after-the-fact c
 > - **Whether A can be satisfied without capabilities**, by a `newuidmap` setuid helper — the third
 >   option in this document's [decision](#where-the-decision-is-recorded-and-why-this-pass-did-not-write-it).
 >   `newuidmap` is itself AppArmor-profiled on Ubuntu and was not run here.
+>   - ⚠️ **Measured 2026-08-05, and the answer is the opposite of the way this bullet frames the
+>     question** — [finding 028](./028-od24-deferral-re-examination.md). **A cannot be satisfied
+>     without capabilities by this route: the helper needs *more* authority, not less.** `newuidmap`
+>     requires `CAP_SYS_ADMIN` in the bounding set (`EACCES` at `CapBnd 0`, `EPERM` under Docker's
+>     default 14, `ok` with that one bit added), where a direct map write by the namespace's creator
+>     needs only `CAP_SETUID`+`CAP_SETGID`. The reason is not packaging: `map_write()` demands
+>     `CAP_SYS_ADMIN` over the *target* namespace judged at open time, and a namespace's creator
+>     satisfies that for free because the owner is judged **by euid** — a setuid helper forfeits the
+>     shortcut by the very act of becoming euid 0. **This bullet's own caveat still stands**: that
+>     measurement is on the no-LSM host, so it remains unrun under an enforcing AppArmor profile.
 > - **The privileged arm is `sudo` on a runner, not a supervisor design.** It shows the trigger
 >   condition, not that holding capabilities is the right answer.
 > - **One distribution, one kernel.** A is Ubuntu's patch. It is not upstream and says nothing about
