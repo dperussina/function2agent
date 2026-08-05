@@ -33,6 +33,38 @@ CGROUP2_ROOT = Path("/sys/fs/cgroup")
 CLONE_NEWUSER = 0x10000000
 UNSHARE_NOOP = 0
 
+# `pivot_root(2)` syscall numbers, duplicated from `_linux._SYSCALL_NUMBERS`
+# for the same reason `CLONE_NEWUSER` is duplicated: importing `_linux` would
+# resolve every symbol against the platform libc at import time, and preflight
+# has to run on the platform it is about to refuse.
+# `tests/unit/test_pivot_root_probe.py` asserts the two agree and asserts the
+# literals, so neither the copy nor the original can drift alone.
+#
+# **glibc exports no `pivot_root` wrapper**, so this goes through `syscall(2)`
+# and the number is the whole interface. A number that is wrong for the running
+# architecture calls a different syscall and its answer would be read as this
+# one's — 41 is `pivot_root` on `aarch64` and `dup` on Darwin. So an
+# architecture absent from this table produces an unattempted probe rather than
+# a default, matching `_SECCOMP_NR_BY_MACHINE` below, and `_attempt_pivot_root`
+# refuses outright on a non-Linux kernel.
+_PIVOT_ROOT_NR_BY_MACHINE = {
+    "x86_64": 155,
+    "aarch64": 41,
+    "arm64": 41,
+}
+
+# The two errnos this classifier has a reading for. Written as literals rather
+# than read from the `errno` module because they must be *Linux's* numbers
+# whatever host is doing the reading; both happen to agree with macOS today,
+# which is exactly the kind of coincidence that stops being true silently.
+_EPERM = 1
+_EBUSY = 16
+
+# `CAP_SYS_ADMIN` is capability bit 21. It is the kernel's own gate on
+# `pivot_root`, which is why the posture has to be read before an `EPERM` can
+# be attributed to anything.
+CAP_SYS_ADMIN_BIT = 21
+
 # seccomp(2) constants. Values are the kernel's UAPI numbers, identical on every
 # Linux architecture.
 SECCOMP_SET_MODE_FILTER = 1
@@ -319,6 +351,12 @@ LAYER_INCOHERENT = "incoherent"
 LAYER_NOT_ATTEMPTED = "not-attempted"
 LAYER_KERNEL_BUILD = "kernel-build"
 LAYER_SYSCTL_DISABLED = "sysctl-administratively-disabled"
+# T207. The `pivot_root` check needs one layer the pair does not, because it
+# has no no-op arm. `unshare(0)` separates a syscall-level filter from every
+# kernel-side refusal for free; `pivot_root` has no call that asks for nothing,
+# so a refusal whose posture does not license an attribution is reported as
+# unattributed rather than resolved into the likelier of two remedies.
+LAYER_REFUSED_UNATTRIBUTED = "refused-unattributed"
 
 # Exit codes the probe child speaks back through. errno on Linux tops out at 133
 # (`EHWPOISON`), so 1..200 encodes an errno unambiguously and the two codes above
@@ -327,6 +365,12 @@ LAYER_SYSCTL_DISABLED = "sysctl-administratively-disabled"
 _ERRNO_MAX = 200
 _CODE_CHILD_FAILED = 201
 _CODE_ERRNO_UNENCODABLE = 202
+# T207. `pivot_root` returns 0 or -1 and nothing else, so any other return is
+# evidence that the syscall number was wrong for this architecture rather than
+# evidence about `pivot_root`. It must not be readable as either a success or a
+# refusal; it is an absence of evidence, and it is kept distinct from
+# `_CODE_CHILD_FAILED` so the message can say which of the two happened.
+_CODE_RETURN_UNEXPECTED = 203
 
 _REMEDY_RUNTIME_SECCOMP = (
     "REFUSING LAYER: your container runtime's seccomp profile. Both arms were "
@@ -563,6 +607,359 @@ def _check_namespaces(
     )
 
 
+# ---------------------------------------------------------------------------
+# T207 — `pivot_root`, which is a separate syscall and therefore a separate
+# check.
+#
+# **The gap this closes is in the check *set*, not in the check above.** Under
+# `--cap-add=SYS_ADMIN` with Docker's unmodified default profile, `unshare`
+# genuinely succeeds — measured as arms A5 and A6 of
+# findings/025-preflight-unshare-pair-measured.md — so `_check_namespaces`
+# reports `available` and is right to. Making it report a refusal there would
+# be a false statement about the syscall it measures. But `pivot_root` appears
+# in **no rule of that profile at all**, so it still returns `EPERM` with the
+# capability held (probe arm P1), and `run_checks()` asked about it nowhere. An
+# operator who applies the cgroup half of the bundle and then reaches for the
+# capability instead of the profile got a wholly green preflight on a host
+# where the mount tree builds correctly and `enter()` fails at the one step
+# that establishes containment.
+#
+# **Permitted does not mean success, and that inverts the verdict if it is
+# missed.** `pivot_root("/", "/")` cannot succeed — the kernel refuses a new
+# root that is already the root — so the *permitted* reading here is a failure
+# with `EBUSY`, meaning the call passed the filter and the kernel rejected the
+# arguments. Finding 025 measured the pair as NC-6: `EPERM` under the default
+# profile, `EBUSY` under the bundle's profile, one flag changed.
+#
+# **Why the capability posture is read.** The kernel's own gate on `pivot_root`
+# is `CAP_SYS_ADMIN` and it returns `EPERM` too, so `EPERM` has two sources and
+# only a process holding the capability can tell them apart. `unshare` gets
+# this for free from its no-op arm; there is no call to `pivot_root` that asks
+# for nothing. The posture is therefore *read* from `/proc/self/status` rather
+# than inferred from the uid or asserted from the invocation — finding 024's
+# probe inferred a posture, wrote a uid map naming a uid it did not own, and
+# every later `ok` in that sequence was meaningless.
+
+_REMEDY_PIVOT_ROOT_SECCOMP = (
+    "REFUSING LAYER: your container runtime's seccomp profile. pivot_root was "
+    "refused with EPERM while this process holds CAP_SYS_ADMIN — and "
+    "CAP_SYS_ADMIN is the kernel's own gate on pivot_root, so the gate is "
+    "satisfied and what is left is a filter. "
+    "MEASURED (finding 025, probe arm P1): Docker's unmodified default "
+    "profile with --cap-add=SYS_ADMIN, uid 0, not --privileged. Its control "
+    "(P2/NC-6) is the same probe with the same capability under the bundle's "
+    "profile, which returns EBUSY — the call reaching the kernel. "
+    "THE namespaces CHECK ABOVE MAY BE GREEN, AND IT IS RIGHT TO BE: under "
+    "--cap-add=SYS_ADMIN unshare genuinely succeeds (finding 025, arms A5 and "
+    "A6). pivot_root does not, and no capability changes that, because "
+    "pivot_root appears in no rule of the default profile at all — not in the "
+    "unconditional allow list and not in the CAP_SYS_ADMIN list — so it falls "
+    "to defaultAction SCMP_ACT_ERRNO/EPERM whatever is held. "
+    "DO NOT USE --cap-add=SYS_ADMIN. If you already have, this is that "
+    "configuration and IT DOES NOT WORK: the whole mount tree builds "
+    "correctly and then fails here, at the one step that establishes "
+    "containment, which reads as a broken mechanism rather than as a wrong "
+    "grant. It is also by a wide margin the most dangerous change available. "
+    "REMEDY: run the session with a custom seccomp profile. It is Docker's "
+    "own default plus one added syscall name — 426 allow-listed names becomes "
+    "427 — and the one name it adds is pivot_root itself, so keyctl, add_key, "
+    "userfaultfd, kexec_load, swapon and the rest stay denied. The bundle "
+    "ships one (T160); the flag is --security-opt seccomp=<profile.json>. Do "
+    "not reach for seccomp=unconfined either; it removes the entire filter "
+    "rather than one rule."
+)
+
+_UNATTRIBUTED_PIVOT_ROOT = (
+    "REFUSING LAYER: not determined, and this check will not guess between "
+    "two candidates that produce the same errno. The kernel gates pivot_root "
+    "on CAP_SYS_ADMIN and returns EPERM when it is absent; a seccomp profile "
+    "with no rule for pivot_root refuses it with EPERM as well, because "
+    "Docker's default profile carries defaultAction SCMP_ACT_ERRNO and "
+    "defaultErrnoRet 1. unshare separates those two layers for free with its "
+    "no-op arm, and pivot_root has no call that asks for nothing, so the only "
+    "thing that separates them here is the capability this process holds. "
+    "WHAT TO DO: re-run the preflight from a process that holds "
+    "CAP_SYS_ADMIN. Under that posture an EPERM can only be the filter and "
+    "this check says so, naming the profile to ship. Shipping one on the "
+    "reading below would be acting on a refusal that has not been attributed "
+    "to a profile at all. "
+    "MEASURED (T207 arms P3, P4 and P5): this exact EPERM was produced at uid "
+    "1000 with --cap-drop=ALL under three different filter configurations — "
+    "Docker's default profile, which denies pivot_root; the bundle's profile, "
+    "which allows it; and seccomp=unconfined, which installs no filter at all "
+    "(Seccomp mode 0, 0 filters, read from /proc/self/status). Same errno in "
+    "all three. P5 is the one that settles it: there was no filter to blame, "
+    "so naming the seccomp profile on this reading would have told an "
+    "operator to ship a profile on a host that had none — and P4 would have "
+    "told one who had already shipped the right profile to ship it again. "
+    "WHAT IS STILL DERIVED: that the kernel's capability gate and a filter "
+    "are the *only* two sources of an EPERM here. An LSM hook or a "
+    "distribution policy could add a third, none was constructible on the "
+    "measuring host, and this message names two candidates rather than "
+    "claiming the list is closed."
+)
+
+
+@dataclass(frozen=True)
+class PivotRootAttempt:
+    """One forked-child `pivot_root("/", "/")` call, as the child reported it.
+
+    `attempted` is False when the call could not be made at all — a non-Linux
+    kernel, an architecture with no recorded syscall number, a failed `fork`,
+    or a return value `pivot_root` cannot produce. Same discipline as
+    `UnshareAttempt`: `preflight()` has no degraded mode, so every failure it
+    prints is read by an operator looking for a way past it, and "I could not
+    ask" reported as "the host said no" sends them after a change they do not
+    need.
+    """
+
+    attempted: bool
+    ok: bool
+    errno: int | None
+    note: str
+
+    def describe(self) -> str:
+        label = 'pivot_root("/", "/")'
+        if not self.attempted:
+            return f"{label} NOT ATTEMPTED ({self.note})"
+        if self.ok:
+            return f"{label} returned 0"
+        if self.errno is None:
+            return f"{label} FAILED ({self.note})"
+        name = errno_module.errorcode.get(self.errno, str(self.errno))
+        return f"{label} {name} (errno {self.errno}: {os.strerror(self.errno)})"
+
+
+def _read_cap_sys_admin(status_path: Path | None = None) -> bool | None:
+    """Whether this process holds `CAP_SYS_ADMIN` effectively, read from /proc.
+
+    **Three states, and the third is why this returns `bool | None`.** A
+    posture that could not be read is not a "no": reporting it as one would put
+    a statement about this process into the message that was never observed,
+    and the whole reason this function exists is that finding 024's probe
+    inferred a posture instead of reading one.
+
+    `CapEff` rather than `CapPrm` or `CapBnd`, because the kernel's capability
+    check reads the effective set. Finding 025's arm A6 is the case that makes
+    the distinction load-bearing: `--cap-add=SYS_ADMIN` at uid 1000 leaves
+    `CapEff=0` with `CapBnd=a82425fb`, so the container was granted the
+    capability and the process does not hold it.
+    """
+    path = Path("/proc/self/status") if status_path is None else status_path
+    try:
+        text = path.read_text()
+    except OSError:
+        return None
+    for line in text.splitlines():
+        if not line.startswith("CapEff:"):
+            continue
+        try:
+            value = int(line.split(":", 1)[1].strip(), 16)
+        except ValueError:
+            return None
+        return bool(value & (1 << CAP_SYS_ADMIN_BIT))
+    return None
+
+
+def _decode_pivot_root_exit(code: int) -> PivotRootAttempt:
+    """The child's exit code, which is the only thing that crosses back.
+
+    Separated from the fork so every branch is exercisable on a host that can
+    make none of these calls, which is the same reason `_classify_unshare_pair`
+    is separate from `_attempt_unshare`.
+    """
+    if code == 0:
+        return PivotRootAttempt(True, True, None, "the call returned 0")
+    if code == _CODE_CHILD_FAILED:
+        return PivotRootAttempt(
+            False, False, None,
+            "the probe child raised before it could report an errno",
+        )
+    if code == _CODE_ERRNO_UNENCODABLE:
+        return PivotRootAttempt(
+            True, False, None,
+            f"the call failed with an errno above {_ERRNO_MAX}, which the "
+            "child's exit code cannot carry",
+        )
+    if code == _CODE_RETURN_UNEXPECTED:
+        return PivotRootAttempt(
+            False, False, None,
+            "syscall() returned a value that is neither 0 nor -1, which "
+            "pivot_root cannot produce. The syscall number is wrong for this "
+            "architecture, so some other syscall answered and its answer is "
+            "not evidence about pivot_root",
+        )
+    return PivotRootAttempt(True, False, code, "the call failed")
+
+
+def _attempt_pivot_root() -> PivotRootAttempt:
+    """`pivot_root("/", "/")` in a forked child, so this process is never moved.
+
+    **Forked because `pivot_root(2)` mutates the calling process's mount
+    namespace.** The arguments chosen cannot succeed, so in practice nothing
+    moves — but a preflight that relied on its own probe failing in order to
+    stay safe would be one kernel change away from re-rooting the supervisor as
+    a side effect of asking a question. The child is discarded and only an exit
+    code crosses back.
+
+    **`("/", "/")` is deliberate.** It reaches the kernel's argument checks
+    without naming any path that has to exist, so a refusal is attributable to
+    the filter rather than to the probe's own setup, and a permitted call
+    lands on `EBUSY` rather than on a filesystem error that would need its own
+    reading.
+    """
+    if platform.system() != "Linux":
+        return PivotRootAttempt(
+            False, False, None,
+            f"platform.system()={platform.system()!r} is not Linux. The "
+            "syscall numbers here are Linux's, and issuing one on another "
+            "kernel asks a different syscall entirely — 41 is pivot_root on "
+            "aarch64 and dup on Darwin — so the call was not made",
+        )
+    machine = platform.machine()
+    nr = _PIVOT_ROOT_NR_BY_MACHINE.get(machine)
+    if nr is None:
+        return PivotRootAttempt(
+            False, False, None,
+            f"no pivot_root syscall number is recorded for machine "
+            f"{machine!r}; add it to _PIVOT_ROOT_NR_BY_MACHINE rather than "
+            "guessing, because a wrong number calls a different syscall and "
+            "its answer would be read as this one's",
+        )
+    libc = ctypes.CDLL(None, use_errno=True)
+    try:
+        syscall = libc.syscall
+    except AttributeError:
+        return PivotRootAttempt(
+            False, False, None,
+            "this libc exports no syscall(2) symbol, so the call was never "
+            "made — that is an absence of evidence, not a refusal",
+        )
+    syscall.restype = ctypes.c_long
+    try:
+        pid = os.fork()
+    except OSError as exc:
+        return PivotRootAttempt(
+            False, False, None, f"fork() for the probe child failed: {exc}"
+        )
+    if pid == 0:  # pragma: no cover - the child never returns to the collector
+        code = _CODE_CHILD_FAILED
+        try:
+            ctypes.set_errno(0)
+            rc = syscall(ctypes.c_long(nr), b"/", b"/")
+            if rc == 0:
+                code = 0
+            elif rc != -1:
+                code = _CODE_RETURN_UNEXPECTED
+            else:
+                err = ctypes.get_errno()
+                code = err if 1 <= err <= _ERRNO_MAX else _CODE_ERRNO_UNENCODABLE
+        except BaseException:
+            code = _CODE_CHILD_FAILED
+        os._exit(code)
+    _, status = os.waitpid(pid, 0)
+    if not os.WIFEXITED(status):
+        signal_number = os.WTERMSIG(status) if os.WIFSIGNALED(status) else None
+        return PivotRootAttempt(
+            False, False, None,
+            f"the probe child did not exit normally (signal {signal_number}); "
+            "nothing can be concluded about the syscall from that",
+        )
+    return _decode_pivot_root_exit(os.WEXITSTATUS(status))
+
+
+def _classify_pivot_root(
+    attempt: PivotRootAttempt, sys_admin: bool | None
+) -> tuple[bool, str, str]:
+    """The cells of the reading, as `(ok, layer, message)`. No syscalls here.
+
+    Kept separate from the probe so the table can be exercised on a host that
+    cannot run any of it, which is every developer machine that is not Linux.
+    """
+    observed = attempt.describe()
+    posture = {
+        True: "this process holds CAP_SYS_ADMIN (read from /proc/self/status)",
+        False: (
+            "this process does not hold CAP_SYS_ADMIN (read from "
+            "/proc/self/status)"
+        ),
+        None: (
+            "this process's CAP_SYS_ADMIN could not be read from "
+            "/proc/self/status, which is not the same as not holding it"
+        ),
+    }[sys_admin]
+
+    if not attempt.attempted:
+        return (
+            False,
+            LAYER_NOT_ATTEMPTED,
+            f"{observed}. The syscall could not be attempted, so this host is "
+            "reported as unverified rather than as refused — there is no "
+            "reading here at all, and no remedy follows from one.",
+        )
+    if attempt.ok or attempt.errno == _EBUSY:
+        return (
+            True,
+            LAYER_AVAILABLE,
+            f"{observed}. {posture}. pivot_root reached the kernel, which is "
+            "the whole question: EBUSY is the kernel rejecting these "
+            'arguments — pivot_root("/", "/") can never succeed, because the '
+            "new root may not be the current root — and a syscall refused by "
+            "a seccomp filter never gets that far. Attempted in a forked "
+            "child, so this process's mount namespace was not moved.",
+        )
+    if attempt.errno == _EPERM and sys_admin is True:
+        return (
+            False,
+            LAYER_RUNTIME_SECCOMP,
+            f"{observed}. {posture}. {_REMEDY_PIVOT_ROOT_SECCOMP}",
+        )
+    if attempt.errno == _EPERM:
+        return (
+            False,
+            LAYER_REFUSED_UNATTRIBUTED,
+            f"{observed}. {posture}. {_UNATTRIBUTED_PIVOT_ROOT}",
+        )
+    return (
+        False,
+        LAYER_REFUSED_UNATTRIBUTED,
+        f"{observed}. {posture}. This errno is not one of the two this check "
+        "has a reading for. EPERM is the kernel's capability gate or a "
+        "seccomp SCMP_ACT_ERRNO refusal; EBUSY is the call reaching the "
+        "kernel. Anything else is reported as found rather than resolved into "
+        "a layer: a profile whose defaultErrnoRet is ENOSYS — Podman's is — "
+        "and a kernel that does not implement the syscall produce the same "
+        "errno by different mechanisms, and this check cannot separate them. "
+        "DERIVED, NOT MEASURED: no arm of T207, finding 024 or finding 025 "
+        "produced any errno here other than EPERM and EBUSY, so this branch "
+        "is reasoned from the profiles' defaultErrnoRet and not observed.",
+    )
+
+
+def _READ_FROM_PROC() -> None:  # pragma: no cover - a sentinel, never called
+    """Sentinel default for `_check_pivot_root(sys_admin=...)`.
+
+    `None` cannot be the default, because `None` is a real posture value —
+    "could not be read" — and a test must be able to inject it. A sentinel
+    keeps that cell reachable.
+    """
+
+
+def _check_pivot_root(attempt=None, sys_admin=_READ_FROM_PROC) -> Check:
+    """`pivot_root`, the step FR-048's containment actually rests on.
+
+    Separate from `_check_namespaces` because it is a separate syscall with a
+    separate refusal. The two disagree in exactly the configuration an operator
+    is most likely to reach — `--cap-add=SYS_ADMIN` under the default profile —
+    and collapsing them would make one of the two answers false.
+    """
+    attempt = _attempt_pivot_root if attempt is None else attempt
+    if sys_admin is _READ_FROM_PROC:
+        sys_admin = _read_cap_sys_admin()
+    ok, layer, message = _classify_pivot_root(attempt(), sys_admin)
+    return Check("pivot_root", ok, message, "FR-048", layer)
+
+
 def _check_seccomp_user_notification() -> Check:
     """SECCOMP_FILTER_FLAG_NEW_LISTENER, which FR-048's *recording* clause needs.
 
@@ -634,6 +1031,10 @@ def run_checks() -> list[Check]:
         checks.append(_check_cgroup_delegation())
         checks.append(_check_cgroup_kill())
         checks.append(_check_namespaces())
+        # After `namespaces`, because a host that cannot `unshare` at all will
+        # never reach `pivot_root`, and the two read best in the order
+        # `enter()` performs them. Not folded into it: see the T207 block.
+        checks.append(_check_pivot_root())
         if _SECCOMP_NR < 0:
             checks.append(
                 Check(

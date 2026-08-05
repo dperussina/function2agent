@@ -217,6 +217,77 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
 
+      - name: The unshare pair, unprivileged and privileged — NON-GATING observation
+        # The step above runs the preflight under `sudo`, and that is correct
+        # for a gate: the supervisor runs privileged, so an unprivileged run
+        # would assert a capability it never needs. But it means CI has never
+        # exercised the classifier's unprivileged path, and one cell of that
+        # path is the one nobody here has been able to construct.
+        #
+        # Finding 025 leaves `kernel-sysctl-or-lsm` **derived, not measured**.
+        # It could not be built on the measuring host: Docker Desktop's
+        # linuxkit VM carries neither AppArmor nor SELinux, so no LSM is there
+        # to refuse anything. It is also the cell most likely to fire in
+        # production — Ubuntu 24.04 ships
+        # `kernel.apparmor_restrict_unprivileged_userns` enabled, and this
+        # runner *is* Ubuntu 24.04. Root is exempt from that restriction, which
+        # is exactly why the `sudo` preflight above has never produced it.
+        #
+        # So: run the same committed checks unprivileged on this same VM. If
+        # the cell appears, a derived classification becomes a measured one at
+        # no hardware cost.
+        #
+        # **`continue-on-error` is the whole design, not a convenience.** What
+        # this measures is a property of a GitHub-hosted runner image, not of
+        # this repository's code. A runner-image change flipping that sysctl
+        # would break every build here while saying nothing about the merge —
+        # so this cannot gate. But `continue-on-error` alone would let it fail
+        # silently, and the renderer exits non-zero on a missing record, which
+        # surfaces as an annotated step and a `::warning::` rather than as
+        # nothing at all. Non-gating, still visible.
+        #
+        # **Both arms, or neither is readable.** The positive result here is a
+        # *refusal*, and a refusal is what a broken import, a failed fork, or a
+        # probe that can never succeed all produce too. The privileged arm on
+        # the same VM, differing in privilege and nothing else, is the negative
+        # control that separates those — Rule 8 of the `experiment-design`
+        # skill, and the discipline finding 025's own NC-1..NC-7 follow.
+        #
+        # **The prediction is derived and may be wrong.** It is written into
+        # `tools/unshare_pair_observation.py` as `PREDICTED_LAYER` before the
+        # run, and whatever comes out is published beside it. If the arm
+        # reports something else, that is the result. Do not tune this step
+        # until it agrees; an experiment with one acceptable outcome measures
+        # nothing.
+        if: always()
+        continue-on-error: true
+        run: |
+          # `set +e` is explicit and load-bearing. Every `run:` here executes
+          # under `bash -e`, so a failing arm would abort the step before the
+          # other arm ran and before anything reached the run page — and the
+          # failing run is precisely the one whose record somebody needs. The
+          # status is carried by hand to the last line instead, the same
+          # discipline `tests/removal_proofs.sh` states in its own header.
+          set +e
+          set -u
+          # The unprivileged arm is this shell's own posture; the privileged
+          # arm is taken *inside* the sudo wrapper, so `euid: 0` is a reading
+          # rather than a claim about an invocation. Finding 024's overflow-uid
+          # bug is what happens when a posture is inferred instead of read.
+          python3 tools/unshare_pair_observation.py \
+            --label unprivileged --out unshare-pair-unprivileged.json
+          sudo -E env "PATH=$PATH" python3 tools/unshare_pair_observation.py \
+            --label 'privileged (sudo)' --out unshare-pair-privileged.json
+          python3 tools/unshare_pair_observation.py --render \
+            unshare-pair-unprivileged.json \
+            unshare-pair-privileged.json \
+            >> "$GITHUB_STEP_SUMMARY"
+          rendered=$?
+          if [ "$rendered" -ne 0 ]; then
+            echo "::warning title=unshare-pair observation::An arm left no record, so the observation did not happen. See the run summary. This does not gate the build."
+          fi
+          exit "$rendered"
+
       - name: Collect the whole suite, so the two halves can be checked against it
         # The suite is run as two disjoint halves and the pair is taken for the
         # whole. Nothing verified that it is. A marker expression that stopped
@@ -321,6 +392,8 @@ jobs:
             pytest-privileged.xml
             privileged-suite-identity.json
             preflight.txt
+            unshare-pair-unprivileged.json
+            unshare-pair-privileged.json
             tests/batteries/results/seccomp-overhead.latest.json
           if-no-files-found: error
           retention-days: 90

@@ -651,6 +651,32 @@ proof "T206 preflight — the unshare(0) discriminator is assumed rather than at
   "tests/unit/test_namespace_probe.py::test_both_arms_refused_is_attributed_to_the_runtime_seccomp_profile" \
   's = s.replace("        attempt(UNSHARE_NOOP), attempt(CLONE_NEWUSER)", "        UnshareAttempt(UNSHARE_NOOP, True, True, None, \x22assumed\x22), attempt(CLONE_NEWUSER)")'
 
+# T207's three arms. The first is the coverage gap itself — the check deleted
+# from the set, which is the state 95c871d was in and which reported **every
+# FR-048 check green** in the operator-trap arm, FR-048 being the requirement
+# that owns the mount and containment sequence. (Not "wholly green": finding
+# 026 measured 5 of 7 there, and both reds are FR-049 cgroup artifacts of the
+# container rather than anything about the mount sequence.) The other two are
+# the ways the check can be present
+# and wrong, and both invert a verdict rather than losing one, which is the
+# harder failure to notice: pivot_root's permitted reading is a *failure* with
+# EBUSY, and its EPERM is only attributable to seccomp in a process holding
+# CAP_SYS_ADMIN.
+proof "T207 preflight — pivot_root is not in the check set at all" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_run_checks_asks_about_pivot_root_after_it_asks_about_unshare" \
+  's = s.replace("        checks.append(_check_pivot_root())", "        pass")'
+
+proof "T207 preflight — EBUSY is scored as a refusal instead of as reaching the kernel" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_ebusy_is_permitted_because_the_call_reached_the_kernel" \
+  's = s.replace("    if attempt.ok or attempt.errno == _EBUSY:", "    if attempt.ok:")'
+
+proof "T207 preflight — an EPERM is blamed on seccomp without reading the capability" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_eperm_without_the_capability_is_not_attributed_to_seccomp" \
+  's = s.replace("    if attempt.errno == _EPERM and sys_admin is True:", "    if attempt.errno == _EPERM:")'
+
 proof "FR-038 ordering — the span position has no unique index" \
   src/runtime/trace.py \
   "tests/contract/test_trace_spans.py::test_two_writers_over_one_repository_cannot_share_a_position" \
