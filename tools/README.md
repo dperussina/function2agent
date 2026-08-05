@@ -781,6 +781,34 @@ say which kernel line it was derived against. The ordering above is v6.12's; mai
 lookup above `may_mount()`, which makes an unprivileged mainline host answer with two distinct errnos
 by a third route.
 
+### A derived copy and its authority share a basename — "I corrected `plan.md`" was true and useless
+
+**On 2026-08-04 a pass struck a falsified inference from `OD-24` and recorded in its propagation note
+that it had corrected "`plan.md`'s OD-24 note". That was true. It corrected feature 002's plan, which
+is a derived view; the entry itself lives in feature 001's plan, which is the register.** The falsified
+inference stood live in the authority for a day while a committed note attested that it had been
+fixed, and the note's relative link resolved exactly as written — to the author's own sibling, because
+that is the directory they were working in. Corrected at `90a54cf`.
+
+**No gate can see this**, and the reason is worth stating precisely: link resolution asks whether a
+path *exists*, not whether it is the path the sentence *means*. This is the same blind spot as
+`identifier-resolution` passing a mis-citation because the wrong identifier still resolved.
+
+The exposure is wide and was measured rather than assumed: this corpus has **three** `plan.md`, four
+`spec.md`, three `tasks.md`, three `data-model.md`, two `requirements.md` and two `NOTES.md`, plus the
+`README.md` and `SKILL.md` families — and roughly 49 references to a bare `` `plan.md` `` across ten
+files. **That is exposure, not defects.** Exactly one real instance has been found, and most bare
+references are unambiguous to a reader who is already in the right directory. No check was built, for
+the same reason `register-range` was left hand-maintained: a rule firing on every bare basename would
+be almost entirely false positives.
+
+The tell is cheap and does not need a tool: **when a note claims to have corrected a document, ask
+whether the thing corrected was the authority or a view of it.** This is the second instance this week
+of a correct edit to a derived document leaving the authority standing — the first being the
+citation that three sweeps declined to follow, where the label was right and the document it pointed
+at carried the false claim. Both share one shape: *the artifact you edited and the artifact that
+governs are not the same artifact, and its name does not tell you which one you have.*
+
 ## Roles: who is authoritative
 
 `config.json` sorts every file into one of four roles, and the roles decide which
