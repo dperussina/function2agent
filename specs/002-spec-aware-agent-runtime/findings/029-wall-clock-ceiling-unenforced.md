@@ -29,6 +29,16 @@ probe. Source was read only to build the probe and to name the writers in
 committed with this finding, plus one two-attempt sequence over the existing committed fixture
 [`tests/fixtures/resume_session.py`](../../../tests/fixtures/resume_session.py). Both command lines
 are given in full below.
+**Revision discipline, and a concurrent writer disclosed rather than glossed.** `main` was at
+`eee6d16` when this pass began. Every arm was taken with `src/` clean of any edit by this pass —
+nothing here modified a source file. **A second pass was writing into the same working tree while
+these arms ran**: `src/runtime/providers/` appeared untracked between 13:05 and 13:10, and it is not
+this pass's work and was not committed by it. It is disclosed because a measurement taken beside a
+concurrent writer is only sound if the writer is off the measured path, and that was checked rather
+than assumed — no module under `src/runtime/providers/` is imported by
+[`loop.py`](../../../src/runtime/loop.py), [`ledger.py`](../../../src/runtime/ledger.py),
+[`session_store.py`](../../../src/runtime/session_store.py), the probe or the fixture; every import
+of that package is internal to it.
 **Numbering note**: `028` was the high-water mark across `specs/*/findings/`, established by listing
 the whole tree rather than by reading a number out of a document or out of the brief that
 commissioned this pass, and `029` was free at that moment and re-checked free immediately before
