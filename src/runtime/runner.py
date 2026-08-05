@@ -39,6 +39,16 @@ event that really is resumable: an attempt bounded short by
 > rather than human. `src/contracts/terminal.py` carries the widened meaning;
 > the name is a wire string the Go enforcement point reads and does not move.
 
+> **`attach()`'s refusal message cites the state machine rather than the diagram,
+> corrected 2026-08-05 under `OD-26`.** It used to read *"data-model.md §2.1 has
+> no edge out of it"*. The refusal was right and the citation was **vacuously**
+> true: §2.1 had no edge out of `TERMINATED` because §2.1 had no `TERMINATED` —
+> every branch in it was labelled with a terminal-state *name* rather than a
+> state ([finding 027](../../specs/002-spec-aware-agent-runtime/findings/027-lifecycle-edge-set-divergence.md)).
+> A contributor checking the citation would not have found what the sentence
+> promised. `SessionStateMachine._move` is what actually refuses, it refuses
+> unconditionally, and it fails if it stops.
+
 **What is not here.** Resume *reconstruction* — replaying the journal to rebuild
 the turns an interrupted attempt had already produced — is T052's. `attach()`
 takes the resume edge and starts the next attempt against the same journal, so
@@ -250,9 +260,10 @@ class Runner:
         if row.state == STATE_TERMINATED:
             raise RunnerError(
                 f"{session_id!r} is {STATE_TERMINATED} as "
-                f"{row.terminal_state!r}. data-model.md §2.1 has no edge out of "
-                "it, and a revived session would carry a second outcome for a "
-                "run FR-006 says already has one."
+                f"{row.terminal_state!r}. SessionStateMachine refuses every "
+                "transition out of TERMINATED (src/runtime/session_state.py), "
+                "and a revived session would carry a second outcome for a run "
+                "FR-006 says already has one."
             )
 
         transition = None

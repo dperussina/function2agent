@@ -284,6 +284,15 @@ def test_a_cancelled_session_cannot_be_attached_to(tmp_path) -> None:
     branch. Only the `STATE_TERMINATED` branch interpolates `row.terminal_state`,
     so requiring the taxonomy name in the message is what proves *which* branch
     was reached.
+
+    **The second assertion moved 2026-08-05 and the reason is the point of the
+    change.** It used to require `"no edge out of"`, which was the message's
+    citation of `data-model.md` §2.1 — a citation that held only vacuously,
+    because §2.1 declared no `TERMINATED` state for an edge to leave. `OD-26`
+    settled the direction and the message now names `SessionStateMachine`, which
+    is what actually refuses. The assertion follows it, and it stays a
+    *branch-discriminating* assertion rather than a change-detector: the fallback
+    branch names no mechanism at all, so a run that reached it fails both lines.
     """
     rig = Rig(tmp_path)
     token = CancelToken()
@@ -301,7 +310,11 @@ def test_a_cancelled_session_cannot_be_attached_to(tmp_path) -> None:
         "outcome, so a cancelled session refused there would be refused for "
         "the wrong reason."
     )
-    assert "no edge out of" in message
+    assert "SessionStateMachine refuses every transition out of" in message, (
+        f"attach refused without naming the mechanism that refuses: {message!r}. "
+        "The fallback branch names a state and no mechanism, so this line is "
+        "the second half of the branch discrimination and not a wording pin."
+    )
     rig.close()
 
 
