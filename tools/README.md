@@ -752,6 +752,35 @@ that a check has a hole, put the hole in front of it and record what it printed.
 to be expensive, say the claim is *unverified* in the same breath as making it. An honest "I have not
 run this" costs the next reader one sentence; a confident wrong one costs them an afternoon.
 
+### Never state a classifier as a complement — enumerate the accepting set
+
+**A rule of the form "anything but X means success" is one unknown value away from inverting the
+verdict it reports**, and on two consecutive passes in August 2026 a rule written that way would have
+done exactly that to a kernel containment gate.
+
+The first was **"any errno but `EPERM` means the syscall reached the kernel"**, proposed for the
+`pivot_root` check. It fails because AppArmor's `build_pivotroot` hook denies with `EACCES`, before
+every argument check — so a host where an LSM refuses outright would have been reported as a working
+containment gate. The second, one pass later, was **"the two errnos differ, therefore the call was
+permitted"**, proposed to tell a genuine kernel error from one forged by a seccomp filter. It fails
+for a different reason on the same cell: `security_sb_pivotroot()` runs *after* `user_path_at()`, so an
+LSM-denying host answers `EACCES` to one probe and `ENOENT` to the other — two different errnos, on a
+host that refused. Both would have gone green on a refusal.
+
+What made the shipped check sound in both cases was the opposite construction: a **closed list** of
+the errnos that mean *permitted* (`EBUSY` and `EINVAL`, each for a stated reason), with everything else
+falling to `refused-unattributed`. That fails closed on a value nobody anticipated, including `ENOSYS`.
+The measured detail is in
+[finding 026](../specs/002-spec-aware-agent-runtime/findings/026-pivot-root-check-measured.md) §7–8.
+
+So the rule, which is about how a *brief* is written as much as a check: **name the values that mean
+yes and refuse everything else.** An error space is open — a kernel version, an LSM, or a container
+runtime can add a member at any time — so reasoning about it by complement quietly assumes a
+completeness nobody holds. One corollary worth carrying: any claim about a `pivot_root` errno pair must
+say which kernel line it was derived against. The ordering above is v6.12's; mainline hoists the path
+lookup above `may_mount()`, which makes an unprivileged mainline host answer with two distinct errnos
+by a third route.
+
 ## Roles: who is authoritative
 
 `config.json` sorts every file into one of four roles, and the roles decide which
