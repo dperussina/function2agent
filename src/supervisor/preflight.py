@@ -20,7 +20,7 @@ import ctypes
 import errno as errno_module
 import os
 import platform
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as _dc_replace
 from pathlib import Path
 
 CGROUP2_ROOT = Path("/sys/fs/cgroup")
@@ -93,9 +93,18 @@ _PIVOT_ROOT_NR_BY_MACHINE = {
 # causes including the `MS_SHARED` one; the kernel's ordering is what decides
 # which of the two a given host reports.
 _EPERM = 1
+_ENOENT = 2
 _EACCES = 13
 _EBUSY = 16
 _EINVAL = 22
+
+#: The second half of the discriminating pair. A path that does not exist, so
+#: `user_path_at()` fails before anything else can run and the kernel's answer is
+#: ENOENT. Named rather than computed so it appears verbatim in the message an
+#: operator reads, and deliberately not a real mount point: `("/proc", "/proc")`
+#: was tried and **returned 0**, pivoting the probe child's root. See
+#: `_attempt_pivot_root_pair`.
+_ABSENT_PROBE_PATH = b"/f2a-preflight-no-such-path"
 
 #: Refusals by an authority gate. Never evidence the syscall is permitted, at
 #: any filter posture.
@@ -831,6 +840,46 @@ _UNKNOWN_ERRNO_WITH_NO_FILTER = (
     "placed in the kernel's path."
 )
 
+_PAIR_DISCRIMINATED_PERMIT = (
+    "pivot_root reached the kernel, and the PAIR is what establishes that "
+    "rather than either errno on its own. Two invocations of the same syscall "
+    "number, differing only in their two path pointers, produced two DIFFERENT "
+    "errnos — and a seccomp filter cannot produce two different answers to "
+    "those two calls. Its BPF program may not dereference pointers "
+    "(Documentation/userspace-api/seccomp_filter.rst: 'BPF programs may not "
+    "dereference pointers which constrains all filters to solely evaluating "
+    "the system call arguments directly'), so it sees the same syscall number "
+    "and the same architecture for both and must answer both the same way, "
+    "before syscall entry. Something that can tell these two calls apart "
+    "decided them, and the only thing that can is the kernel resolving the "
+    "paths. Both authority gates were checked first and neither fired. "
+    "THIS IS WHY THE SECCOMP MODE NO LONGER GATES THIS CELL: the ambiguity a "
+    "defaultErrnoRet creates is resolved by measurement here rather than by "
+    "assuming no filter is installed. Attempted in forked children, so this "
+    "process's mount namespace was not moved. The absent path cannot succeed "
+    "under any circumstances, which is why it is safe to issue: it fails at "
+    "user_path_at() before any mount machinery runs. "
+    "LIMIT: a SECCOMP_RET_USER_NOTIF or SECCOMP_RET_TRACE supervisor CAN read "
+    "the tracee's memory and could answer the two differently. Container "
+    "runtimes do not ship those, and the seccomp mode is still reported above "
+    "so that posture stays visible."
+)
+
+_AUTHORITY_ERRNO_IN_THE_PAIR = (
+    "REFUSING LAYER: not determined, and the pair does not license resolving "
+    "it. One of the two invocations was refused by an authority gate — EPERM is "
+    "may_mount()'s capability check and EACCES is the LSM hook — and an "
+    "authority refusal is not evidence the syscall is permitted no matter what "
+    "the other invocation answered. THIS CELL EXISTS BECAUSE THE TWO ERRNOS "
+    "DIFFERING IS NOT ENOUGH ON ITS OWN: security_sb_pivotroot() runs after "
+    "user_path_at() on every kernel, so a host whose LSM refuses answers EACCES "
+    "to one call and ENOENT to the other, and mainline hoisted the path lookup "
+    "above may_mount() as well, so an unprivileged host there answers EPERM and "
+    "ENOENT. Both are pairs that differ while the syscall was refused. "
+    "REMEDY: read the errno named above — a capability gate and an LSM denial "
+    "need different fixes, and neither is a seccomp profile."
+)
+
 _POST_AUTHORITY_ERRNO_UNDER_A_FILTER = (
     "This IS an errno path_pivot_root() produces after both of its authority "
     "gates, so the kernel's own control flow would read it as the call getting "
@@ -873,9 +922,14 @@ class PivotRootAttempt:
     ok: bool
     errno: int | None
     note: str
+    #: How this invocation is named in the message. Defaulted so every existing
+    #: construction keeps meaning the call it always meant, and carried at all
+    #: because the pair prints two of these and an operator has to be able to
+    #: tell which invocation produced which errno.
+    label: str = 'pivot_root("/", "/")'
 
     def describe(self) -> str:
-        label = 'pivot_root("/", "/")'
+        label = self.label
         if not self.attempted:
             return f"{label} NOT ATTEMPTED ({self.note})"
         if self.ok:
@@ -980,7 +1034,9 @@ def _decode_pivot_root_exit(code: int) -> PivotRootAttempt:
     return PivotRootAttempt(True, False, code, "the call failed")
 
 
-def _attempt_pivot_root() -> PivotRootAttempt:
+def _attempt_pivot_root(
+    new_root: bytes = b"/", put_old: bytes = b"/"
+) -> PivotRootAttempt:
     """`pivot_root("/", "/")` in a forked child, so this process is never moved.
 
     **Forked because `pivot_root(2)` mutates the calling process's mount
@@ -995,6 +1051,11 @@ def _attempt_pivot_root() -> PivotRootAttempt:
     the filter rather than to the probe's own setup, and a permitted call
     lands on `EBUSY` rather than on a filesystem error that would need its own
     reading.
+
+    **Arguments are parameters so a *second* invocation can differ from this one
+    in nothing but its pointers.** That is the whole of the pair discriminator;
+    see `_attempt_pivot_root_pair`. Callers that pass nothing get the call this
+    function has always made.
     """
     if platform.system() != "Linux":
         return PivotRootAttempt(
@@ -1034,7 +1095,7 @@ def _attempt_pivot_root() -> PivotRootAttempt:
         code = _CODE_CHILD_FAILED
         try:
             ctypes.set_errno(0)
-            rc = syscall(ctypes.c_long(nr), b"/", b"/")
+            rc = syscall(ctypes.c_long(nr), new_root, put_old)
             if rc == 0:
                 code = 0
             elif rc != -1:
@@ -1056,10 +1117,57 @@ def _attempt_pivot_root() -> PivotRootAttempt:
     return _decode_pivot_root_exit(os.WEXITSTATUS(status))
 
 
+def _attempt_pivot_root_pair() -> PivotRootAttempt:
+    """The second invocation, whose *genuine* kernel errno differs from the first.
+
+    **Why a pair exists at all.** A single `pivot_root` call cannot distinguish
+    the kernel answering from a seccomp filter answering *as* the kernel:
+    `SCMP_ACT_ERRNO` returns an errno of the profile author's choosing, so an
+    `EBUSY` from a permitting host and an `EBUSY` forged by a filter are the same
+    16. Finding 026's arms B2 and G are that pair of hosts, and they are
+    identical in every reading a single call has. This is the same shape as
+    T206's `unshare` pair, where `unshare(0)` beside `unshare(CLONE_NEWUSER)` is
+    the only thing that separates a seccomp refusal from every other layer.
+
+    **Why a filter cannot tell the two invocations apart.** The kernel's own
+    documentation is explicit: "BPF programs may not dereference pointers which
+    constrains all filters to solely evaluating the system call arguments
+    directly" (`Documentation/userspace-api/seccomp_filter.rst`). Both
+    invocations are the same syscall number on the same architecture and differ
+    only in two `const char __user *` arguments, so a classic filter's decision
+    is necessarily the same for both, and it is taken before syscall entry. If
+    the filter refuses, neither call reaches the kernel and both wear the same
+    forged constant. If it permits, both reach the kernel and the kernel's own
+    control flow separates them.
+
+    **Two documented limits on that, neither of which this closes.** First, a
+    filter *can* branch on the pointer's numeric value — `seccomp_data.args`
+    carries the raw register — but not on the bytes behind it; the addresses here
+    are runtime stack values a profile author cannot predict, so this is
+    unreachable rather than impossible. Second, `SECCOMP_RET_USER_NOTIF` and
+    `SECCOMP_RET_TRACE` hand the call to a supervisor that *can* read the
+    tracee's memory via `ptrace` or `/proc/pid/mem` — the same doc says so — and
+    such a supervisor could answer the two differently. Those are not what
+    container runtimes ship, and they are why the seccomp mode is still read and
+    reported even though it no longer gates resolution.
+
+    **The path must not exist, and that is a safety property rather than a
+    convenience.** `("/proc", "/proc")` was measured as the second argument set
+    and **returned 0** — it pivoted the child's root. A nonexistent path fails at
+    `user_path_at()` before any of the mount machinery runs, so it cannot
+    succeed, which is what makes it safe to issue at all. The child is forked
+    regardless, and that measurement is why.
+    """
+    attempt = _attempt_pivot_root(_ABSENT_PROBE_PATH, _ABSENT_PROBE_PATH)
+    path = _ABSENT_PROBE_PATH.decode(errors="replace")
+    return _dc_replace(attempt, label=f'pivot_root("{path}", "{path}")')
+
+
 def _classify_pivot_root(
     attempt: PivotRootAttempt,
     sys_admin: bool | None,
     seccomp_mode: int | None = None,
+    probe: PivotRootAttempt | None = None,
 ) -> tuple[bool, str, str]:
     """The cells of the reading, as `(ok, layer, message)`. No syscalls here.
 
@@ -1116,43 +1224,50 @@ def _classify_pivot_root(
             "reported as unverified rather than as refused — there is no "
             "reading here at all, and no remedy follows from one.",
         )
-    if attempt.ok or attempt.errno == _EBUSY:
-        # The verdict is unconditional and the *justification* is not, because
-        # only one of the two survives a filter. MEASURED (finding 026, arm G): a
-        # profile whose only rule is pivot_root -> SCMP_ACT_ERRNO errnoRet 16
-        # produces this exact errno without the syscall reaching the kernel, so
-        # "a filter never gets that far" is false whenever a filter is installed.
-        # Arm B2 is why the verdict itself is left alone — a measured `available`
-        # at Seccomp: 2 — and arms B2 and G are indistinguishable in every
-        # reading available here. Finding 026 escalates that choice rather than
-        # resolving it inside a classifier.
-        because_no_filter = (
-            " — and a syscall refused by a seccomp filter never gets that far"
-            if no_filter
-            else ""
-        )
-        caveat = (
-            ""
-            if no_filter
-            else (
-                f" {filtering}, so this errno alone does not rule out a filter "
-                "having produced it: SCMP_ACT_ERRNO can return EBUSY without "
-                "the syscall reaching path_pivot_root() at all. This cell is "
-                "reported as available because a filter that permits pivot_root "
-                "yields the same reading (MEASURED, finding 026 arm B2) and the "
-                "two are indistinguishable from here. To separate them, re-read "
-                "with seccomp=unconfined."
-            )
-        )
+    if attempt.ok:
         return (
             True,
             LAYER_AVAILABLE,
-            f"{observed}. {posture}. pivot_root reached the kernel, which is "
-            "the whole question: EBUSY is the kernel rejecting these "
-            'arguments — pivot_root("/", "/") can never succeed, because the '
-            f"new root may not be the current root{because_no_filter}. "
-            "Attempted in a forked child, so this process's mount namespace "
-            f"was not moved.{caveat}",
+            f"{observed}. {posture}. The syscall returned 0, so it reached the "
+            "kernel and the kernel performed it. Attempted in a forked child, "
+            "so this process's mount namespace was not moved.",
+        )
+
+    # The authority gates are checked across BOTH invocations and BEFORE the
+    # pair is allowed to resolve anything, and that ordering is the whole
+    # correctness of this function. `security_sb_pivotroot()` runs *after*
+    # `user_path_at()` on every kernel, so on a host where an LSM refuses,
+    # ("/", "/") answers EACCES while the absent path answers ENOENT — two
+    # different errnos, which a bare "they differ, so the call got through"
+    # rule would read as permitted on a host that refused it outright. The
+    # capability gate has the same shape on new kernels: v6.12 runs may_mount()
+    # before the path lookup, so an unprivileged host answers EPERM to both,
+    # but mainline hoisted the lookup above it (fs/namespace.c: the syscall
+    # resolves both paths, then calls path_pivot_root() which begins with
+    # may_mount()), so the same host answers EPERM and ENOENT — distinct again.
+    # An authority errno anywhere in the pair therefore has to win first.
+    pair = [attempt] + ([probe] if probe is not None else [])
+    authority = [a for a in pair if a.attempted and a.errno in _AUTHORITY_ERRNOS]
+    if attempt.errno not in _AUTHORITY_ERRNOS and authority:
+        other = authority[0]
+        return (
+            False,
+            LAYER_REFUSED_UNATTRIBUTED,
+            f"{observed}, but {other.describe()}. {posture}, and {filtering}. "
+            f"{_AUTHORITY_ERRNO_IN_THE_PAIR}",
+        )
+
+    if (
+        probe is not None
+        and probe.attempted
+        and probe.errno == _ENOENT
+        and attempt.errno in _POST_AUTHORITY_ERRNOS
+    ):
+        return (
+            True,
+            LAYER_AVAILABLE,
+            f"{observed}, and {probe.describe()}. {posture}, and {filtering}. "
+            f"{_PAIR_DISCRIMINATED_PERMIT}",
         )
     if attempt.errno in _POST_AUTHORITY_ERRNOS and no_filter:
         return (
@@ -1243,7 +1358,10 @@ def _READ_FROM_PROC() -> None:  # pragma: no cover - a sentinel, never called
 
 
 def _check_pivot_root(
-    attempt=None, sys_admin=_READ_FROM_PROC, seccomp_mode=_READ_FROM_PROC
+    attempt=None,
+    sys_admin=_READ_FROM_PROC,
+    seccomp_mode=_READ_FROM_PROC,
+    probe=None,
 ) -> Check:
     """`pivot_root`, the step FR-048's containment actually rests on.
 
@@ -1259,11 +1377,14 @@ def _check_pivot_root(
     later `ok` in that sequence was meaningless.
     """
     attempt = _attempt_pivot_root if attempt is None else attempt
+    probe = _attempt_pivot_root_pair if probe is None else probe
     if sys_admin is _READ_FROM_PROC:
         sys_admin = _read_cap_sys_admin()
     if seccomp_mode is _READ_FROM_PROC:
         seccomp_mode = _read_seccomp_mode()
-    ok, layer, message = _classify_pivot_root(attempt(), sys_admin, seccomp_mode)
+    ok, layer, message = _classify_pivot_root(
+        attempt(), sys_admin, seccomp_mode, probe()
+    )
     return Check("pivot_root", ok, message, "FR-048", layer)
 
 

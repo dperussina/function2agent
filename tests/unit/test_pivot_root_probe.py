@@ -62,6 +62,7 @@ here without ever being evaluated.
 from __future__ import annotations
 
 import pytest
+from pathlib import Path
 
 from src.supervisor import preflight
 
@@ -70,6 +71,7 @@ EACCES = 13
 EBUSY = 16
 EINVAL = 22
 ENOSYS = 38
+ENOENT = 2
 
 # `Seccomp` as `/proc/self/status` reports it: 0 no filter, 1 strict, 2 filter.
 # Injected in every cell below, never read from the host, for the reason in this
@@ -84,7 +86,8 @@ CAPEFF_DOCKER_DEFAULT = "a80425fb"
 CAPEFF_WITH_SYS_ADMIN = "a82425fb"
 
 
-def _attempt(*, ok: bool, errno: int | None = None, attempted: bool = True):
+def _attempt(*, ok: bool = False, errno: int | None = None,
+             attempted: bool = True):
     return preflight.PivotRootAttempt(
         attempted=attempted, ok=ok, errno=errno,
         note="constructed by a test, no syscall was made",
@@ -107,8 +110,20 @@ def _returning(attempt):
     return probe
 
 
-def _check(attempt, sys_admin, seccomp_mode=FILTER_INSTALLED):
-    """Every cell, with both readings injected rather than taken from the host.
+#: The absent-path invocation's answer on a host that runs it: `user_path_at()`
+#: fails before any mount machinery, so the kernel says ENOENT. Injected, never
+#: read, like every other cell here.
+PROBE_ENOENT = _attempt(ok=False, errno=ENOENT)
+
+#: No second invocation at all — a fork that failed, or a caller from before the
+#: pair existed. The cells behind this are the pre-pair behaviour, kept as a
+#: floor rather than deleted, because a probe that could not be issued must not
+#: read as a probe that discriminated.
+NO_PROBE = None
+
+
+def _check(attempt, sys_admin, seccomp_mode=FILTER_INSTALLED, probe=NO_PROBE):
+    """Every cell, with all three readings injected rather than taken from the host.
 
     `seccomp_mode` defaults to `FILTER_INSTALLED` rather than to "read it from
     /proc" because that is the posture **every measured arm but B3 and B6 was
@@ -116,10 +131,18 @@ def _check(attempt, sys_admin, seccomp_mode=FILTER_INSTALLED):
     `Seccomp: 2` — so the assertions written against those arms keep meaning
     what they meant when the mode became load-bearing. A default of "read the
     host" would make each of them a statement about the laptop instead.
+
+    `probe` defaults to **absent** for the same reason: a test that says nothing
+    about the second invocation is asking what a single call can establish, and
+    that is a real question with its own cells. Tests about the pair pass it
+    explicitly.
     """
     return preflight._check_pivot_root(
         attempt=_returning(attempt), sys_admin=sys_admin,
-        seccomp_mode=seccomp_mode)
+        seccomp_mode=seccomp_mode,
+        probe=_returning(probe) if probe is not None else _returning(
+            _attempt(attempted=False)),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +162,8 @@ def test_run_checks_asks_about_pivot_root_after_it_asks_about_unshare(
     """
     monkeypatch.setattr("platform.system", lambda: "Linux")
     monkeypatch.setattr(
-        preflight, "_attempt_pivot_root", lambda: _attempt(ok=False, errno=EBUSY))
+        preflight, "_attempt_pivot_root",
+        lambda *a, **k: _attempt(ok=False, errno=EBUSY))
     names = [c.name for c in preflight.run_checks()]
     assert "pivot_root" in names, (
         "run_checks() has no pivot_root check. Under --cap-add=SYS_ADMIN with "
@@ -198,7 +222,8 @@ def test_ebusy_is_permitted_because_the_call_reached_the_kernel():
     `EPERM` (P1). Scoring it as a refusal would report the containment step
     broken on precisely the hosts where it works.
     """
-    check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True)
+    check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True,
+                   probe=PROBE_ENOENT)
     assert check.name == "pivot_root"
     assert check.ok is True, (
         "EBUSY was scored as a refusal. It is the permitted reading: the "
@@ -211,16 +236,21 @@ def test_ebusy_is_permitted_because_the_call_reached_the_kernel():
 
 
 @pytest.mark.parametrize("mode", [NO_FILTER, FILTER_INSTALLED, None])
-def test_ebusy_is_permitted_whatever_the_filter_posture(mode):
-    """`EBUSY`'s reading does not depend on the seccomp mode, and must not.
+def test_ebusy_is_permitted_whatever_the_filter_posture_when_the_pair_ran(mode):
+    """`EBUSY`'s reading does not depend on the seccomp mode — but on the pair.
 
     Measured under both postures: B2 and P2 read `Seccomp: 2`, B3 read
     `Seccomp: 0`, and all three produced `EBUSY` and classified `available`.
-    The mode is what resolves `EINVAL` below; wiring it into `EBUSY` as well
-    would re-open a cell that three arms already closed.
+    Those rows are preserved, and **what preserves them changed**. It used to be
+    an unconditional `EBUSY -> available` branch, which arm G falsified by
+    forging a 16 with `SCMP_ACT_ERRNO` and reading `available` on a host where
+    the filter refused the syscall outright. Now the second invocation is what
+    carries them: `EBUSY` beside `ENOENT` is a pair no filter can produce, so
+    the posture genuinely does not matter and the forged constant no longer
+    passes. See `test_a_forged_constant_errno_is_not_resolved_by_the_pair`.
     """
     check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True,
-                   seccomp_mode=mode)
+                   seccomp_mode=mode, probe=PROBE_ENOENT)
     assert check.ok is True, check.detail
     assert check.layer == preflight.LAYER_AVAILABLE
 
@@ -320,65 +350,153 @@ def test_einval_under_a_filter_is_not_described_as_an_unrecognised_errno(mode):
     )
 
 
-@pytest.mark.parametrize("mode", [FILTER_INSTALLED, None])
-def test_ebusy_under_a_filter_does_not_claim_a_filter_could_not_have_caused_it(
-    mode
-):
-    """MEASURED arm G, and it falsifies a sentence this check has always printed.
+@pytest.mark.parametrize("errno", [EBUSY, EINVAL, ENOENT, EPERM, EACCES])
+def test_a_forged_constant_errno_is_not_resolved_by_the_pair(errno):
+    """Arm G's false permit, closed — and closed for every constant, not one.
 
-    The `EBUSY` message asserted "a syscall refused by a seccomp filter never
-    gets that far". Arm G built the counterexample: a profile whose only rule is
-    `pivot_root -> SCMP_ACT_ERRNO, errnoRet: 16`. It reads `available`, and the
-    printed justification is measurably false — the filter got exactly that far,
-    because `SCMP_ACT_ERRNO` returns an errno of the profile author's choosing
-    without the syscall ever reaching `path_pivot_root()`.
+    A `SCMP_ACT_ERRNO` rule returns the *same* errno to both invocations,
+    because the BPF program cannot dereference either path pointer and the two
+    calls are otherwise byte-identical. So a forged constant shows up as a pair
+    that does **not** differ, whatever constant was chosen. Arm G forged 16 and
+    read `available` under the old unconditional branch; this is that arm and
+    its four siblings.
 
-    **The verdict is deliberately left as `available` here and the sentence is
-    what changes.** Gating `EBUSY` on the filter posture the way `EINVAL` is
-    gated would be the consistent move, and finding 026 records why it is not
-    made in this pass: arm **B2** is a measured `available` at `Seccomp: 2`, and
-    arms B2 and G are indistinguishable in every reading this check has. Choosing
-    between them means either a false permit (today) or a red gate on every
-    hardened deployment that ships a permitting profile. That is an operator's
-    decision about which failure they prefer, not a detail to settle silently
-    inside a classifier, so it is escalated rather than taken.
-
-    What is not defensible either way is printing a false reason, so the claim is
-    narrowed to the posture where it actually holds.
+    Parametrised over the authority errnos as well, which reach the verdict by
+    the other route — an `EPERM` or `EACCES` anywhere in the pair is an
+    authority refusal before distinctness is even consulted.
     """
-    check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True,
-                   seccomp_mode=mode)
+    forged = _attempt(errno=errno)
+    check = _check(forged, sys_admin=True, seccomp_mode=FILTER_INSTALLED,
+                   probe=forged)
+
+    assert check.ok is False, (
+        f"a filter forging a constant {errno} was read as permitted. Both "
+        "invocations returned it, which is exactly what SCMP_ACT_ERRNO does "
+        "and exactly what the kernel cannot do, since the two calls name "
+        "different paths.\n"
+        f"detail was: {check.detail}"
+    )
+    assert check.layer != preflight.LAYER_AVAILABLE, check.detail
+
+
+@pytest.mark.parametrize("primary", [EBUSY, EINVAL])
+def test_the_pair_resolves_without_needing_the_seccomp_mode(primary):
+    """The point of the pair: `Seccomp: 0` stops being load-bearing.
+
+    Arm F is this cell. A shared-`/` host running a filter that **permits**
+    `pivot_root` answers `EINVAL` to the first call, and the pre-pair classifier
+    read `refused-unattributed` because a filter was installed — a false refusal
+    on a working host. With the second invocation answering `ENOENT`, the pair
+    discriminates and the filter posture is no longer consulted for the verdict.
+    """
+    check = _check(_attempt(errno=primary), sys_admin=True,
+                   seccomp_mode=FILTER_INSTALLED, probe=PROBE_ENOENT)
 
     assert check.ok is True, (
-        "the verdict is not what this test governs — see the docstring. If this "
-        "fails, the EBUSY cell was gated on the filter posture, which moves "
-        "measured arm B2 and needs finding 026 updated rather than this "
-        "assertion relaxed."
+        "the pair discriminated and the check still withheld the verdict. "
+        "Two different errnos from two calls a filter cannot tell apart is a "
+        "stronger reading than the seccomp mode, not a weaker one.\n"
+        f"detail was: {check.detail}"
     )
-    assert "never gets that far" not in check.detail, (
-        "the message still claims a seccomp filter cannot produce this errno. "
-        "Arm G measured a profile doing exactly that with errnoRet 16, so this "
-        "sentence is false whenever a filter is installed or its posture is "
-        "unknown."
+    assert check.layer == preflight.LAYER_AVAILABLE
+    assert "may not dereference pointers" in check.detail, (
+        "the message must carry the reason the pair is evidence, because an "
+        "operator reading a green containment gate is entitled to the argument."
     )
 
 
-def test_ebusy_with_no_filter_may_still_say_a_filter_could_not_have_caused_it():
-    """The other half, so the narrowing does not delete a true statement.
+@pytest.mark.parametrize("authority", [EPERM, EACCES])
+def test_an_authority_errno_beats_a_differing_pair(authority):
+    """The correction to the pair rule, and the cell that makes it sound.
 
-    With `Seccomp: 0` there is no filter, so "a syscall refused by a seccomp
-    filter never gets that far" is sound and is the most useful thing the message
-    can say. Arm A is this cell: `/` private, no filter, `EBUSY`, `available`.
+    "The errnos differ, so the call reached the kernel" is **false**, and the
+    LSM refusal is the counterexample that matters. `security_sb_pivotroot()`
+    runs *after* `user_path_at()` on every kernel, so a host whose AppArmor
+    policy denies `pivot_root` answers `EACCES` to `("/", "/")` and `ENOENT` to
+    the absent path — two different errnos on a host that refused the syscall
+    outright. Mainline has the same shape for the capability gate: it hoisted
+    the path lookup above `may_mount()`, so an unprivileged host there answers
+    `EPERM` and `ENOENT` where v6.12 answers `EPERM` to both.
+
+    **What actually holds this closed is the closed list, and that is worth
+    saying precisely because it is not obvious.** The pair only ever resolves a
+    *primary* errno drawn from `_POST_AUTHORITY_ERRNOS`, and neither `EPERM` nor
+    `EACCES` is in it, so both cases above are excluded by construction rather
+    than by a guard. This half of the test is the assertion that the closed list
+    keeps doing that job once a second reading exists to tempt it.
     """
-    check = _check(_attempt(ok=False, errno=EBUSY), sys_admin=True,
-                   seccomp_mode=NO_FILTER)
+    check = _check(_attempt(errno=authority), sys_admin=True,
+                   seccomp_mode=NO_FILTER, probe=PROBE_ENOENT)
 
-    assert check.ok is True, check.detail
-    assert "never gets that far" in check.detail, (
-        "the true form of the claim was removed along with the false one. With "
-        "no filter installed it is exactly right and it is the reading that "
-        "makes the permitted verdict legible."
+    assert check.ok is False, (
+        f"a pair of ({authority}, ENOENT) was read as permitted because the "
+        "two errnos differ. They differ because path resolution runs before "
+        "the authority gate, not because the call got through it. This is a "
+        "green containment gate on a host that refuses pivot_root.\n"
+        f"detail was: {check.detail}"
     )
+    assert check.layer != preflight.LAYER_AVAILABLE, check.detail
+
+
+@pytest.mark.parametrize("authority", [EPERM, EACCES])
+def test_an_authority_errno_on_the_second_call_also_blocks_resolution(authority):
+    """The other half, and the one the closed list does **not** cover.
+
+    Here the first invocation answers a post-authority errno and the *second*
+    is refused by an authority gate. The closed list is satisfied — `EBUSY` is
+    on it — and the two errnos differ, so nothing but an explicit check of both
+    invocations stops this resolving. No host has been observed answering two
+    different authority verdicts to two calls a filter cannot tell apart, so
+    this is a guard against a state rather than a measured arm, and it is
+    written down as such. It is cheap, and the alternative is a permit derived
+    from a reading that contains a refusal.
+    """
+    check = _check(_attempt(errno=EBUSY), sys_admin=True,
+                   seccomp_mode=NO_FILTER, probe=_attempt(errno=authority))
+
+    assert check.ok is False, (
+        "the pair contained an authority refusal and still resolved to "
+        f"permitted. One of the two calls was refused by a gate ({authority}); "
+        "that is not a reading a permit can be built on.\n"
+        f"detail was: {check.detail}"
+    )
+    assert check.layer != preflight.LAYER_AVAILABLE, check.detail
+
+
+def test_the_absent_path_probe_is_a_path_that_cannot_exist():
+    """A safety property, measured the hard way.
+
+    `("/proc", "/proc")` was tried as the second argument set and **returned
+    0** — it pivoted the probe child's root, which is only harmless because the
+    child is forked and immediately exits. The second invocation must therefore
+    name a path that cannot resolve, so it fails at `user_path_at()` before any
+    mount machinery runs and has no success path at all.
+
+    **The assertion is on the marker rather than on `exists()`, and the first
+    draft of this test got that wrong.** `Path("/proc").exists()` is `False` on
+    macOS, so a tamper swapping the probe path to `/proc` passed here while
+    being catastrophic on the only kind of host that runs the probe. That is the
+    host-dependent-pass defect this file's own docstring is about, reproduced
+    inside a test written to prevent a different one. What is checked instead is
+    the property that makes the path safe on *every* host: it is namespaced to
+    this project, so no OS ships it and no image can contain it by accident.
+    The `exists()` check is kept as a second assertion and is meaningful only
+    where it can run.
+    """
+    path = preflight._ABSENT_PROBE_PATH
+
+    assert path.startswith(b"/"), path
+    assert b"f2a-" in path, (
+        f"the second invocation's path {path!r} carries no project marker, so "
+        "it may name something the host actually has. ('/proc', '/proc') was "
+        "measured returning 0 — it pivots the child's root. The path has to be "
+        "one nothing ships."
+    )
+    if Path("/proc").exists():  # a host where the probe could actually run
+        assert not Path(path.decode()).exists(), (
+            f"{path!r} exists on this host, so the second invocation may "
+            "resolve it and reach the mount machinery."
+        )
 
 
 @pytest.mark.parametrize("mode", [NO_FILTER, FILTER_INSTALLED, None])

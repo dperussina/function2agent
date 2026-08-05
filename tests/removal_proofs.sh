@@ -667,10 +667,14 @@ proof "T207 preflight — pivot_root is not in the check set at all" \
   "tests/unit/test_pivot_root_probe.py::test_run_checks_asks_about_pivot_root_after_it_asks_about_unshare" \
   's = s.replace("        checks.append(_check_pivot_root())", "        pass")'
 
+# Repointed at T209. The mechanism that resolves EBUSY moved: it used to be an
+# unconditional branch, which arm G falsified by forging a 16, and it is now the
+# pair. The defect the proof names is unchanged — EBUSY read as a refusal on a
+# host where pivot_root works — so the proof follows the mechanism.
 proof "T207 preflight — EBUSY is scored as a refusal instead of as reaching the kernel" \
   src/supervisor/preflight.py \
   "tests/unit/test_pivot_root_probe.py::test_ebusy_is_permitted_because_the_call_reached_the_kernel" \
-  's = s.replace("    if attempt.ok or attempt.errno == _EBUSY:", "    if attempt.ok:")'
+  's = s.replace("        and attempt.errno in _POST_AUTHORITY_ERRNOS\n", "        and attempt.errno == _EINVAL\n")'
 
 proof "T207 preflight — an EPERM is blamed on seccomp without reading the capability" \
   src/supervisor/preflight.py \
@@ -713,15 +717,44 @@ proof "T208 preflight — a withheld post-authority errno is reported as unrecog
   "tests/unit/test_pivot_root_probe.py::test_einval_under_a_filter_is_not_described_as_an_unrecognised_errno" \
   's = s.replace("    if attempt.errno in _POST_AUTHORITY_ERRNOS:\n", "    if False:\n")'
 
-# Arm G measured the counterexample to a sentence this check printed from the
-# start: a profile with `pivot_root -> errnoRet: 16` produces EBUSY without the
-# syscall reaching the kernel, so "a filter never gets that far" is false under a
-# filter. The verdict is left as available on purpose (arm B2); the false reason
-# is not. Restoring the unconditional claim is restoring a measured falsehood.
-proof "T208 preflight — the EBUSY message claims a filter cannot have caused it" \
+# T209 — the pair. A single pivot_root call cannot separate the kernel answering
+# from a filter answering as the kernel, because SCMP_ACT_ERRNO returns an errno
+# of the profile author's choosing. A second invocation differing only in its
+# path pointers can, because a BPF program may not dereference pointers and so
+# must answer both calls identically. These four hold that reasoning in place.
+
+# Arm G, restored. The unconditional EBUSY branch read `available` while a filter
+# refused the syscall outright — a green containment gate over absent
+# containment, which is the worst direction this check can fail in.
+proof "T209 preflight — a forged constant errno is resolved without the pair" \
   src/supervisor/preflight.py \
-  "tests/unit/test_pivot_root_probe.py::test_ebusy_under_a_filter_does_not_claim_a_filter_could_not_have_caused_it" \
-  's = s.replace("            \" — and a syscall refused by a seccomp filter never gets that far\"\n            if no_filter\n            else \"\"", "            \" — and a syscall refused by a seccomp filter never gets that far\"")'
+  "tests/unit/test_pivot_root_probe.py::test_a_forged_constant_errno_is_not_resolved_by_the_pair" \
+  's = s.replace("    if attempt.ok:\n", "    if attempt.ok or attempt.errno == _EBUSY:\n")'
+
+# The correction to the pair rule. security_sb_pivotroot() runs after
+# user_path_at() on every kernel, so an LSM refusal answers EACCES to one call
+# and ENOENT to the other — a pair that differs on a host that refused outright.
+# Dropping the authority guard turns that into a permit.
+proof "T209 preflight — the authority guard is dropped, so a differing pair always resolves" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_an_authority_errno_on_the_second_call_also_blocks_resolution" \
+  's = s.replace("    if attempt.errno not in _AUTHORITY_ERRNOS and authority:\n", "    if False:\n")'
+
+# Arm F. Without the pair being consulted the check falls back to the seccomp
+# mode, and a shared-root host running a filter that PERMITS pivot_root reads as
+# refused — a red gate on a working host.
+proof "T209 preflight — the second invocation is ignored, so only Seccomp 0 resolves" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_the_pair_resolves_without_needing_the_seccomp_mode" \
+  's = s.replace("        probe is not None\n", "        False\n")'
+
+# Measured the hard way: ("/proc", "/proc") returned 0 and pivoted the probe
+# child. The second invocation must name a path that cannot resolve, so it fails
+# at user_path_at() before any mount machinery runs.
+proof "T209 preflight — the second invocation names a path that can exist" \
+  src/supervisor/preflight.py \
+  "tests/unit/test_pivot_root_probe.py::test_the_absent_path_probe_is_a_path_that_cannot_exist" \
+  's = s.replace("_ABSENT_PROBE_PATH = b\"/f2a-preflight-no-such-path\"", "_ABSENT_PROBE_PATH = b\"/proc\"")'
 
 proof "T208 preflight — EACCES is admitted to the class that reads as permitted" \
   src/supervisor/preflight.py \
