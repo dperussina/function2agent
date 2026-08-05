@@ -804,6 +804,30 @@ which it is repeatedly mistaken for. Append-only applies to it too.
   > including the one interaction that runs against the intuition: a per-result bound set low enough
   > to force follow-up calls **spends this requirement's budget faster**, because every follow-up
   > re-sends the whole transcript.
+
+  > **Clarified 2026-08-05 — nothing is added, narrowed or extended, and the clause below was already
+  > determined by the text above. It is written down because it was re-derived at cost once and would
+  > be again.** *The wall-clock ceiling counts the intervals during which the session was **running**.
+  > The interval between a crash and its resume does not count against it.* Three readings of this
+  > requirement converge and the third settles it. ① The counted quantity is named: *"consumption
+  > already incurred before a crash MUST still be counted after the resume"* — a session that is not
+  > running incurs nothing. ② FR-049's extension note above classifies all four as *"consumption
+  > ceilings on a session"*, expressly against bounds that are *"properties of the execution
+  > environment rather than of a session's consumption."* ③ **The crash clause has no subject under
+  > the other reading.** A ceiling measured as *now minus session start* is a deadline; a crash cannot
+  > reduce a deadline and no number of resumes can raise one, so a requirement spending a sentence
+  > forbidding both is not describing one. *"The cumulative total against it, MUST be recorded"* says
+  > the same thing from the other side, a deadline having no cumulative total. **The
+  > no-number-of-resumes clause therefore names a *reset*, which a durable sum does not have** — it is
+  > evidence for the accrual reading rather than a question left open by it.
+  >
+  > **Why this is worth a paragraph in the requirement rather than a comment in the code.**
+  > [finding 029](./findings/029-wall-clock-ceiling-unenforced.md) measured this ceiling not firing at
+  > all — a session ran 2.044 s under a ceiling of 0.001 s and ended `terminated.completed`, against
+  > three controls on the same harness that fired — and put the question above to an owner as one this
+  > requirement was *silent* on. It was not silent; the derivation simply had to be done. The
+  > implementation records it at `AgentLoop._accrue_elapsed`, and the measured state is now 7 of 7 arms
+  > terminating where 3 of 7 did.
 - **FR-058**: Every result either of FR-004's capabilities returns to the agent MUST be bounded before
   it enters the model's context. The bound MUST be stated in **tokens of the model in force**, MUST be
   required configuration under FR-033, and **this specification states no default value for it**: an
