@@ -722,6 +722,36 @@ Two defences, and the first is free:
 - **verify by presence, not absence** — `git status --short` on a tree you expect to be *dirty*, or a
   grep for a string only your own work contains.
 
+### Reading an instrument is not measuring it — plant the case instead
+
+**A claim about what one of these checks *would* do is worth nothing until something has done it.**
+Twice on 2026-08-05 a defect in a harness was asserted from reading its source and relayed onward as
+though it had been observed, and both times the defect did not exist. Each cost a downstream pass real
+work looking for something that was not there.
+
+The instance that names this section: a proof whose target test no longer exists was believed to score
+`proved`, on the reasoning that `pytest` exit 4 is a *usage* error and the existing guards were built
+around exit 5 and zero collection. Plausible, and false. Two proofs were planted — a nonexistent test
+name inside a real file, and a nonexistent file — and both came back `NO TEST`, unproven. **Three**
+independent guards catch it, and each was confirmed separately rather than inferred from the first:
+`check_tampers.py` catches it statically and **names exit 4 in its own error text**, so the case was
+closed knowingly; `baseline_py` returns `ABSENT`, which is the layer the planted proofs actually
+reached; and `proof()`'s collection check would take it regardless, because real exit-4 output begins
+`ERROR: not found:` and contains no `N failed`. Written up in
+[finding 027](../specs/002-spec-aware-agent-runtime/findings/027-lifecycle-edge-set-divergence.md) §9.
+
+The tell is the same in both instances and is easy to say out loud: **the claim describes behaviour,
+and the evidence is a file.** A guard's source tells you what its author intended to cover, which is
+exactly the thing in question when you suspect a gap — the gaps live in the distance between intent
+and effect, and that distance is invisible from the inside. It is the same reason a removal proof
+exists at all: this whole directory rests on the position that a mechanism is proved by deleting it
+and watching something fail, not by reading it and agreeing.
+
+So the rule is cheap, because planting a case is nearly always a one-liner here: **before reporting
+that a check has a hole, put the hole in front of it and record what it printed.** If that turns out
+to be expensive, say the claim is *unverified* in the same breath as making it. An honest "I have not
+run this" costs the next reader one sentence; a confident wrong one costs them an afternoon.
+
 ## Roles: who is authoritative
 
 `config.json` sorts every file into one of four roles, and the roles decide which
