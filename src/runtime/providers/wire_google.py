@@ -64,9 +64,9 @@ class GoogleDriver(ProviderDriver):
         system: str,
         turns: Sequence[WireTurn],
         tools: Sequence[ToolSchema],
-        provider_state: bytes | None = None,
+        provider_states: Sequence[bytes | None] = (),
     ) -> dict[str, Any]:
-        reinject(GOOGLE, turns, provider_state)
+        reinject(GOOGLE, turns, provider_states)
         capabilities = self.capabilities(model)
         return {
             "model": model,

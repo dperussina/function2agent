@@ -39,10 +39,18 @@ Neither mode decides anything. The harness's exit status is computed from its
 own failure counter and this file is never consulted for it. The renderer is the
 one place that can fail a job, and only for the case that would otherwise be
 indistinguishable from a good run: a green harness step that produced no record.
+
+EVERY RUN, NOT JUST THE LAST ONE
+
+The path the harness passes is `removal-proofs.latest.json` and the next run
+overwrites it. `_archive` keeps a per-run copy beside it so a run that disagreed
+with its neighbours can still be read. See that function for the run that made
+this necessary.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import platform
@@ -256,10 +264,48 @@ def write(out_path: str) -> int:
         doc["proofs"] = proofs
         doc["what_this_is_a_property_of"] = _caveats(env, have_go, skipped)
 
+    body = json.dumps(doc, indent=2, sort_keys=True) + "\n"
     with open(out_path, "w", encoding="utf-8") as handle:
-        json.dump(doc, handle, indent=2, sort_keys=True)
-        handle.write("\n")
+        handle.write(body)
+    _archive(out_path, body)
     return 0
+
+
+def _archive(out_path: str, body: str) -> None:
+    """Keep this run's record beside the one the next run will overwrite.
+
+    `tests/removal_proofs.sh` writes to `removal-proofs.latest.json` and the
+    name is honest: the next run replaces it. On 2026-08-05 the harness reported
+    `113 proved, 1 unproven` on one run and `114 proved, 0 unproven` on the
+    three after it, and the run that disagreed **could no longer be read** — so
+    nobody could say which proof it was, whether it was flaky or fixed, or
+    whether the three green runs were the same instrument. An instrument that
+    disagrees with itself once in four is worth more than one that never does;
+    it is only worth anything if the disagreeing run survives.
+
+    Named by content digest as well as by clock, so two runs in the same second
+    with different outcomes are two files and two identical runs are one. This
+    never raises: the canonical record at `out_path` is the contract and a
+    failure to keep an extra copy must not turn a green run red. It says so on
+    stderr instead, because an archive that silently stopped working is the
+    thing this exists to prevent, one level up.
+    """
+    directory = os.path.join(os.path.dirname(os.path.abspath(out_path)),
+                             "removal-proofs-history")
+    stem = os.path.basename(out_path).removesuffix(".json").removesuffix(".latest")
+    digest = hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
+    name = "{}-{}-{}.json".format(stem, time.strftime("%Y%m%dT%H%M%S"), digest)
+    try:
+        os.makedirs(directory, exist_ok=True)
+        with open(os.path.join(directory, name), "w", encoding="utf-8") as handle:
+            handle.write(body)
+    except OSError as exc:
+        print(
+            "WARNING: this run's record was written to {} but could not be "
+            "archived to {} ({}). The next run will overwrite it and this run "
+            "will not be readable afterwards.".format(out_path, directory, exc),
+            file=sys.stderr,
+        )
 
 
 def render(in_path: str) -> int:

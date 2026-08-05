@@ -158,6 +158,11 @@ examples/
 # F2A_RECORD_MEASUREMENTS=1; an ordinary privileged run writes .latest.json so
 # it cannot silently replace a recorded figure.
 tests/batteries/results/*.latest.json
+# Per-run copies of the record above, written by
+# `tools/removal_proofs_summary.py::_archive` so a run that disagreed with its
+# neighbours is still readable. Records of runs, never committed figures — same
+# rule as the line above.
+tests/batteries/results/removal-proofs-history/
 
 # CI scratch. `.github/workflows/ci.yml` writes these into the workspace so it
 # can upload them as artifacts; they are readings of one run and are never

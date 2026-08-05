@@ -92,9 +92,9 @@ class AnthropicDriver(ProviderDriver):
         system: str,
         turns: Sequence[WireTurn],
         tools: Sequence[ToolSchema],
-        provider_state: bytes | None = None,
+        provider_states: Sequence[bytes | None] = (),
     ) -> dict[str, Any]:
-        reinject(ANTHROPIC, turns, provider_state)
+        reinject(ANTHROPIC, turns, provider_states)
         request: dict[str, Any] = {
             "model": model,
             "max_tokens": DEFAULT_MAX_TOKENS,

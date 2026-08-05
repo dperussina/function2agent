@@ -280,14 +280,14 @@ def test_provider_state_is_reinjected_verbatim(tmp_path) -> None:
     injected: list = []
 
     def model(context):
-        injected.append(context.provider_state)
+        injected.append(context.provider_states)
         i = len(injected) - 1
         return _asks("t", state=states[i]) if i < 1 else _finish()
 
     outcome = h.loop(model, lambda call: "r").run("p")
 
-    assert injected[0] is None, "the first turn has no prior state to carry"
-    assert injected[1] == states[0], (
+    assert injected[0] == (), "the first turn has no prior state to carry"
+    assert injected[1] == (states[0],), (
         "the state the second turn was given is not the bytes the first turn "
         "returned. Re-injected verbatim is the requirement; re-encoded is not "
         "re-injected."
@@ -324,12 +324,23 @@ def test_the_turn_record_exposes_a_digest_and_not_the_bytes(tmp_path) -> None:
     h.close()
 
 
-def test_state_handed_over_is_always_the_immediately_preceding_turns(tmp_path) -> None:
-    """T-02: never merged, and never an older turn's.
+def test_every_earlier_turns_state_is_handed_over_in_order(tmp_path) -> None:
+    """T-02: never merged. FR-037: **never dropped.**
 
-    The loop hands over the last turn's state and does not accumulate. A loop
+    ~~The loop hands over the last turn's state and does not accumulate. A loop
     that concatenated states, or that kept the first one, would still produce
-    plausible answers — which is why this reads the bytes rather than the text.
+    plausible answers.~~ **Rewritten 2026-08-05.** The struck text asserted the
+    defect. `states_for` returned a single blob, and all four vendors want
+    every state in the current turn: OpenAI *"preserve and replay every
+    returned reasoning item"*, Google validates every step of the turn and 400s
+    on a miss, xAI *"always pass the full output array back verbatim"*, and an
+    Anthropic tool-use loop is one assistant turn within which every thinking
+    block must come back. What survives unchanged is *why* this reads the bytes
+    rather than the text: a loop that lost them still answers plausibly.
+
+    Order is asserted as well as membership. The states are positionally
+    aligned with the assistant entries a driver builds, so a reordering
+    attaches one turn's reasoning to another — a request every provider accepts.
 
     **What this cannot assert, and where that property lives instead.** The
     cross-provider drop is not observable here: the loop calls one provider and
@@ -345,16 +356,19 @@ def test_state_handed_over_is_always_the_immediately_preceding_turns(tmp_path) -
 
     def model(context):
         i = len(injected)
-        injected.append(context.provider_state)
+        injected.append(context.provider_states)
         if i < 3:
             return _asks("t", state=produced[i])
         return _finish()
 
     h.loop(model, lambda c: "r").run("p")
 
-    assert injected == [None, produced[0], produced[1], produced[2]], (
-        "the state handed to each turn is not the previous turn's verbatim"
-    )
+    assert injected == [
+        (),
+        (produced[0],),
+        (produced[0], produced[1]),
+        (produced[0], produced[1], produced[2]),
+    ], "the chain handed to each turn is not every earlier turn's, in order"
     h.close()
 
 

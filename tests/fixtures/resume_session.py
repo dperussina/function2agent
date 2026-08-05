@@ -53,7 +53,9 @@ rebuilds — and a fixture that asked for one would be unable to detect it.
 bytes rather than an interpretation of them: FR-037 forbids the second and says
 nothing about the first. `NONE` is a distinct token from the empty string,
 because a provider that returned no state and one that returned zero bytes are
-different facts and `provider_state` is nullable for that reason.
+different facts and `provider_state` is nullable for that reason. It records the
+**whole carried chain**, comma-joined, because `context.provider_states` holds
+one entry per kept turn; `-` is the token for a chain with nothing in it.
 """
 
 from __future__ import annotations
@@ -184,6 +186,17 @@ def _hex(state: bytes | None) -> str:
     return "NONE" if state is None else state.hex()
 
 
+def _hexes(states: "tuple[bytes | None, ...]") -> str:
+    """The whole carried chain, comma-joined, `-` when nothing is carried.
+
+    The chain rather than its last element: `context.provider_states` holds one
+    entry per kept turn (FR-037, *never dropped*), and a fixture that recorded
+    only the last one would report the same line for a resume that rebuilt the
+    whole chain off disk and for one that rebuilt a single turn of it.
+    """
+    return ",".join(_hex(state) for state in states) or "-"
+
+
 class Child:
     def __init__(self, args: argparse.Namespace) -> None:
         self.root = Path(args.root)
@@ -286,7 +299,7 @@ class Child:
         # defect — every call_id and every `provider_state` came out labelled
         # with the turn after the one that produced it.
         turn = self.journal.next_turn_index(self.session) - 1
-        _append(self.injected, f"{turn} {_hex(context.provider_state)}")
+        _append(self.injected, f"{turn} {_hexes(context.provider_states)}")
         self.model_calls += 1
         kind, want_turn, _ = self.pause
         if kind == "model" and turn == want_turn:

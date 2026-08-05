@@ -1204,7 +1204,18 @@ proof "T056 digest not bytes — the opaque state is written to the trace readab
 proof "T041 opaque state — the provider state is not carried into the next turn" \
   src/runtime/context.py \
   "tests/unit/test_loop.py::test_provider_state_is_reinjected_verbatim" \
-  's = s.replace("        if turn.provider_state is not None:\n            return turn.provider_state", "        if False:\n            return turn.provider_state")'
+  's = s.replace("        kept.append(turn.provider_state)", "        kept.append(None)")'
+
+# FR-037, *never dropped*. The state this plants is the one the code actually
+# shipped with until 2026-08-05: the newest turn's, and nothing before it. Every
+# turn still gets a state, the round-trip of that state is still byte-exact, and
+# the chain still answers correctly — finding 016 measured the last of those. The
+# arm that sees it compares what the request carries against what every earlier
+# turn produced.
+proof "T041 opaque state — only the newest turn's state is carried forward" \
+  src/runtime/context.py \
+  "tests/conformance/test_provider_state_roundtrip.py::test_the_opaque_field_survives_the_chain_byte_identically" \
+  's = s.replace("    kept.reverse()\n    return tuple(kept)", "    kept.reverse()\n    return tuple(kept[-1:])")'
 
 # T042. Trimming the task to fit is the silent failure: the agent answers a
 # question nobody asked and every size assertion still passes.
@@ -1309,7 +1320,24 @@ proof "T059 repr — the opaque payload is disclosed by its own repr" \
 proof "T061 re-injection — the opaque state is counted as written and written nowhere" \
   src/runtime/providers/state.py \
   "tests/conformance/test_provider_state_roundtrip.py::test_the_opaque_field_survives_the_chain_byte_identically" \
-  's = s.replace("        if write_path(target, slot.path, slot.carrier()):\n            written += 1", "        if True:\n            written += 1")'
+  's = s.replace("            1 for slot in slots\n            if write_path(target, slot.path, slot.carrier())", "            1 for slot in slots\n            if True or write_path(target, slot.path, slot.carrier())")'
+
+# T059 and T061. Each state onto the entry it came off, rather than all of them
+# onto the newest. This is the shape the code had until 2026-08-05, and on
+# Anthropic it put a `signature` key on a `tool_use` block — well-formed JSON the
+# provider signed for a different message.
+proof "T061 re-injection — every state is written onto the newest assistant entry" \
+  src/runtime/providers/state.py \
+  "tests/unit/test_provider_state.py::test_a_turn_that_emitted_nothing_keeps_its_slot_and_gets_no_write" \
+  's = s.replace("    for target, blob in zip(targets, carried):", "    for target, blob in ((targets[-1], b) for b in carried):")'
+
+# T059 and T061. The alignment check. Zipping short is silent: `zip` stops at the
+# shorter of the two and every state it did place is byte-exact, so the digest
+# arms all pass while each one sits on the wrong message.
+proof "T061 re-injection — a chain that does not line up is zipped short instead of refused" \
+  src/runtime/providers/state.py \
+  "tests/unit/test_provider_state.py::test_a_chain_that_does_not_line_up_with_the_conversation_is_refused" \
+  's = s.replace("    if len(targets) != len(carried):", "    if False:")'
 
 # T061. The vacuity guard, and it is the proof this capability most needs. Every
 # byte-identity assertion above it is satisfied by a run in which the field never

@@ -180,15 +180,20 @@ class ProviderDriver(ABC):
         system: str,
         turns: Sequence[WireTurn],
         tools: Sequence[ToolSchema],
-        provider_state: bytes | None = None,
+        provider_states: Sequence[bytes | None] = (),
     ) -> dict[str, Any]:
         """The request body, with the opaque state re-attached where it sat.
 
         `turns` is the conversation so far in this provider's own wire shape —
-        the driver does not own conversation accumulation, the caller does. What
-        the driver owns is that `provider_state`, if given, is unpacked and put
-        back onto the **last assistant entry**, at the positions it was taken
-        from, byte for byte.
+        the driver does not own conversation accumulation, the caller does.
+
+        `provider_states` is `src/runtime/context.py::states_for`'s result: one
+        entry per kept turn, in turn order, positionally aligned with the
+        assistant entries in `turns`. What the driver owns is that each entry is
+        unpacked and put back onto **its own** assistant entry, at the positions
+        it was taken from, byte for byte. Every one of them, not the latest:
+        FR-037 says never dropped, and three of the four providers reject a
+        request that is missing one.
         """
 
     @abstractmethod

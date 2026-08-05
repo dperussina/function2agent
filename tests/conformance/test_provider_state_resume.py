@@ -126,6 +126,16 @@ def _injected(root: Path) -> list[tuple[int, str]]:
     return out
 
 
+def _chain(turn: int) -> str:
+    """What turn `turn`'s context should carry: every earlier turn's state.
+
+    Computed here from `state_for`, the fixture's own generator, rather than
+    read back from the child — the parent's expectation has to come from
+    somewhere the child cannot influence.
+    """
+    return ",".join(state_for(i).hex() for i in range(turn)) or "-"
+
+
 def _repo(root: Path) -> Repository:
     return Repository(root / "runtime.sqlite3", role="runtime",
                       tenant_id="t-1", deployment_id="d-1")
@@ -160,10 +170,10 @@ def test_the_state_a_killed_process_recorded_is_injected_by_the_next_one(
     handed_to_turn_2 = dict(after[len(before):])
     assert 2 in handed_to_turn_2, (
         f"the resumed process made no model call for turn 2: {after}")
-    assert handed_to_turn_2[2] == state_for(1).hex(), (
+    assert handed_to_turn_2[2] == _chain(2), (
         "the resumed process was handed "
-        f"{handed_to_turn_2[2]!r} where turn 1's provider returned "
-        f"{state_for(1).hex()!r}. FR-037 requires it captured verbatim and "
+        f"{handed_to_turn_2[2]!r} where turns 0 and 1's providers returned "
+        f"{_chain(2)!r}. FR-037 requires it captured verbatim and "
         "re-injected verbatim, and a digest comparison is the only assertion "
         "that can tell re-injected from regenerated."
     )
@@ -189,14 +199,17 @@ def test_every_turn_after_the_boundary_carries_its_predecessors_state(
     _resume(root)
 
     seen = _injected(root)
-    assert seen[0] == (0, "NONE"), (
-        f"turn 0 was handed {seen[0]!r}. There is no prior turn, so there is no "
-        "state — and NONE is a different fact from empty bytes."
+    assert seen[0] == (0, "-"), (
+        f"turn 0 was handed {seen[0]!r}. There is no prior turn, so the chain "
+        "is empty — and `-` is a different token from `NONE`, which is what a "
+        "turn that ran and returned no state contributes."
     )
     for turn, state in seen[1:]:
-        assert state == state_for(turn - 1).hex(), (
-            f"turn {turn} was handed {state!r} rather than turn {turn - 1}'s "
-            f"{state_for(turn - 1).hex()!r}"
+        assert state == _chain(turn), (
+            f"turn {turn} was handed {state!r} rather than every preceding "
+            f"turn's state, {_chain(turn)!r}. FR-037 says never dropped, and a "
+            "resume that rebuilt only the newest one would satisfy the arm "
+            "above and fail here."
         )
     assert [turn for turn, _ in seen] == [0, 1, 2, 3, 4], (
         f"the session's model calls were {[t for t, _ in seen]}; a repeat would "
@@ -247,9 +260,10 @@ def test_a_half_finished_turns_state_comes_off_disk_and_not_from_the_provider(
         "2's response is on disk; turns 3 and 4 are what remain."
     )
     handed = dict(_injected(root))
-    assert handed[3] == state_for(2).hex(), (
-        "turn 3 was not handed turn 2's recorded state, so the resume rebuilt "
-        "the context without the state the journal was holding for it"
+    assert handed[3] == _chain(3), (
+        "turn 3 was not handed every preceding turn's recorded state, so the "
+        "resume rebuilt the context without state the journal was holding for "
+        "it"
     )
 
 

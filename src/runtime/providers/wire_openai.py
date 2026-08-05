@@ -73,9 +73,9 @@ class OpenAIDriver(ProviderDriver):
         system: str,
         turns: Sequence[WireTurn],
         tools: Sequence[ToolSchema],
-        provider_state: bytes | None = None,
+        provider_states: Sequence[bytes | None] = (),
     ) -> dict[str, Any]:
-        reinject(OPENAI, turns, provider_state)
+        reinject(OPENAI, turns, provider_states)
         conversation: list[Any] = []
         for turn in turns:
             # A list payload is spliced, not nested. See the module docstring.

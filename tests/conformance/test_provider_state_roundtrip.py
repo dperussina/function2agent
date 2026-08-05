@@ -44,16 +44,26 @@ battery is where the shipped configuration re-establishes it.
 **Does not**: exercise any vendor SDK. `ProviderDriver.call` is the transport
 half and nothing offline reaches it.
 
-**Does not**: establish anything about assistant turns older than the previous
-one. `src/runtime/context.py:state_for` scans backwards and returns the *first*
-state it finds, so exactly one turn's opaque field is carried forward and every
-earlier one is dropped. This fixture asserts what the runtime does rather than
-papering over it: `_persisted` strips the field from every assistant turn and
-only the most recent gets it back. That matches Anthropic, whose interleaved
-thinking requires the signature on the immediately preceding assistant turn and
-strips older ones server-side. Whether OpenAI's Responses chain wants every
-reasoning item in the current chain rather than only the last is **not settled
-here**, and if it does, the fix is in `state_for` and not in these drivers.
+**Does**, as of 2026-08-05: that **every** assistant turn's opaque field reaches
+the next request, not only the previous turn's. It did not before. This fixture
+recorded the limit — *"exactly one turn's opaque field is carried forward and
+every earlier one is dropped"* — and left open whether any provider minded. All
+four do, and three reject the request outright; the evidence is in
+`src/runtime/context.py::states_for`. The premise the limit rested on was also
+wrong: Anthropic does not want only the immediately preceding assistant turn,
+because **a tool-use loop is one assistant turn** and within one *"you must pass
+the thinking blocks from the assistant message back to the API, complete and
+unmodified."* Server-side stripping is about turns before the current one, and
+on Opus 4.5 / Sonnet 4.6 and later there is none.
+
+**Two things had to change here for the fixture to see any of that**, and both
+are the same failure in different clothes. `_persisted` models the runtime
+stripping the field on the way to storage; `_rebuilt` models it building each
+request from stored bodies rather than from a conversation it kept in memory.
+Without the second, `reinject`'s in-place write on turn N survived into turn
+N+1's request and the fixture reported full accumulation from a runtime that
+carried one state per turn. And the states now come from `ContextAssembler`
+rather than from a local variable, so the policy under test is the runtime's.
 """
 
 from __future__ import annotations
@@ -66,7 +76,9 @@ from typing import Any, Mapping
 
 import pytest
 
+from src.runtime.context import ByteTokenizer, ContextAssembler
 from src.runtime.dispatch import ToolResult
+from src.runtime.loop import TurnRecord
 from src.runtime.providers import ROLE_TOOL, ROLE_USER, WireTurn, driver_for
 from src.runtime.providers.schema import ToolSchema, results_to_wire
 from src.runtime.turn import state_digest
@@ -159,8 +171,12 @@ class TurnObservation:
     #: What the cassette declares the provider emitted, read off the cassette's
     #: own `opaque` list rather than off anything the driver produced.
     declared: tuple[Any, ...]
-    #: What the *next* request carried, found by walking the cassette's declared
-    #: selector — a second implementation, not the driver's injector.
+    #: Everything the request for this turn carried, found by walking the
+    #: cassette's declared selector — a second implementation, not the driver's
+    #: injector. **Every** prior turn's values, in conversation order, not only
+    #: the previous turn's.
+    carried: tuple[Any, ...]
+    #: The tail of `carried` attributable to the immediately previous turn.
     reinjected: tuple[Any, ...]
     #: The driver's digest over its packed carrier, against the cassette's pin.
     digest: str | None
@@ -202,29 +218,45 @@ def roundtrip_report(cassette: harness.Cassette) -> Report:
     player = harness.Player(cassette)
     ledger = ToolLedger()
 
-    turns: list[WireTurn] = [WireTurn(role=ROLE_USER,
-                                      payload=_user_turn(cassette.provider))]
+    persisted: list[WireTurn] = [WireTurn(role=ROLE_USER,
+                                          payload=_user_turn(cassette.provider))]
     observations: list[TurnObservation] = []
-    carried: bytes | None = None
     final_text = ""
 
+    # **The state is routed through the assembler, not handed along in a local.**
+    # `states_for` is where the per-turn selection lives, and a fixture that
+    # short-circuited it by keeping `parsed.provider_state` in a variable would
+    # be asserting over its own policy rather than over the runtime's. The
+    # budget is deliberately enormous and `dropped_turns` asserted at zero, so
+    # that this arm cannot quietly become a truncation test.
+    assembler = ContextAssembler(budget_tokens=10_000_000,
+                                 tokenizer=ByteTokenizer())
+    records: list[TurnRecord] = []
+
     for index, interaction in enumerate(cassette.interactions):
+        context = assembler.assemble(prompt=PROMPT, turns=records,
+                                     provider=cassette.provider)
+        assert context.dropped_turns == 0, (
+            f"{cassette.provider} turn {index}: the assembler dropped "
+            f"{context.dropped_turns} turns, so the states it returned cover "
+            "fewer turns than the conversation holds and this arm is measuring "
+            "truncation rather than the round trip")
+        turns = _rebuilt(persisted)
         request = driver.build_request(
             model=cassette.model, system=SYSTEM, turns=turns, tools=TOOLS,
-            provider_state=carried)
+            provider_states=context.provider_states)
 
         # What this request carries, found by the cassette's route. Read
         # *before* the response is played, because the state under test is the
-        # one the previous turn produced.
-        reinjected = tuple(harness.opaque_in_request(cassette, request))
+        # one the previous turns produced.
+        carried = tuple(harness.opaque_in_request(cassette, request))
         previous = observations[-1].declared if observations else ()
         observations.append(TurnObservation(
             turn=index,
             declared=tuple(v.native() for v in interaction.opaque),
-            # Only the values attributable to the previous turn matter for the
-            # round trip, and they are the tail of what the request carries:
-            # every earlier turn's state is still in the conversation.
-            reinjected=reinjected[-len(previous):] if previous else (),
+            carried=carried,
+            # The tail is what the immediately previous turn contributed.
+            reinjected=carried[-len(previous):] if previous else (),
             digest=None, pinned=interaction.expected_state_digest,
         ))
 
@@ -234,8 +266,12 @@ def roundtrip_report(cassette: harness.Cassette) -> Report:
         observations[-1].digest = state_digest(parsed.provider_state)
 
         assert parsed.assistant is not None
-        turns.append(_persisted(parsed.assistant, interaction))
-        carried = parsed.provider_state
+        persisted.append(_persisted(parsed.assistant, interaction))
+        records.append(TurnRecord(
+            turn_index=index, provider=cassette.provider,
+            provider_state=parsed.provider_state,
+            tool_calls=parsed.tool_calls, tool_results=(),
+            text=parsed.text, at=float(index)))
 
         if not parsed.tool_calls:
             final_text = parsed.text
@@ -248,8 +284,8 @@ def roundtrip_report(cassette: harness.Cassette) -> Report:
             for call in parsed.tool_calls
         )
         for entry in results_to_wire(cassette.provider, results):
-            turns.append(WireTurn(role=_result_role(cassette.provider),
-                                  payload=entry))
+            persisted.append(WireTurn(role=_result_role(cassette.provider),
+                                      payload=entry))
 
     player.assert_exhausted()
     return Report(provider=cassette.provider, model=cassette.model,
@@ -291,6 +327,29 @@ def _persisted(assistant: WireTurn, interaction: harness.Interaction) -> WireTur
             "asserting re-injection against a field it never removed."
         )
     return WireTurn(role=assistant.role, payload=json.loads(json.dumps(payload)))
+
+
+def _rebuilt(persisted: "list[WireTurn]") -> list[WireTurn]:
+    """The conversation as each request builds it: fresh from persisted bodies.
+
+    **The second half of the boundary `_persisted` models, and it was missing.**
+    `_persisted` strips the opaque field once, when the turn is first appended.
+    If the same `WireTurn` objects are then reused for every subsequent request,
+    `reinject`'s in-place write on turn N survives into turn N+1 — so a runtime
+    that carries exactly one state per request still *looks* like one that
+    carries all of them, because the earlier ones were left behind in the dicts.
+    That is the by-reference blindness `_persisted` was written to remove,
+    reappearing one level up.
+
+    A journal-backed runtime does not hold a mutable conversation. It holds turn
+    bodies and rebuilds the request from them — that is what `resume.py` must do
+    after a crash, and a conversation that only survives in process memory is
+    one a resumed session does not have. Rebuilding here per request makes the
+    fixture measure the policy rather than the aliasing.
+    """
+    return [WireTurn(role=turn.role,
+                     payload=json.loads(json.dumps(turn.payload)))
+            for turn in persisted]
 
 
 def _delete_path(payload: Any, path: Any) -> bool:
@@ -341,6 +400,22 @@ def check_roundtrip(report: Report) -> None:
        nothing. This repository has found seven instruments silent on exactly
        what they claim; the message here says which of the two happened.
     """
+    accumulated: list[Any] = []
+    for observation in report.observations:
+        assert observation.carried == tuple(accumulated), (
+            f"{report.provider} turn {observation.turn}: the request carried "
+            f"{_shape(observation.carried)} where turns 0..{observation.turn - 1} "
+            f"together produced {_shape(tuple(accumulated))}. Every one of "
+            "them belongs in this request. All four vendors say so and three "
+            "of them say it as a hard error: OpenAI *\"preserve and replay "
+            "every returned reasoning item\"*, Google validates every step of "
+            "the current turn and 400s on a missing one, xAI *\"always pass "
+            "the full output array back verbatim\"*, and Anthropic requires "
+            "the thinking block on every assistant message inside a tool-use "
+            "turn because the whole loop is one turn."
+        )
+        accumulated.extend(observation.declared)
+
     for observation in report.observations[1:]:
         previous = report.observations[observation.turn - 1]
         if previous.present:
@@ -532,7 +607,7 @@ def test_the_answer_alone_cannot_detect_the_loss():
             model=cassette.model, system=SYSTEM, turns=turns, tools=TOOLS,
             # The negative control: the state is thrown away, exactly as ADK's
             # adapter threw it away.
-            provider_state=None)
+            provider_states=())
         assert harness.opaque_in_request(cassette, request) == []
 
         parsed = driver.parse_response(

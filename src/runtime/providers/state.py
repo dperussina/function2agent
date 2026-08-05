@@ -296,46 +296,71 @@ def write_path(payload: Any, path: Sequence[Any], value: Any) -> bool:
 
 
 def reinject(
-    provider: str, turns: Sequence[WireTurn], blob: bytes | None
+    provider: str, turns: Sequence[WireTurn], states: Sequence[bytes | None]
 ) -> int:
-    """Put a turn's opaque values back onto the last assistant entry.
+    """Put each turn's opaque values back onto **that turn's** assistant entry.
 
     Shared by all four drivers so that "re-injected verbatim" has one
     implementation. Four copies would be four chances for one provider's path
     to be written with a decode in it, and the arm that would catch it is the
     one provider-specific fixture nobody ran that week.
 
-    Returns the number of values written. `0` with a non-empty blob is a
+    `states` is `src/runtime/context.py::states_for`'s result: one entry per
+    kept turn, in turn order, `None` where that turn emitted none. It is
+    **positionally aligned** with the assistant entries in `turns`, and a
+    length mismatch is refused rather than zipped short.
+
+    **Why alignment is checked rather than assumed.** This took a single blob
+    and wrote it onto the *last* assistant entry until 2026-08-05. Given a
+    conversation where an intervening turn emitted no state, the caller handed
+    over an older turn's blob and this wrote it onto a later turn's entry — at
+    the recorded path, which on Anthropic meant a `signature` key appearing on a
+    `tool_use` block. The provider had signed neither. Refusing a mismatch is
+    what turns that back into an error.
+
+    Returns the number of values written. `0` with a non-empty state is a
     failure: it means the state was carried across the boundary and then
     dropped on the floor at the last step, which is invisible in the response
     and is exactly finding 016's negative control.
     """
-    if blob is None:
+    carried = list(states)
+    if not any(blob is not None for blob in carried):
         return 0
-    slots = unpack(provider, blob)
-    if not slots:
-        return 0
-    target = None
-    for turn in reversed(list(turns)):
-        if turn.role == ROLE_ASSISTANT:
-            target = turn.payload
-            break
-    if target is None:
+
+    targets = [turn.payload for turn in turns if turn.role == ROLE_ASSISTANT]
+    if not targets:
         raise OpaqueStateError(
             f"{provider}: opaque state was given with no assistant turn to "
             "put it back on. The state belongs to a turn the conversation no "
             "longer holds, and injecting it anywhere else would attach one "
             "turn's reasoning to another."
         )
-    written = 0
-    for slot in slots:
-        if write_path(target, slot.path, slot.carrier()):
-            written += 1
-    if written != len(slots):
+    if len(targets) != len(carried):
         raise OpaqueStateError(
-            f"{provider}: {len(slots) - written} of {len(slots)} opaque values "
-            "had no path left to write to. The assistant turn was rebuilt "
-            "rather than carried, which is the adapter defect FR-037 exists "
-            "for — and it produces a request the provider accepts."
+            f"{provider}: {len(carried)} turns of opaque state against "
+            f"{len(targets)} assistant entries in the conversation. The two "
+            "are positionally aligned by construction, so a mismatch means the "
+            "conversation and the turn history disagree about what happened — "
+            "and pairing them off anyway would attach one turn's reasoning to "
+            "another, which the provider signs and cannot detect."
         )
+
+    written = 0
+    for target, blob in zip(targets, carried):
+        if blob is None:
+            continue
+        slots = unpack(provider, blob)
+        landed = sum(
+            1 for slot in slots
+            if write_path(target, slot.path, slot.carrier())
+        )
+        if landed != len(slots):
+            raise OpaqueStateError(
+                f"{provider}: {len(slots) - landed} of {len(slots)} opaque "
+                "values had no path left to write to. The assistant turn was "
+                "rebuilt rather than carried, which is the adapter defect "
+                "FR-037 exists for — and it produces a request the provider "
+                "accepts."
+            )
+        written += landed
     return written

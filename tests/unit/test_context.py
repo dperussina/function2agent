@@ -78,10 +78,83 @@ def test_the_context_carries_only_the_current_providers_state() -> None:
         TurnRecord(turn_index=1, provider="two", provider_state=b"b",
                    tool_calls=(), tool_results=(), text="t", at=1.0),
     )
+    # The scan stops at the foreign provider rather than filtering past it, so
+    # `one`'s state is not in the chain handed to `two` (T-02).
     assert assembler.assemble(
-        prompt="p", turns=turns, provider="two").provider_state == b"b"
+        prompt="p", turns=turns, provider="two").provider_states == (b"b",)
     assert assembler.assemble(
-        prompt="p", turns=turns, provider="three").provider_state is None
+        prompt="p", turns=turns, provider="three").provider_states == ()
+
+
+def test_every_turns_state_is_carried_and_not_only_the_latest() -> None:
+    """FR-037's *never dropped*, on the clause that was not held.
+
+    `states_for` returned one blob until 2026-08-05. All four vendors want the
+    whole chain within the current turn and three of them reject a request
+    missing one of them: OpenAI *"preserve and replay every returned reasoning
+    item"*, Google 400s on any step of the current turn whose first
+    `functionCall` part has lost its signature, xAI *"always pass the full
+    output array back verbatim"*. Anthropic is the one that degrades silently,
+    which is worse rather than better.
+    """
+    assembler = ContextAssembler(budget_tokens=1_000, tokenizer=Tok())
+    turns = tuple(
+        TurnRecord(turn_index=i, provider="one",
+                   provider_state=f"s{i}".encode(),
+                   tool_calls=(), tool_results=(), text="t", at=float(i))
+        for i in range(4)
+    )
+    assert assembler.assemble(
+        prompt="p", turns=turns, provider="one").provider_states == (
+            b"s0", b"s1", b"s2", b"s3")
+
+
+def test_a_turn_that_emitted_no_state_holds_its_place_in_the_chain() -> None:
+    """The defect that made the drop worse than a drop.
+
+    The old scan skipped a `None` turn and returned an *older* turn's state,
+    which the caller then re-attached to the newest assistant entry. On
+    Anthropic that put a `signature` key on a `tool_use` block — a value the
+    provider signed for a different message. The chain keeps `None` in place so
+    the positional alignment with the assistant entries survives, and
+    `reinject` refuses when it does not.
+    """
+    assembler = ContextAssembler(budget_tokens=1_000, tokenizer=Tok())
+    turns = (
+        TurnRecord(turn_index=0, provider="one", provider_state=b"a",
+                   tool_calls=(), tool_results=(), text="t", at=0.0),
+        TurnRecord(turn_index=1, provider="one", provider_state=None,
+                   tool_calls=(), tool_results=(), text="t", at=1.0),
+        TurnRecord(turn_index=2, provider="one", provider_state=b"c",
+                   tool_calls=(), tool_results=(), text="t", at=2.0),
+    )
+    assert assembler.assemble(
+        prompt="p", turns=turns, provider="one").provider_states == (
+            b"a", None, b"c")
+
+
+def test_the_state_of_a_dropped_turn_is_dropped_with_it() -> None:
+    """One entry per *kept* turn, or the alignment is a lie.
+
+    A state whose turn was truncated out of the context has no assistant entry
+    left to be put back on. Carrying it anyway would shift every later state
+    one position and attach each one to the wrong message.
+    """
+    assembler = ContextAssembler(budget_tokens=60, tokenizer=Tok())
+    turns = tuple(
+        TurnRecord(turn_index=i, provider="one",
+                   provider_state=f"s{i}".encode(),
+                   tool_calls=(), tool_results=(), text="y" * 100,
+                   at=float(i))
+        for i in range(10)
+    )
+    context = assembler.assemble(prompt="p", turns=turns, provider="one")
+
+    assert context.dropped_turns > 0, (
+        "the budget was not small enough to force a drop, so this arm is "
+        "asserting nothing about truncation")
+    assert len(context.provider_states) == len(turns) - context.dropped_turns
+    assert context.provider_states[-1] == b"s9"
 
 
 def test_the_rendered_context_never_contains_the_opaque_state() -> None:

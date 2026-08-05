@@ -62,9 +62,9 @@ class XaiDriver(ProviderDriver):
         system: str,
         turns: Sequence[WireTurn],
         tools: Sequence[ToolSchema],
-        provider_state: bytes | None = None,
+        provider_states: Sequence[bytes | None] = (),
     ) -> dict[str, Any]:
-        reinject(XAI, turns, provider_state)
+        reinject(XAI, turns, provider_states)
         messages: list[Any] = [{"role": "system", "content": system}]
         messages.extend(turn.payload for turn in turns)
         capabilities = self.capabilities(model)

@@ -189,19 +189,67 @@ def test_writing_refuses_to_create_a_route_that_is_not_there():
     assert len(payload["content"]) == 1
 
 
-def test_reinjection_targets_the_last_assistant_turn_and_counts_what_it_wrote():
-    assistant = {"role": "assistant",
-                 "content": [{"type": "thinking"}, {"type": "text"}]}
+def test_reinjection_targets_each_turns_own_assistant_entry_and_counts_writes():
+    first = {"role": "assistant", "content": [{"type": "thinking"}]}
+    second = {"role": "assistant",
+              "content": [{"type": "thinking"}, {"type": "text"}]}
     turns = [WireTurn(role=ROLE_USER, payload={"role": "user"}),
-             WireTurn(role=ROLE_ASSISTANT, payload=assistant),
+             WireTurn(role=ROLE_ASSISTANT, payload=first),
+             WireTurn(role=ROLE_USER, payload={"role": "user"}),
+             WireTurn(role=ROLE_ASSISTANT, payload=second),
              WireTurn(role=ROLE_USER, payload={"role": "user"})]
+    states = [
+        pack("anthropic",
+             [slot_from_carrier(("content", 0, "signature"), "SIG-1")]),
+        pack("anthropic",
+             [slot_from_carrier(("content", 0, "signature"), "SIG-2")]),
+    ]
+    assert reinject("anthropic", turns, states) == 2
+    # Each state lands on the entry it came off, in order. Swapping them would
+    # produce a request every provider accepts and one of them validates.
+    assert first["content"][0]["signature"] == "SIG-1"
+    assert second["content"][0]["signature"] == "SIG-2"
+    # The user turns are untouched: state on a results entry would attach one
+    # turn's reasoning to another.
+    assert turns[2].payload == {"role": "user"}
+    assert turns[4].payload == {"role": "user"}
+
+
+def test_a_turn_that_emitted_nothing_keeps_its_slot_and_gets_no_write():
+    """The defect that made the drop worse than a drop, at this layer.
+
+    `states_for` returned the most recent *non-`None`* state until 2026-08-05,
+    and this wrote whatever it was given onto the *last* assistant entry. With
+    a silent turn in the middle, an older turn's signature landed on a
+    `tool_use` block — a value the provider signed for a different message and
+    cannot detect on the way in.
+    """
+    thinking = {"role": "assistant", "content": [{"type": "thinking"}]}
+    tool_use = {"role": "assistant", "content": [{"type": "tool_use"}]}
+    turns = [WireTurn(role=ROLE_ASSISTANT, payload=thinking),
+             WireTurn(role=ROLE_USER, payload={"role": "user"}),
+             WireTurn(role=ROLE_ASSISTANT, payload=tool_use)]
     blob = pack("anthropic",
                 [slot_from_carrier(("content", 0, "signature"), "SIG")])
-    assert reinject("anthropic", turns, blob) == 1
-    assert assistant["content"][0]["signature"] == "SIG"
-    # The later user turn is untouched: state on a results entry would attach
-    # one turn's reasoning to another.
-    assert turns[2].payload == {"role": "user"}
+
+    assert reinject("anthropic", turns, [blob, None]) == 1
+    assert thinking["content"][0]["signature"] == "SIG"
+    assert tool_use["content"][0] == {"type": "tool_use"}, (
+        "an older turn's signature was written onto a tool_use block")
+
+
+def test_a_chain_that_does_not_line_up_with_the_conversation_is_refused():
+    """Alignment is checked, not assumed.
+
+    Zipping short would pair each state with whichever entry happened to be at
+    that index, which is the misattribution above with a different cause.
+    """
+    turns = [WireTurn(role=ROLE_ASSISTANT,
+                      payload={"content": [{"type": "thinking"}]})]
+    blob = pack("anthropic",
+                [slot_from_carrier(("content", 0, "signature"), "SIG")])
+    with pytest.raises(OpaqueStateError, match="positionally aligned"):
+        reinject("anthropic", turns, [blob, blob])
 
 
 def test_a_rebuilt_assistant_turn_makes_reinjection_fail_loudly():
@@ -218,21 +266,23 @@ def test_a_rebuilt_assistant_turn_makes_reinjection_fail_loudly():
     blob = pack("anthropic",
                 [slot_from_carrier(("content", 4, "signature"), "SIG")])
     with pytest.raises(OpaqueStateError, match="rebuilt rather than carried"):
-        reinject("anthropic", turns, blob)
+        reinject("anthropic", turns, [blob])
 
 
 def test_reinjecting_with_no_assistant_turn_is_refused():
     blob = pack("xai", [slot_from_carrier(("encrypted_content",), "E")])
     with pytest.raises(OpaqueStateError, match="no assistant turn"):
-        reinject("xai", [WireTurn(role=ROLE_USER, payload={})], blob)
+        reinject("xai", [WireTurn(role=ROLE_USER, payload={})], [blob])
 
 
 def test_no_state_and_empty_state_stay_different_all_the_way_down():
     """`None` is a provider that returned nothing; an empty slot list is a
     provider that returned an empty carrier. The journal's column is nullable
     to keep them apart and this is the layer above it."""
-    assert reinject("xai", [], None) == 0
+    assert reinject("xai", [], ()) == 0
+    assert reinject("xai", [], [None]) == 0
     empty = pack("xai", [])
     assert empty != b""
     assert unpack("xai", empty) == ()
-    assert reinject("xai", [], empty) == 0
+    assert reinject("xai", [WireTurn(role=ROLE_ASSISTANT, payload={})],
+                    [empty]) == 0
