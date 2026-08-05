@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ **twenty-five** owner decisions
-(OD-01 through OD-25, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ **twenty-six** owner decisions
+(OD-01 through OD-26, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -40,8 +40,12 @@ and the measurements that falsified its wording landed in between — so its str
 here as a live row, which is a first for this register and is stated in the entry rather than left to
 be inferred; and **OD-25 is a contemporaneous record** of the disposition the production
 specification's FR-058 carries. **OD-24 is also the first entry here that adopts a model and defers
-its build in the same act**, which is why it says so in a banner rather than in a clause.)*
-~~**The last twelve**~~ ~~**The last fourteen**~~ **The last sixteen
+its build in the same act**, which is why it says so in a banner rather than in a clause. **Extended
+2026-08-05 with OD-26**, which is different in kind again: it is the first entry here that adjudicates
+**between two artifacts in this repository** rather than settling a design question, naming one of
+them authoritative and the other derived, and whose principal output is therefore a mechanical check
+rather than a requirement.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ **The last seventeen
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -66,7 +70,10 @@ not, `CLONE_NEWPID` is mandatory and the `setuid` drop is retained — and adopt
 13–20 day build, so it is the register's first adopt-and-defer entry and must not be read as a
 decline**, and **OD-25 makes bounded-and-referenced v1's default disposition for tool output at a bound
 deliberately below where the token saving is large, settling U-50's token limb by argument and killing
-the experiment on both limbs.**
+the experiment on both limbs**, and **OD-26 settles which of two divergent artifacts holds FR-006's
+closed terminal-state taxonomy — `src/contracts/terminal.py` does, `data-model.md` §2.1 is a derived
+view of it — and strikes `terminated.denied_operation`, a state no requirement wants because a refusal
+is a disposition the loop continues past.**
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -2907,6 +2914,122 @@ authorised by an entry in this register and naming none, which is the defect **O
 [`14`](../../research/14-architecture-synthesis.md)'s **U-50** row needs a dated annotation recording
 that its token limb is settled by requirement and its task-success limb is not; that document was not
 free at this pass and the annotation is reported for routing rather than written.
+
+### OD-26 — `src/contracts/terminal.py` is authoritative for terminal-state membership and `data-model.md` §2.1 is a derived view of it; `terminated.denied_operation` is struck from the diagram
+
+**Decided 2026-08-05**, answering the question
+[finding 027](../002-spec-aware-agent-runtime/findings/027-lifecycle-edge-set-divergence.md) §4 left
+open on purpose: **does the production specification's `data-model.md` §2.1 lifecycle get reconciled
+with `TAXONOMY`, and in which direction?** The finding measured the divergence in both directions and
+declined to pick, on the ground that picking is an owner act. This entry picks, and it picks against
+the direction an earlier instruction had assumed.
+
+**The decision, in two limbs.**
+
+**① [`src/contracts/terminal.py`](../../src/contracts/terminal.py) is authoritative for membership.
+[`data-model.md`](../002-spec-aware-agent-runtime/data-model.md) §2.1's lifecycle is a **derived
+view** of that taxonomy** — authoritative on the *shape* of the lifecycle, which is what it was always
+good for, and not the closed set. **FR-006**'s closed set is the module, and
+`tests/invariants/test_terminal_taxonomy.py` is what closes it.
+
+**② `terminated.denied_operation` is STRUCK from §2.1.** It named a terminal state nothing produces,
+nothing records as owed, and — the part that makes it wrong rather than merely absent — **no
+requirement wants**. `terminated.no_progress` is **not** struck: it is a real debt, already recorded,
+and it is marked in the diagram as declared-but-not-yet-a-member rather than deleted.
+
+**Why the diagram loses and the module wins, and the argument is an evenness argument rather than a
+preference.** The alternative reading — *§2.1's declared branch set is authoritative and a member
+outside it may not be reached* — is not merely inconvenient. **Applied evenly it invalidates
+`terminated.unrecoverable_fault`**, which is the runner's teardown state for a fault it cannot
+classify, which has shipped since **T046**, and which has its own arm in the suite. A rule whose even
+application condemns a path that ships today is not a rule; it is a preference for one of the two
+artifacts, and the preference has to be argued rather than assumed.
+
+Argued, the asymmetry is one-sided:
+
+- **The taxonomy has consumers and the diagram has none.** `src/contracts/terminal.py` is imported by
+  **seven** modules under [`src/`](../../src/) — `contracts/transition.py`, `runtime/runner.py`,
+  `runtime/loop.py`, `runtime/session_state.py`, `runtime/session_store.py`, `runtime/trace.py` and
+  `supervisor/session_table.py` — and its member names ship as a **cross-language conformance vector**
+  in `tests/fixtures/session_conformance.json`, which the Go enforcement point reads directly at
+  `src/proxy/conformance_test.go`. Nothing anywhere reads §2.1. *(Both figures were re-counted for
+  this entry rather than carried over from the finding.)*
+- **A member's name is a wire string.** Moving one to satisfy a diagram would break a conformance
+  vector two languages read. Moving a diagram to match the code breaks nothing.
+- **The drift is evidence for the direction, not merely for the repair.** §2.1 has been wrong about
+  three members for as long as those members have existed, and the corpus noticed only when a fourth
+  question was asked of it. An artifact that can be wrong for that long without anything failing is
+  not the one holding the invariant.
+
+**What limb ① does not license, and this is the clause that matters most.** It does **not** license
+adding a member. `terminal.py` is authoritative for *membership*, which makes it the place a member is
+added — under FR-006's rule, with a requirement and a meaning, and against the invariant suite. It is
+not a licence to add one casually because the diagram no longer constrains it. **The diagram was never
+the constraint; the invariant test is**, and it is unchanged by this decision.
+
+**Why `denied_operation` is struck rather than owed, and the premise was checked before the strike.**
+A refusal is a **disposition the loop continues past**, not an outcome of the session. That is not an
+inference from the code; it is what the two enforcement points are specified to do. **SC-022 counts
+denials as records** — [`contracts/filesystem-decision.md`](../002-spec-aware-agent-runtime/contracts/filesystem-decision.md)
+says so in as many words, that the criterion is scored on *"the record's existence and its rule
+identifier"* and that an unclassifiable open is *"recorded rather than raised because SC-022 counts
+attempts"*. The egress side reads the same way: a handle presented after termination *"is denied and
+the denial recorded like any other FR-011 denial"*. **FR-006 was read in full and defines exactly one
+producer** — the stall condition behind `no_progress` — and says nothing about a denial. So a session
+in which the agent is refused a path or a destination has **not ended**; it has learned something, and
+FR-005's ceilings bound what it does next. A terminal state for a denial would make the *first*
+refusal fatal, which is the opposite of the posture **OD-12** and **Q-07** settled, where the denial
+counter is the instrument.
+
+> #### The durable output of this decision is a check, not an edit
+>
+> **Two artifacts drifted in both directions for weeks and nothing looked at either against the
+> other.** Repairing them settles today's divergence and does nothing about tomorrow's, and this
+> corpus has recorded the same shape often enough to name it: *a claim about the corpus that lives in
+> a different file from the thing it describes*, which is the family
+> [`tools/README.md`](../../tools/README.md) already collects `register-range`, `inventory-count`,
+> `catalog-line-count` and `definition-count` under.
+>
+> So this decision also authorises a **`lifecycle-taxonomy` check in `check_corpus.py`**, reconciling
+> §2.1's declared branch set against `TAXONOMY` and erroring **in either direction**. It is a check
+> rather than a generator for the reason the README already gives for `definition-count`: the diagram
+> carries strike-and-supersede history and an owed-member marking, which is exactly the shape
+> `gen_claims.py` classifies `MANUAL` and refuses to write.
+>
+> **It was written before the repair and run against the unrepaired tree**, and the output of that run
+> is recorded in finding 027. A check added after the defect has never shown it can see the defect,
+> and this repository has been bitten by that at least four times.
+
+**What this decision does not license.**
+- **Not** a claim that §2.1 is unreliable in general. It is authoritative on the lifecycle's *shape* —
+  one non-terminal state, a resume edge back to `RUNNING`, no edge out of any terminal state — and
+  every routing decision taken against that shape stands.
+- **Not** the retirement of `terminated.no_progress`. Its predicate is *unwritable as specified* under
+  **T067** and that is a debt, not a spurious name. Striking it would convert a recorded gap into a
+  forgotten one.
+- **Not** an amendment to FR-006, whose text is unchanged and should be. FR-006 requires a closed
+  named taxonomy; this decision says which artifact *is* it.
+- **Not** a widening of `is_terminal()`. A prefix match is still what FR-006 forbids, and the
+  invariant that stops it is untouched.
+
+**Authorises** the `lifecycle-taxonomy` check in
+[`tools/corpuscheck/checks/`](../../tools/corpuscheck/checks/) together with its two fixture cases;
+the reconciliation of
+[`data-model.md`](../002-spec-aware-agent-runtime/data-model.md) §2.1 — three members added, one
+struck, one marked owed, and the bare `completed` corrected to `terminated.completed`; and the
+rewording of `Runner.attach`'s refusal message in [`src/runtime/runner.py`](../../src/runtime/runner.py),
+which cited §2.1 for a property §2.1 held only vacuously.
+
+**Propagated to** [`data-model.md`](../002-spec-aware-agent-runtime/data-model.md) §2.1, which carries
+the reconciled diagram, a dated note recording the strike, and the sentence naming `terminal.py` as
+the authority; [`src/runtime/runner.py`](../../src/runtime/runner.py) and
+`tests/unit/test_cancellation.py`, which assert the message together;
+[`tools/README.md`](../../tools/README.md)'s check table and family count; and
+[finding 027](../002-spec-aware-agent-runtime/findings/027-lifecycle-edge-set-divergence.md), whose §4
+question this closes and whose §1 census is now the check's specification.
+[`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) **T067** keeps `no_progress` and **loses
+`denied_operation`**, struck in place with a dated note, because a task still owing a member this
+decision struck would be a live instruction to reintroduce it.
 
 ## Open items this plan does not resolve
 
