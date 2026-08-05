@@ -544,12 +544,36 @@ each landed:
 | **3 — the real `unshare` plus the `unshare(0)` no-op arm** | **Not already discharged.** `src/supervisor/preflight.py`'s `namespaces` check reads `/proc/self/ns/` and `max_user_namespaces` only — presence and a sysctl, neither of which is a syscall attempt — so it cannot see a runtime-profile refusal at all. [`tasks.md`](../tasks.md) **T206** is the extension, and it carries the `--cap-add=SYS_ADMIN` warning in its remedy text |
 | **4 — managed container services are unsupported, not degraded** | [`spec.md`](../spec.md) at **FR-053**, as a note naming the four surfaces and the absent degraded tier; [`plan.md`](../plan.md)'s Complexity Tracking row and Target Platform note |
 
-**The unconstructible LSM layer is carried with all four**, at the Target Platform note, at the
+~~**The unconstructible LSM layer is carried with all four**~~ **The LSM layer *this host* could not
+construct is carried with all four**, at the Target Platform note, at the
 FR-053 note and in T206's own text, under the same *DERIVED, NOT TESTED* discipline the 5.14 kernel
 floor carries — because a condition derived from a layer nobody could measure must not read as a
 measured one. **`CAP_SETUID` is recorded as still open** at [`plan.md`](../plan.md)'s OD-24 note: a
 permissive deployment surface does not unblock finding 023's privilege model, and both constraints
 must hold.
+
+> #### ⚠️ SCOPED 2026-08-05 — an LSM refusal is constructible after all, and every claim in this document about *this* host still stands
+>
+> **Why the adjective was struck rather than the sentence.** *The unconstructible LSM layer* reads as a
+> property of the layer. It was never more than a property of the measuring host, and
+> [finding 023](./023-user-namespace-privilege-model.md)'s 2026-08-05 extension makes the wider reading
+> plainly false: an enforcing AppArmor refusal **was** constructed, on the `ubuntu-latest` runner, at
+> the `setgroups` and `uid_map` writes rather than at the `unshare` this document's probe issued. The
+> cell was being looked for at the wrong syscall.
+>
+> **Everything scoped to this host is untouched and is not restated.** The sentence *not merely
+> unconstructed but unconstructible here* in
+> [Negative controls](#negative-controls-including-the-two-i-could-not-construct)
+> is a true dated record of a host carrying no AppArmor and no SELinux, and it is left exactly as
+> written. So are the equivalently scoped statements in
+> [finding 025](./025-preflight-unshare-pair-measured.md), [`plan.md`](../plan.md) and
+> [`tasks.md`](../tasks.md).
+>
+> **What the four conditions still carry is unchanged in substance.** They are derived from a refusal
+> that nobody has measured **on these four surfaces**, of **FR-048's mount namespace** — a different
+> syscall on a different surface from the `uid_map` write finding 023 reached. The *DERIVED, NOT
+> TESTED* discipline stays, and it stays for that reason rather than because an LSM refusal is
+> unreachable anywhere.
 
 **One correction was made outside the four conditions.** [`plan.md`](../plan.md)'s OD-24 note carried
 the same over-strong inference this document flags in finding 023's reproduction section — that

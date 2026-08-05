@@ -1955,6 +1955,20 @@ question.
   > unconstructed. **The most consequential refusal is the one that could not be measured**, and
   > nothing here may be restated as though it were. This is the discipline the kernel floor above
   > carries, applied to a second derived claim.
+  >
+  > ⚠️ **Narrowed 2026-08-05 — an LSM refusal is no longer unconstructible *in this repository*, and
+  > that discharges nothing above.** [Finding 023](./findings/023-user-namespace-privilege-model.md)'s
+  > extension measured an enforcing AppArmor refusal on the `ubuntu-latest` CI runner: the
+  > `unprivileged_userns` profile does not refuse `unshare(CLONE_NEWUSER)` at all, it permits the call
+  > and transitions the caller onto a confining profile, and the refusal then lands on the
+  > **`setgroups` and `uid_map` writes**. So the cell was constructible all along and was being looked
+  > for at the wrong syscall. **What this entry needs is a different measurement entirely**: an LSM
+  > refusing **FR-048's mount namespace**, on **Fargate, Cloud Run, ACI or GKE Autopilot**. Different
+  > syscall, different surface, and none of those four has been probed by anything. **So the caveat
+  > above survives intact, on narrower and better-stated grounds**: not *nobody can construct an LSM
+  > refusal*, but *no measurement of these four surfaces exists*, and vendor documentation is still the
+  > whole of the basis. A reader arriving from finding 023 must neither discharge this caveat nor widen
+  > its reach.
 
 **Artifact versioning and rollback**
 
