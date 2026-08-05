@@ -644,6 +644,33 @@ against the source that caused them, plus the refusals that keep the tolerance h
   four arms on any host, which is the one place the static check is strictly stronger than the
   harness.
 
+### The emptiness-test inversion — `git diff` cannot tell "unchanged" from "changed back"
+
+**Read this before mounting this tree into a container.** On 2026-08-05 a pass bind-mounted the
+repository **read-write** into a container whose image carried its own copy of
+`src/supervisor/preflight.py` at the commit under test. The container copied that file over the
+working tree, silently reverting an entire unfinished implementation.
+
+The check meant to catch that was `git diff --stat`. It printed nothing — and nothing is what a clean
+tree prints, but nothing is *also* what a tree prints once your work has been replaced by the
+committed version. The check was **exactly inverted with respect to the failure it existed to
+catch**: the more completely the work was destroyed, the quieter the signal. An emptiness test over a
+diff against `HEAD` is satisfied by "I changed nothing" and by "my changes are gone" identically, and
+cannot separate them.
+
+`check_tampers.py` caught it two steps later by reporting `NO_MATCH` on all three new proofs, and the
+reason is structural rather than lucky: it reads for strings only the *new* implementation contains,
+so it is a **presence** test. A check that names what must be there fails loudly when it is not; a
+check that names what must be absent passes on an empty tree.
+
+Two defences, and the first is free:
+
+- **mount `:ro`.** No measurement over this tree needs write access to it. Every arm behind
+  [finding 026](../specs/002-spec-aware-agent-runtime/findings/026-pivot-root-check-measured.md) was
+  re-run read-only and reproduced identically.
+- **verify by presence, not absence** — `git status --short` on a tree you expect to be *dirty*, or a
+  grep for a string only your own work contains.
+
 ## Roles: who is authoritative
 
 `config.json` sorts every file into one of four roles, and the roles decide which
