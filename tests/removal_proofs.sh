@@ -1190,6 +1190,120 @@ proof "T046 attach — the resume edge is not taken and the loop runs unauthoris
   "tests/unit/test_runner.py::test_attach_resumes_an_interrupted_session_and_keeps_its_ceilings" \
   's = s.replace("        if row.state == STATE_INTERRUPTED:\n            transition = self.machine.resume(", "        if False:\n            transition = self.machine.resume(")'
 
+# ---------------------------------------------------------------------------
+# Capability 5 — the provider layer (T057-T061).
+#
+# Nine of the eleven below are **narrowings**, not deletions, and that is
+# deliberate: a tamper that breaks the module makes every test in it fail, which
+# reads as "the mechanism was load-bearing" and cannot distinguish that from
+# "the file no longer works". Each of these leaves the module importable and the
+# other arms green.
+
+# T059. The framing. A carrier that separated values instead of length-prefixing
+# them loses any payload containing the separator, and Google'"'"'s payloads are
+# arbitrary bytes. The tamper is the realistic version of that defect rather than
+# the reframing itself: a strip of what looks like padding. It leaves the frame
+# boundaries correct and only the value wrong, so nothing structural notices —
+# and every arm whose payload is base64 still passes.
+proof "T059 opaque framing — a trailing NUL is stripped off a payload as padding" \
+  src/runtime/providers/state.py \
+  "tests/unit/test_provider_state.py::test_a_payload_containing_a_nul_survives_the_round_trip" \
+  's = s.replace("        value = bytes(view[at:at + value_len])", "        value = bytes(view[at:at + value_len]).rstrip(b\"\\x00\")")'
+
+# T059. The one bit that says which carrier the provider used. Dropping the text
+# branch re-injects Anthropic'"'"'s signature as bytes into a field the SDK
+# serializes as a string. The *digest* is unchanged either way, so no
+# byte-identity assertion on our side of the wire can see it.
+proof "T059 carrier type — a text field is re-injected as bytes" \
+  src/runtime/providers/state.py \
+  "tests/unit/test_provider_state.py::test_a_text_carrier_comes_back_as_text_and_a_binary_one_as_bytes" \
+  's = s.replace("        return self.value.decode(_TEXT_CODEC) if self.text else bytes(self.value)", "        return bytes(self.value)")'
+
+# T059 and T-02. Keyed by provider, never merged. Without the check a blob from
+# one provider unpacks cleanly for another — the frames are ours, so nothing in
+# the format objects — and the failure downstream is a silently degraded turn
+# rather than an error the provider raises.
+proof "T059 provider keying — one provider's opaque state unpacks for another" \
+  src/runtime/providers/state.py \
+  "tests/unit/test_provider_state.py::test_one_providers_state_cannot_be_unpacked_by_another" \
+  's = s.replace("    if recorded != provider:\n        raise ProviderMismatchError(", "    if False:\n        raise ProviderMismatchError(")'
+
+# T059 and FR-037'"'"'s third clause — never logged readably. The tamper is the
+# change somebody debugging a state mismatch makes on purpose, and it discloses
+# the payload on every traceback and every debugger frame thereafter. Nothing
+# else in the suite reads a repr.
+proof "T059 repr — the opaque payload is disclosed by its own repr" \
+  src/runtime/providers/state.py \
+  "tests/unit/test_provider_state.py::test_the_payload_is_not_in_the_repr_or_the_str" \
+  's = s.replace("            f\"value=<{len(self.value)} opaque bytes>, text={self.text})\"", "            f\"value={self.value!r}, text={self.text})\"")'
+
+# T059 and T061. **The ADK defect itself**, planted. The counter still increments
+# so the loud guard never fires; the write simply does not happen. The request is
+# still well-formed, the provider still accepts it, the chain still runs and the
+# answer is still 149.99 — finding 016 measured all of that. Only the byte
+# comparison sees it.
+proof "T061 re-injection — the opaque state is counted as written and written nowhere" \
+  src/runtime/providers/state.py \
+  "tests/conformance/test_provider_state_roundtrip.py::test_the_opaque_field_survives_the_chain_byte_identically" \
+  's = s.replace("        if write_path(target, slot.path, slot.carrier()):\n            written += 1", "        if True:\n            written += 1")'
+
+# T061. The vacuity guard, and it is the proof this capability most needs. Every
+# byte-identity assertion above it is satisfied by a run in which the field never
+# appeared: there is nothing to compare and nothing to fabricate. Without this
+# line the silent cassette produces a green fixture that tested nothing, and the
+# arm that catches it is the one asserting the refusal.
+proof "T061 vacuity guard — a conditional over an empty population reports a pass" \
+  tests/conformance/test_provider_state_roundtrip.py \
+  "tests/conformance/test_provider_state_roundtrip.py::test_the_vacuity_guard_refuses_a_cassette_that_never_carries_state" \
+  's = s.replace("    assert report.present_turns, (", "    assert True, (")'
+
+# T057. The argument asymmetry, on one of the two providers that send a JSON
+# string. Skipping the parse hands the tool a mapping whose single key is
+# `arguments` and whose value is the whole JSON text, so the tool reports a
+# missing argument and the model retries — a translation fault wearing a model
+# failure'"'"'s clothes.
+proof "T057 argument codec — OpenAI's JSON-string arguments are forwarded unparsed" \
+  src/runtime/providers/schema.py \
+  "tests/unit/test_provider_schema.py::test_arguments_reach_the_tool_as_a_mapping_whatever_the_wire_said" \
+  's = s.replace("        parsed = json.loads(raw)", "        parsed = {\"arguments\": raw}")'
+
+# T057. Google matches a function response by **name**, so two calls to one name
+# in a turn are indistinguishable to the provider. Pairing them by position looks
+# right locally and attributes one call'"'"'s result to the other'"'"'s; the
+# model then answers confidently from the wrong row, which no assertion on the
+# answer'"'"'s shape can catch.
+proof "T057 Google ambiguity — two calls to one tool name are paired by position" \
+  src/runtime/providers/schema.py \
+  "tests/unit/test_provider_schema.py::test_two_google_calls_to_one_name_are_refused_rather_than_paired" \
+  's = s.replace("            if seen:\n                raise GoogleAmbiguousCallError(", "            if False:\n                raise GoogleAmbiguousCallError(")'
+
+# T058 and finding 016 result 9. The per-model branch inside one vendor. Without
+# it `claude-sonnet-5` is sent the request shape that model answers with HTTP
+# 400, and the failure arrives at the operator as a provider outage rather than
+# as a translation fault of ours.
+proof "T058 per-model branch — one request shape is sent to every Anthropic model" \
+  src/runtime/providers/wire_anthropic.py \
+  "tests/unit/test_provider_schema.py::test_the_anthropic_request_shape_branches_on_the_model_and_not_the_vendor" \
+  's = s.replace("        adaptive = model in ADAPTIVE_MODELS", "        adaptive = False")'
+
+# T060. The player'"'"'s only precondition on the request. Without it replay is
+# purely ordinal: a driver that dropped an assistant entry is handed exactly the
+# response it would have been handed anyway, and the recorded answer becomes an
+# answer to a question the driver did not ask.
+proof "T060 replay precondition — a request with a turn missing is answered anyway" \
+  tests/conformance/cassettes/harness.py \
+  "tests/unit/test_cassette_harness.py::test_a_conversation_of_the_wrong_length_is_refused" \
+  's = s.replace("        if conversation_length != interaction.request_turns:", "        if False:")'
+
+# T060. The quietest failure a cassette harness has: a fixture that consumed the
+# first interaction, passed, and reported a six-turn chain. The tamper leaves the
+# method present and returning cleanly, which is what the degraded version of it
+# would look like.
+proof "T060 exhaustion — a run that played one of six turns reports no news" \
+  tests/conformance/cassettes/harness.py \
+  "tests/unit/test_cassette_harness.py::test_a_player_that_served_some_turns_reports_the_rest" \
+  's = s.replace("        missing = sorted(\n            set(range(len(self.cassette.interactions))) - self._served)", "        missing = []")'
+
 echo
 if [ "$SKIP" -gt 0 ]; then
   echo "$PASS proved, $FAIL unproven, $SKIP skipped"
