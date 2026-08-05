@@ -6,11 +6,13 @@
 derived to measured, against a real seccomp refusal, by running **that check** rather than a
 re-implementation of it.
 **User Story**: US1, by way of FR-048 and [`tasks.md`](../tasks.md) **T206**.
-**Owner decision**: **none is recorded here and the register was not edited.** The next free owner
-decision number is `OD-26` — written inside a code span, which the corpus checker does not resolve
-as an identifier, because writing it as a live token before the register carries the entry is a hard
+**Owner decision**: **none is recorded here and the register was not edited.** For the next free owner
+decision number, read the register's high-water mark and add one; a number copied into a finding goes
+stale in the direction that tells the next author to reuse a taken one. When such a number is written
+down at all it goes inside a code span, which the corpus checker does not resolve as an identifier,
+because writing it as a live token before the register carries the entry is a hard
 `identifier-resolution` error. Nothing in this document rests on it. Same escape and same reason as
-[finding 024](./024-deployment-surface-permission-census.md)'s header.
+[finding 024](./024-deployment-surface-permission-census.md)'s header, which carries the reasoning.
 **Model spend**: **$0.0000.** No model was called and no credential was read. Twelve containers were
 run locally; the only network requests were one image pull and one fetch of a public seccomp profile.
 **Method**: our committed `namespaces` check, run unchanged inside eight container configurations

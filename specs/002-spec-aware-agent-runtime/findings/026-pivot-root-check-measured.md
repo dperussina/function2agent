@@ -6,9 +6,11 @@
 four of its five classification cells from derived to measured, by running **that check** inside
 container arms rather than a re-implementation of it.
 **User Story**: US1, by way of FR-048 and [`tasks.md`](../tasks.md) **T207** and **T208**.
-**Owner decision**: **none is recorded here and the register was not edited.** The next free owner
-decision number is `OD-26` — written inside a code span, which the corpus checker does not resolve
-as an identifier, because writing it as a live token before the register carries the entry is a hard
+**Owner decision**: **none is recorded here and the register was not edited.** For the next free owner
+decision number, read the register's high-water mark and add one; a number copied into a finding goes
+stale in the direction that tells the next author to reuse a taken one. When such a number is written
+down at all it goes inside a code span, which the corpus checker does not resolve as an identifier,
+because writing it as a live token before the register carries the entry is a hard
 `identifier-resolution` error. Same escape and same reason as
 [finding 025](./025-preflight-unshare-pair-measured.md)'s header. Nothing here rests on it.
 **Model spend**: **$0.0000.** No model was called and no credential was read. Roughly two dozen

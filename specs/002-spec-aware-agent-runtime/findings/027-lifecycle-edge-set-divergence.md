@@ -8,11 +8,15 @@
 [`src/runtime/session_state.py`](../../../src/runtime/session_state.py), taken while routing
 cancellation to a terminal state under [`tasks.md`](../tasks.md) **T047**.
 **User Story**: none directly. Bears on **FR-006** (the named terminal state) and **FR-007** (resume).
-**Owner decision**: **none is recorded here and the register was not edited.** The next free owner
-decision number is `OD-26` — written inside a code span, which the corpus checker does not resolve as
-an identifier, because writing it as a live token before the register carries the entry is a hard
-`identifier-resolution` error. Same escape and same reason as
-[finding 026](./026-pivot-root-check-measured.md)'s header. **§4 below is a question for the owner
+**Owner decision**: ~~none is recorded here and the register was not edited. The next free owner
+decision number is `OD-26`~~ — **corrected 2026-08-05, and this is the reservation's sharpest failure
+in the corpus: `OD-26` was taken by this finding's own pass**, which recorded
+`src/contracts/terminal.py` as authoritative for terminal-state membership. The number was falsified
+between the header being written and the pass ending. **For the next free owner decision number, read
+the register's high-water mark and add one.** When such a number is written down at all it goes inside
+a code span, which the corpus checker does not resolve as an identifier, because writing it as a live
+token before the register carries the entry is a hard `identifier-resolution` error. Same escape and
+same reason as [finding 026](./026-pivot-root-check-measured.md)'s header. **§4 below is a question for the owner
 and deliberately does not answer it.**
 **Owner decision, second pass (2026-08-05)**: **OD-26**, now written and no longer escaped. It answers
 §4 in favour of `src/contracts/terminal.py` and strikes `terminated.denied_operation`. The escape
