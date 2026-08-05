@@ -47,6 +47,192 @@ whole tree, and `026` was free at that moment and re-checked free immediately be
 
 ---
 
+> ## SUPERSEDED IN PART, 2026-08-05 (later the same day) — the escalation below was answered by measurement, and the answer is that there was no tradeoff to make
+>
+> The correction that follows this block escalated a choice: `EBUSY` resolved at any filter posture
+> costs a **false permit** (arm G), `EINVAL` gated on `Seccomp: 0` costs a **false refusal** (arm F),
+> and the two arms in each pair were declared "indistinguishable in every reading this check has".
+> That last clause was the defect. The readings were **one call short**, and the missing one is
+> cheap.
+>
+> **Both defects are now closed, no measured row moved, and the hardened-deployment posture pays
+> nothing.** Arms A–G were rebuilt against the new classifier and are retabulated below. The owner
+> declined the tradeoff and proposed the pair; the mechanism survived falsification, the decision
+> rule as proposed did **not**, and the difference is the whole of result 3.
+>
+> ### 1. A second invocation, differing only in its pointers
+>
+> `pivot_root` is issued **twice** in two forked children:
+>
+> | invocation | genuine kernel errno | why |
+> |---|---|---|
+> | `pivot_root("/", "/")` | `EBUSY`, or `EINVAL` on a shared-`/` host | the argument checks, as before |
+> | `pivot_root("/f2a-preflight-no-such-path", …)` | **`ENOENT`** | `user_path_at()` fails before anything else runs |
+>
+> **A seccomp filter cannot answer those two differently, and the kernel's own documentation is the
+> source rather than an inference.** `Documentation/userspace-api/seccomp_filter.rst`: *"BPF programs
+> may not dereference pointers which constrains all filters to solely evaluating the system call
+> arguments directly."* Both calls are the same syscall number on the same architecture, differing
+> only in two `const char __user *` arguments, and the filter runs **before syscall entry**. So a
+> filter that refuses returns its constant to *both*, and a filter that permits lets *both* through
+> to a kernel that separates them. Two different errnos therefore mean the kernel decided.
+>
+> This is the same shape as T206's `unshare` pair, and **it does not generalise back to it** — see
+> result 4.
+>
+> ### 2. The controls, rebuilt. Arm G flips, arm F flips, arm B2 does not move
+>
+> All arms on `6.12.76-linuxkit` under Docker Desktop, running the committed `_check_pivot_root`:
+>
+> | arm | `/` propagation | seccomp | cap | call 1 | call 2 | layer | vs. before |
+> |---|---|---:|---|---|---|---|---|
+> | **A** | private | `0` | yes | `EBUSY` | `ENOENT` | `available` | unchanged |
+> | **B** | shared | `0` | yes | `EINVAL` | `ENOENT` | `available` | unchanged |
+> | **C** | private | `2`, forges `22` | yes | `EINVAL` | `EINVAL` | `refused-unattributed` | unchanged |
+> | **D** | private | `2`, Docker default | yes | `EPERM` | `EPERM` | `runtime-seccomp-profile` | unchanged |
+> | **E** | private | `0` | **no** | `EPERM` | `EPERM` | `refused-unattributed` | unchanged |
+> | **F** | shared | `2`, **permits** `pivot_root` | yes | `EINVAL` | `ENOENT` | **`available`** | **was `refused-unattributed` — false refusal CLOSED** |
+> | **G** | private | `2`, **forges `16`** | yes | `EBUSY` | `EBUSY` | **`refused-unattributed`** | **was `available` — false permit CLOSED** |
+> | **B2** | private | `2`, **permits** `pivot_root` | yes | `EBUSY` | `ENOENT` | `available` | **unchanged — the row the tradeoff was protecting** |
+>
+> **B2 is the point.** The old code kept that row with an unconditional `EBUSY → available` branch,
+> which is exactly what arm G exploited. The pair keeps it for a reason that arm G cannot borrow:
+> `EBUSY` *beside* `ENOENT` is a pair no filter can produce. So the branch was deleted and the row
+> survived, which is what "no tradeoff" means here.
+>
+> **`Seccomp: 0` is no longer load-bearing for the verdict.** It is still read and still printed,
+> because the posture a measurement was taken under is evidence independent of the verdict, and
+> because of the limit in result 5.
+>
+> ### 3. The owner's decision rule was wrong, and the LSM cell is where it breaks
+>
+> The proposal was: *errnos differ ⟹ the call reached the kernel ⟹ resolve as permitted*. **That rule
+> is false, and the counterexample is the single most consequential cell in this document.**
+>
+> `security_sb_pivotroot()` runs **after** `user_path_at()`. So on a host whose AppArmor policy denies
+> `pivot_root`:
+>
+> | call | errno |
+> |---|---|
+> | `pivot_root("/", "/")` | **`EACCES`** — paths resolve, the LSM hook denies |
+> | absent path | **`ENOENT`** — path lookup fails first, the hook is never reached |
+>
+> Two different errnos, on a host that refused the syscall outright. The rule as stated reports it
+> **permitted**. That is a green containment gate over an LSM denial — the exact failure the whole
+> escalation was about, reintroduced by the fix for it.
+>
+> **And the capability gate has the same shape on new kernels, which is a correction to the ordering
+> table in the block below.** That table put `may_mount()` first. It is first in **v6.12**, and
+> mainline **hoisted the path lookup above it**:
+>
+> | | v6.12 `SYSCALL_DEFINE2(pivot_root)` | mainline `SYSCALL_DEFINE2` → `path_pivot_root()` |
+> |---|---|---|
+> | 1 | `may_mount()` → `EPERM` | `user_path_at(new_root)` → **`ENOENT`** |
+> | 2 | `user_path_at()` → `ENOENT` | `user_path_at(put_old)` → `ENOENT` |
+> | 3 | `security_sb_pivotroot()` → `EACCES` | `may_mount()` → `EPERM` |
+> | 4 | argument checks | `security_sb_pivotroot()` → `EACCES` |
+> | 5 | — | argument checks |
+>
+> So an **unprivileged mainline host** answers `EPERM` and `ENOENT` — distinct — where v6.12 answers
+> `EPERM` to both. Measured: the linuxkit 6.12 arm gave `EPERM` to *every* argument set, which is only
+> possible with `may_mount()` ahead of the lookup, and the mainline source is read above. The
+> ordering is **kernel-version-dependent**, and the previous block's table is correct only for 6.12.
+>
+> **What makes the implementation sound is the closed list, not a distinctness test.** The pair only
+> ever resolves a first-call errno drawn from `{EBUSY, EINVAL}`. Neither `EPERM` nor `EACCES` is on
+> that list, so both cases above are excluded **by construction** — the closed-list design from the
+> block below, which was adopted for a different reason, is what makes the pair safe. An explicit
+> guard rejects an authority errno appearing on *either* call as well; that state has not been
+> observed on any host and is written down as a guard rather than as a measured arm.
+>
+> ### 4. The pairing does **not** retroactively strengthen the `unshare` check, and cannot
+>
+> Asked directly, and the answer is no. `unshare(flags)` takes a **scalar** argument, and a scalar
+> register is precisely what `seccomp_data.args` carries and what a BPF program *can* branch on.
+> Filtering `unshare` by its flags is not exotic; it is what real profiles do. So `unshare(0)` beside
+> `unshare(CLONE_NEWUSER)` is a pair a filter **can** answer differently, and a difference there is
+> not evidence the kernel decided.
+>
+> The two pairs are doing different work, and conflating them would be an error: T206's pair
+> establishes **that a filter is the refusing layer**, by catching a filter discriminating on a flag
+> only a filter and the kernel both see. This pair establishes **that the kernel is the deciding
+> layer**, by catching that something discriminated on a pointer only the kernel can follow. The
+> pointer-blindness that makes this one sound has no analogue in `unshare`, because `unshare` has no
+> pointer arguments at all.
+>
+> ### 5. What this does not close, stated because the same page that supplies the premise supplies the hole
+>
+> - **`SECCOMP_RET_USER_NOTIF` and `SECCOMP_RET_TRACE`.** The same document: *"The task's memory is
+>   accessible to suitably privileged traces via `ptrace()` or `/proc/pid/mem`."* A supervisor on the
+>   other end of a notification fd **can** read both paths and answer the two calls differently.
+>   Container runtimes do not ship this; it is why the seccomp mode is still reported.
+> - **Branching on the pointer's numeric value.** `seccomp_data.args` carries the raw register, so a
+>   filter can compare an address to a constant — just not follow it. The addresses here are runtime
+>   values a profile author cannot predict, so this is unreachable rather than impossible.
+> - **An LSM returning an errno outside `{EPERM, EACCES}`.** The closed list is a list; an authority
+>   refusal wearing an unlisted errno would fall to the unresolved branch, which fails closed.
+>
+> ### 6. A safety property, measured the hard way
+>
+> `("/proc", "/proc")` was tried as the second argument set and **returned 0**. It pivoted the probe
+> child's root. That is harmless only because the probe forks and the child exits immediately — a
+> design justified until now by caution rather than by an event. It is no longer hypothetical, and it
+> is why the second invocation names a path that **cannot resolve**: it fails at `user_path_at()`
+> before any mount machinery runs, so it has no success path at all.
+>
+> ### 7. Proofs, and two that had to be rewritten because they did not fail
+>
+> The declared count is **98**, observed from `tools/check_tampers.py`. One proof was **repointed**
+> (the mechanism resolving `EBUSY` moved from an unconditional branch to the pair) and one was
+> **removed** (it protected a sentence that no longer exists). Four are new. Each was run and watched
+> to fail its named test, and **two did not fail on the first attempt**:
+>
+> | tamper | test | the failure it proves |
+> |---|---|---|
+> | unconditional `EBUSY → available` restored | `test_a_forged_constant_errno_is_not_resolved_by_the_pair` | **arm G**, a green gate over a filter that refuses the syscall |
+> | the authority guard dropped | `test_an_authority_errno_on_the_second_call_also_blocks_resolution` | a permit derived from a pair containing a refusal |
+> | the second invocation ignored | `test_the_pair_resolves_without_needing_the_seccomp_mode` | **arm F**, a red gate on a working host |
+> | the absent path replaced by `/proc` | `test_the_absent_path_probe_is_a_path_that_cannot_exist` | a probe that can pivot the child's root |
+>
+> **The two that did not fail are worth more than the two that did.**
+>
+> - The authority-guard test put the authority errno on the **first** call, where the pre-existing
+>   `EPERM`/`EACCES` branches catch it regardless. It asserted something true for a reason unrelated
+>   to the code it named. Rewritten to put the refusal on the **second** call, which is the only cell
+>   the guard actually owns.
+> - The absent-path test asserted `not Path(path).exists()`. **`/proc` does not exist on macOS**, so
+>   the tamper passed on the machine the suite runs on while being catastrophic on the only kind of
+>   host that runs the probe. That is the host-dependent-pass defect this document keeps recording,
+>   reproduced *inside a test written to prevent a different one*. Rewritten to assert the property
+>   that holds everywhere: the path carries an `f2a-` marker, so nothing an OS ships can collide with
+>   it. The `exists()` check is kept, guarded, and meaningful only where it can run.
+>
+> ### 8. Cross-reference — and the surviving explanation in result 7 below is now CONFIRMED
+>
+> Result 7 of the block below left one explanation standing: Ubuntu **permits** the `unshare` and
+> confines the result, moving the denial to the `uid_map` write. The probe was extended past the
+> `unshare` and run on the same runner (run **31022713003**), and the mechanism was **observed
+> directly** rather than inferred:
+>
+> | reading, unprivileged arm | value |
+> |---|---|
+> | label **before** `unshare` | `unconfined` |
+> | `unshare(CLONE_NEWUSER)` | **ok** |
+> | label **inside** the new namespace | **`unprivileged_userns (enforce)`** |
+> | `CapEff` inside the new namespace | `000001ffffffffff` — full |
+> | `setgroups` write | **`EACCES`** |
+>
+> The process enters `unshare` unconfined and comes out transitioned onto the confining profile. So
+> **this probe genuinely cannot construct `kernel-sysctl-or-lsm` at the `unshare`, on any Ubuntu 24.04
+> host** — the mechanism the cell was written for is not a refusal of the syscall this probe issues,
+> and `PREDICTED_LAYER` in [`tools/unshare_pair_observation.py`](../../../tools/unshare_pair_observation.py)
+> stays unedited because the prediction was falsified rather than mistaken about the host.
+>
+> The cell **is** constructible one step later, and the full reading — including whether the LSM
+> refusal and the `CAP_SETUID` question are one constraint or two — is in
+> [finding 023](./023-user-namespace-privilege-model.md), which is that document's question and not
+> this one's.
+
 > ## CORRECTED IN PART, 2026-08-05 — the `EBUSY` cell was one errno of a class, and pinning it turned CI red on a host that permits the syscall
 >
 > CI run **30970910828** at `6df7da0` — the commit this finding documents — failed its gating
