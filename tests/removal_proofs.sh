@@ -1067,6 +1067,33 @@ proof "T053 outstanding reservations — the totals ignore the call in flight" \
   "tests/contract/test_budget_ledger.py::test_an_unreconciled_reservation_keeps_counting" \
   's = s.replace("        committed = self.journal.totals(session_id)\n        held = self.outstanding(session_id)", "        committed = self.journal.totals(session_id)\n        held = ()")'
 
+# T054. **The one proof in this file that no single-process test can carry.** Every
+# other arm below is detected by something in tests/unit or tests/contract as well;
+# this tamper is detected by the SIGKILL battery and by nothing else — 564 unit and
+# contract tests pass with it applied. The reason is structural: within one attempt a
+# tool call is intended exactly once, so `intend` and `intend_once` are
+# indistinguishable, and the difference only exists for a process that resumed a turn
+# whose intent is already on disk.
+#
+# It is also the defect a real crash found rather than review. The first run of the
+# mid-step arm resumed a turn holding an unrecorded tool intent and the *resume*
+# raised, which is a worse failure than the repeat the arm was written to catch.
+proof "T054 resumed intent — the retry path re-intends a step that already has one" \
+  src/runtime/loop.py \
+  "tests/integration/test_resume_sigkill.py::test_a_mid_step_crash_re_executes_no_recorded_step" \
+  's = s.replace("        self.journal.intend_once(**self._call_intent(turn_index, call))", "        self.journal.intend(**self._call_intent(turn_index, call))")'
+
+# T055 deliberately carries **no** proof, and this note is here so the next reader
+# does not re-derive the search. Its subject is an emergent property — a total that
+# never goes backwards across three crashes — and every line that property rests on
+# is already detected by something cheaper: the totals living on disk by the two T053
+# proofs, the ceilings being recorded by T048's, the turn positions by T041's. The
+# two mechanisms it *would* uniquely cover cannot be reached: `reconcile`'s atomicity
+# needs a crash between the release and the measurement, and there is no pause point
+# inside a single transaction to hang one on. A proof targeting the battery for a
+# mechanism another test already refuses would report the battery as load-bearing on
+# evidence that belongs to the other test.
+
 # T056. FR-037 **across a crash**, which is a different mechanism from FR-037
 # within one attempt: the state a resumed process injects came out of the journal
 # rather than out of the response object still in memory. The tamper is confined
