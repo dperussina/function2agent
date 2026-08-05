@@ -2782,15 +2782,62 @@ repository, which is why it is a fallback rather than the decision.
 > supervisor running in a container under that profile cannot create a user namespace, and every
 > unprivileged probe behind this decision needed `--security-opt seccomp=unconfined` to run. **This is
 > a deployment constraint and not a probe artefact**, and it lands squarely on **OD-08**'s self-hosted
-> model, where what the operator's container runtime permits is not ours to choose. A concurrent pass
+> model, ~~where what the operator's container runtime permits is not ours to choose~~. A concurrent pass
 > has taken the first empirical reading — `unshare(CLONE_NEWUSER)` is `EPERM` under Docker's defaults
 > and `ok` with that one filter removed, while Landlock, seccomp user-notification and cgroup
 > delegation all live under a smaller privilege set — at
 > [`harness/pass-by-reference/results/20260804-kernel-facilities/`](./harness/pass-by-reference/results/20260804-kernel-facilities/README.md).
 > **That is one kernel, one architecture and one container runtime**, so it establishes the constraint
-> exists rather than how wide it is. **The schedule waits on the wider reading**, and this is a
+> exists rather than how wide it is. ~~**The schedule waits on the wider reading**~~, and this is a
 > sequencing statement rather than a condition on the model: the model is settled either way, and what
 > the surface decides is whether the fallback ships instead.
+>
+> > #### ⚠️ CORRECTED 2026-08-05 — ground ② no longer supports the deferral, by two different routes, and ground ① is doing all of the work
+> >
+> > Re-examined in [finding 028](../002-spec-aware-agent-runtime/findings/028-od24-deferral-re-examination.md).
+> > **The deferral survives. Ground ② does not, and the two strikes above fail for different reasons that
+> > must not be collapsed.**
+> >
+> > **The inference limb was falsified.** "Not ours to choose" was wrong.
+> > [Finding 024](../002-spec-aware-agent-runtime/findings/024-deployment-surface-permission-census.md)
+> > measured a custom seccomp profile that is Docker's *own default* with a widening, running the whole
+> > mount sequence at uid 1000 under `--cap-drop=ALL`. The operator does choose, and a bundle can ship
+> > the profile. The measured half of the clause — that the default profile blocks the call — stands.
+> >
+> > **The operative limb was *discharged*, not falsified, and the distinction is the ruling.** "The
+> > schedule waits on the wider reading" is a **sequencing clause**, as this entry says in terms: it
+> > waits on information rather than asserting a fact. That information has since arrived from both
+> > directions — finding 024 answered the width question across eight surfaces, and
+> > [finding 023](../002-spec-aware-agent-runtime/findings/023-user-namespace-privilege-model.md)'s
+> > extension measured the last unread layer on Ubuntu 24.04. **A ground that says "wait until we know"
+> > stops being a reason to wait once we know.** It was collected and spent. Nothing about it was wrong.
+> >
+> > **What the reading returned is a real constraint, but a different one, and it is stated here because
+> > this entry did not contain it.** The LSM restriction and the `CAP_SETUID` requirement are **not
+> > independent**: no posture binds exactly one. At `CapEff=0` the LSM refuses even the self-map, so the
+> > distinct map that `CAP_SETUID` guards is never reached; and holding capabilities in the initial
+> > namespace *disables* the LSM as a side effect, because Ubuntu's hook only transitions a process
+> > lacking `CAP_SYS_ADMIN`. Both therefore collapse onto one question — **may the supervisor hold
+> > capabilities in the initial user namespace?** — and a plan cannot satisfy one and report partial
+> > progress on the other.
+> >
+> > **Two consequences for anyone reading this entry to decide.** First, the sentence above saying the
+> > entry "must state both because either alone would be weaker" **is now wrong**: ground ① is untouched
+> > by everything measured since, holds under every privilege model including doing nothing, and is
+> > **sufficient alone**. Second, two misreadings are reachable from the unamended text and both are
+> > wrong — that ②'s discharge licenses starting the build, and that the deferral was never sound.
+> >
+> > **Retirement triggers, neither of which is a measurement.** Ground ① retires when a requirement asks
+> > for something mount flags cannot give and per-session uid isolation can — sessions unable to signal
+> > or `ptrace` one another, or distinct on-disk ownership. Nothing in the corpus asks that today. The
+> > replacement ground retires when the capability question above is settled either way. **No further
+> > probing of this kind will move the deferral**, which is the useful part.
+> >
+> > **This correction was owed and was missed once.** Finding 024's propagation note records it as having
+> > corrected "`plan.md`'s OD-24 note", and its relative link resolves to **feature 002's plan**, not to
+> > this document — which holds the entry. The falsified inference therefore stood live in the register
+> > for a day after the derived copy was struck, and no gate can see that, because a citation naming the
+> > right filename can still resolve to the wrong file.
 
 **What this decision does not license.**
 - **Not** a claim that the namespace closes an authority gap. It closes neither, measured, and the
