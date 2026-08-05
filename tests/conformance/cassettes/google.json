@@ -1,0 +1,279 @@
+{
+  "cassette_version": 1,
+  "provider": "google",
+  "model": "gemini-3-flash-preview",
+  "sdk": "google-genai",
+  "sdk_version": "2.16.0",
+  "provenance": {
+    "kind": "derived-shape-synthetic-payload",
+    "shape_source": "specs/001-discovery-validation/harness/provider-sdk-roundtrip/arm_google.py",
+    "shape_observed": "2026-08-03, finding 016, against the live API",
+    "payload_source": "synthetic",
+    "why": "Finding 016 committed digests and verdicts, not transcripts. There is no recorded provider response in this repository to build a cassette from, and recording one costs money to re-measure something finding 016 already measured.",
+    "note": "The one binary carrier. Payloads contain a NUL and a bare UTF-8 continuation byte on purpose."
+  },
+  "opaque_selectors": [
+    [
+      "contents",
+      "*",
+      "parts",
+      "*",
+      "thought_signature"
+    ]
+  ],
+  "interactions": [
+    {
+      "turn": 0,
+      "request_turns": 1,
+      "opaque": [
+        {
+          "path": [
+            "parts",
+            0,
+            "thought_signature"
+          ],
+          "carrier": "binary",
+          "b64": "AID+Z29vZ2xlLXR1cm4wAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh//AP4="
+        }
+      ],
+      "expected_state_digest": "sha256:eb385b5c20f502878916d17ad387a0f4d5b471b371bc87a2967f3e4fd6307845",
+      "response": {
+        "candidates": [
+          {
+            "content": {
+              "role": "model",
+              "parts": [
+                {
+                  "function_call": {
+                    "name": "lookup_customer",
+                    "args": {
+                      "customer_name": "Dana Whitfield"
+                    }
+                  },
+                  "thought_signature": {
+                    "$opaque": 0
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "usage_metadata": {
+          "prompt_token_count": 350,
+          "candidates_token_count": 40,
+          "thoughts_token_count": 120
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "request_turns": 3,
+      "opaque": [
+        {
+          "path": [
+            "parts",
+            0,
+            "thought_signature"
+          ],
+          "carrier": "binary",
+          "b64": "AID+Z29vZ2xlLXR1cm4xAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh//AP4="
+        }
+      ],
+      "expected_state_digest": "sha256:240b4b9be3c40548d6ca9afeb0c5ef31f6b07da0b42b8e556b7dcd7fe9bce4b0",
+      "response": {
+        "candidates": [
+          {
+            "content": {
+              "role": "model",
+              "parts": [
+                {
+                  "function_call": {
+                    "name": "list_orders",
+                    "args": {
+                      "customer_id": "CUS-4417"
+                    }
+                  },
+                  "thought_signature": {
+                    "$opaque": 0
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "usage_metadata": {
+          "prompt_token_count": 430,
+          "candidates_token_count": 43,
+          "thoughts_token_count": 120
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "request_turns": 5,
+      "opaque": [
+        {
+          "path": [
+            "parts",
+            0,
+            "thought_signature"
+          ],
+          "carrier": "binary",
+          "b64": "AID+Z29vZ2xlLXR1cm4yAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh//AP4="
+        }
+      ],
+      "expected_state_digest": "sha256:86ffa6f5aa22985ffc1dabba62393dccbdbc89607f65fe59fb41fcc3371c9440",
+      "response": {
+        "candidates": [
+          {
+            "content": {
+              "role": "model",
+              "parts": [
+                {
+                  "function_call": {
+                    "name": "get_order_lines",
+                    "args": {
+                      "order_id": "ORD-7731"
+                    }
+                  },
+                  "thought_signature": {
+                    "$opaque": 0
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "usage_metadata": {
+          "prompt_token_count": 510,
+          "candidates_token_count": 46,
+          "thoughts_token_count": 120
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "request_turns": 7,
+      "opaque": [
+        {
+          "path": [
+            "parts",
+            0,
+            "thought_signature"
+          ],
+          "carrier": "binary",
+          "b64": "AID+Z29vZ2xlLXR1cm4zAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh//AP4="
+        }
+      ],
+      "expected_state_digest": "sha256:8ed45f2bcd2df7c3d4c6623c0308d3ee2a47330f96dd5ed246368e63509914cf",
+      "response": {
+        "candidates": [
+          {
+            "content": {
+              "role": "model",
+              "parts": [
+                {
+                  "function_call": {
+                    "name": "get_line_price",
+                    "args": {
+                      "line_id": "LN-22"
+                    }
+                  },
+                  "thought_signature": {
+                    "$opaque": 0
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "usage_metadata": {
+          "prompt_token_count": 590,
+          "candidates_token_count": 49,
+          "thoughts_token_count": 120
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "request_turns": 9,
+      "opaque": [
+        {
+          "path": [
+            "parts",
+            0,
+            "thought_signature"
+          ],
+          "carrier": "binary",
+          "b64": "AID+Z29vZ2xlLXR1cm40AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh//AP4="
+        }
+      ],
+      "expected_state_digest": "sha256:deb243e206d6fea160228dabbd4ae3393e0097dffc794b4fd8b0ee7605b147af",
+      "response": {
+        "candidates": [
+          {
+            "content": {
+              "role": "model",
+              "parts": [
+                {
+                  "function_call": {
+                    "name": "apply_tax",
+                    "args": {
+                      "subtotal_usd": 139.99
+                    }
+                  },
+                  "thought_signature": {
+                    "$opaque": 0
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "usage_metadata": {
+          "prompt_token_count": 670,
+          "candidates_token_count": 52,
+          "thoughts_token_count": 120
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "request_turns": 11,
+      "opaque": [
+        {
+          "path": [
+            "parts",
+            0,
+            "thought_signature"
+          ],
+          "carrier": "binary",
+          "b64": "AID+Z29vZ2xlLXR1cm41AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh//AP4="
+        }
+      ],
+      "expected_state_digest": "sha256:f516f3a201412d7bbca3ab3e496ccf2d29cd9f8dce5c77a893049ae58779b151",
+      "response": {
+        "candidates": [
+          {
+            "content": {
+              "role": "model",
+              "parts": [
+                {
+                  "text": "The order total for Dana Whitfield is 149.99",
+                  "thought_signature": {
+                    "$opaque": 0
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "usage_metadata": {
+          "prompt_token_count": 750,
+          "candidates_token_count": 55,
+          "thoughts_token_count": 120
+        }
+      }
+    }
+  ]
+}

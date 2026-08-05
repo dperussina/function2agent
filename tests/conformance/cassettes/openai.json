@@ -1,0 +1,267 @@
+{
+  "cassette_version": 1,
+  "provider": "openai",
+  "model": "gpt-5-mini",
+  "sdk": "openai",
+  "sdk_version": "2.52.1",
+  "provenance": {
+    "kind": "derived-shape-synthetic-payload",
+    "shape_source": "specs/001-discovery-validation/harness/provider-sdk-roundtrip/arm_openai.py",
+    "shape_observed": "2026-08-03, finding 016, against the live API",
+    "payload_source": "synthetic",
+    "why": "Finding 016 committed digests and verdicts, not transcripts. There is no recorded provider response in this repository to build a cassette from, and recording one costs money to re-measure something finding 016 already measured.",
+    "note": "store=False with include=[reasoning.encrypted_content], the configuration where the provider keeps nothing and the round-trip is ours."
+  },
+  "opaque_selectors": [
+    [
+      "input",
+      "*",
+      "encrypted_content"
+    ]
+  ],
+  "interactions": [
+    {
+      "turn": 0,
+      "request_turns": 1,
+      "opaque": [
+        {
+          "path": [
+            0,
+            "encrypted_content"
+          ],
+          "carrier": "text",
+          "b64": "YjNCbGJtRnBMWFIxY200d0xXOXdZWEYxWlMwaElpTWtKU1luS0NrcUt5d3RMaTh3TVRJek5EVTJOemc1T2pzOFBUNC9RRUZDUTBSRlJrZEk="
+        }
+      ],
+      "expected_state_digest": "sha256:29db302e425e2631a2583f8809739d44d9528c56c23e526dafcfb3d6d052d0a6",
+      "response": {
+        "id": "resp_00",
+        "object": "response",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_00",
+            "summary": [],
+            "encrypted_content": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "function_call",
+            "id": "fc_00",
+            "call_id": "call_00",
+            "name": "lookup_customer",
+            "arguments": "{\"customer_name\": \"Dana Whitfield\"}"
+          }
+        ],
+        "usage": {
+          "input_tokens": 380,
+          "output_tokens": 55
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "request_turns": 3,
+      "opaque": [
+        {
+          "path": [
+            0,
+            "encrypted_content"
+          ],
+          "carrier": "text",
+          "b64": "YjNCbGJtRnBMWFIxY200eExXOXdZWEYxWlMwaElpTWtKU1luS0NrcUt5d3RMaTh3TVRJek5EVTJOemc1T2pzOFBUNC9RRUZDUTBSRlJrZEk="
+        }
+      ],
+      "expected_state_digest": "sha256:d57759efb27376181f08e29606b96a6d6e22f50d35ad541f9e7de430e1827237",
+      "response": {
+        "id": "resp_01",
+        "object": "response",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_01",
+            "summary": [],
+            "encrypted_content": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "function_call",
+            "id": "fc_01",
+            "call_id": "call_01",
+            "name": "list_orders",
+            "arguments": "{\"customer_id\": \"CUS-4417\"}"
+          }
+        ],
+        "usage": {
+          "input_tokens": 465,
+          "output_tokens": 59
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "request_turns": 5,
+      "opaque": [
+        {
+          "path": [
+            0,
+            "encrypted_content"
+          ],
+          "carrier": "text",
+          "b64": "YjNCbGJtRnBMWFIxY200eUxXOXdZWEYxWlMwaElpTWtKU1luS0NrcUt5d3RMaTh3TVRJek5EVTJOemc1T2pzOFBUNC9RRUZDUTBSRlJrZEk="
+        }
+      ],
+      "expected_state_digest": "sha256:4ba56a335690311c1c7abf66f12d25e7e66ee284a67728d7fe8c2e9aea8c6648",
+      "response": {
+        "id": "resp_02",
+        "object": "response",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_02",
+            "summary": [],
+            "encrypted_content": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "function_call",
+            "id": "fc_02",
+            "call_id": "call_02",
+            "name": "get_order_lines",
+            "arguments": "{\"order_id\": \"ORD-7731\"}"
+          }
+        ],
+        "usage": {
+          "input_tokens": 550,
+          "output_tokens": 63
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "request_turns": 7,
+      "opaque": [
+        {
+          "path": [
+            0,
+            "encrypted_content"
+          ],
+          "carrier": "text",
+          "b64": "YjNCbGJtRnBMWFIxY200ekxXOXdZWEYxWlMwaElpTWtKU1luS0NrcUt5d3RMaTh3TVRJek5EVTJOemc1T2pzOFBUNC9RRUZDUTBSRlJrZEk="
+        }
+      ],
+      "expected_state_digest": "sha256:c10de048dc055753071aaf5f07427f4f6f5b1bd99f80c95b90febe62e8bea1a4",
+      "response": {
+        "id": "resp_03",
+        "object": "response",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_03",
+            "summary": [],
+            "encrypted_content": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "function_call",
+            "id": "fc_03",
+            "call_id": "call_03",
+            "name": "get_line_price",
+            "arguments": "{\"line_id\": \"LN-22\"}"
+          }
+        ],
+        "usage": {
+          "input_tokens": 635,
+          "output_tokens": 67
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "request_turns": 9,
+      "opaque": [
+        {
+          "path": [
+            0,
+            "encrypted_content"
+          ],
+          "carrier": "text",
+          "b64": "YjNCbGJtRnBMWFIxY200MExXOXdZWEYxWlMwaElpTWtKU1luS0NrcUt5d3RMaTh3TVRJek5EVTJOemc1T2pzOFBUNC9RRUZDUTBSRlJrZEk="
+        }
+      ],
+      "expected_state_digest": "sha256:ce5a5989e42da345e0b2d749b4707993ec390df7fe0560b8dcbbec20de4b3238",
+      "response": {
+        "id": "resp_04",
+        "object": "response",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_04",
+            "summary": [],
+            "encrypted_content": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "function_call",
+            "id": "fc_04",
+            "call_id": "call_04",
+            "name": "apply_tax",
+            "arguments": "{\"subtotal_usd\": 139.99}"
+          }
+        ],
+        "usage": {
+          "input_tokens": 720,
+          "output_tokens": 71
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "request_turns": 11,
+      "opaque": [
+        {
+          "path": [
+            0,
+            "encrypted_content"
+          ],
+          "carrier": "text",
+          "b64": "YjNCbGJtRnBMWFIxY200MUxXOXdZWEYxWlMwaElpTWtKU1luS0NrcUt5d3RMaTh3TVRJek5EVTJOemc1T2pzOFBUNC9RRUZDUTBSRlJrZEk="
+        }
+      ],
+      "expected_state_digest": "sha256:34c542e232e68303e79758b39d6f4550400688186974fc116b8c1501a449736b",
+      "response": {
+        "id": "resp_05",
+        "object": "response",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_05",
+            "summary": [],
+            "encrypted_content": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "message",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "The order total for Dana Whitfield is 149.99"
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 805,
+          "output_tokens": 75
+        }
+      }
+    }
+  ]
+}

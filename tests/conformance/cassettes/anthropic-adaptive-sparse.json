@@ -1,0 +1,206 @@
+{
+  "cassette_version": 1,
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "sdk": "anthropic",
+  "sdk_version": "0.120.2",
+  "provenance": {
+    "kind": "derived-shape-synthetic-payload",
+    "shape_source": "specs/001-discovery-validation/harness/provider-sdk-roundtrip/arm_anthropic.py",
+    "shape_observed": "2026-08-03, finding 016, against the live API",
+    "payload_source": "synthetic",
+    "why": "Finding 016 committed digests and verdicts, not transcripts. There is no recorded provider response in this repository to build a cassette from, and recording one costs money to re-measure something finding 016 already measured.",
+    "note": "Finding 016 result 8: claude-sonnet-5 under adaptive thinking emitted opaque state on 2 of 6 runs in the committed batch. This cassette is that ratio, and it is what makes the fixture's assertion a conditional rather than a presence check."
+  },
+  "opaque_selectors": [
+    [
+      "messages",
+      "*",
+      "content",
+      "*",
+      "signature"
+    ]
+  ],
+  "interactions": [
+    {
+      "turn": 0,
+      "request_turns": 1,
+      "opaque": [],
+      "expected_state_digest": null,
+      "response": {
+        "id": "msg_00",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_00",
+            "name": "lookup_customer",
+            "input": {
+              "customer_name": "Dana Whitfield"
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 400,
+          "output_tokens": 60
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "request_turns": 3,
+      "opaque": [
+        {
+          "path": [
+            "content",
+            0,
+            "signature"
+          ],
+          "carrier": "text",
+          "b64": "WVc1MGFISnZjR2xqTFhSMWNtNHhMVzl3WVhGMVpTMGhJaU1rSlNZbktDa3FLeXd0TGk4d01USXpORFUyTnpnNU9qczhQVDQvUUVGQ1EwUkZSa2RJ"
+        }
+      ],
+      "expected_state_digest": "sha256:78303eb2bc41f6b633bf4b31561c658a331c0e82d066302263902a5db0397fa0",
+      "response": {
+        "id": "msg_01",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "working on hop 1",
+            "signature": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "tool_use",
+            "id": "toolu_01",
+            "name": "list_orders",
+            "input": {
+              "customer_id": "CUS-4417"
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 490,
+          "output_tokens": 65
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "request_turns": 5,
+      "opaque": [],
+      "expected_state_digest": null,
+      "response": {
+        "id": "msg_02",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_02",
+            "name": "get_order_lines",
+            "input": {
+              "order_id": "ORD-7731"
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 580,
+          "output_tokens": 70
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "request_turns": 7,
+      "opaque": [],
+      "expected_state_digest": null,
+      "response": {
+        "id": "msg_03",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_03",
+            "name": "get_line_price",
+            "input": {
+              "line_id": "LN-22"
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 670,
+          "output_tokens": 75
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "request_turns": 9,
+      "opaque": [
+        {
+          "path": [
+            "content",
+            0,
+            "signature"
+          ],
+          "carrier": "text",
+          "b64": "WVc1MGFISnZjR2xqTFhSMWNtNDBMVzl3WVhGMVpTMGhJaU1rSlNZbktDa3FLeXd0TGk4d01USXpORFUyTnpnNU9qczhQVDQvUUVGQ1EwUkZSa2RJ"
+        }
+      ],
+      "expected_state_digest": "sha256:811d21a8369fa856341681f855ab1395d9cc277d3d9ec1a1d45f4d9f85fce47c",
+      "response": {
+        "id": "msg_04",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "working on hop 4",
+            "signature": {
+              "$opaque": 0
+            }
+          },
+          {
+            "type": "tool_use",
+            "id": "toolu_04",
+            "name": "apply_tax",
+            "input": {
+              "subtotal_usd": 139.99
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 760,
+          "output_tokens": 80
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "request_turns": 11,
+      "opaque": [],
+      "expected_state_digest": null,
+      "response": {
+        "id": "msg_05",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "The order total for Dana Whitfield is 149.99"
+          }
+        ],
+        "usage": {
+          "input_tokens": 850,
+          "output_tokens": 85
+        }
+      }
+    }
+  ]
+}
