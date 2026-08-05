@@ -54,6 +54,111 @@ caught after the fact"*. That is exactly what happened, and the after-the-fact c
 
 ---
 
+> ## EXTENDED 2026-08-05 — the LSM refusal cell is CONSTRUCTIBLE after all, it lands on this document's `uid_map` write, and "two independent constraints" is wrong about the independence rather than about the count
+>
+> **Nothing below is struck.** Every measurement in this document reproduces exactly, on a second
+> host, including on the arm that has an LSM. What is added is a mechanism this document could not
+> see, because no surface available when it was written had AppArmor enforcing.
+>
+> [Finding 026](./026-pivot-root-check-measured.md) measured, on `ubuntu-latest`:
+> `kernel.apparmor_restrict_unprivileged_userns` = `1`, AppArmor **enforcing**, the
+> `unprivileged_userns` profile **loaded** among 123, the process label `unconfined`, `CapEff=0` — and
+> `unshare(CLONE_NEWUSER)` **permitted anyway**. Every precondition for the restriction to fire was
+> present and the namespace was created. The surviving explanation was that Ubuntu permits the
+> `unshare` and confines the *result*, which would move the denial to this document's `uid_map` write.
+> The probe was extended past the `unshare` and run on that runner (run **31022713003**).
+>
+> **It is confirmed, and by direct observation of the mechanism rather than by inference from a
+> denial.**
+>
+> ### 1. The readings
+>
+> Both arms read their label *inside* the new namespace, which is what separates an LSM from the
+> capability check that was always there:
+>
+> | reading | unprivileged arm (`CapEff=0`) | privileged arm (`sudo`) |
+> |---|---|---|
+> | label **before** `unshare` | `unconfined` | `unconfined` |
+> | `unshare(CLONE_NEWUSER)` | **ok** | ok |
+> | label **inside** the new namespace | **`unprivileged_userns (enforce)`** | `unconfined` |
+> | `CapEff` inside the new namespace | **`000001ffffffffff`** — full | `000001ffffffffff` |
+> | write `deny` to `setgroups` | **`EACCES`** | ok |
+> | write self-map `0 1001 1` | **`EPERM`** | ok |
+> | write distinct map `0 100000 1`, by the parent | `EPERM` | **ok** |
+>
+> **The third row is the whole finding.** The process enters `unshare` labelled `unconfined` and comes
+> out labelled `unprivileged_userns` in **enforce** mode. That is Ubuntu's restriction, observed doing
+> the thing it does: it does not refuse the namespace, it transitions the creator onto a confining
+> profile. `apparmor_userns_create()` in mainline carries no such sysctl, so no source read could have
+> settled this — only a host with the patched kernel and the profile loaded, which is why the cell
+> looked unconstructible.
+>
+> ### 2. The refusal is AppArmor's, and the `CapEff` row proves it without needing a control
+>
+> `CapEff` **inside** the new namespace is `000001ffffffffff` — the full set, which is what a fresh
+> user namespace always grants its creator — and the writes fail anyway. A refusal at a full effective
+> capability set is not the ordinary capability check. Two further separations:
+>
+> - **`setgroups` answers `EACCES`, which is AppArmor's errno**, not `EPERM`. Writing `deny` to
+>   `setgroups` is the *permissive* direction and is exactly what an unprivileged process is supposed
+>   to be able to do before writing a map.
+> - **The same two writes were measured on a host with no LSM at all.** On `6.12.76-linuxkit` under
+>   Docker at `CapEff=0`: `setgroups` **ok**, self-map **ok**. Same operations, same posture, opposite
+>   answers. The variable is AppArmor.
+>
+> So this is a **`kernel-sysctl-or-lsm` refusal, measured** — the cell
+> [finding 024](./024-deployment-surface-permission-census.md) and finding 026 both recorded as
+> unconstructed on every available surface. It is constructible; it was being looked for at the wrong
+> syscall.
+>
+> ### 3. Are the LSM refusal and the `CAP_SETUID` question one constraint or two?
+>
+> The framing this document has been read with is *two independent constraints that must both hold*.
+> **The count is right and the independence is wrong**, and the distinction matters because it changes
+> what a green deployment surface buys.
+>
+> **Mechanically they are two, and they are not the same check:**
+>
+> | | what fires it | what it refuses | present on |
+> |---|---|---|---|
+> | **A — the LSM** | an `unconfined` process without `CAP_SYS_ADMIN` creating a user namespace | *everything* — `setgroups`, and even the self-map that needs no capability | only a host with Ubuntu's patch, the sysctl on, and the profile loaded |
+> | **B — `CAP_SETUID`** | a map naming a uid other than the writer's | only the distinct map; the self-map is permitted | **every** Linux host, LSM or not |
+>
+> They refuse different things, with different errnos, from different subsystems, and B is the one
+> this document measured on a host that has no A at all.
+>
+> **Operationally they collapse to one question, and this is the correction.** They are not
+> independent, because a single posture change disables both and no posture binds exactly one:
+>
+> - At `CapEff=0`, **A fires first and B is never reached.** A refuses the self-map, so the writer
+>   never gets as far as the distinct map that B guards. Measured above: self-map `EPERM`.
+> - Holding capabilities in the initial user namespace **disables A as a side effect**, because
+>   Ubuntu's hook only transitions a process that lacks `CAP_SYS_ADMIN` there. Measured above: the
+>   privileged arm's label inside the namespace stayed `unconfined`, and every write succeeded.
+>
+> So there is **no posture on this host where A binds and B does not, or B binds and A does not.**
+> Both answer to *does the supervisor hold capabilities in the initial user namespace?* — which is
+> already this document's [`OD-24`/`OD-25`](#where-the-decision-is-recorded-and-why-this-pass-did-not-write-it)
+> question. Two mechanisms, one remedy, one decision.
+>
+> **What this changes for a deployment surface.** Treating them as independent invites a plan that
+> satisfies one and reports partial progress — "we have `CAP_SETUID`, the LSM is a separate work
+> item". That plan is incoherent: a supervisor holding `CAP_SETUID` in the initial namespace is
+> already outside A's trigger, and a supervisor holding nothing fails A before B is legible. The
+> honest statement is that the multi-line uid map needs a capable writer, and that on Ubuntu 24.04
+> the LSM makes the *incapable* case fail earlier and harder than this document measured.
+>
+> ### 4. What is still not measured
+>
+> - **Whether A can be satisfied without capabilities**, by a `newuidmap` setuid helper — the third
+>   option in this document's [decision](#where-the-decision-is-recorded-and-why-this-pass-did-not-write-it).
+>   `newuidmap` is itself AppArmor-profiled on Ubuntu and was not run here.
+> - **The privileged arm is `sudo` on a runner, not a supervisor design.** It shows the trigger
+>   condition, not that holding capabilities is the right answer.
+> - **One distribution, one kernel.** A is Ubuntu's patch. It is not upstream and says nothing about
+>   RHEL, Debian or SUSE.
+
+
 > ## Read this first: the mechanism you doubted is fine, and the reason you gave for it being fine is not the reason
 >
 > **Seccomp user-notification was never at risk, and the listener's position is irrelevant to
