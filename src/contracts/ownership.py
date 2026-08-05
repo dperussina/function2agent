@@ -65,6 +65,17 @@ OWNERSHIP: tuple[TableOwnership, ...] = (
     # turn journal, budget ledger, trace, result, drift signal → runtime.
     _own("turn_journal", ROLE_RUNTIME, ROLE_ANALYSIS),
     _own("budget_ledger", ROLE_RUNTIME, ROLE_ANALYSIS),
+    _own("budget_reservation", ROLE_RUNTIME, ROLE_ANALYSIS,
+         note="T053's reserve-then-reconcile half (U-30). The measured "
+              "consumption is `budget_ledger`; this holds what was reserved "
+              "before a call whose cost is not yet known, so that a SIGKILL "
+              "during the call over-counts rather than under-counts. "
+              "**A second table rather than more rows in budget_ledger**, "
+              "because a reservation is released by appending a release row "
+              "and `Consumption` refuses a negative — a release expressed as "
+              "a correction in budget_ledger would have to be one. Same "
+              "writer, same reader, and the same FR-035 scope columns, so the "
+              "two are summed by one caller (src/runtime/ledger.py)."),
     _own("session_ceiling", ROLE_RUNTIME, ROLE_ANALYSIS,
          note="FR-005's last clause: 'Every one of the four ceilings, and the "
               "cumulative total against it, MUST be recorded with the "
