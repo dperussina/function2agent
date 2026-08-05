@@ -160,9 +160,49 @@ full and which no restatement may be weaker than.
 > is untouched. What replaces the second is a *different* reason to wait rather than an absence of
 > one: [finding 023](./findings/023-user-namespace-privilege-model.md)'s question of whether the
 > supervisor may hold `CAP_SETUID` is open, and a runtime that permits `unshare` does not answer it.
-> **The two constraints are independent and both must hold.** A permissive deployment surface plus a
+> ~~**The two constraints are independent and both must hold.** A permissive deployment surface plus a
 > supervisor that cannot write a multi-line uid map produces the self-mapped namespace finding 023
-> measured the hazards of, which is worse than not entering one.
+> measured the hazards of, which is worse than not entering one.~~
+>
+> > #### ⚠️ CORRECTED 2026-08-05 — the count was right and the independence was not, and the deferral gets *stronger* rather than weaker
+> >
+> > **The live statement.** There are still two constraints and both still bind, but they are not
+> > independent: **no posture binds exactly one, so a plan cannot satisfy one and report partial
+> > progress on the other.** Both answer to a single question — *does the supervisor hold capabilities
+> > in the initial user namespace?*
+> >
+> > **Why the independence fell.**
+> > [Finding 023](./findings/023-user-namespace-privilege-model.md)'s 2026-08-05 extension measured, on
+> > the `ubuntu-latest` runner, that Ubuntu's AppArmor does not refuse `unshare(CLONE_NEWUSER)` at all:
+> > it permits the call and confines the result, so the process enters `unshare` labelled `unconfined`
+> > and comes out labelled `unprivileged_userns (enforce)`, and the refusal lands on the `setgroups`
+> > and `uid_map` writes instead. From there, both halves of the collapse are observed. At `CapEff=0`
+> > the LSM refuses even the *self*-map, so the distinct-map write that `CAP_SETUID` guards is never
+> > reached. And holding capabilities in the initial user namespace **disables the LSM as a side
+> > effect**, because Ubuntu's hook only transitions a process that lacks `CAP_SYS_ADMIN` there. The
+> > two are still mechanically distinct — different subsystems, different errnos, refusing different
+> > things, and only `CAP_SETUID` exists on a host with no AppArmor — which is why the *count* is
+> > untouched.
+> >
+> > **What the struck sentence licensed, and this is why it had to go.** Independence invites a plan
+> > that satisfies one constraint and books progress on the other — *"we hold `CAP_SETUID`, the LSM is
+> > a separate work item"*. No such plan exists: a supervisor holding `CAP_SETUID` is already outside
+> > the LSM's trigger, and a supervisor holding nothing fails the LSM before `CAP_SETUID` is legible.
+> >
+> > **`OD-24` is unchanged and the deferral is not reopened.** Its first ground — the landed repairs
+> > close finding 021's gaps under every privilege model — is untouched here as well. What replaced its
+> > second ground was *two things must both hold*; what replaces that in turn is *there is no partial
+> > progress available on either*, which is a stronger reason to wait, not a weaker one.
+> >
+> > **The second struck sentence is surface-dependent rather than false, and this is its scoped
+> > form.** On a surface **without** Ubuntu's restriction the hazard is exactly as it was written and
+> > is measured: at `CapEff=0` on `6.12.76-linuxkit`, which carries no LSM at all, `setgroups` and the
+> > self-map both succeed, so a permissive surface plus a supervisor that cannot write a multi-line map
+> > does produce the self-mapped namespace finding 023 measured the hazards of. **On Ubuntu 24.04 with
+> > the restriction in force it does not**: the self-map answers `EPERM`, so what results is a
+> > namespace with *no* map rather than a self-mapped one — a different failure, and one that fails
+> > earlier and harder than finding 023 measured. Neither surface makes the namespace safe to enter
+> > without a capable writer, which is the reason the deferral does not move on either.
 
 > **Extended 2026-08-04 — the three facilities being present in the kernel does not make them
 > reachable from the runtime the operator runs, and the bundle is where the difference is closed.**

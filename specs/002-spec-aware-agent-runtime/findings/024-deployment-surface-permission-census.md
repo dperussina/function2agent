@@ -439,10 +439,39 @@ and that is a property of the requirement rather than of the surfaces.
 **What this does not decide.** Whether the supervisor holds `CAP_SETUID` — finding 023's central
 open question — is untouched by anything measured here, and it is the harder of the two. This
 document establishes that the *runtime* will permit the namespace; finding 023 establishes that the
-namespace is not useful without a multi-line uid map, and that writing one needs a capability. **The
+namespace is not useful without a multi-line uid map, and that writing one needs a capability. ~~**The
 two constraints are independent and both must hold.** A surface that permits `unshare` and a
 supervisor that cannot write a map produces the self-mapped namespace whose hazards finding 023
-measured.
+measured.~~
+
+> #### ⚠️ CORRECTED 2026-08-05 — the count survives, the independence does not, and nothing measured in this document moves
+>
+> **The live statement.** Both constraints still exist and both still bind. What is false is that they
+> can be satisfied separately: **no posture binds exactly one, so a plan cannot satisfy one constraint
+> and report partial progress on the other.**
+>
+> [Finding 023](./023-user-namespace-privilege-model.md)'s 2026-08-05 extension measured, on the
+> `ubuntu-latest` runner, that Ubuntu's AppArmor permits `unshare(CLONE_NEWUSER)` and confines the
+> result — the process enters `unshare` labelled `unconfined` and comes out labelled
+> `unprivileged_userns (enforce)` — so the refusal lands on the `setgroups` and `uid_map` writes.
+> Two consequences follow, both observed there. At `CapEff=0` the LSM refuses even the *self*-map, so
+> the distinct-map write `CAP_SETUID` guards is never reached. And holding capabilities in the initial
+> user namespace disables the LSM as a side effect, because Ubuntu's hook only transitions a process
+> that lacks `CAP_SYS_ADMIN` there. **Mechanically they remain two** — different subsystems, different
+> errnos, refusing different things, and only `CAP_SETUID` exists on a host with no AppArmor — which
+> is why the count is untouched and only the independence is struck.
+>
+> **The second struck sentence is surface-dependent rather than wrong.** On a surface without the
+> restriction it holds exactly as written, and the kernel every arm of this document ran on is one of
+> them — though the measurement is finding 023's and not this document's: its extension records
+> `setgroups` and the self-map both succeeding at `CapEff=0` on `6.12.76-linuxkit`. On Ubuntu 24.04
+> with the restriction in force the self-map answers `EPERM` instead, so an incapable supervisor gets
+> a namespace with **no** map rather than a self-mapped one.
+>
+> **Nothing this document measured changes.** The falsified claim is a framing written in *What this
+> does not decide* about a question this document explicitly did not decide, and the corrected framing
+> makes that question harder rather than easier. The same correction is applied at
+> [`plan.md`](../plan.md)'s OD-24 note, where the sentence also appeared.
 
 ## What remains unverified
 
