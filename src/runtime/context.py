@@ -148,8 +148,7 @@ def states_for(
 
     **Why every one and not the latest.** This returned a single blob until
     2026-08-05 — the most recent non-`None` state — and FR-037 says *never
-    dropped*. All four vendors want the whole chain and three of them enforce
-    it:
+    dropped*. All four vendors' documentation asks for the whole chain:
 
     - **OpenAI Responses**: *"Preserve and replay every returned reasoning
       item"* under `store=False`, and the function-calling cookbook is blunter
@@ -166,8 +165,26 @@ def states_for(
       Opus 4.5 / Sonnet 4.6 and later it does not apply at all — those models
       keep every prior turn's blocks.
 
-    Only Anthropic degrades quietly on a miss; the other three fail the request.
-    Neither is a reason to send less.
+    **All four of those readings are vendor documentation and none of them is
+    measured. See finding 030, which is about exactly that.** Corrected
+    2026-08-05, hours after the paragraph above landed: this said *"three of
+    them enforce it"* and *"Only Anthropic degrades quietly on a miss; the
+    other three fail the request."* Only OpenAI's and Google's quotes carry
+    error language. **xAI's is an imperative**, and the one live arm in this
+    corpus bearing on it points the other way — finding 016's negative control
+    blanked `encrypted_content` on every assistant message of a `grok-4.5`
+    chain and recorded `provider_errored: false`. Whether xAI rejects a chain
+    with a *hole* in it, as against one carrying *nothing*, is a different
+    request and is unmeasured. Anthropic's quiet degradation has never been
+    observed in either direction.
+
+    **None of that is a reason to send less**, and the asymmetry is the reason:
+    FR-037 says never dropped whatever a vendor does; the mis-attachment
+    `reinject` now refuses is wrong on every provider; and being wrong in this
+    direction costs input tokens, where being wrong in the other costs a
+    rejected request on the two providers that document one and a silently
+    degraded turn on Anthropic — which finding 016 result 7 measured to be
+    invisible in the answer.
 
     **T-02 is unchanged and is why this stops rather than filters.** Handing
     another provider's state over would hand an opaque blob to something that

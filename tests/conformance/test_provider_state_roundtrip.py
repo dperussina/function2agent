@@ -48,8 +48,10 @@ half and nothing offline reaches it.
 the next request, not only the previous turn's. It did not before. This fixture
 recorded the limit — *"exactly one turn's opaque field is carried forward and
 every earlier one is dropped"* — and left open whether any provider minded. All
-four do, and three reject the request outright; the evidence is in
-`src/runtime/context.py::states_for`. The premise the limit rested on was also
+four vendors' documentation says they do; the readings are in
+`src/runtime/context.py::states_for` and **all four are derived, none measured**
+(finding 030, which also records that the one live arm bearing on the xAI
+reading contradicts it). The premise the limit rested on was also
 wrong: Anthropic does not want only the immediately preceding assistant turn,
 because **a tool-use loop is one assistant turn** and within one *"you must pass
 the thinking blocks from the assistant message back to the API, complete and
@@ -406,13 +408,15 @@ def check_roundtrip(report: Report) -> None:
             f"{report.provider} turn {observation.turn}: the request carried "
             f"{_shape(observation.carried)} where turns 0..{observation.turn - 1} "
             f"together produced {_shape(tuple(accumulated))}. Every one of "
-            "them belongs in this request. All four vendors say so and three "
-            "of them say it as a hard error: OpenAI *\"preserve and replay "
-            "every returned reasoning item\"*, Google validates every step of "
-            "the current turn and 400s on a missing one, xAI *\"always pass "
-            "the full output array back verbatim\"*, and Anthropic requires "
-            "the thinking block on every assistant message inside a tool-use "
-            "turn because the whole loop is one turn."
+            "them belongs in this request. All four vendors' documentation "
+            "says so and two of them say it as a hard error: OpenAI "
+            "*\"preserve and replay every returned reasoning item\"* and "
+            "Google 400s on a missing one, while xAI *\"always pass the full "
+            "output array back verbatim\"* and Anthropic's requirement that "
+            "the thinking block ride on every assistant message inside a "
+            "tool-use turn are both imperatives rather than documented "
+            "refusals. **All four readings are derived and none is measured "
+            "— finding 030.**"
         )
         accumulated.extend(observation.declared)
 
