@@ -57,15 +57,55 @@ def pytest_configure(config: pytest.Config) -> None:
     as a removal proof that reports `proved` because pytest was missing — so it
     is fixed rather than documented. The redirect is conditional on the budget
     actually being exceeded, so on Linux and in CI nothing changes.
+
+    **The directory is keyed by pid, not by uid alone.** Keyed by uid it was
+    shared, and this hook begins by deleting it: a second run starting while a
+    first was still going deleted the live tree underneath it, surfacing as a
+    `FileNotFoundError` from whichever test next touched `tmp_path` and naming
+    nothing about the cause. That is the fault above wearing different clothes,
+    and it reaches exactly the concurrent runs this repository does routinely.
+    Reaping is therefore narrowed to directories whose owning process is gone.
     """
     if config.option.basetemp is not None:
         return
     if len(tempfile.gettempdir()) + _TMP_PATH_SUFFIX_BUDGET <= _SUN_PATH_MAX:
         return
-    short = os.path.join("/tmp", f"f2a-pytest-{os.getuid()}")
+    root = os.path.join("/tmp", f"f2a-pytest-{os.getuid()}")
+    _reap_abandoned_basetemps(root)
+    short = os.path.join(root, str(os.getpid()))
+    # Failing loudly here rather than proceeding: a redirect that overflows the
+    # budget reintroduces the very overflow it exists to prevent, and would do
+    # it silently, since the socket error names the path and not this hook.
+    if len(short) + _TMP_PATH_SUFFIX_BUDGET > _SUN_PATH_MAX:
+        raise RuntimeError(
+            f"redirected basetemp {short!r} still exceeds the sun_path budget "
+            f"({len(short)} + {_TMP_PATH_SUFFIX_BUDGET} > {_SUN_PATH_MAX})"
+        )
     shutil.rmtree(short, ignore_errors=True)
     os.makedirs(short, exist_ok=True)
     config.option.basetemp = short
+
+
+def _reap_abandoned_basetemps(root: str) -> None:
+    """Remove per-pid basetemps whose owning process has exited.
+
+    Per-pid directories leak where a shared one did not, so they are cleaned on
+    the next run instead. Liveness is the only safe predicate available: mtime
+    would delete the tree of a long run that happened to be idle.
+    """
+    try:
+        names = os.listdir(root)
+    except FileNotFoundError:
+        return
+    for name in names:
+        if not name.isdigit():
+            continue
+        try:
+            os.kill(int(name), 0)
+        except ProcessLookupError:
+            shutil.rmtree(os.path.join(root, name), ignore_errors=True)
+        except PermissionError:
+            continue  # Alive and owned by someone else.
 
 
 def note_vacuous_invariant(invariant_id: str, reason: str) -> None:
