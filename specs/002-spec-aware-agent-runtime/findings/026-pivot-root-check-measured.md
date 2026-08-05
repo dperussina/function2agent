@@ -68,6 +68,20 @@ whole tree, and `026` was free at that moment and re-checked free immediately be
 > privileged (sudo): euid=0 CapEff=000001ffffffffff seccomp_mode=0 namespaces=available pivot_root=refused-unattributed
 > ```
 >
+> **Confirmed fixed, run 31016201724.** The same runner, same errno, after the correction:
+>
+> ```
+> [ok  ] pivot_root (FR-048): pivot_root("/", "/") EINVAL (errno 22: Invalid argument). this process
+>        holds CAP_SYS_ADMIN ..., and no seccomp filter is installed (Seccomp: 0, ...). pivot_root
+>        reached the kernel, which is the whole question.
+> privileged (sudo): euid=0 CapEff=000001ffffffffff seccomp_mode=0 namespaces=available pivot_root=available
+> ```
+>
+> All five jobs green, including the gating `pytest (kernel mechanisms included)` — the first green
+> preflight since `6df7da0`. The unprivileged arm still reads `refused-unattributed`, and **that is
+> correct rather than residual**: it is `EPERM` at `CapEff=0000000000000000`, an ambiguous reading
+> reported as ambiguous, which is the distinction the brief's symptom description collapsed.
+>
 > `CapEff=000001ffffffffff` holds `CAP_SYS_ADMIN`; `Seccomp: 0` means **no filter was installed at
 > all**. A syscall that no filter can have touched, past a capability gate that is satisfied, reported
 > as refused. That is the **inverted verdict on a working host** that §5's second removal proof was
@@ -301,36 +315,59 @@ whole tree, and `026` was free at that moment and re-checked free immediately be
 > | `user.max_user_namespaces` | `63838` | `63838` |
 > | `/sys/kernel/security/lsm` | `lockdown,capability,landlock,yama,apparmor,ima,evm` | same |
 > | `/sys/module/apparmor/parameters/enabled` | **`Y`** | **`Y`** |
+> | `/sys/module/apparmor/parameters/mode` | unreadable | **`enforce`** |
+> | `unprivileged_userns` profile loaded | unreadable | **`true`**, of `123` profiles |
 > | `CapEff` | `0000000000000000` | `000001ffffffffff` |
 > | `Seccomp` / `Seccomp_filters` | `0` / `0` | `0` / `0` |
 >
-> So the switch is **on**, AppArmor is **loaded and in the active LSM list**, the process held **no
-> capabilities at all**, and the namespace was created anyway. That is a materially different and more
-> consequential result than the sysctl being absent, which is how the runner read in every arm taken
-> locally (§4's table: *absent*, on a linuxkit kernel with no AppArmor).
+> So the switch is **on**, AppArmor is **loaded, enforcing, and in the active LSM list**, the
+> restriction's own profile is **loaded**, the process held **no capabilities at all**, and the namespace
+> was created anyway. That is a materially different and more consequential result than the sysctl being
+> absent, which is how every arm taken locally read (§4's table: *absent*, on a linuxkit kernel with no
+> AppArmor). The last two rows come from run **31016201724**, which is the first run carrying the
+> readings this correction added; the rest are from 30970910828.
 >
-> **Two mechanisms explain it, this run cannot separate them, and neither is asserted here.**
+> **Two mechanisms could explain it. The readings added by this correction ran, and they eliminate the
+> first.**
 >
-> 1. **The restriction's profile is not loaded.** Ubuntu implements the restriction by transitioning an
->    unconfined process onto a hard-coded profile named `unprivileged_userns`, which the AppArmor
->    *userspace* package ships as `/etc/apparmor.d/unprivileged_userns`. A kernel with the sysctl on and
->    that policy never loaded has nothing to transition to.
+> 1. ~~**The restriction's profile is not loaded.**~~ **FALSIFIED, run 31016201724.** Ubuntu implements
+>    the restriction by transitioning an unconfined process onto a hard-coded profile named
+>    `unprivileged_userns`, which the AppArmor *userspace* package ships. The hypothesis was that the
+>    sysctl was on with nothing to transition to. It is not: the profile **is** loaded.
 > 2. **The restriction does not refuse `unshare(CLONE_NEWUSER)` in the first place.** On the published
 >    reading of Ubuntu's patch, the hook **permits** the namespace and confines the result; the denial
 >    lands afterwards, on the `CAP_SYS_ADMIN` the confining profile withholds, which surfaces at the
->    `uid_map` write rather than at the `unshare`. **If that is what it does, this probe cannot construct
->    `kernel-sysctl-or-lsm` on any Ubuntu 24.04 host** — the mechanism the cell was written for is not a
->    refusal of the syscall the probe issues, and the cell would need a different probe rather than a
->    different host. That failure would land in finding 023's `uid_map`/`CAP_SETUID` territory instead.
+>    `uid_map` write rather than at the `unshare`. **This is now the surviving explanation**, and if it is
+>    right, this probe cannot construct `kernel-sysctl-or-lsm` on any Ubuntu 24.04 host — the mechanism
+>    the cell was written for is not a refusal of the syscall the probe issues, so the cell needs a
+>    different *probe*, not a different host. That failure lands in finding 023's `uid_map`/`CAP_SETUID`
+>    territory instead.
 >
-> Both are **DERIVED, NOT MEASURED** — 1 from AppArmor's packaging, 2 from a third-party reading of
-> Ubuntu's kernel patch alongside an audit trace, neither from anything this project ran. Mainline's
-> `apparmor_userns_create()` carries no such sysctl at all, so mainline source cannot settle it either.
-> The reading that *would* separate them is the **loaded-profile list**, plus this process's own
-> AppArmor label, and the observation tool did not collect either. It does now: `_apparmor_policy()`
-> records `/proc/self/attr/current`, whether `unprivileged_userns` is among the loaded profiles, and how
-> many profiles are loaded — with `None` rather than `False` when the list is unreadable, which is what
-> the unprivileged arm is expected to report, because that file is root-readable only.
+> The readings that separated them, from run **31016201724**'s privileged arm — the unprivileged arm
+> cannot read the profile list, which is why the reading is carried on both:
+>
+> | reading | privileged arm | unprivileged arm |
+> |---|---|---|
+> | `restriction_profile_loaded` (`unprivileged_userns`) | **`true`** | `null` (list unreadable) |
+> | `loaded_profile_count` | **`123`** | `null` |
+> | `/sys/module/apparmor/parameters/mode` | **`enforce`** | `null` |
+> | `/proc/self/attr/current` | `unconfined` | `unconfined` |
+> | `profiles_readable` | `true` | `false` |
+>
+> So on this runner AppArmor is **enforcing**, the restriction's profile **is loaded**, the sysctl reads
+> **`1`**, the process label is `unconfined` — the branch Ubuntu's hook keys on — and an unprivileged
+> user namespace was **still created** at `CapEff=0000000000000000`. Every precondition for the
+> restriction to fire was present and the namespace was permitted anyway. That is as far as this probe
+> can take it: mechanism 2 is now **DERIVED and unfalsified** rather than one of two guesses, and
+> confirming it requires probing the `uid_map` write, which is a different mechanism and a different
+> finding. Mainline's `apparmor_userns_create()` carries no such sysctl, so mainline source cannot
+> settle it either.
+>
+> Note the `null`s in the unprivileged column are the design working, not data missing:
+> `/sys/kernel/security/apparmor/profiles` is root-readable only, so the arm under test reports
+> `restriction_profile_loaded: null` — **not `false`**. Reporting `false` there would have let the arm
+> that cannot see the policy assert the policy is absent, which is the exact inversion that produced
+> this whole correction.
 >
 > **The consequence for the classifier, stated plainly.** The `kernel-sysctl-or-lsm` cell remains
 > **UNCONSTRUCTED on every surface available to this project**: Docker Desktop's linuxkit VM carries no
