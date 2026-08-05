@@ -9,11 +9,12 @@ caller got an answer.
 
 **The two claims, and what a broken teardown would look like against each.**
 
-- *No error.* A cancelled run must not raise at the caller, must not record a
-  fault outcome, and must not end the session in a terminal state — because
-  nothing ended. `data-model.md` §2.1's `interrupted ─▶ RUNNING` edge is the one
-  cancellation takes, and FR-006's taxonomy has no cancellation member, so a
-  cancelled run that named one would be inventing an outcome.
+- *No error.* A cancelled run must not raise at the caller and must not record a
+  fault outcome. It **must** end the session, in FR-006's already-declared
+  `terminated.operator_terminated` — cancellation is terminal as of 2026-08-05,
+  and `src/runtime/runner.py`'s module docstring carries why. A cancelled run
+  that left the session in `INTERRUPTED` would be resumable by `attach()`, which
+  is the defect that routing had.
 - *No partial state.* The journal's turn count and the number of returned turn
   records must agree. A runner that abandoned a turn mid-flight leaves a model
   call accrued against a turn no record describes, and the next resume would
@@ -22,9 +23,8 @@ caller got an answer.
 **The teardown handshake is asserted through `honoured_at`, not through the
 state string.** The point of standing the session down is that the enforcement
 point stops honouring the capability; `SessionRow.honoured_at` is the predicate
-the proxy actually evaluates, so that is what is read here. A test asserting
-`state == "INTERRUPTED"` would pass for a state name change that left the
-predicate true.
+the proxy actually evaluates, so that is what is read here. A test asserting the
+state string alone would pass for a state rename that left the predicate true.
 """
 
 from __future__ import annotations
@@ -36,11 +36,12 @@ import pytest
 
 from src.contracts import terminal
 from src.contracts.repository import Repository
+from src.contracts.transition import ST_OPERATOR_TERMINATED
 from src.runtime.dispatch import ToolCall
 from src.runtime.loop import ModelResponse
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.runner import CancelToken, Runner, RunnerError
-from src.runtime.session_state import SessionStateMachine
+from src.runtime.session_state import SessionStateError, SessionStateMachine
 from src.runtime.session_store import Ceilings, SessionStore
 from src.runtime.trace import (
     MODEL_CALL,
@@ -141,10 +142,10 @@ def test_a_cancelled_run_returns_rather_than_raising(tmp_path) -> None:
     outcome = _start(rig, model, lambda c: "r", token)
 
     assert outcome.cancelled is True
-    assert outcome.terminal_state is None, (
-        f"a cancelled run named {outcome.terminal_state!r} as its terminal "
-        "state. Nothing ended: FR-006's taxonomy has no cancellation member, "
-        "and data-model.md §2.1 routes an interruption to a resumable state."
+    assert outcome.terminal_state == terminal.OPERATOR_TERMINATED.name, (
+        f"a cancelled run reported {outcome.terminal_state!r}. The session ended "
+        "and the row says so, so a caller told otherwise is told something the "
+        "record contradicts."
     )
     rig.close()
 
@@ -171,7 +172,7 @@ def test_a_cancelled_run_records_no_fault_outcome(tmp_path) -> None:
     rig.close()
 
 
-def test_the_interruption_is_on_the_trace_as_a_transition(tmp_path) -> None:
+def test_the_cancellation_is_on_the_trace_as_a_transition(tmp_path) -> None:
     """Principle VI. A teardown nothing recorded is one nobody can audit."""
     rig = Rig(tmp_path)
     token = CancelToken()
@@ -181,10 +182,15 @@ def test_the_interruption_is_on_the_trace_as_a_transition(tmp_path) -> None:
 
     transitions = [row for row in rig.spans.spans(SESSION)
                    if row["kind"] == STATE_TRANSITION]
-    assert transitions, "the interruption left no state_transition span"
+    assert transitions, "the cancellation left no state_transition span"
     payload = json.loads(transitions[-1]["payload"])["transition"]
-    assert payload["to_state"] == "INTERRUPTED"
-    assert payload["terminal_state"] is None
+    assert payload["to_state"] == "TERMINATED"
+    assert payload["terminal_state"] == terminal.OPERATOR_TERMINATED.name
+    assert payload["deciding_rule"] == ST_OPERATOR_TERMINATED.rule_id, (
+        f"the cancellation was attributed to {payload['deciding_rule']!r}. "
+        "Principle VI wants the identity of the rule that produced the "
+        "transition, and the rule for this edge is the operator-terminated one."
+    )
     rig.close()
 
 
@@ -262,21 +268,94 @@ def test_the_lease_is_stood_down_before_the_runner_returns(tmp_path) -> None:
     rig.close()
 
 
-def test_a_cancelled_session_is_resumable_and_a_completed_one_is_not(
-    tmp_path,
-) -> None:
-    """The difference between interrupted and terminated, asserted as behaviour.
+def test_a_cancelled_session_cannot_be_attached_to(tmp_path) -> None:
+    """The defect this file's routing exists to close, asserted as behaviour.
 
-    An interruption that recorded a terminal state would pass every assertion
-    above and fail here, because a terminated session has no resume edge.
+    `CancelToken` is one-way because "a token that could be cleared would let a
+    race produce a run that continued after cancellation". While cancellation
+    routed to `INTERRUPTED`, `attach()` *automatically resumed* the session it
+    found there — so the outcome the token was made irreversible to prevent was
+    reachable one call later. Cancelling and then attaching silently resumed the
+    cancelled run.
+
+    **Asserted against the terminal state in the message, not merely against
+    `RunnerError`.** `attach` has two refusal branches and both name the state,
+    so a match on `TERMINATED` alone would pass on the fallback "has no edge"
+    branch. Only the `STATE_TERMINATED` branch interpolates `row.terminal_state`,
+    so requiring the taxonomy name in the message is what proves *which* branch
+    was reached.
     """
     rig = Rig(tmp_path)
     token = CancelToken()
     token.cancel()
     _start(rig, lambda c: _finish(), lambda c: "r", token)
 
-    rig.machine.resume(SESSION, at=100.0, lease_expires_at=LEASE)
-    assert rig.lifecycle.get(SESSION).state == "RUNNING"
+    with pytest.raises(RunnerError) as caught:
+        rig.runner.attach(session_id=SESSION, prompt="p",
+                          model=lambda c: _finish(), execute=lambda c: "r")
+
+    message = str(caught.value)
+    assert terminal.OPERATOR_TERMINATED.name in message, (
+        f"attach refused, but not from the branch that reads the terminal "
+        f"state: {message!r}. The fallback branch names the state and not the "
+        "outcome, so a cancelled session refused there would be refused for "
+        "the wrong reason."
+    )
+    assert "no edge out of" in message
+    rig.close()
+
+
+def test_a_cancelled_run_names_operator_terminated_as_its_terminal_state(
+    tmp_path,
+) -> None:
+    """Cancellation is terminal, and the name is read from three places.
+
+    The caller-visible field, the supervisor's row and the trace span must
+    agree. A runner that moved the row without reporting the name would leave a
+    caller believing nothing ended, and a runner that reported a name it never
+    wrote would be the same defect facing the other way.
+    """
+    rig = Rig(tmp_path)
+    token = CancelToken()
+    token.cancel()
+
+    outcome = _start(rig, lambda c: _finish(), lambda c: "r", token)
+
+    assert outcome.cancelled is True
+    assert outcome.terminal_state == terminal.OPERATOR_TERMINATED.name
+
+    row = rig.lifecycle.get(SESSION)
+    assert row.state == "TERMINATED"
+    assert row.terminal_state == terminal.OPERATOR_TERMINATED.name
+
+    terminals = [row["terminal_state"] for row in rig.spans.spans(SESSION)
+                 if row["kind"] == STATE_TRANSITION]
+    assert terminals[-1] == terminal.OPERATOR_TERMINATED.name, (
+        f"the trace's last transition names {terminals[-1]!r}. Principle VI "
+        "wants the run's named terminal state on the record, and a record "
+        "disagreeing with the row is worse than an absent one."
+    )
+    rig.close()
+
+
+def test_a_completed_session_and_a_cancelled_one_are_both_unresumable(
+    tmp_path,
+) -> None:
+    """The control arm for the routing, read through the resume edge itself.
+
+    Without it, the two arms above are satisfied by a runner that terminates
+    everything, and this one would still hold. What it adds is that the *machine*
+    refuses the edge — `attach`'s guard and the lifecycle's guard are two
+    mechanisms, and a test reading only the first proves only the first.
+    """
+    rig = Rig(tmp_path)
+    token = CancelToken()
+    token.cancel()
+    _start(rig, lambda c: _finish(), lambda c: "r", token)
+
+    with pytest.raises(SessionStateError, match="already terminated"):
+        rig.machine.resume(SESSION, at=100.0, lease_expires_at=LEASE)
+    assert rig.lifecycle.get(SESSION).state == "TERMINATED"
     rig.close()
 
 
@@ -306,8 +385,8 @@ def test_cancelling_twice_is_not_a_second_teardown(tmp_path) -> None:
                    if row["kind"] == STATE_TRANSITION]
     to_states = [json.loads(r["payload"])["transition"]["to_state"]
                  for r in transitions]
-    assert to_states.count("INTERRUPTED") == 1, (
-        f"the teardown ran {to_states.count('INTERRUPTED')} times"
+    assert to_states.count("TERMINATED") == 1, (
+        f"the teardown ran {to_states.count('TERMINATED')} times"
     )
     rig.close()
 

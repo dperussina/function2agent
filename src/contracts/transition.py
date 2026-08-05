@@ -58,8 +58,10 @@ STATE_TERMINATED = "TERMINATED"
 # `data-model.md` §2.1's `interrupted ─▶ RUNNING` edge. Not a terminal state: a
 # session that resumes has not ended, which is why it carries no member of the
 # taxonomy. Added with T049; both edges are driven by the runner (T046), which
-# interrupts on cancellation and resumes on attach. Rebuilding an interrupted
-# attempt's transcript over the edge is still T052's.
+# interrupts an attempt bounded short by `max_turns_this_attempt` and resumes on
+# attach. **Cancellation does not come here** — it terminates, since a cancelled
+# session that landed in the resume state was resumable by `attach()`. Rebuilding
+# an interrupted attempt's transcript over the edge is still T052's.
 STATE_INTERRUPTED = "INTERRUPTED"
 STATES = frozenset({
     STATE_STARTING, STATE_RUNNING, STATE_TERMINATED, STATE_INTERRUPTED,
@@ -120,8 +122,10 @@ ST_CAPABILITY_LAPSED = TransitionRule(
 )
 ST_OPERATOR_TERMINATED = TransitionRule(
     "ST-007", "operator_terminated", False,
-    "RUNNING → TERMINATED by a human act. No limit was consulted; the "
-    "operator's identity belongs on the record, not in the predicate.",
+    "RUNNING → TERMINATED because the party that started the run ended it — a "
+    "human operator, or a consumer cancelling programmatically. No limit was "
+    "consulted; the terminator's identity belongs on the record, not in the "
+    "predicate.",
 )
 ST_UNRECOVERABLE_FAULT = TransitionRule(
     "ST-008", "unrecoverable_fault", False,

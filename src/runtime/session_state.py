@@ -17,8 +17,13 @@ in. The count is checked *and* the row is re-read, because the count says the
 statement matched and the row says what it matched to.
 
 **Who drives the two non-terminal edges.** `interrupt()` and `resume()` are the
-runner's: T046 interrupts on cancellation and on an attempt bounded short, and
-`attach()` resumes. What is still *not* here is resume **reconstruction** —
+runner's: T046 interrupts on an attempt bounded short by
+`max_turns_this_attempt`, and `attach()` resumes. **Cancellation is not one of
+them** — it takes `terminate()` with `terminated.operator_terminated`, because a
+cancelled session must not be resumable and `INTERRUPTED` is by definition the
+state that is. It routed here until 2026-08-05; `src/runtime/runner.py`'s module
+docstring carries the reason it moved. What is still *not* here is resume
+**reconstruction** —
 replaying the journal to rebuild the turns an interrupted attempt produced. That
 is T052's, and the difference matters: the edge carries the ceilings and the turn
 numbering, because both read the journal, and it does not carry the transcript.

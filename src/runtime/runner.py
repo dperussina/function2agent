@@ -17,20 +17,27 @@ capability whose owner is gone. So the teardown is in a `finally`, it reads the
 row back, and a failure *inside* the teardown never replaces the exception that
 caused it — the first exception is the diagnosis.
 
-**Cancellation interrupts; it does not terminate.** `data-model.md` §2.1 has an
-`interrupted ─▶ RUNNING` edge and FR-006's taxonomy has no cancellation member,
-so a cancelled run records no terminal state: nothing ended, and FR-007 resumes
-the same session. Naming a terminal state for a cancellation would either invent
-a taxonomy member or borrow `operator_terminated` for an event no operator
-caused.
+**Cancellation terminates. It is not an interruption.** A cancelled session ends
+in `terminated.operator_terminated`, and the interrupt edge is left to the one
+event that really is resumable: an attempt bounded short by
+`max_turns_this_attempt`.
 
-> **Underspecified, and read rather than decided.** No requirement states what a
-> cancelled session's recorded state is. The reading above is the one that
-> violates nothing: it needs no new member of a closed taxonomy, it uses a
-> declared edge, and `SessionRow.honoured_at` already refuses a non-`RUNNING`
-> session, so the capability stops being honoured either way. If the owner wants
-> cancellation to be terminal, that is a taxonomy addition and an owner
-> decision, and this module is where it lands.
+> **Decided 2026-08-05, and it needed no taxonomy addition.** The earlier reading
+> here routed cancellation to `INTERRUPTED` and recorded that making it terminal
+> "is a taxonomy addition and an owner decision". **The first half was wrong**,
+> and it is why the decision went this way: `OPERATOR_TERMINATED` already
+> existed, so the closed set stays closed. What the earlier reading cost was a
+> live defect. `STATE_INTERRUPTED` is FR-007's *resume* state, and `attach()`
+> below resumes a session it finds in it automatically — so cancelling a session
+> and then attaching to it silently resumed the cancelled run. `CancelToken` is
+> one-way precisely so that "a race cannot produce a run that continued after
+> cancellation", and the state it cancelled into was resumable by design. That
+> contradiction, not the ambiguity, is what settled this.
+>
+> The name is wider than the event by one term and was widened rather than
+> renamed: a `CancelToken` is set by a *consumer*, which may be programmatic
+> rather than human. `src/contracts/terminal.py` carries the widened meaning;
+> the name is a wire string the Go enforcement point reads and does not move.
 
 **What is not here.** Resume *reconstruction* — replaying the journal to rebuild
 the turns an interrupted attempt had already produced — is T052's. `attach()`
@@ -78,6 +85,13 @@ class CancelToken:
     flag produce a run that continued after cancellation, which is the state a
     consumer cancelled to avoid.
 
+    **The lifecycle now matches that, and for a while it did not.** The session a
+    set token ends is terminated, so there is no edge out of it and no second
+    attempt to race against. While cancellation routed to `INTERRUPTED` the
+    token's irreversibility bought nothing: `attach()` resumed the session, and
+    the run continued after cancellation by the ordinary path rather than by a
+    race.
+
     Thread-safe because the consumer and the loop are not the same thread — a
     plain attribute would work on CPython today and is the kind of assumption
     that stops being true quietly.
@@ -102,11 +116,16 @@ class CancelToken:
 class RunOutcome:
     """What one `start()` or `attach()` produced.
 
-    `terminal_state` is `None` exactly when `cancelled` is true. The two are
-    separate fields rather than one nullable name because a caller asking "did
-    this end?" and a caller asking "why did it end?" are asking different
-    questions, and collapsing them is how a cancellation gets reported as a
-    completion with a missing name.
+    `terminal_state` is `None` exactly when the attempt stopped without the
+    session ending, which since cancellation became terminal leaves one case:
+    an attempt bounded short by `max_turns_this_attempt`. A cancelled run now
+    carries `terminated.operator_terminated` here, because the row does.
+
+    The two fields stay separate rather than collapsing into one nullable name
+    because a caller asking "did this end?" and a caller asking "why did it end?"
+    are asking different questions. `cancelled` is now the narrower of the two:
+    every cancelled run is terminated, and not every terminated run was
+    cancelled.
     """
 
     session_id: str
@@ -263,24 +282,35 @@ class Runner:
         max_turns_this_attempt: int | None,
     ) -> RunOutcome:
         outcome: LoopOutcome | None = None
+        recorded: str | None = None
         try:
             outcome = loop.run(
                 prompt, max_turns_this_attempt=max_turns_this_attempt)
-            return RunOutcome(
-                session_id=session_id,
-                turns=outcome.turns,
-                terminal_state=outcome.terminal_state,
-                text=outcome.text,
-                cancelled=outcome.cancelled,
-                merged_state=outcome.merged_state,
-            )
         finally:
-            self._stand_down(loop, session_id, outcome)
+            recorded = self._stand_down(loop, session_id, outcome)
+
+        # Built after the teardown, not inside the `try`, because the terminal
+        # state a cancelled run ends in is the one teardown writes. Returning
+        # the loop's `None` here would report "nothing ended" for a session the
+        # row says ended as `terminated.operator_terminated`.
+        return RunOutcome(
+            session_id=session_id,
+            turns=outcome.turns,
+            terminal_state=(outcome.terminal_state if outcome.terminal_state
+                            is not None else recorded),
+            text=outcome.text,
+            cancelled=outcome.cancelled,
+            merged_state=outcome.merged_state,
+        )
 
     def _stand_down(
         self, loop: AgentLoop, session_id: str, outcome: LoopOutcome | None
-    ) -> None:
+    ) -> str | None:
         """Leave the session in a state the enforcement point will not honour.
+
+        Returns the terminal state it recorded, or `None` where it recorded no
+        terminal state — either because the loop had already ended the session or
+        because the attempt was bounded short and the session is resumable.
 
         Wrapped so that a teardown failure cannot replace the exception that
         brought us here. The suppression is narrow — it covers only the
@@ -290,19 +320,31 @@ class Runner:
         """
         row = self.lifecycle.get(session_id)
         if row is None or row.state == STATE_TERMINATED:
-            return
+            return None
         if row.state != STATE_RUNNING:
             # Already interrupted by something else. Not ours to move.
-            return
+            return None
+        recorded: str | None = None
         failure: BaseException | None = None
         try:
             if outcome is not None and outcome.cancelled:
-                transition = self.machine.interrupt(
-                    session_id, at=self.clock())
+                # Cancellation ends the session. This branch and the next used to
+                # be one — both interrupted — and merging them is what left a
+                # cancelled session sitting in FR-007's resume state.
+                # `recorded` is read off the transition after the write, never
+                # set ahead of it: a name assigned before a `terminate()` that
+                # then raised would be reported to the caller with no row
+                # holding it.
+                transition = self.machine.terminate(
+                    session_id,
+                    terminal_state=terminal.OPERATOR_TERMINATED.name,
+                    at=self.clock())
+                recorded = transition.terminal_state
             elif outcome is not None:
                 # The loop returned without ending the session and without
                 # being cancelled: `max_turns_this_attempt` bounded the attempt.
-                # Interrupting is the honest record — the session did not end.
+                # Interrupting is the honest record — the session did not end,
+                # and this is now the only event that takes FR-007's edge.
                 transition = self.machine.interrupt(
                     session_id, at=self.clock())
             else:
@@ -323,7 +365,7 @@ class Runner:
 
         after = self.lifecycle.get(session_id)
         if after is None or not after.honoured_at(self.clock()):
-            return
+            return recorded
 
         # The session is still honoured. This is the leak the handshake exists to
         # prevent, and it must not pass quietly — but *how* it is surfaced

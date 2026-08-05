@@ -157,25 +157,27 @@ def test_attach_resumes_an_interrupted_session_and_keeps_its_ceilings(
 
     A ceiling reset on attach is finding 006's measurement exactly: a limit of
     3 permitting 6, where every individual attempt is compliant.
+
+    **The interruption comes from `max_turns_this_attempt`, not from a cancel.**
+    Since cancellation became terminal (2026-08-05) that is the only event that
+    takes FR-007's edge, so it is the only way to reach the state under test.
     """
     rig = Rig(tmp_path)
-    from src.runtime.runner import CancelToken
-
-    token = CancelToken()
-    calls = {"n": 0}
 
     def model(context):
-        calls["n"] += 1
-        if calls["n"] == 2:
-            token.cancel()
         return ModelResponse(
             provider="test", provider_state=b"s", text="",
             tool_calls=(_call(),))
 
     first = _start(rig, ceilings=Ceilings(
         spend_usd=100.0, tokens=1_000_000, wall_clock_seconds=10_000.0,
-        turns=3), model=model, cancel=token)
-    assert first.cancelled is True
+        turns=3), model=model, max_turns_this_attempt=2)
+    assert first.terminal_state is None, (
+        "the attempt was bounded short, so the session did not end and there is "
+        "no terminal state to name"
+    )
+    assert first.cancelled is False
+    assert rig.lifecycle.get(SESSION).state == "INTERRUPTED"
     before = rig.budget.totals(SESSION).turns
     assert before > 0
 
@@ -205,19 +207,12 @@ def test_turn_indexes_continue_across_attempts(tmp_path) -> None:
     itself. The two mechanisms read the same number for different reasons.
     """
     rig = Rig(tmp_path)
-    from src.runtime.runner import CancelToken
-
-    token = CancelToken()
-    calls = {"n": 0}
 
     def model(context):
-        calls["n"] += 1
-        if calls["n"] == 2:
-            token.cancel()
         return ModelResponse(provider="test", provider_state=b"s", text="",
                              tool_calls=(_call(),))
 
-    first = _start(rig, model=model, cancel=token)
+    first = _start(rig, model=model, max_turns_this_attempt=2)
     assert [t.turn_index for t in first.turns] == [0, 1]
 
     second = rig.runner.attach(session_id=SESSION, prompt="p",
@@ -314,20 +309,25 @@ def test_a_failed_teardown_with_nothing_in_flight_is_raised(tmp_path) -> None:
     the teardown failed to stand down must raise. A runner that only ever
     attached a note would return a `RunOutcome` describing a completed run whose
     capability is still live.
+
+    Driven through the *interrupt* write rather than the terminate write, so this
+    arm and `test_the_original_fault_is_not_replaced_by_a_teardown_fault` break
+    two different supervisor calls. Both breaking `terminate` would leave the
+    interrupt teardown path with no failure arm at all.
     """
     rig = Rig(tmp_path)
 
     def exploding_interrupt(session_id):
         raise RuntimeError("the supervisor refused the write")
 
-    from src.runtime.runner import CancelToken
-
-    token = CancelToken()
-    token.cancel()
     rig.lifecycle.mark_interrupted = exploding_interrupt
 
     with pytest.raises(RunnerError, match="still honoured"):
-        _start(rig, cancel=token)
+        _start(rig,
+               model=lambda c: ModelResponse(
+                   provider="test", provider_state=b"s", text="",
+                   tool_calls=(_call(),)),
+               max_turns_this_attempt=1)
     rig.close()
 
 

@@ -920,14 +920,29 @@ proof "T042 prompt refusal — an over-budget prompt is trimmed instead of refus
 proof "T046 teardown — the session is stood down only on the paths that returned" \
   src/runtime/runner.py \
   "tests/unit/test_runner.py::test_a_fault_in_the_loop_still_stands_the_session_down" \
-  's = s.replace("        finally:\n            self._stand_down(loop, session_id, outcome)", "        finally:\n            if outcome is not None:\n                self._stand_down(loop, session_id, outcome)")'
+  's = s.replace("        finally:\n            recorded = self._stand_down(loop, session_id, outcome)", "        finally:\n            if outcome is not None:\n                recorded = self._stand_down(loop, session_id, outcome)")'
 
-# T047. Cancellation is not termination. Naming a terminal state for it would
-# either invent a member of a closed taxonomy or borrow one no operator caused.
-proof "T047 cancellation — a cancelled run is terminated rather than interrupted" \
+# T047. Cancellation terminates. The tamper restores the routing this file
+# carried until 2026-08-05 — interrupt on cancellation — and the arm is the
+# defect that routing had: `STATE_INTERRUPTED` is FR-007's resume state, so
+# `attach()` resumed a cancelled session automatically. The arm therefore reads
+# the *consequence* rather than the state string: a proof asserting
+# `to_state == "TERMINATED"` would be satisfied by any terminal state, and what
+# matters is that no edge leads out of the one chosen.
+proof "T047 cancellation — a cancelled run is interrupted, so attach resumes it" \
   src/runtime/runner.py \
-  "tests/unit/test_cancellation.py::test_a_cancelled_session_is_resumable_and_a_completed_one_is_not" \
-  's = s.replace("            if outcome is not None and outcome.cancelled:\n                transition = self.machine.interrupt(\n                    session_id, at=self.clock())", "            if outcome is not None and outcome.cancelled:\n                transition = self.machine.terminate(session_id, terminal_state=terminal.OPERATOR_TERMINATED.name, at=self.clock())")'
+  "tests/unit/test_cancellation.py::test_a_cancelled_session_cannot_be_attached_to" \
+  's = s.replace("                transition = self.machine.terminate(\n                    session_id,\n                    terminal_state=terminal.OPERATOR_TERMINATED.name,\n                    at=self.clock())\n                recorded = transition.terminal_state", "                transition = self.machine.interrupt(session_id, at=self.clock())")'
+
+# T047, the caller-visible half — a second mechanism, not a second reading of the
+# one above. Routing cancellation to `terminate()` moves the row; carrying the
+# recorded name back out of teardown is what makes the caller agree with it. The
+# tamper leaves the row correct and reports the loop's `None`, which is the
+# divergence a reviewer would otherwise have to take on trust.
+proof "T047 cancellation — the terminal state teardown recorded is not reported" \
+  src/runtime/runner.py \
+  "tests/unit/test_cancellation.py::test_a_cancelled_run_names_operator_terminated_as_its_terminal_state" \
+  's = s.replace("            terminal_state=(outcome.terminal_state if outcome.terminal_state\n                            is not None else recorded),", "            terminal_state=outcome.terminal_state,")'
 
 # T046. **Not a proof of the terminated refusal.** That guard was tried here and
 # the tamper was vacuous: removing it drops the caller through to the "no edge

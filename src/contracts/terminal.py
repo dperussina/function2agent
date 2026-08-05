@@ -55,7 +55,11 @@ CAPABILITY_LAPSED = TerminalState(
     "terminated.capability_lapsed", "FR-050",
     "the lease expired without renewal — the crash path, where nothing ran")
 OPERATOR_TERMINATED = TerminalState(
-    "terminated.operator_terminated", "FR-006", "a human ended the session")
+    "terminated.operator_terminated", "FR-006",
+    "the session was ended from outside the run by the party that started it "
+    "— a human operator, or a consumer cancelling programmatically. The name "
+    "predates the second case and is kept: it is a wire string the Go "
+    "enforcement point and the conformance vectors both read.")
 UNRECOVERABLE_FAULT = TerminalState(
     "terminated.unrecoverable_fault", "FR-006",
     "a fault the runtime cannot classify further. Named, bounded, and "

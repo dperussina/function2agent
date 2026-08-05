@@ -204,6 +204,31 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 - [x] T044 Explicit per-key merge rules for shared state a concurrent step writes, with last-write-wins forbidden, in `src/runtime/state_merge.py` (T-08)
 - [x] T045 [P] Invariant tests for declared-order recording and for a concurrent write that cannot be lost, in `tests/invariants/test_fanout_ordering.py`
 
+> **FR-058 landed inside capability 1 on 2026-08-04 and is named in none of its task lines, and the
+> seam is recorded here rather than absorbed. Added 2026-08-05.** FR-058 bounds every result either of
+> FR-004's capabilities returns to the agent, and FR-004 is T041's requirement — so the work arrived
+> inside this capability rather than beside it. What it brought: per-result bounding, the disclosure
+> the agent sees in place of the elided body, the retention lifecycle for the full result, the derived
+> ceiling and its unit rule, span-field validation on `tool_call`, and ten removal proofs. It shipped
+> in `src/runtime/result_bound.py` with fields added to
+> [`contracts/trace-record.md`](./contracts/trace-record.md), and `plan.md` **OD-25** authorises it.
+>
+> **None of T041 through T045 mentions it, and the estimate row for this capability does not either.**
+> Row 1 of [the derived estimate](#the-re-derived-estimate-for-u-48s-nine-capabilities) is dated
+> before FR-058 existed and its 8–11 days were derived over T041–T045 as those lines read — so the
+> figure **does not include FR-058's work**, and reading it as this capability's cost now understates
+> it by whatever FR-058 cost.
+>
+> **This note deliberately does not re-derive the figure, and the reason is the method's own.** A
+> re-estimate taken mid-phase, by the pass that just built the thing being sized, is the shape that
+> produces a motivated number — and the estimate section's premise is that each row states an anchor a
+> reader can disagree with. **What a defensible figure would rest on, stated so that the omission is
+> checkable rather than convenient**: the per-task increment FR-058's six items add, judged against the
+> same anchors row 1 already cites, by someone who did not implement them; or, better, the elapsed
+> cost of the FR-058 pass read off the commit range, which is a measurement rather than a judgment and
+> which nothing in this document currently records. Neither exists. The figure is left as it stands,
+> marked as excluding FR-058, rather than adjusted by this pass.
+>
 > **Why T043 through T045 exist in a v1 that emits no graph, since this was nearly lost.** Finding
 > 006 measured fan-out producing **5 distinct orderings in 8 runs** under overlapping latencies, and
 > a **silent lost update** where one of two parallel branches writing a shared key vanished with no
@@ -279,7 +304,26 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 ### Capability 8 — the raw terminal signals
 
 - [ ] T066 Emit the raw terminal signals the taxonomy sits on — error identity, budget-exhaustion cause, and an explicit end-of-run marker distinguishing completion from cancellation — in `src/runtime/signals.py` (finding 006 primitive 2: the taxonomy was always ours, and the raw signals were the dependency's)
-- [ ] T067 Terminal taxonomy over those signals, with a named member per ceiling, per bound, plus `no_progress`, `denied_operation` and `completed`, in `src/runtime/terminal.py` (FR-006, [`data-model.md`](./data-model.md) §2.1)
+- [ ] T067 Terminal taxonomy over those signals, with a named member per ceiling, per bound, plus `no_progress`, `denied_operation` and `completed`, in ~~`src/runtime/terminal.py`~~ **`src/contracts/terminal.py`** (FR-006, [`data-model.md`](./data-model.md) §2.1)
+
+> **T067's path corrected 2026-08-05, and its remaining work is smaller than the line reads but is
+> not a file move.** The struck path named a module that does not exist. **The taxonomy is already
+> built**, at `src/contracts/terminal.py`, with `TAXONOMY`, `NAMES`, `is_terminal()` and `require()`,
+> and **seven consumers** read it: `src/contracts/transition.py`, `src/runtime/trace.py`,
+> `src/runtime/session_state.py`, `tests/invariants/test_terminal_taxonomy.py`,
+> `tests/invariants/invariants.yaml` (INV-005), `tests/batteries/test_bounds_exhaustion.py` and
+> `tests/removal_proofs.sh`. Building it a second time under the struck path would have been a live
+> module duplicated, which is what the wrong path invited.
+>
+> **What is genuinely left is the two members the taxonomy lacks**, and one of them is blocked. Every
+> ceiling and every bound has its member and `completed` has its member; `no_progress` and
+> `denied_operation` do not. **Row 6 of the loose-requirements table below already records that
+> `no_progress`'s predicate is unwritable as specified**, and it is assigned to this task — so T067
+> cannot complete while that stands, and closing it would mean inventing the stall condition FR-006
+> declines to define. `denied_operation` is unblocked and is recorded as owed nowhere else.
+> [Finding 027](./findings/027-lifecycle-edge-set-divergence.md) is the census, and it also reports
+> the divergence running the other way: three members the runtime already reaches are absent from
+> §2.1's own diagram.
 - [ ] T068 [P] Test that a clean completion and a mid-loop cancellation are distinguishable from the caller's side, in `tests/unit/test_terminal_distinguishable.py` — the indistinguishable case is the false-success shape the corpus names as a very common and very expensive bug
 
 ### Capability 9 — the event stream the serving surface renders
@@ -306,7 +350,7 @@ engineer-days of focused work.
 
 | # | Capability | Tasks | Days, low | Days, high | Anchor the judgment is calibrated against |
 |---|---|---|---|---|---|
-| 1 | Agent loop, dispatcher, merge discipline | T041–T045 | 8 | 11 | T043's 1–2 days re-uses the fan-out item's shape; **OD-15** records that as a construction requirement of our own dispatcher rather than a discipline imposed on somebody else's scheduler, and calls it the easier of the two |
+| 1 | Agent loop, dispatcher, merge discipline | T041–T045 | 8 | 11 | T043's 1–2 days re-uses the fan-out item's shape; **OD-15** records that as a construction requirement of our own dispatcher rather than a discipline imposed on somebody else's scheduler, and calls it the easier of the two. **Excludes FR-058** *(noted 2026-08-05)* — added 2026-08-04, after this row was derived, and it landed inside this capability because it bounds FR-004's results. The seam is set out at [capability 1](#capability-1--the-agent-loop); the figure is **not** re-derived here, and reading it as this capability's cost understates it |
 | 2 | Runner | T046–T047 | 3 | 4 | No prior sizing anywhere. Judged against T048's shape, with which it shares the session handshake |
 | 3 | Session store | T048–T050 | 5 | 7 | No prior sizing: the store was inside the removed dependency. T050 is sized as a probe rather than a fix, because a fix's size depends on what the probe finds |
 | 4 | Checkpoint and resume | T051–T056 | **12** | **17** | Re-derived under **OD-10** per T-07's instruction, not inherited. Carries a **+0 to +4 day risk band**; both are derived below |
