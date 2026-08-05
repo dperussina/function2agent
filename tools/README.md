@@ -1185,6 +1185,28 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   OD register grows, six sites advance by hand and nothing anywhere will say if one
   is missed. That is the residue, it is accepted rather than unnoticed, and the
   count above is how wide it is.
+- **An `unconstructible` claim that has outlived its scope.** Two findings once
+  asserted opposite things about the same refusal cell — one saying an LSM refusal
+  could not be built on any available surface, the other having since built it —
+  and nothing caught the contradiction. A check was proposed on the
+  `lifecycle-taxonomy` precedent and **declined on this one, measured rather than
+  argued.** The candidate rule — an `unconstructib*` or `unconstructed` token with
+  no scope qualifier nearby — was built and run over the real corpus through
+  `corpuscheck`'s own masking at three window widths: **15 firings at the tightest,
+  8 at 30 and 60 characters, and zero real defects at any width.** Worse, **three of
+  the seven correctly-scoped sites are among the firings**, escaping the qualifier
+  test only because a code span or a `**` sits between the token and its scope —
+  the identical markup-between-the-bounds failure that made relaxing `_RANGE`
+  unacceptable one bullet above. It also fires on `unconstructible in principle`,
+  which is a *different sense* of the word that must never be rescoped, and on a
+  finding's own past-tense narration of the cell it corrects. Sparing those would
+  mean growing the qualifier vocabulary into a list of the phrasings the corpus
+  already happens to use, which is fitting the rule to the corpus rather than to
+  the defect. **And the `lifecycle-taxonomy` shape does not transfer**: that check
+  works by reconciling two *machine-readable enumerations* against each other, and
+  there is no register of which refusal cell is constructible on which surface to
+  reconcile against — the thing that would have to exist first is the artifact, not
+  the check.
 - **A lone pipe row far from any table.** `table-no-delimiter` needs two
   consecutive pipe rows, and the orphan rule needs the row within two blank lines
   of a real table. A single stray `| a | b |` outside both windows is caught by
