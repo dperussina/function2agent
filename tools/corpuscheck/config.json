@@ -196,5 +196,11 @@
       "namespace": "SC",
       "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\\s+success\\s+criteria"
     }
+  ],
+
+  "_comment_lifecycle_taxonomy": "The session lifecycle's declared terminal states against the closed set FR-006 requires, which lives in Python rather than in markdown. Unlike every other check here, one side of this comparison is source: `lifecycle_taxonomy_source` is read from the corpus root and parsed with `ast` rather than imported, because --root may point at a fixture tree and a corpus checker that executes what it checks has a failure mode no regex does. The document side is a table rather than the fenced diagram it replaced — `~~` renders literally inside a fence, so a superseded member could not be struck in the house style, and a picture cannot say which members are owed. Both sides can degrade to the empty set and two empty sets reconcile perfectly, so zero parsed members is an error and zero table rows in a corpus that has the documents is an error too. See OD-26 and finding 027.",
+  "lifecycle_taxonomy_source": "src/contracts/terminal.py",
+  "lifecycle_taxonomy_files": [
+    "specs/*/data-model.md"
   ]
 }

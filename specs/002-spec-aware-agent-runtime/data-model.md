@@ -144,21 +144,77 @@ tools from it — **OD-09**.
 | `lease_expires_at` | renewed by the supervisor; the mechanism that makes a crash revoke authority (§3.3) |
 | `budget` | the four declared ceilings of FR-005 |
 
-**Lifecycle.**
+**Lifecycle — the shape.**
 
 ```text
-CREATED ─▶ RUNNING ─┬─▶ completed
-                    ├─▶ terminated.turn_ceiling_reached
-                    ├─▶ terminated.token_ceiling_reached
-                    ├─▶ terminated.wall_clock_ceiling_reached
-                    ├─▶ terminated.spend_ceiling_reached
-                    ├─▶ terminated.memory_bound_exhausted
-                    ├─▶ terminated.cpu_bound_exhausted
-                    ├─▶ terminated.process_bound_exhausted
-                    ├─▶ terminated.no_progress            (FR-006 stall condition — defined at FR-006)
-                    ├─▶ terminated.denied_operation
-                    └─▶ interrupted ─▶ RUNNING            (resume — the same session, FR-007)
+CREATED ─▶ RUNNING ─┬─▶ TERMINATED  ⟨terminal_state⟩   one named member, and no edge out
+                    │
+                    └─▶ INTERRUPTED ─▶ RUNNING          resume — the same session, FR-007
 ```
+
+One non-terminal state, one resume edge back to it, and **no edge out of `TERMINATED`**: a revived
+session would carry a second outcome for a run FR-006 says already has one. Which member the
+`terminal_state` column holds is the table below and not the picture.
+
+**Lifecycle — the terminal states.** This table is a **derived view of
+[`src/contracts/terminal.py`](../../src/contracts/terminal.py)'s `TAXONOMY`**, which is authoritative
+for membership under FR-006 — **OD-26**. `check_corpus.py`'s `lifecycle-taxonomy` check reconciles the
+two and errors in either direction, so a member added there and not here fails the gate, and so does a
+row here that names no member.
+
+| Terminal state | Requirement | Status |
+|---|---|---|
+| `terminated.completed` | FR-006 | member |
+| `terminated.turn_ceiling_reached` | FR-005 | member |
+| `terminated.token_ceiling_reached` | FR-005 | member |
+| `terminated.wall_clock_ceiling_reached` | FR-005 | member |
+| `terminated.spend_ceiling_reached` | FR-005 | member |
+| `terminated.memory_bound_exhausted` | FR-049 | member |
+| `terminated.cpu_bound_exhausted` | FR-049 | member |
+| `terminated.process_bound_exhausted` | FR-049 | member |
+| `terminated.capability_lapsed` | FR-050 | member |
+| `terminated.operator_terminated` | FR-006 | member |
+| `terminated.unrecoverable_fault` | FR-006 | member |
+| `terminated.no_progress` | FR-006 | owed — **T067**, predicate unwritable as specified |
+| ~~`terminated.denied_operation`~~ | — | struck — **OD-26**, 2026-08-05 |
+
+**`member` means the taxonomy carries it; `owed` means it does not yet and a task says so; `struck`
+means it never will.** The check reads all three in the forbidding direction as well as the
+permitting one, so an `owed` row whose member has since landed fails the gate rather than going quiet.
+
+> **Five corrections here, all dated 2026-08-05, and the reason they were all found at once is that
+> nothing had ever read this section against the code.**
+> [Finding 027](./findings/027-lifecycle-edge-set-divergence.md) took the census; **OD-26** settled
+> which artifact wins; `check_corpus.py`'s `lifecycle-taxonomy` check is what stops it recurring, and
+> it was written and observed firing on every one of these before any of them was repaired.
+>
+> **① The lifecycle had no `TERMINATED` state at all.** Every branch out of `RUNNING` was labelled
+> with a terminal-state *name*, so this diagram had nothing for the code's `STATE_TERMINATED` to
+> correspond to, and the question *"does §2.1 declare a `RUNNING → TERMINATED` edge"* had no literal
+> answer in its own vocabulary. The shape above now says what the code implements: **one** edge,
+> carrying a `terminal_state`.
+>
+> **② Three members the runtime already reaches were missing** — `terminated.capability_lapsed`,
+> `terminated.operator_terminated` and `terminated.unrecoverable_fault`. The last has been the
+> runner's teardown state for an unclassifiable fault since **T046**, with its own arm in the suite,
+> and it was as absent from here as the other two. That asymmetry is what decided OD-26: a rule
+> reading this diagram as the closed set would, applied evenly, have invalidated a path that ships.
+>
+> **③ The bare label `completed` is now `terminated.completed`.** Every other branch carried the
+> prefix; the odd one out is the one the invariant suite's `name.startswith("terminated.")` assertion
+> would have rejected if anything had read it off this diagram.
+>
+> **④ ~~`terminated.denied_operation`~~ is struck rather than owed, on OD-26's grounds.** A refusal by
+> the egress enforcement point or by the supervisor's filesystem decision is **a disposition the loop
+> continues past**, not an outcome of the session — **SC-022 counts denials as records**, and
+> [`contracts/filesystem-decision.md`](./contracts/filesystem-decision.md) scores the criterion on the
+> record's existence rather than on the session ending. FR-006 names exactly one producer of its own,
+> the stall condition below, and no requirement in this specification wants a denial to be terminal.
+> A terminal state for one would make the *first* refusal fatal.
+>
+> **⑤ `terminated.no_progress` is owed, not struck, and the difference is deliberate.** Its predicate
+> is *unwritable as specified* under [`tasks.md`](./tasks.md) **T067** — a recorded debt, and striking
+> it would convert a gap something is tracking into one nothing is.
 
 **Invariants.** Only `RUNNING` with a live lease is honoured by the enforcement point. A resumed
 session keeps its `session_id` and its capability handle; resume renews the lease and never issues a

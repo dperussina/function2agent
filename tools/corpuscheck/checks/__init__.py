@@ -13,6 +13,7 @@ from . import (  # noqa: F401
     findings_numbering,
     identifiers,
     inventory,
+    lifecycle_taxonomy,
     numeric_provenance,
     ratio_arithmetic,
     register_ranges,

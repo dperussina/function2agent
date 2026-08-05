@@ -304,7 +304,7 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 ### Capability 8 — the raw terminal signals
 
 - [ ] T066 Emit the raw terminal signals the taxonomy sits on — error identity, budget-exhaustion cause, and an explicit end-of-run marker distinguishing completion from cancellation — in `src/runtime/signals.py` (finding 006 primitive 2: the taxonomy was always ours, and the raw signals were the dependency's)
-- [ ] T067 Terminal taxonomy over those signals, with a named member per ceiling, per bound, plus `no_progress`, `denied_operation` and `completed`, in ~~`src/runtime/terminal.py`~~ **`src/contracts/terminal.py`** (FR-006, [`data-model.md`](./data-model.md) §2.1)
+- [ ] T067 Terminal taxonomy over those signals, with a named member per ceiling, per bound, plus `no_progress`, ~~`denied_operation`~~ *(struck 2026-08-05 — **OD-26**)* and `completed`, in ~~`src/runtime/terminal.py`~~ **`src/contracts/terminal.py`** (FR-006, [`data-model.md`](./data-model.md) §2.1)
 
 > **T067's path corrected 2026-08-05, and its remaining work is smaller than the line reads but is
 > not a file move.** The struck path named a module that does not exist. **The taxonomy is already
@@ -315,15 +315,21 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 > `tests/removal_proofs.sh`. Building it a second time under the struck path would have been a live
 > module duplicated, which is what the wrong path invited.
 >
-> **What is genuinely left is the two members the taxonomy lacks**, and one of them is blocked. Every
-> ceiling and every bound has its member and `completed` has its member; `no_progress` and
-> `denied_operation` do not. **Row 6 of the loose-requirements table below already records that
+> ~~**What is genuinely left is the two members the taxonomy lacks**, and one of them is blocked.~~
+> **Corrected 2026-08-05 by OD-26: what is left is one member, and it is the blocked one.** Every
+> ceiling and every bound has its member and `completed` has its member; `no_progress` does not.
+> **Row 6 of the loose-requirements table below already records that
 > `no_progress`'s predicate is unwritable as specified**, and it is assigned to this task — so T067
 > cannot complete while that stands, and closing it would mean inventing the stall condition FR-006
-> declines to define. `denied_operation` is unblocked and is recorded as owed nowhere else.
-> [Finding 027](./findings/027-lifecycle-edge-set-divergence.md) is the census, and it also reports
-> the divergence running the other way: three members the runtime already reaches are absent from
-> §2.1's own diagram.
+> declines to define. ~~`denied_operation` is unblocked and is recorded as owed nowhere else.~~
+> **`denied_operation` is struck rather than owed.** OD-26 establishes that no requirement wants a
+> refusal to be terminal: SC-022 counts denials as records the loop continues past, and FR-006 names
+> exactly one producer of its own. The struck sentence was right that nothing recorded it as owed, and
+> wrong to read that as a debt — it was a name from an earlier design that nothing had ever removed.
+> [Finding 027](./findings/027-lifecycle-edge-set-divergence.md) is the census, and it also reported
+> the divergence running the other way: three members the runtime already reaches were absent from
+> §2.1's own diagram. **All five divergences are now reconciled and `check_corpus.py`'s
+> `lifecycle-taxonomy` check is what keeps them so.**
 - [ ] T068 [P] Test that a clean completion and a mid-loop cancellation are distinguishable from the caller's side, in `tests/unit/test_terminal_distinguishable.py` — the indistinguishable case is the false-success shape the corpus names as a very common and very expensive bug
 
 ### Capability 9 — the event stream the serving surface renders

@@ -158,6 +158,15 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     # from the outside.
     ("definition-count", "specs/001-fixture/tasks.md", 17, "no FR definition was found"),
     ("definition-count", "specs/001-fixture/tasks.md", 17, "means 'not found', not 'none exist'"),
+    # The lifecycle against the taxonomy, one row per branch of the check so
+    # that removing any branch takes exactly one row away. The two markings are
+    # the important pair: both are checked in the *forbidding* direction, and a
+    # marking that only exempted would pass those two rows forever.
+    ("lifecycle-taxonomy", "specs/001-fixture/data-model.md", 23, "turn_ceiling_reached is declared a member"),
+    ("lifecycle-taxonomy", "specs/001-fixture/data-model.md", 24, "no_progress is marked 'owed', but it IS in"),
+    ("lifecycle-taxonomy", "specs/001-fixture/data-model.md", 25, "denied_operation is marked 'struck', but it IS in"),
+    ("lifecycle-taxonomy", "specs/001-fixture/data-model.md", 26, "carries status 'pending'"),
+    ("lifecycle-taxonomy", "specs/001-fixture/data-model.md", 1, "declares terminated.operator_terminated, and the lifecycle does not mention it"),
     ("catalog-line-count", "research/README.md", 8, "14-fixture-synthesis.md"),
     ("catalog-line-count", "research/README.md", 13, "01-fixture-metrics.md"),
     ("catalog-line-count", "research/README.md", 13, "listed at 40 lines"),
@@ -359,6 +368,85 @@ def _generator_selftest(verbose: bool) -> list[str]:
     return failures
 
 
+#: `lifecycle-taxonomy`'s two vacuity floors, and why they are here rather than
+#: in a fixture corpus. Both are properties of a *whole corpus* — "the taxonomy
+#: parsed to nothing" and "no scoped document declares anything" — so neither can
+#: be planted in `known-bad` beside the row-level defects without destroying
+#: them: emptying the taxonomy silences every row check, and deleting the table
+#: silences all five. They are the branches that most need pinning, because each
+#: one is a state in which the check reads nothing and two things that were never
+#: read agree perfectly. Each entry perturbs a copy of `known-good` — the corpus
+#: that must otherwise be silent — and requires exactly this violation out of it.
+LIFECYCLE_FLOORS: list[tuple[str, str, str, str]] = [
+    (
+        "an unreadable taxonomy",
+        "src/contracts/terminal.py",
+        "# every binding gone; the module still imports and declares nothing\n",
+        "no TAXONOMY member could be read out of this file",
+    ),
+    (
+        "a taxonomy that does not parse",
+        "src/contracts/terminal.py",
+        "TAXONOMY = (\n",
+        "this file does not parse as Python",
+    ),
+    (
+        "a renamed header column",
+        "specs/001-fixture/data-model.md",
+        None,
+        "no terminal-state branch table",
+    ),
+]
+
+
+def _lifecycle_floor_selftest(verbose: bool) -> list[str]:
+    """Prove the two states in which this check reads nothing are errors."""
+    from corpuscheck import corpus as corpus_mod
+
+    failures: list[str] = []
+    print("\nknown-good (perturbed) — lifecycle-taxonomy's vacuity floors must fire")
+    for label, relpath, replacement, needle in LIFECYCLE_FLOORS:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "known-good"
+            shutil.copytree(GOOD, root)
+            target = root / relpath
+            if replacement is None:
+                # The header column renamed, which is all it takes: the table
+                # still renders, still reads correctly to a human, and is
+                # invisible to the check that reconciles it.
+                target.write_text(
+                    target.read_text(encoding="utf-8").replace(
+                        "| Terminal state |", "| Outcome |"
+                    ),
+                    encoding="utf-8",
+                )
+            else:
+                target.write_text(replacement, encoding="utf-8")
+
+            report, _ = run_checks(root)
+            hits = [
+                v
+                for v in report.violations
+                if v.check == "lifecycle-taxonomy" and needle in v.found
+            ]
+            ok = bool(hits)
+            print(f"  {'PASS' if ok else 'FAIL'}  {label:<32} {needle!r}")
+            if not ok:
+                other = [v for v in report.violations if v.check == "lifecycle-taxonomy"]
+                failures.append(
+                    f"lifecycle floor: {label} produced no violation matching "
+                    f"{needle!r} (got {[v.found for v in other] or 'nothing'})"
+                )
+            if verbose:
+                for v in report.violations:
+                    print(f"        {v.check} {v.path}:{v.line} {v.found}")
+        # `run_checks` caches nothing across roots today; asserted rather than
+        # assumed, because a cache keyed on relpath would make every floor above
+        # read the previous corpus and pass for the wrong reason.
+        assert not getattr(corpus_mod, "_CACHE", None), "corpus load grew a cache"
+    return failures
+
+
 def _matches(v, path, line, needle) -> bool:
     if path is not None and v.path != path:
         return False
@@ -416,7 +504,11 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(f"  PASS  {len(all_checks())} checks, 0 violations")
 
-    # Direction 4: the generator that now writes two of those claim classes.
+    # Direction 4: the two states in which `lifecycle-taxonomy` reads nothing.
+    # Neither is plantable in a fixture corpus; see LIFECYCLE_FLOORS.
+    failures.extend(_lifecycle_floor_selftest(args.verbose))
+
+    # Direction 5: the generator that now writes two of those claim classes.
     failures.extend(_generator_selftest(args.verbose))
 
     print()

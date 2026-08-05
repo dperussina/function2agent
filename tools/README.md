@@ -77,7 +77,7 @@ threshold** before you write any edit-and-restore loop of your own.
 
 ## The check set
 
-Sixteen checks in nine families. Severity is **error** when the finding is
+Seventeen checks in ten families. Severity is **error** when the finding is
 almost certainly a defect, **warning** when it is a defect *or* a judgement call
 the author may have made deliberately.
 
@@ -98,6 +98,7 @@ the author may have made deliberately.
 | `definition-count` | error / warning | A prose count of a *register* — "58 functional requirements" — against the definitions in the specification it describes. **error** when the target yields zero definitions, unconditionally; **warning** on an ordinary mismatch, because a deliberately historical figure is a real case and the strike convention is its escape. See [Why zero definitions is an error](#why-zero-definitions-is-an-error-and-not-a-comparison). |
 | `catalog-line-count` | warning | A `Lines` column, or an inline `(N lines)`, that has drifted from the file it describes. **`gen_claims.py` writes these**; this rule is what fires when it has not been run. Exact since 2026-08-03 — the previous ±2 tolerance was concealing a live 2-line drift. |
 | `toc-coverage` | warning | A `##` section missing from its document's own table of contents, and therefore unreachable from the top of an 800-line file. |
+| `lifecycle-taxonomy` | error | `data-model.md` §2.1's declared terminal states are not exactly the members of `TAXONOMY` in `src/contracts/terminal.py`, in **either** direction. The only check whose other side is source: the taxonomy is parsed with `ast`, never imported, because `--root` may point at a fixture tree. Added 2026-08-05 under **OD-26**, after the two artifacts had diverged in both directions at once — three members absent from the diagram, two diagram labels that were not members, and a bare `completed` where the member is `terminated.completed` — while the other sixteen checks ran at 0 errors, because none of them reads Python. See [Why the lifecycle is a table now](#why-the-lifecycle-is-a-table-now). |
 | `dry-run-verdict` | error | An outcome claim inside a run directory whose own manifest says `dry_run: true`: a gate cleared, a hypothesis confirmed, one method materially better than another, a line labelled `VERDICT:`. A run that called no model produced no evidence, so every such claim was computed against stub output. See below for why the disclosure has to be on the same line. |
 
 Four of these name failure classes nobody had named before: `register-range`,
@@ -189,9 +190,59 @@ the lowercased line, which opened two holes and both are now closed:
   confirmed'" — is 27 characters and keeps working; `known-bad` carries the
   same sentence with an unrelated `VERDICT:` bolted onto the end of it.
 
+### Why the lifecycle is a table now
+
+**The diagram could not be reconciled by anything, and that is why it drifted.**
+`data-model.md` §2.1 enumerated its terminal states as branch labels inside a
+fenced `text` picture. Three properties of that form each block a check on their
+own, and together they explain a divergence that survived three members and
+several weeks:
+
+- **`~~` renders literally inside a fence.** The house convention for a
+  superseded claim is to strike it and keep it visible, so a terminal state that
+  turned out to be wrong could not be retired in the corpus's own style. Two
+  prior passes had already found the same about headings, where a strike
+  corrupts the anchor.
+- **A picture cannot carry a status.** `terminated.no_progress` is a *declared
+  debt* — its predicate is unwritable as specified and T067 owes it — and
+  `terminated.denied_operation` was a name no requirement wanted. Nothing in the
+  branch syntax could tell those two apart, or tell either from a live member.
+- **Its labels were terminal-state names, not states**, so the diagram had no
+  `TERMINATED` at all. `Runner.attach`'s refusal message cited §2.1 for having
+  *"no edge out of it"*, which was true only because there was no *it*.
+
+So the enumeration moved into a table and the diagram kept the shape it was
+always authoritative about — one non-terminal state, one resume edge back, one
+`RUNNING → TERMINATED` edge carrying a `terminal_state`. **The table is the only
+enumeration**; the picture names no member, so the two cannot drift from each
+other. What a human reader loses is the ten names inline in the picture; what a
+human reader gains is a state model that matches the code, a requirement per
+member, and a column that says which members are owed.
+
+**The status column is checked in the forbidding direction as well as the
+permitting one**, and that is the part worth copying. A marking that merely
+exempted a row would go blind the moment its debt was discharged — the member
+would ship, the row would go on saying *not yet*, and nothing would fire again.
+So an `owed` or `struck` row whose name **is** a member is an error too. Both
+sides of that rule are pinned in `known-bad`.
+
+**Neither of its two vacuity floors is plantable in a fixture corpus**, which is
+why they live in `selftest.py` as `LIFECYCLE_FLOORS` rather than beside the
+other rows. Both are properties of a whole corpus — a taxonomy that parses to
+nothing, and a corpus where no scoped document declares anything — and planting
+either in `known-bad` silences every row-level defect there. They are also the
+branches that most need pinning, for the reason
+[Why zero definitions is an error](#why-zero-definitions-is-an-error-and-not-a-comparison)
+gives one flight up: two things that were never read agree perfectly. Each floor
+is exercised by perturbing a copy of `known-good` — the corpus that must
+otherwise be silent — and requiring exactly one named violation out of it. The
+third perturbation is the cheapest and the most realistic: **renaming one header
+column**. The table still renders, still reads correctly to a human, and becomes
+invisible to the check that reconciles it.
+
 ## Generated claims — `gen_claims.py`
 
-Two of the sixteen checks were guarding **hand-written summaries of facts that
+Two of the seventeen checks were guarding **hand-written summaries of facts that
 are machine-readable from an artifact sitting right beside them.** Guarding is
 the wrong shape of solution for a fact nobody should be transcribing, and the
 catch history says so: `catalog-line-count` has been tripped and hand-repaired
@@ -1027,6 +1078,14 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   by any check — including the analysis script that *emits* the decision rows
   `dry-run-verdict` catches, so the rule stops the artifact reaching the
   repository and does not stop the code producing it.
+  **Narrowed 2026-08-05: one check now reads product source.**
+  `lifecycle-taxonomy` parses `src/contracts/terminal.py` with `ast` — one file,
+  named in `config.json`, for one fact. That is not a general capability and
+  should not be read as one: the check knows the shape of a `TerminalState`
+  binding and the `TAXONOMY` tuple and nothing else about Python, and it
+  **parses rather than imports** because `--root` may point at a fixture tree
+  and a corpus checker that executes what it checks has a failure mode no regex
+  does.
 - **A wrong verdict in a run that paid for it.** `dry-run-verdict` keys entirely
   off the `dry_run` marker. A live run may publish any conclusion it likes,
   however unsupported, and nothing here objects. The check catches *evidence
