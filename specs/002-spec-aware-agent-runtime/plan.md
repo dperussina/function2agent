@@ -203,6 +203,34 @@ full and which no restatement may be weaker than.
 > > namespace with *no* map rather than a self-mapped one — a different failure, and one that fails
 > > earlier and harder than finding 023 measured. Neither surface makes the namespace safe to enter
 > > without a capable writer, which is the reason the deferral does not move on either.
+> >
+> > #### ⚠️ NARROWED 2026-08-05 — the `newuidmap` helper is measured for the first time, and it is the *highest*-authority of the model's three routes rather than the lowest
+> >
+> > **No decision is taken here and the deferral does not move.** What moves is which route a builder
+> > should reach for. **OD-24** offers three ways to get the multi-line map written — the supervisor
+> > holds `CAP_SETUID`/`CAP_SETGID`, *or* "delegates that to a `newuidmap` helper", or the plain-drop
+> > fallback — and the helper was named in three places in this corpus and measured in none of them.
+> > [Finding 028](./findings/028-od24-deferral-re-examination.md) measured it, on the no-LSM host
+> > finding 024 used, so the `CAP_SETUID` limb is isolated from Ubuntu's restriction.
+> >
+> > **The result, as a one-bit delta.** The setuid-root helper needs **`CAP_SYS_ADMIN`** in the
+> > supervisor's bounding set: with Docker's default set — which carries `CAP_SETUID` and not
+> > `CAP_SYS_ADMIN` — the map write is `EPERM`, and adding exactly that one bit makes it `ok`. Writing
+> > the map **directly**, as the namespace's own creator, succeeds holding exactly `CAP_SETUID` and
+> > `CAP_SETGID` and no `CAP_SYS_ADMIN`.
+> >
+> > **Why, and it is not an accident of the helper's packaging.** `map_write()` demands
+> > `CAP_SYS_ADMIN` over the target namespace, judged against the credentials at open time
+> > (`kernel/user_namespace.c:976`, v6.12). A namespace's creator satisfies that for free, because the
+> > owner of a user namespace — judged **by euid** — holds every capability in it without holding any
+> > bit (`security/commoncap.c:92`, v6.12). A setuid helper **forfeits exactly that shortcut by
+> > becoming euid 0**, and must then satisfy the `CAP_SYS_ADMIN` gate on its own merits.
+> >
+> > **So the helper buys one real thing and is not a way to hold less.** The supervisor *process* can
+> > run at `CapEff=0`; the cost is a bounding set carrying `CAP_SYS_ADMIN`, reachable by any setuid
+> > binary in the image. **The three routes are now two and a reordering**, and the least-authority
+> > route that delivers the namespace is the supervisor holding `CAP_SETUID`+`CAP_SETGID` directly.
+> > A supervisor holding **nothing** in the initial user namespace has no measured route at all.
 
 > **Extended 2026-08-04 — the three facilities being present in the kernel does not make them
 > reachable from the runtime the operator runs, and the bundle is where the difference is closed.**
