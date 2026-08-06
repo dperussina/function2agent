@@ -962,6 +962,26 @@ citation that three sweeps declined to follow, where the label was right and the
 at carried the false claim. Both share one shape: *the artifact you edited and the artifact that
 governs are not the same artifact, and its name does not tell you which one you have.*
 
+### Staging explicit paths protects you from another pass's working tree, not from its index
+
+**On 2026-08-05 the cost-table pass staged explicit paths — the defence this repository adopted after
+two sweep-ups of other passes' work — and it still disturbed a concurrent pass's *pre-staged* index
+entry, converting a staged rename into an unstaged delete plus an untracked file.** Nothing was lost,
+because the shape was noticed. The shape is what matters: from there a `git commit -a` commits the
+delete without the add and drops the renamed file out of version control entirely. That has already
+happened twice here, to findings 025 and 028, and a 492-line finding came close to going the same way
+the same day.
+
+`git add <path>` is a statement about the working tree. It says nothing about what was *already* in
+the index when you arrived, and a rename staged by someone else is two index entries that only mean
+"rename" while both are present. Touch one and the pair stops being a rename without anything
+reporting an error.
+
+**So the rule is a read, not a write: before staging anything, read `git status` for staged entries
+you did not create.** If there are any, a concurrent pass is mid-commit and the index is not yours to
+edit. This is cheap, it is the only signal available, and no gate can supply it — a hook runs after
+the damage is staged, and by then the two halves of the rename are already separated.
+
 ### A proof arm with no terminator does not report a hang; it reports whatever the eventual kill looks like
 
 **On 2026-08-05 the `T065 wiring` arm ran for 56 minutes of continuous CPU without returning, and the
