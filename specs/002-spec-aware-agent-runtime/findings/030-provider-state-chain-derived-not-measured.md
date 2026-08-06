@@ -49,6 +49,8 @@ saving.
 > | **xAI errors on a miss** | vendor documentation — but the quote is an **imperative**, *"always pass the full `output` array back verbatim"*, which says nothing about what happens if you do not | **No — and see below** |
 > | **Anthropic degrades quietly on a miss** | vendor documentation, plus the two-way correction to the old premise | **No, in either direction** |
 >
+> **SUPERSEDED IN PART 2026-08-05 by [finding 031](./031-provider-state-chain-measured.md), which ran the probe [§6](#6-the-probe-that-would-convert-this-designed-and-not-run) designs and this document did not run.** The *measured?* column above reads **No** on all four rows; that was the state on the day this was written and it is no longer the state. **The sharp claim this document is built around — three providers error on a miss and Anthropic degrades quietly — is now measured and partly falsified: on a well-formed request with the reasoning state gone, exactly one provider errors.** Which one it is, why one of the two observed 400s is not a state rejection at all, and what became of the other limbs are finding 031's §2, §4 and §6, and are **deliberately not restated here**. What this document exists to record — that all four determinations rested on documentation alone, and that a live artifact already contradicted one of them — is unaffected and remains true of the day it was written.
+>
 > **The sentence that does not survive.** `states_for`'s docstring says *"Only Anthropic degrades
 > quietly on a miss; the other three fail the request."* **The xAI limb of that is contradicted by a
 > live measurement already committed in this repository**, and the contradiction is inside the
@@ -113,9 +115,17 @@ finding follows that precedent and does not improve on it.
 | xAI **errors** on a miss | **DERIVED from an imperative**, and **CONTRADICTED** for the drop-all condition | [§2](#2-the-xai-limb-is-not-unmeasured--it-is-contradicted-and-the-condition-matters) |
 | Anthropic **degrades quietly** on a miss | **DERIVED**, and never observed in either direction | `states_for`'s docstring |
 
-**The load-bearing negative, stated plainly: no request with a state deliberately withheld has ever
+~~**The load-bearing negative, stated plainly: no request with a state deliberately withheld has ever
 been sent to OpenAI, Google or Anthropic from this repository.** One has been sent to xAI, once, in a
-different condition from the one the prediction is about, and it did not error.
+different condition from the one the prediction is about, and it did not error.~~
+
+**DISCHARGED 2026-08-05 by [finding 031](./031-provider-state-chain-measured.md): eight such requests
+have been sent, four providers × two withholding conditions, each against a full-chain baseline on the
+same provider, model, credential and conversation.** Every `DERIVED` row in the table above is
+therefore the evidential state on the day this was written rather than the current one. **The measured
+column of that table is finding 031 §6 and is not copied here**, for the reason
+[`tools/README.md`](../../../tools/README.md) records about derived views: a restatement of what an
+authority holds rots on the authority's next revision while the authority stays correct.
 
 ## 2. The xAI limb is not unmeasured — it is **contradicted**, and the condition matters
 
@@ -163,6 +173,18 @@ provider rejected the mutated conversation"* — did not fire.
 | **drop-all** | no assistant turn carries state | **measured, no error** | never run |
 | **drop-one** | a chain with a hole in the middle | never run | never run |
 
+**BOTH `drop-one` CELLS WERE FILLED 2026-08-05, AND FOR THREE OF THE FOUR PROVIDERS THE ANSWER IS TO A
+WEAKER QUESTION THAN THIS TABLE ASKS** ([finding 031](./031-provider-state-chain-measured.md) §3,
+which is where this belongs and is not reproduced here). This row's description is *a chain with a
+hole in the middle*, and an **interior hole was actually constructed and sent to exactly one
+provider**: xAI, three requests, all accepted. On the other three the treatment never produced a hole
+— two of them rejected the request whose *trailing* state was missing, one turn before a hole could
+form, and for different reasons from each other; the third stopped emitting state after the withheld
+turn, so nothing landed after the gap. **So for xAI the `drop-one` cell is answered as this table asks
+it, and for Anthropic, Google and OpenAI it is answered narrower: whether the most recent state may be
+missing, not whether an interior one may.** A later document reading that arm as *interior hole, four
+providers* would be wrong.
+
 These are not the same request and a validator could reasonably distinguish them: a conversation
 carrying **no** encrypted content reads as an ordinary unencrypted conversation, whereas a chain with
 a hole is internally inconsistent, and inconsistency is the thing a validator is for. So the honest
@@ -170,7 +192,8 @@ position is:
 
 - **`states_for`'s sentence *"the other three fail the request"* is wrong as written**, because it
   attaches no condition and the measured case falls inside it.
-- **The narrower prediction — xAI rejects a chain with a hole — survives, unmeasured.**
+- ~~**The narrower prediction — xAI rejects a chain with a hole — survives, unmeasured.**~~
+  **Measured 2026-08-05 and it fails too** ([finding 031](./031-provider-state-chain-measured.md) §2).
 - **This is exactly what a negative control is for, and finding 016 already built one.** Rule 8's
   concern is that *"every way the instrument itself can break produces that same bit"*; here the
   instrument did not break and the bit did not appear, which is the informative case and is why the
@@ -622,9 +645,12 @@ stripped entirely *"still chained and still answered 149.99."*
 ## 11. What this does **not** establish
 
 - **It does not establish that any provider tolerates a missing state.** One condition on one provider
-  was measured not to error. That is one cell of a twelve-cell table.
-- **It does not establish that any provider rejects one.** No such request has been sent from this
-  repository to OpenAI, Google or Anthropic in any condition.
+  was measured not to error. That is one cell of a twelve-cell table. **The other eleven were filled on
+  2026-08-05** ([finding 031](./031-provider-state-chain-measured.md)); this document still establishes
+  only the one cell, which is what this bullet says.
+- **It does not establish that any provider rejects one.** ~~No such request has been sent from this
+  repository to OpenAI, Google or Anthropic in any condition.~~ **Superseded 2026-08-05 — such requests
+  have now been sent to all three; this finding is still not what establishes anything about them.**
 - **It does not establish anything about quiet degradation on Anthropic, in either direction.** Nothing
   has measured it and [§6](#6-the-probe-that-would-convert-this-designed-and-not-run) records that the
   designed probe would not either.
