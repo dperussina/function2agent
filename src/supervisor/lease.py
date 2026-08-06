@@ -96,15 +96,49 @@ class LeaseRenewer:
                 if not self.renew_once():
                     self.stopped_because = "session is no longer RUNNING"
                     return
-            except Exception as exc:  # noqa: BLE001 - recorded, then stop
-                # A renewer thread that dies silently makes the lease lapse for
-                # a reason nobody can see. Lapsing is the fail-closed
-                # direction, so this is not unsafe — it is undiagnosable, and
-                # that is its own defect. It cost real time during the crash
-                # fixture: `sqlite3`'s same-thread guard killed this thread and
-                # the only symptom was a lease that would not renew.
+            except Exception as exc:
+                # **A traceback is not the intended operator interface. This is
+                # an interim, and it is here because it is the only channel
+                # library code has today.**
+                #
+                # Swallowing was measured, not assumed: one planted
+                # `SQLITE_BUSY` on the second of twelve renewals stopped
+                # renewal at 1 of 12, left the row `RUNNING` with the lease
+                # 0.5s in the past, and put **0 bytes** on stdout and stderr.
+                # Re-raising leaves every one of those outcomes identical and
+                # adds 881 bytes of traceback naming the engine error. So this
+                # does not repair the lapse — it makes an unattributable lapse
+                # attributable, which is the half the constructor comment in
+                # `session_table.py` already calls "its own defect".
+                #
+                # `stopped_because` is set before raising rather than dropped.
+                # Nothing in `src/` reads it, but its documented `None` means
+                # *running, or stopped in the orderly way*, and leaving it
+                # `None` through a crash would make it report an orderly stop
+                # to the one reader it has.
+                #
+                # **The durable answer is a logger injected from an entry
+                # point**, on the pattern `src/proxy/main.go` already follows:
+                # `log.New(os.Stderr, ...)` is the first statement of `main()`
+                # and is handed downward, and there is no package-level logger
+                # anywhere in Go. Python has no entry point to constitute one
+                # from — the seam recorded against T029 under *configuration
+                # and failing closed* — so the good answer is blocked, not
+                # declined. **Nothing here is a logging facility and none of it
+                # should grow into one.**
+                #
+                # **What this channel does not survive, measured:** interpreter
+                # finalization. It relies on `threading.excepthook` reaching a
+                # buffered stderr from a daemon thread, so a raise coinciding
+                # with the main thread's exit is truncated, lost, or aborts the
+                # process (`_enter_buffered_busy`, SIGABRT). Sweeping the main
+                # thread's exit across the raise instant in 0.5ms steps: 41 of
+                # 87 clean, 14 truncated, 32 silent, 4 aborted. That window is
+                # a further reason the traceback is not the answer — it is not
+                # a reason to keep the swallow, which loses the report in every
+                # case rather than in a sub-millisecond one.
                 self.stopped_because = f"{type(exc).__name__}: {exc}"
-                return
+                raise
 
     def start(self) -> None:
         if self._thread is not None:

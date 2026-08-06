@@ -430,6 +430,16 @@ proof "FR-050 opaque handle — a structured claim instead" \
   "tests/integration/test_lease_revocation.py::test_the_handle_carries_no_claim_and_no_expiry" \
   's = s.replace("    handle = secrets.token_hex(HANDLE_BYTES)", "    handle = \x27eyJzZXNzaW9uIjoi\x27 + secrets.token_hex(HANDLE_BYTES)")'
 
+# The tamper restores the swallow rather than deleting the handler: `return` in place of `raise` is
+# the edit a contributor would actually make, and it is the state this file shipped until 2026-08-06.
+# What makes this a proof of the *report* and not of the renewal count is that the arm's own
+# `RENEWALS 1` assertion still passes under the tamper — one planted SQLITE_BUSY stops renewal at 1
+# of 12 either way, and the lease is 0.5s expired either way. Only the stderr assertion moves.
+proof "FR-050 lease renewal — the swallow restored, so a failed renewal is silent again" \
+  src/supervisor/lease.py \
+  "tests/integration/test_lease_revocation.py::test_a_failed_renewal_is_not_silent" \
+  's = s.replace("{exc}\"\n                raise", "{exc}\"\n                return")'
+
 proof "FR-036 Secret — a __str__ that discloses" \
   src/contracts/secret.py \
   "tests/invariants/test_secret_has_no_serializer.py" \

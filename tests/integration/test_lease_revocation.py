@@ -167,6 +167,103 @@ def test_the_renewer_says_why_it_stopped(table) -> None:
     assert renewer.stopped_because == "session is no longer RUNNING"
 
 
+_PLANTED_RENEWER = textwrap.dedent(
+    """
+    import sqlite3, sys, time
+    sys.path.insert(0, {repo!r})
+    from src.supervisor.lease import LeaseRenewer, LeaseTerms
+    from src.supervisor.session_table import SessionTable
+
+    table = SessionTable({db!r})
+    calls = []
+    real = table.renew
+
+    def one_busy(session_id, expiry):
+        calls.append(1)
+        if len(calls) == 2:
+            raise sqlite3.OperationalError("database is locked")
+        return real(session_id, expiry)
+
+    table.renew = one_busy
+    renewer = LeaseRenewer(table, LeaseTerms({session!r}, {interval!r}))
+    renewer.start()
+    print("READY", flush=True)
+    time.sleep({lifetime!r})
+    print("RENEWALS", renewer.renewals, flush=True)
+    """
+)
+
+
+def test_a_failed_renewal_is_not_silent(tmp_path) -> None:
+    """One momentary `SQLITE_BUSY`, and the lapse has to be attributable.
+
+    **The lease lapses either way, and that is not what this asserts.** A
+    swallowed exception and a raised one produce the same 1 renewal, the same
+    `RUNNING` row and the same expired lease. What differs is whether an
+    operator can find out why a *healthy* session's authority ended:
+    swallowing leaves the reason on an attribute nothing in `src/` reads, and
+    puts zero bytes anywhere a human looks.
+
+    Out of process on purpose. `pytest` installs its own
+    `threading.excepthook` and turns thread exceptions into warnings, so
+    asserting inside the test process would measure the plugin rather than the
+    channel a deployed supervisor has. The child also outlives the raise by an
+    order of magnitude, which keeps the arm out of the interpreter-shutdown
+    window the comment at the change site measures.
+    """
+    db = tmp_path / "sessions.db"
+    repo = str(Path(__file__).resolve().parent.parent.parent)
+    now = time.time()
+    with SessionTable(db) as table:
+        capability = _start(table, "s-busy", now)
+
+    child = subprocess.run(
+        [sys.executable, "-c", _PLANTED_RENEWER.format(
+            repo=repo, db=str(db), session="s-busy",
+            interval=0.05, lifetime=0.6)],
+        capture_output=True, text=True, timeout=30,
+    )
+
+    assert child.returncode == 0, (
+        f"the child did not exit cleanly (rc={child.returncode}), so this arm "
+        f"is measuring a crash and not the renewer's report:\n{child.stderr}"
+    )
+    assert "READY" in child.stdout, "the renewer never started"
+    assert "RENEWALS 1" in child.stdout, (
+        f"the planted failure did not stop renewal where this arm expects, so "
+        f"the stderr assertions below are not about it: {child.stdout!r}"
+    )
+
+    assert child.stderr, (
+        "the renewer died and said nothing. One momentary SQLITE_BUSY — the "
+        "class the repository layer labels *retrying is reasonable* — ended "
+        "renewal for a live session, and the only surviving symptom is a "
+        "lease that stopped moving"
+    )
+    assert "sqlite3.OperationalError: database is locked" in child.stderr, (
+        f"stderr carries no engine error, so the reason did not survive:\n"
+        f"{child.stderr}"
+    )
+    assert "_loop" in child.stderr and "lease-s-busy" in child.stderr, (
+        f"stderr does not name the renewer thread or its loop, so a reader "
+        f"cannot tell which mechanism stopped:\n{child.stderr}"
+    )
+
+    # The outcome half, asserted so the arm records that re-raising bought
+    # visibility and changed nothing else.
+    with SessionTable(db) as table:
+        row = table.resolve(capability.digest)
+    assert row is not None
+    assert row.state == STATE_RUNNING, (
+        "the row is no longer RUNNING, so the lapse came from termination "
+        "rather than from renewal stopping"
+    )
+    assert not row.honoured_at(time.time()), (
+        "the lease is still honoured, so renewal did not stop and the arm "
+        "proves nothing about a lapse"
+    )
+
+
 def test_terminate_requires_a_named_state(table) -> None:
     """FR-006 — a *member* of the taxonomy, which is stronger than non-empty.
 
