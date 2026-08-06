@@ -473,6 +473,50 @@ proof "FR-050 lease renewal — the swallow restored, so a failed renewal is sil
   "tests/integration/test_lease_revocation.py::test_a_failed_renewal_is_not_silent" \
   's = s.replace("{exc}\"\n                raise", "{exc}\"\n                return")'
 
+# --- T108, the renewer branch the T016 migration made available ---------------
+#
+# `_loop` tolerates `StoreBusyError` up to the budget `LEASE_TTL_MULTIPLE` already
+# grants and stops on everything else. Four mechanisms, four failure directions,
+# and they are separated deliberately: a proof set that could not tell them apart
+# would report the branch as load-bearing while any three of the four were gone.
+
+# Collapse the split back to re-raise-everything — the pre-2026-08-06 behaviour,
+# and the one this task was asked to rule on. Measured either side: one planted
+# momentary contention on renewal 2 of 12 gives 1 renewal and a dead thread with
+# the tamper applied, 10 and a live thread without it.
+proof "T108 renewer — one momentary contention ends a healthy session again" \
+  src/supervisor/lease.py \
+  "tests/integration/test_lease_revocation.py::test_one_momentary_contention_does_not_end_a_healthy_lease" \
+  's = s.replace("                if consecutive_busy > TOLERATED_CONSECUTIVE_BUSY:", "                if True:")'
+
+# The other end of the same line: tolerate without bound. This is the option T108
+# refused by name, and it is invisible in the arm above — that one plants a
+# single failure, which is under the bound either way. Only a permanently
+# planted refusal separates them, and it separates them by attempt count rather
+# than by anything a message says.
+proof "T108 renewer — contention is tolerated past the budget the lease grants" \
+  src/supervisor/lease.py \
+  "tests/integration/test_lease_revocation.py::test_contention_beyond_the_lease_budget_stops_renewal" \
+  's = s.replace("                if consecutive_busy > TOLERATED_CONSECUTIVE_BUSY:", "                if False:")'
+
+# Widen the split from the busy subclass to `StoreUnavailableError`, its base.
+# The tamper is an import alias because that is the smallest honest edit: the
+# handler body does not change, only which errors reach it. A wedged store — a
+# lock that outlasted the entire busy timeout — then gets waited on, which is
+# waiting for something that is not coming.
+proof "T108 renewer — a wedged store is retried as though it were momentary" \
+  src/supervisor/lease.py \
+  "tests/integration/test_lease_revocation.py::test_a_wedged_store_stops_renewal_without_spending_the_budget" \
+  's = s.replace("from src.contracts.repository import StoreBusyError", "from src.contracts.repository import StoreUnavailableError as StoreBusyError")'
+
+# The reset, which is what makes the tolerance a budget rather than a lifetime
+# quota. Without it a supervisor dies on the second momentary contention it ever
+# sees, however many hours and however many healthy renewals apart the two were.
+proof "T108 renewer — the tolerance becomes a lifetime quota" \
+  src/supervisor/lease.py \
+  "tests/integration/test_lease_revocation.py::test_the_tolerance_is_consecutive_and_not_cumulative" \
+  's = s.replace("            consecutive_busy = 0", "            pass")'
+
 proof "FR-036 Secret — a __str__ that discloses" \
   src/contracts/secret.py \
   "tests/invariants/test_secret_has_no_serializer.py" \

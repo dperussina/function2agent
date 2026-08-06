@@ -3399,9 +3399,15 @@ half lands there rather than here.
   a fourth.
 - **Not** a claim that the defect is harmless. It is unreached, which is a different thing, and the
   difference is the entire reason the expiry condition is written down.
-- **Not** a resolution of T108. The lease renewer dies permanently on the first exception of any kind,
-  and that is wrong whichever layer the table sits behind. The migration would remove one of its
-  causes; it does not answer the question T108 puts.
+- ~~**Not** a resolution of T108. The lease renewer dies permanently on the first exception of any
+  kind, and that is wrong whichever layer the table sits behind. The migration would remove one of its
+  causes; it does not answer the question T108 puts.~~ **Superseded 2026-08-06 with the discharge
+  above, and the original was right about the order.** The migration did not answer T108; it made the
+  answer *available*. Two of T108's four blocked routes were the migration's absence — *`continue`
+  retries forever* and *`SessionTable` cannot raise them from outside the repository layer* — and both
+  fell with it. `_loop` now tolerates `StoreBusyError` up to the budget `LEASE_TTL_MULTIPLE` already
+  grants and stops on everything else, which is bounded because a lock that is never released
+  exhausts the busy handler and reads as `StoreWedgedError` instead.
 - **Not** a re-sizing of anything. No estimate is attached, no band is collapsed, and finding 033 is
   explicit that it does not establish whether the migration is correctly sized.
 

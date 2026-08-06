@@ -39,8 +39,14 @@ from pathlib import Path
 
 import pytest
 
+from src.contracts.repository import StoreBusyError, StoreWedgedError
 from src.supervisor.capability import Capability, issue
-from src.supervisor.lease import LEASE_TTL_MULTIPLE, LeaseRenewer, LeaseTerms
+from src.supervisor.lease import (
+    LEASE_TTL_MULTIPLE,
+    TOLERATED_CONSECUTIVE_BUSY,
+    LeaseRenewer,
+    LeaseTerms,
+)
 from src.supervisor.listener import SessionListener, is_reachable
 from src.supervisor.session_table import (
     STATE_RUNNING,
@@ -262,6 +268,157 @@ def test_a_failed_renewal_is_not_silent(tmp_path) -> None:
         "the lease is still honoured, so renewal did not stop and the arm "
         "proves nothing about a lapse"
     )
+
+
+# --- the two branches of `_loop`, which are a single decision -------------
+#
+# `StoreBusyError` is tolerated up to the budget the lease already grants;
+# everything else stops renewal at once. The three arms below are written so
+# that no one of them passes if the branch it is about is deleted: the
+# tolerated arm fails if the split collapses into re-raise, the exhaustion arm
+# fails if it collapses into swallow, and the wedged arm fails if the split is
+# made on `StoreUnavailableError` — the common base — instead of on the busy
+# subclass. Each asserts the number of *attempts* the table saw, which is a
+# value the guard decides, rather than a word in a message some other module
+# might also contain.
+
+class _PlantedRenew:
+    """A real table whose `renew` raises from the n-th call onward."""
+
+    def __init__(self, table: SessionTable, exc: Exception, *,
+                 fail_on: int, forever: bool = False) -> None:
+        self._table = table
+        self._exc = exc
+        self._fail_on = fail_on
+        self._forever = forever
+        self.attempts = 0
+
+    def renew(self, session_id: str, lease_expires_at: float) -> int:
+        self.attempts += 1
+        if self.attempts == self._fail_on or (
+                self._forever and self.attempts >= self._fail_on):
+            raise self._exc
+        return self._table.renew(session_id, lease_expires_at)
+
+
+def _run_planted(table, planted, *, intervals: int = 8, interval: float = 0.05):
+    renewer = LeaseRenewer(planted, LeaseTerms("s-1", interval))
+    renewer.start()
+    time.sleep(interval * intervals)
+    alive = renewer._thread.is_alive()
+    renewer.stop()
+    return renewer, alive
+
+
+def test_one_momentary_contention_does_not_end_a_healthy_lease(table) -> None:
+    """The repair, stated as the outcome rather than as the branch taken.
+
+    `LEASE_TTL_MULTIPLE` already budgets the lease for one missed renewal, and
+    before this the loop spent that budget on the first `SQLITE_BUSY` it saw:
+    measured at **1 renewal of 12** with the thread dead and the lease 0.501s
+    in the past, against a control of 12 of 12. The assertion that matters is
+    the last one — the lease is *in the future* when the dust settles, which a
+    stopped renewer cannot produce and which no message check would catch.
+    """
+    _start(table, "s-1", time.time())
+    planted = _PlantedRenew(
+        table, StoreBusyError("momentary contention"), fail_on=2)
+    renewer, alive = _run_planted(table, planted)
+
+    assert renewer.renewals >= 4, (
+        f"only {renewer.renewals} renewals survived one momentary "
+        f"SQLITE_BUSY, so the loop is still spending the whole lease budget "
+        f"on contention that had already cleared: {renewer.stopped_because}"
+    )
+    assert alive, "the renewer thread died on a single momentary refusal"
+    assert renewer.stopped_because is None
+    row = table.get("s-1")
+    assert row.lease_expires_at > time.time(), (
+        "the lease is in the past, so renewal stopped even though the thread "
+        "is alive and the session is still RUNNING"
+    )
+
+
+def test_contention_beyond_the_lease_budget_stops_renewal(table) -> None:
+    """The bound, asserted as a count so it cannot drift silently.
+
+    Tolerance is `TOLERATED_CONSECUTIVE_BUSY`, derived from
+    `LEASE_TTL_MULTIPLE`. The loop must stop on the *first* failure past it and
+    not on the second or the tenth, so this counts attempts rather than
+    asserting merely that it eventually stopped — an unbounded `continue`
+    would also eventually be interrupted by `stop()` and would pass a weaker
+    check.
+    """
+    _start(table, "s-1", time.time())
+    planted = _PlantedRenew(
+        table, StoreBusyError("held lock"), fail_on=2, forever=True)
+    renewer, alive = _run_planted(table, planted)
+
+    # start() takes attempt 1 on the calling thread; the loop then tolerates
+    # exactly TOLERATED_CONSECUTIVE_BUSY and stops on the one after.
+    expected = 1 + TOLERATED_CONSECUTIVE_BUSY + 1
+    assert planted.attempts == expected, (
+        f"the table saw {planted.attempts} renewal attempts, expected "
+        f"{expected}. Fewer means the tolerance is not being spent; more "
+        f"means the loop is retrying past the budget the lease grants, which "
+        f"is the unbounded retry T108 refused"
+    )
+    assert not alive, "the renewer thread outlived a lock it cannot wait out"
+    assert renewer.stopped_because is not None
+    assert renewer.stopped_because.startswith("StoreBusyError:")
+
+
+def test_the_tolerance_is_consecutive_and_not_cumulative(table) -> None:
+    """The counter reset, which is the difference between a budget and a quota.
+
+    Without it, `consecutive_busy` counts every refusal a long-lived session
+    ever saw, so a supervisor running for hours dies on the second momentary
+    contention of its life — hours after the first, with the lease healthy the
+    whole time in between. The arm above cannot see this: it plants one
+    failure, and one is under the bound either way.
+    """
+    _start(table, "s-1", time.time())
+    planted = _PlantedRenew(table, StoreBusyError("first"), fail_on=2)
+    renewer = LeaseRenewer(planted, LeaseTerms("s-1", 0.05))
+    renewer.start()
+    time.sleep(0.20)
+    # A second, separate contention several successful renewals later.
+    planted._fail_on = planted.attempts + 2
+    planted._exc = StoreBusyError("second, much later")
+    time.sleep(0.25)
+    alive = renewer._thread.is_alive()
+    renewer.stop()
+
+    assert alive and renewer.stopped_because is None, (
+        f"the renewer died on the second non-consecutive contention, so the "
+        f"tolerance is a lifetime quota rather than a budget the lease "
+        f"renews: {renewer.stopped_because}"
+    )
+    assert table.get("s-1").lease_expires_at > time.time()
+
+
+def test_a_wedged_store_stops_renewal_without_spending_the_budget(table) -> None:
+    """The half that tells the split apart from tolerating every store error.
+
+    `StoreWedgedError` means the busy handler ran to *exhaustion* — the lock
+    outlived the whole timeout, so nothing healthy holds it and waiting longer
+    is waiting for something that is not coming. A loop that split on
+    `StoreUnavailableError`, the shared base, would tolerate this one too and
+    would still pass the arm above; the attempt count is what separates them.
+    """
+    _start(table, "s-1", time.time())
+    planted = _PlantedRenew(
+        table, StoreWedgedError("lock outlived the busy timeout"), fail_on=2)
+    renewer, alive = _run_planted(table, planted)
+
+    assert planted.attempts == 2, (
+        f"the table saw {planted.attempts} attempts; a wedged store is "
+        f"tolerated for a while, so the split is on StoreUnavailableError "
+        f"rather than on the busy case"
+    )
+    assert not alive
+    assert renewer.stopped_because is not None
+    assert renewer.stopped_because.startswith("StoreWedgedError:")
 
 
 def test_terminate_requires_a_named_state(table) -> None:
