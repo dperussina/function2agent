@@ -895,6 +895,11 @@ proof "FR-036 — the shared Secret scan stops at a nested dataclass" \
   "tests/contract/test_trace_spans.py::test_a_secret_nested_in_any_carrier_field_is_refused" \
   's = s.replace("    elif is_dataclass(value) and not isinstance(value, type):", "    elif False:")'
 
+proof "FR-036 — the shared Secret scan stops at a mapping key" \
+  src/contracts/secret.py \
+  "tests/contract/test_event_stream_redaction.py::test_a_secret_used_as_a_mapping_key_is_refused" \
+  's = s.replace("            refuse_secrets(key, f\x22{path}.<key>\x22, raise_as=raise_as,\n                           destination=destination)", "            pass")'
+
 proof "T038 journal location — a ledger inside the session root is accepted" \
   src/runtime/trace_budget.py \
   "tests/contract/test_budget_journal.py" \
@@ -1911,6 +1916,79 @@ proof "OD-27 revision-2 migration — a pre-OD-27 payload comes back with no pro
   src/runtime/resume.py \
   "tests/unit/test_resume.py::test_a_revision_two_payload_comes_back_as_a_vendor_price" \
   's = s.replace("            if raw_provenance is None and spend is not None:\n                provenance = PROVENANCE_VENDOR", "            if False:\n                provenance = PROVENANCE_VENDOR")'
+
+# ---------------------------------------------------------------------------
+# T069/T070 — the caller-visible event stream and the surface that renders it.
+#
+# TWO OF THE ARMS BELOW TAMPER BY ADDITION RATHER THAN BY REMOVAL, AND THAT IS
+# NOT A LAPSE. The guarantee under proof is a *negative*: a field that must not
+# be on the wire, and a caller's input that must not be in an error body. There
+# is nothing to delete — the mechanism is the absence of a line. The
+# counterfactual for an absence is the presence, so those two arms re-introduce
+# the exact edit a contributor would make ("carry the state as hex, it is only
+# a digest anyway"; "put the path in the 404, the operator will want it"), and
+# the proof is that the test notices. An arm that deleted something instead
+# would be proving a different mechanism than the test's name claims.
+
+proof "T069 event stream — the FR-036 Secret refusal is gone" \
+  src/runtime/events.py \
+  "tests/contract/test_event_stream_redaction.py::test_a_secret_cannot_be_placed_on_an_event_at_all" \
+  's = s.replace("            refuse_secrets(value, member.name, raise_as=EventError,\n                           destination=\x22a caller-visible event stream\x22)", "            pass")'
+
+proof "T069 event stream — the FR-037 raw-bytes refusal is gone" \
+  src/runtime/events.py \
+  "tests/contract/test_event_stream_redaction.py::test_raw_bytes_cannot_be_placed_on_an_event" \
+  's = s.replace("            _refuse_opaque_bytes(value, member.name)", "            pass")'
+
+# The narrowing, separate from the arm above because it is a different failure:
+# the scan still runs and still refuses bytes on a mapping, and only stops
+# descending into a list. Three of that test's four planted shapes survive it.
+proof "T069 event stream — the FR-037 scan stops at a list" \
+  src/runtime/events.py \
+  "tests/contract/test_event_stream_redaction.py::test_raw_bytes_cannot_be_placed_on_an_event" \
+  's = s.replace("    elif isinstance(value, (list, tuple)):\n        for item in value:\n            _refuse_opaque_bytes(item, f\x22{path}[]\x22)", "    elif False:\n        pass")'
+
+# Additive. See the note above this block.
+proof "T069 turn frame — the opaque state is rendered beside its digest" \
+  src/runtime/events.py \
+  "tests/contract/test_event_stream_redaction.py::test_the_opaque_state_is_on_the_stream_only_as_a_digest" \
+  's = s.replace("        return self.emit(KIND_TURN_COMPLETED, turn=record.to_record())", "        return self.emit(KIND_TURN_COMPLETED, turn=dict(record.to_record(), provider_state=record.provider_state.hex()))")'
+
+proof "T069 stream lifecycle — a run reports as ended with no marker" \
+  src/runtime/events.py \
+  "tests/contract/test_serving_surface.py::test_the_end_of_run_frame_cannot_be_forged_by_omission" \
+  's = s.replace("        if kind == TERMINAL_KIND and \x22end_of_run\x22 not in data:", "        if False:")'
+
+proof "T069 stream lifecycle — a stream may begin mid-run" \
+  src/runtime/events.py \
+  "tests/contract/test_serving_surface.py::test_a_stream_cannot_begin_anywhere_but_at_the_start" \
+  's = s.replace("            if not self._events and kind != KIND_SESSION_STARTED:", "            if False:")'
+
+proof "T069 stream lifecycle — events continue after the run has ended" \
+  src/runtime/events.py \
+  "tests/contract/test_serving_surface.py::test_nothing_is_emitted_after_the_run_has_ended" \
+  's = s.replace("            if self._closed:", "            if False:")'
+
+# Additive. See the note above this block.
+proof "T070 refusal body — the 404 echoes the path back to the caller" \
+  src/runtime/serving.py \
+  "tests/contract/test_event_stream_redaction.py::test_a_refusal_does_not_echo_what_the_caller_put_in_the_path" \
+  's = s.replace("                       refusal_body(rule_id))", "                       dumps({\x22rule_id\x22: rule_id, \x22reason\x22: REFUSALS[rule_id].reason, \x22requirement\x22: REFUSALS[rule_id].requirement, \x22path\x22: self.path}))")'
+
+proof "T070 request logging — the request line reaches stderr with the path in it" \
+  src/runtime/serving.py \
+  "tests/contract/test_serving_surface.py::test_the_request_line_does_not_reach_stderr" \
+  's = s.replace("        def log_message(self, fmt: str, *args: Any) -> None:", "        def log_message_removed(self, fmt: str, *args: Any) -> None:")'
+
+proof "T070 bind address — an empty host is accepted and binds everywhere" \
+  src/runtime/serving.py \
+  "tests/contract/test_serving_surface.py::test_the_surface_refuses_to_bind_without_an_explicit_host" \
+  's = s.replace("    if not host or host in (\x220.0.0.0\x22, \x22::\x22, \x22*\x22):", "    if False:")'
+
+proof "T070 absent result — a running session serves an empty record with a 200" \
+  src/runtime/serving.py \
+  "tests/contract/test_serving_surface.py::test_a_result_that_does_not_exist_yet_is_a_refusal_and_not_an_empty_one" \
+  's = s.replace("    if view.result is None:\n        raise SurfaceError(RULE_RESULT_ABSENT)", "    if view.result is None:\n        return {\x22session_id\x22: view.session_id, \x22payload\x22: None}")'
 
 # ---------------------------------------------------------------------------
 # The suite's own harness.

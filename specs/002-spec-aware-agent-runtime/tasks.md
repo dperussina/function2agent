@@ -599,10 +599,49 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 
 ### Capability 9 — the event stream the serving surface renders
 
-- [ ] T069 Session event stream emitter, in `src/runtime/events.py` — T-03 assumed our surface would render the dependency's stream, and after **OD-15** nothing produces one
-- [ ] T070 Thin HTTP/SSE surface carrying the caller-visible result record and the session event stream, in `src/runtime/serving.py` (T-03, **Q-05** subsumed rather than chosen)
-- [ ] T071 [P] Surface contract tests over the event stream and the result-record rendering, in `tests/contract/test_serving_surface.py` (constitution Principle VII names the integration-surface contract)
-- [ ] T072 [P] Assert the event stream carries no secret value and no readable `provider_state`, in `tests/contract/test_event_stream_redaction.py` (FR-036, FR-037)
+- [X] T069 Session event stream emitter, in `src/runtime/events.py` — T-03 assumed our surface would render the dependency's stream, and after **OD-15** nothing produces one
+- [X] T070 Thin HTTP/SSE surface carrying the caller-visible result record and the session event stream, in `src/runtime/serving.py` (T-03, **Q-05** subsumed rather than chosen)
+- [X] T071 [P] Surface contract tests over the event stream and the result-record rendering, in `tests/contract/test_serving_surface.py` (constitution Principle VII names the integration-surface contract)
+- [X] T072 [P] Assert the event stream carries no secret value and no readable `provider_state`, in `tests/contract/test_event_stream_redaction.py` (FR-036, FR-037)
+
+> **Landed 2026-08-06.** **The event stream is not the trace and the two are kept apart on purpose.**
+> FR-038's span set is closed at seven kinds and `SpanWriter` persists to a `Repository`; that is the
+> machine-readable audit channel. `events.py` has six kinds of its own, named so a reader cannot
+> mistake `tool_started` for FR-038's `tool_call`, and persists nothing. Adding a kind to either adds
+> none to the other.
+>
+> **FR-058 is read as not binding here, and the reading is written into the module rather than
+> assumed.** The requirement bounds a result *"before it enters the model's context"*; its three
+> obligations name where the bound is applied, *"the result the model reads"*, and *"the `tool_call`
+> span of FR-038"*. The event stream is a **third reader** the requirement does not name. What
+> reaches it is nonetheless the bounded object, because `AgentLoop._bounded_body` replaces the body
+> upstream — transitive, not an obligation discharged. `tool_finished` **requires** `BoundFields`
+> anyway, taken by analogy and marked as one: FR-058's *"a bounded result that reads as a complete
+> one MUST NOT be produced"* describes a property of the reader, and a caller composes answers too.
+>
+> **T070 is not a process entry point and the seam at `f167d7e` is untouched.** No `def main`, no
+> `__main__`, no `[project.scripts]`, no socket bound at import, and `config.load()` is still called
+> from nowhere in `src/`. **OD-28's ground ① is likewise untouched** — nothing here constructs a
+> `SessionTable`, imports one, or opens a `Repository`; a `SessionView` is handed over already built.
+> **The cost, stated rather than left as an omission:** an operator cannot run this. Serving a
+> session needs a process that loads configuration, builds the runtime and registers a view, and
+> that process is the seam. Building one here would have wired the startup preflight and retired
+> OD-28's deferral ground in the same commit, on this pass's own authority.
+>
+> **The redaction tests rebuild from the wire, never from the objects.** Both `parse_frames` go
+> through `json.loads` on the response body, because the by-reference blindness that hit
+> `tests/fixtures/resume_session.py` twice is invisible to a test that reads the live graph. The
+> opaque-state assertion reads the **digest** and then the payload's absence in four encodings.
+>
+> **Error bodies are part of the redaction surface**, on `src/proxy/rules.go`'s precedent: the
+> session identifier travels in the path, so `refusal_body` is a pure function of the rule identifier
+> and of nothing the request carried. `log_message` is silenced for the same leak on a second
+> channel, and that is recorded as a narrowing — a redacting logger is a larger thing than this task.
+>
+> **One instrument was vacuous and the removal harness is what found it.** Four arms asserted
+> `pytest.raises(EventError, match="Secret")`, and `src/contracts/canonical.py` *also* refuses a
+> `Secret` — with a message about key ordering that happens to contain the word. The arms passed with
+> the FR-036 walk deleted. They match the guard's own wording now.
 
 **Checkpoint**: the runtime core exists and is ours end to end. User-story phases can begin.
 
