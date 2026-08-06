@@ -85,8 +85,36 @@ class SessionTable:
         # own defect. Writing the crash fixture is what surfaced it.
         #
         # This is not a substitute for T050's concurrent-writer probe. One
-        # process with one lock is the single-writer case T-06 assumes; the
-        # cross-process case is still unmeasured.
+        # process with one lock is the single-writer case T-06 assumes.
+        #
+        # The cross-process case **has now been measured** (finding 033), and
+        # this said "still unmeasured" for long enough to be worth correcting
+        # rather than deleting: a stale "unmeasured" tells the next reader
+        # there is nothing to find. What it found, against a planted lock:
+        #
+        # - `executescript` does not soften the WAL conversion's busy-handler
+        #   bypass. `SCHEMA`'s first statement is `PRAGMA journal_mode=WAL`,
+        #   and it is refused in 0.165ms against a held RESERVED lock exactly
+        #   as the bare `execute` form is. The script then aborts before
+        #   `CREATE TABLE`, so the store is left with no schema at all.
+        # - every write here leaks `sqlite3.OperationalError` under a held
+        #   lock — `create`, `mark_running`, `mark_interrupted`,
+        #   `mark_resumed`, `renew`, `terminate`, and this constructor. Both
+        #   reads survive, which is what WAL was chosen for.
+        #
+        # **Neither is repaired here, on purpose.** The conversion race needs
+        # a *brand-new* file: a second opener on one already in WAL succeeds
+        # in 0.28ms even against an EXCLUSIVE lock, and no constructor in the
+        # tree produces the cold-and-concurrent case — the one two-process
+        # site creates the file first. And the engine-exception rule does not
+        # bind this file: obligation 2's own scanner names it and skips it
+        # (`tests/invariants/test_writer_ownership.py`), as "a known
+        # migration". That is the repair. This table should move onto
+        # `Repository`, which already owns the translation and the
+        # convergence loop, and a local copy of both is work the migration
+        # deletes. Finding 033 records what the migration has to reconcile —
+        # `resolve()` deliberately has no tenant predicate, and the schema is
+        # a committed cross-language conformance vector.
         self._lock = threading.Lock()
         self._conn = sqlite3.connect(
             str(self.path), isolation_level=None, check_same_thread=False
