@@ -173,7 +173,12 @@ def states_for(
     error language. **xAI's is an imperative**, and the one live arm in this
     corpus bearing on it points the other way — finding 016's negative control
     blanked `encrypted_content` on every assistant message of a `grok-4.5`
-    chain and recorded `provider_errored: false`. Whether xAI rejects a chain
+    chain and recorded `provider_errored: false`. That disagreement — this
+    docstring against that artifact — is registered as **C-21** in
+    `research/14-architecture-synthesis.md` §4, partially resolved: the
+    textual half closed when this paragraph was corrected, and what keeps the
+    row open is that the narrow claim below still has no measurement behind
+    it. Whether xAI rejects a chain
     with a *hole* in it, as against one carrying *nothing*, is a different
     request and is unmeasured. Anthropic's quiet degradation has never been
     observed in either direction.
