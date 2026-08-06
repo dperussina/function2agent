@@ -464,6 +464,17 @@ output sorts by **path** and not by number, so the last line is not the maximum.
 Use `-oNI` — match only, no line numbers, no filenames — before sorting, or read
 the maximum by eye.
 
+**And this trap is normally survived by accident, which is why it stays
+invisible.** Any pipeline that happens to strip the path before sorting — a
+second `rg -o`, a `cut`, an `awk '{print $NF}'` — gets the right answer for the
+wrong reason, so the person who wrote it never sees the failure and passes the
+one-liner on. The failure only appears for the next reader, who copies the
+command **from a report rather than from this file** and drops the incidental
+stripping step. Copy the two commands above, not a command out of a write-up.
+This is the same shape as the emphasis note under
+[The register-provenance trap](#the-register-provenance-trap) — a construct that
+works by side effect looks identical to one that works by design.
+
 #### Why this is documentation and not a check
 
 **A duplicate register row is caught by nothing, and that was measured rather
@@ -493,13 +504,50 @@ corpus it fires **12 times, and every one is well-formed**:
 - `FR-048` heads two adjacent rows and `FR-049` three, inside one table in
   `findings/026-pivot-root-check-measured.md`, which is keyed on something else.
 
-**Zero real defects at any narrowing.** Restricting to one file still leaves
-nine. Restricting to *the authoritative register* would work, and it needs an
-artifact that does not exist — a mapping from each namespace to the one document
+**Zero real defects at any narrowing, and three scopes were measured rather than
+two.** The obvious tightening is to ask for the duplicate **inside a single
+table**, on the reasoning that every legitimate case above is a *restatement*
+somewhere else — a different table or a different file — whereas the defect, a
+pass appending a row for a number already taken, necessarily lands in the table
+the register is. That reasoning is sound about the twelve and still wrong, and
+the measurement is why it was taken:
+
+| scope | firings on the clean corpus | detects the planted `\| U-52 \|` row |
+|---|---:|---|
+| one corpus | 12 | yes |
+| one document | 9 | yes |
+| **one table** | **2** | **yes** |
+
+**Both arms were run at table scope**, because a scope firing zero times on the
+clean corpus and zero times on the plant is a rule that detects nothing, which is
+the failure this repository keeps hitting. With the plant in place it reports
+three firings and names `U-52` at the two adjacent lines, so it does catch the
+defect. It also carries two permanent false alarms, and **they are a class the
+restatement argument does not predict**: `research/14`'s registers are clean at
+table scope, and both firings are in one table in
+`findings/026-pivot-root-check-measured.md` — a **per-check results table** whose
+header column is `requirement` and whose row key is the individual check, so
+`FR-049` heads three rows and `FR-048` two because several checks bear on each
+one. Any table keyed on something finer than the identifier repeats the
+identifier in its leading column, which is an ordinary way to write a results
+table rather than a defect.
+
+**Adjacency does not separate them, and that is the next idea worth killing
+early.** Both false alarms are consecutive rows (668–670 and 671–672) and so is
+the plant (850–851), so requiring the duplicates to be adjacent changes none of
+the three counts.
+
+**Restricting to *the authoritative register* would work, and it needs an
+artifact that does not exist** — a mapping from each namespace to the one document
 and section that owns it — which is the identical objection that declined the
 unconstructible-scoping check: **the thing that would have to exist first is the
-artifact, not the check.** So the house rule holds here too: a rule firing only
-on false positives is worse than a documented residue.
+artifact, not the check.** Excluding `findings/` would clear both false alarms and
+is the wrong move for a stated reason: a number is routinely claimed in a finding
+*before* its row exists, which is the whole reason the search above runs
+corpus-wide, so that exclusion blinds the rule exactly where the claim lands
+first — and it fits the rule to where today's two false alarms happen to live.
+So the house rule holds here too: a rule firing only on false positives is worse
+than a documented residue.
 
 **The residue, stated so it is not mistaken for coverage.** Nothing will notice a
 register that hands out a taken number. The search above is the only guard, it is
