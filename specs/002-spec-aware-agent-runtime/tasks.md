@@ -571,7 +571,31 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 > T065's backstop and the turn ceiling both still stop a repeating agent — stopping is not the
 > claim), the count narrowed to this attempt's turns, and `_NEEDS_READINGS` dropped to the ceiling
 > member alone.
-- [ ] T068 [P] Test that a clean completion and a mid-loop cancellation are distinguishable from the caller's side, in `tests/unit/test_terminal_distinguishable.py` — the indistinguishable case is the false-success shape the corpus names as a very common and very expensive bug
+- [X] T068 [P] Test that a clean completion and a mid-loop cancellation are distinguishable from the caller's side, in `tests/unit/test_terminal_distinguishable.py` — the indistinguishable case is the false-success shape the corpus names as a very common and very expensive bug
+
+> **Landed 2026-08-06.** The two runs are built to differ in **one** thing. Same agent, same tool,
+> same generated text, and the same number of turns on both paths — `TURNS` is one constant read by
+> both builders — so a difference the test finds is the terminal condition and not an artefact of
+> one path being shorter. That control is the point: an earlier draft had the completed run take
+> three turns and the cancelled one two, which would have let the test pass on turn count alone.
+>
+> **Four channels, and the first is the one that matters.** The *payload* alone cannot tell them
+> apart — asserted, not assumed — which is exactly the false-success shape: a caller reading only
+> the text sees a finished run either way. What separates them is the terminal state
+> (`terminated.completed` vs `terminated.operator_terminated`), the end-of-run marker's reason, and
+> the session row.
+>
+> **The routing is what the distinguishability rests on, so it is proved rather than asserted.**
+> Cancellation took FR-007's interrupt edge until `e2e2311`, and the consequence was not a wrong
+> string — a cancelled session stayed **resumable** and the next attach silently continued a run the
+> consumer had ended. `test_the_cancelled_session_is_not_left_resumable` reads the row and then
+> tries the attach, so the tamper that restores `interrupt()` fails it on the consequence and not
+> only on the name.
+>
+> **One thing the planting corrected.** Under that tamper `outcome.end_of_run` is `None`, and the
+> observation table read `.reason` directly — an `AttributeError` that would have failed the test
+> for the wrong reason and hidden the distinction it exists to show. It reads through `getattr` now,
+> so the regression surfaces as `None` where `"cancelled"` belongs.
 
 ### Capability 9 — the event stream the serving surface renders
 

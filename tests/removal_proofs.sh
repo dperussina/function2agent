@@ -1464,6 +1464,17 @@ proof "T067 stall readings — the bare terminate() accepts the member" \
   "tests/unit/test_progress.py::test_the_bare_terminate_refuses_this_member" \
   's = s.replace("_NEEDS_READINGS = {ST_CEILING_REACHED, ST_NO_PROGRESS}", "_NEEDS_READINGS = {ST_CEILING_REACHED}")'
 
+# T068. The routing, which is the defect the distinguishability rests on rather
+# than a property of it. Cancellation took FR-007's interrupt edge until
+# `e2e2311`, and the consequence was not a wrong string — a cancelled session
+# stayed resumable and the next attach silently continued a run the consumer had
+# ended. The arm reads the row and then tries the attach, so it fails on the
+# consequence and not only on the name.
+proof "T068 cancellation routing — a cancelled run is left resumable" \
+  src/runtime/runner.py \
+  "tests/unit/test_terminal_distinguishable.py::test_the_cancelled_session_is_not_left_resumable" \
+  's = s.replace("                transition = self.machine.terminate(\n                    session_id,\n                    terminal_state=terminal.OPERATOR_TERMINATED.name,\n                    at=self.clock())\n                recorded = EndOfRun(session_id=session_id,\n                                    reason=REASON_CANCELLED, at=transition.at)", "                transition = self.machine.interrupt(session_id, at=self.clock())")'
+
 # T046. **Not a proof of the terminated refusal.** That guard was tried here and
 # the tamper was vacuous: removing it drops the caller through to the "no edge
 # out of {state}" branch, which is also a RunnerError also naming TERMINATED, so
