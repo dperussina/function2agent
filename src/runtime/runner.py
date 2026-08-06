@@ -82,6 +82,13 @@ from src.runtime.loop import AgentLoop, LoopOutcome, ModelClient, TurnRecord
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import Ceilings, LifecycleGateway, SessionStore
+from src.runtime.signals import (
+    REASON_CANCELLED,
+    REASON_FAULTED,
+    EndOfRun,
+    ErrorIdentity,
+    require_paired,
+)
 from src.runtime.state_merge import MergePolicy
 from src.runtime.journal import TurnJournal
 from src.runtime.ledger import BudgetLedger
@@ -150,6 +157,16 @@ class RunOutcome:
     text: str
     cancelled: bool
     merged_state: Mapping[str, object]
+    #: T066's explicit end-of-run marker, paired with `terminal_state` above.
+    #: This is the field finding 006 found missing: the removed dependency's
+    #: caller could not tell a clean completion from a mid-loop cancellation,
+    #: because the only marker that separated them was behind a default-off
+    #: experimental flag. Here the two are different members of a closed set,
+    #: and a run that ended cannot report a terminal state without one.
+    end_of_run: EndOfRun | None = None
+
+    def __post_init__(self) -> None:
+        require_paired(self.terminal_state, self.end_of_run)
 
 
 class Runner:
@@ -304,7 +321,7 @@ class Runner:
         max_turns_this_attempt: int | None,
     ) -> RunOutcome:
         outcome: LoopOutcome | None = None
-        recorded: str | None = None
+        recorded: EndOfRun | None = None
         try:
             outcome = loop.run(
                 prompt, max_turns_this_attempt=max_turns_this_attempt)
@@ -315,24 +332,39 @@ class Runner:
         # state a cancelled run ends in is the one teardown writes. Returning
         # the loop's `None` here would report "nothing ended" for a session the
         # row says ended as `terminated.operator_terminated`.
+        #
+        # **One marker decides both fields**, rather than the name and the
+        # signal being resolved separately. Two resolutions of the same question
+        # are two chances for the caller-visible name and the caller-visible
+        # marker to come from different branches, and `RunOutcome` would then be
+        # refusing a disagreement it created itself.
+        marker = outcome.end_of_run if outcome.end_of_run is not None else recorded
         return RunOutcome(
             session_id=session_id,
             turns=outcome.turns,
-            terminal_state=(outcome.terminal_state if outcome.terminal_state
-                            is not None else recorded),
+            terminal_state=None if marker is None else marker.terminal_state,
             text=outcome.text,
             cancelled=outcome.cancelled,
             merged_state=outcome.merged_state,
+            end_of_run=marker,
         )
 
     def _stand_down(
         self, loop: AgentLoop, session_id: str, outcome: LoopOutcome | None
-    ) -> str | None:
+    ) -> EndOfRun | None:
         """Leave the session in a state the enforcement point will not honour.
 
-        Returns the terminal state it recorded, or `None` where it recorded no
-        terminal state — either because the loop had already ended the session or
-        because the attempt was bounded short and the session is resumable.
+        Returns the end-of-run marker it recorded, or `None` where it recorded
+        no terminal state — either because the loop had already ended the
+        session or because the attempt was bounded short and the session is
+        resumable.
+
+        **The marker rather than the bare name, since T066.** The two terminal
+        edges this method takes are the two whose *cause* was previously
+        nowhere: a cancellation had no signal at all, and a fault recorded
+        `terminated.unrecoverable_fault` while the exception's identity went out
+        with the traceback. Returning the marker is what carries both to the
+        caller and to the span.
 
         Wrapped so that a teardown failure cannot replace the exception that
         brought us here. The suppression is narrow — it covers only the
@@ -346,8 +378,13 @@ class Runner:
         if row.state != STATE_RUNNING:
             # Already interrupted by something else. Not ours to move.
             return None
-        recorded: str | None = None
+        recorded: EndOfRun | None = None
         failure: BaseException | None = None
+        # Read once, before anything here can raise and displace it. This is the
+        # exception the loop raised, and the fault branch below is the only
+        # place its identity can still be recovered — after this method returns
+        # it exists only in a traceback.
+        raised = sys.exc_info()[1]
         try:
             if outcome is not None and outcome.cancelled:
                 # Cancellation ends the session. This branch and the next used to
@@ -361,7 +398,8 @@ class Runner:
                     session_id,
                     terminal_state=terminal.OPERATOR_TERMINATED.name,
                     at=self.clock())
-                recorded = transition.terminal_state
+                recorded = EndOfRun(session_id=session_id,
+                                    reason=REASON_CANCELLED, at=transition.at)
             elif outcome is not None:
                 # The loop returned without ending the session and without
                 # being cancelled: `max_turns_this_attempt` bounded the attempt.
@@ -377,7 +415,21 @@ class Runner:
                     session_id,
                     terminal_state=terminal.UNRECOVERABLE_FAULT.name,
                     at=self.clock())
-            loop.write_transition_span(transition)
+                # **The identity, not a classification.** FR-006's member says
+                # the runtime could not classify the fault further; T066's
+                # signal says which fault it was, and the two are compatible
+                # exactly because the second is not a terminal state. A loop
+                # that returned `None` without raising leaves nothing to name,
+                # and a fault with no identity is refused rather than invented.
+                recorded = EndOfRun(
+                    session_id=session_id, reason=REASON_FAULTED,
+                    at=transition.at,
+                    error=ErrorIdentity.from_exception(
+                        raised if raised is not None
+                        else RuntimeError(
+                            "the loop returned no outcome and raised nothing")),
+                )
+            loop.write_transition_span(transition, end_of_run=recorded)
         except Exception as exc:  # noqa: BLE001 - see the docstring
             # Deliberately swallowed, and only here. The alternative is that a
             # teardown failure becomes the reported cause and the real one is

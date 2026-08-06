@@ -457,7 +457,59 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 
 ### Capability 8 — the raw terminal signals
 
-- [ ] T066 Emit the raw terminal signals the taxonomy sits on — error identity, budget-exhaustion cause, and an explicit end-of-run marker distinguishing completion from cancellation — in `src/runtime/signals.py` (finding 006 primitive 2: the taxonomy was always ours, and the raw signals were the dependency's)
+- [X] T066 Emit the raw terminal signals the taxonomy sits on — error identity, budget-exhaustion cause, and an explicit end-of-run marker distinguishing completion from cancellation — in `src/runtime/signals.py` (finding 006 primitive 2: the taxonomy was always ours, and the raw signals were the dependency's)
+
+> **Landed 2026-08-06. Three signals, and the third is the one that was absent
+> rather than merely unexposed.** *(a)* **Error identity** — a session recorded
+> `terminated.unrecoverable_fault`, which FR-006 defines as *a fault the runtime
+> cannot classify further*, and the exception's type and message went out with
+> the traceback. `ErrorIdentity` is deliberately **not** a terminal state: a
+> member named after an exception class would be the generic error FR-006
+> forbids, wearing a specific-looking name. *(b)* **Budget-exhaustion cause** —
+> `CeilingVerdict` already decided which of FR-005's four ceilings fired;
+> `ExhaustionCause` carries that past the loop's own return, reading the
+> **matched** reading rather than re-deriving the winner, because several
+> dimensions can be over at once and a second pass is a second chance to name a
+> different one. The declared figure travels with the observed one, so a reader
+> can tell an overshoot of one from an overshoot of a million. *(c)* **The
+> end-of-run marker** — finding 006 primitive 2's own row reads *"Consumer
+> cancels after 5 events | generator returned | **Nothing. No marker, no
+> signal.**"* The removed dependency **could** emit one, under
+> `Workflow._emit_end_of_agent`, which returned early unless the `@experimental`
+> `is_resumable` flag was set — **and it is off by default**, so the shipped
+> behaviour was that a finished run and a run cut off mid-loop produced the same
+> observation.
+>
+> **The defect was not the missing marker; it was that absence was ambiguous**
+> between *this run did not end* and *nobody turned the marker on*. Two
+> structural rules, not conventions, keep that from recurring: `EndOfRun` has no
+> reason meaning *did not end*, and `require_paired` refuses an outcome carrying
+> a terminal state without a marker, a marker without a terminal state, or a
+> pair that name different members. The second half of that check is the one a
+> presence-only rule would miss — two populated fields agree that the run ended
+> and can still disagree on how, and nothing at this layer can say which is the
+> one the session row holds, so neither is preferred.
+>
+> **Membership is not restated here.** **OD-26** makes `src/contracts/terminal.py`
+> authoritative for which names exist; `signals.py` maps a reason to one of them
+> and puts every entry through `terminal.require()` **at import**, so a member
+> renamed there and not here fails at import rather than on the one path nobody
+> exercises — which is how `terminated.no_progress` sat declared-and-absent
+> (finding 027). The reason set stops at what this process can observe: FR-049's
+> bounds and FR-050's lapsed capability are the supervisor's, and a reason for
+> them here would be a signal with no emitter.
+>
+> **Planted, not reasoned.** Four tampers, each watched failing before the arm
+> was trusted: the marker dropped from the span's `detail` (both new runner arms
+> fail, on the absence rather than on a wrong value); the fault's identity
+> replaced with a constant (only the fault arm fails — the tamper is narrow);
+> the declared figure dropped from the cause; and the two `__post_init__` calls
+> deleted, without which the pairing rule is correct and uncalled. **Two existing
+> removal proofs moved with the source and were re-pointed rather than
+> weakened** — T047's cancellation pair. The second is now a *narrower* tamper
+> than it replaces: the caller's name and the caller's marker are resolved from
+> one variable, so dropping teardown's contribution is one edit, and two
+> resolutions of one question can no longer disagree with each other.
 - [ ] T067 Terminal taxonomy over those signals, with a named member per ceiling, per bound, plus `no_progress`, ~~`denied_operation`~~ *(struck 2026-08-05 — **OD-26**)* and `completed`, in ~~`src/runtime/terminal.py`~~ **`src/contracts/terminal.py`** (FR-006, [`data-model.md`](./data-model.md) §2.1)
 
 > **T067's path corrected 2026-08-05, and its remaining work is smaller than the line reads but is

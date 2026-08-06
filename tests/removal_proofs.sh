@@ -1389,17 +1389,23 @@ proof "T046 teardown — the session is stood down only on the paths that return
 proof "T047 cancellation — a cancelled run is interrupted, so attach resumes it" \
   src/runtime/runner.py \
   "tests/unit/test_cancellation.py::test_a_cancelled_session_cannot_be_attached_to" \
-  's = s.replace("                transition = self.machine.terminate(\n                    session_id,\n                    terminal_state=terminal.OPERATOR_TERMINATED.name,\n                    at=self.clock())\n                recorded = transition.terminal_state", "                transition = self.machine.interrupt(session_id, at=self.clock())")'
+  's = s.replace("                transition = self.machine.terminate(\n                    session_id,\n                    terminal_state=terminal.OPERATOR_TERMINATED.name,\n                    at=self.clock())\n                recorded = EndOfRun(session_id=session_id,\n                                    reason=REASON_CANCELLED, at=transition.at)", "                transition = self.machine.interrupt(session_id, at=self.clock())")'
 
 # T047, the caller-visible half — a second mechanism, not a second reading of the
 # one above. Routing cancellation to `terminate()` moves the row; carrying the
-# recorded name back out of teardown is what makes the caller agree with it. The
-# tamper leaves the row correct and reports the loop's `None`, which is the
+# recorded marker back out of teardown is what makes the caller agree with it.
+# The tamper leaves the row correct and reports the loop's `None`, which is the
 # divergence a reviewer would otherwise have to take on trust.
+#
+# **The site moved with T066 and the tamper moved with it.** The two fields the
+# caller reads — the terminal name and the end-of-run marker — are now resolved
+# from one variable rather than separately, so dropping the teardown's
+# contribution is one edit instead of two. That is a narrower tamper than the
+# one it replaces, not a wider one: it falsifies the same single fact.
 proof "T047 cancellation — the terminal state teardown recorded is not reported" \
   src/runtime/runner.py \
   "tests/unit/test_cancellation.py::test_a_cancelled_run_names_operator_terminated_as_its_terminal_state" \
-  's = s.replace("            terminal_state=(outcome.terminal_state if outcome.terminal_state\n                            is not None else recorded),", "            terminal_state=outcome.terminal_state,")'
+  's = s.replace("        marker = outcome.end_of_run if outcome.end_of_run is not None else recorded", "        marker = outcome.end_of_run")'
 
 # T046. **Not a proof of the terminated refusal.** That guard was tried here and
 # the tamper was vacuous: removing it drops the caller through to the "no edge

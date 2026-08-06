@@ -390,3 +390,87 @@ def test_a_ceiling_reached_run_is_torn_down_with_the_ceilings_state(
 def _call():
     from src.runtime.dispatch import ToolCall
     return ToolCall(index=0, call_id="c0", name="t")
+
+
+# ---------------------------------------------------------------------------
+# T066 — the raw signals, read where the runtime actually produces them.
+#
+# `tests/unit/test_signals.py` reads the shapes; these read the *wiring*. A
+# signal type that nothing populates is a type, and the two arms below are the
+# ones that fail if the loop or the teardown stops attaching a cause.
+
+
+def _end_of_run_detail(rig) -> dict:
+    """The marker as a reader of the trace sees it, not as the caller does.
+
+    Read off the persisted span rather than off the returned `RunOutcome`,
+    because the record is the durable artefact and the return value is not. A
+    marker that reached the caller and not the trace would leave an operator
+    reading `terminated.unrecoverable_fault` with the identity still gone.
+    """
+    import json
+
+    for row in reversed(rig.spans.spans(SESSION)):
+        detail = json.loads(row["payload"]).get("detail") or {}
+        if "end_of_run" in detail:
+            return detail["end_of_run"]
+    raise AssertionError(
+        "no span carries an end-of-run marker. Every terminal edge mints one; "
+        "a session that ended without one is finding 006's measurement back.")
+
+
+def test_a_faulted_run_records_which_exception_ended_it(tmp_path) -> None:
+    """The gap T066 exists to close, at the point it was open.
+
+    `test_a_fault_in_the_loop_still_stands_the_session_down` above asserts the
+    session is named `terminated.unrecoverable_fault` — which says *a fault the
+    runtime could not classify further* and nothing about which fault. Before
+    this the type and message existed only in a traceback that goes with the
+    process. This arm is the one that fails if they go back there.
+    """
+    rig = Rig(tmp_path)
+
+    def model(context):
+        raise ZeroDivisionError("the provider adapter blew up")
+
+    with pytest.raises(ZeroDivisionError):
+        _start(rig, model=model)
+
+    marker = _end_of_run_detail(rig)
+    assert marker["reason"] == "faulted"
+    assert marker["terminal_state"] == terminal.UNRECOVERABLE_FAULT.name
+    assert marker["error"]["type"] == "ZeroDivisionError", (
+        f"the exception's identity is not on the record: {marker!r}. The "
+        "terminal state says a fault happened; only this says which.")
+    assert "blew up" in marker["error"]["message"]
+    rig.close()
+
+
+def test_a_ceiling_termination_records_which_ceiling_and_on_what_reading(
+    tmp_path,
+) -> None:
+    """FR-005 has four ceilings and the marker must say which one fired.
+
+    The *reading* travels with it for the reason `ExhaustionCause` states: a
+    cause naming only the dimension cannot distinguish a session that overshot
+    by one turn from one that overshot by a thousand, and those are a ceiling
+    working and a reservation policy that is not bounding anything.
+    """
+    rig = Rig(tmp_path)
+    _start(rig,
+           ceilings=Ceilings(spend_usd=100.0, tokens=1_000_000,
+                             wall_clock_seconds=10_000.0, turns=2),
+           model=lambda c: ModelResponse(
+               provider="test", provider_state=b"s", text="", spend_usd=0.0,
+               spend_provenance=PROVENANCE_OPERATOR, tool_calls=(_call(),)))
+
+    marker = _end_of_run_detail(rig)
+    assert marker["reason"] == "ceiling_reached"
+    assert marker["terminal_state"] == terminal.TURN_CEILING.name
+    assert marker["exhaustion"]["dimension"] == "turns", (
+        f"the marker does not say which of FR-005's four ceilings fired: "
+        f"{marker!r}")
+    assert marker["exhaustion"]["declared"] == "2", (
+        "the ceiling the reading was taken against is missing, so the record "
+        "cannot say how far past it the session got.")
+    rig.close()

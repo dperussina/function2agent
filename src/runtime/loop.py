@@ -125,6 +125,13 @@ from src.runtime.resume import (
 )
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import SessionStore
+from src.runtime.signals import (
+    REASON_CEILING_REACHED,
+    REASON_COMPLETED,
+    EndOfRun,
+    ExhaustionCause,
+    require_paired,
+)
 from src.runtime.state_merge import Contribution, MergePolicy
 from src.runtime.trace import (
     ATTEMPT_FIRST,
@@ -162,6 +169,18 @@ class LoopOutcome:
     session's recorded outcome is a named member of the taxonomy. A caller that
     writes `outcome.terminal_state` into a record would write `""` and pass any
     truthiness check on the way.
+
+    `end_of_run` is T066's explicit marker and is **paired** with the field
+    above rather than sitting beside it: `require_paired` refuses an outcome
+    carrying one and not the other. A marker a construction site could omit is
+    the shape finding 006 measured — the removed dependency emitted one only
+    under a flag that was off by default, so its absence meant either *this run
+    did not end* or *nobody turned it on*.
+
+    A cancelled attempt carries **no** marker here, and that is not an omission.
+    The loop returns at a turn boundary having ended nothing; the session is
+    ended by `Runner._stand_down`, which is the component that owns the
+    lifecycle, and it mints the marker there.
     """
 
     turns: tuple[TurnRecord, ...]
@@ -169,6 +188,10 @@ class LoopOutcome:
     text: str
     cancelled: bool = False
     merged_state: Mapping[str, Any] = field(default_factory=dict)
+    end_of_run: EndOfRun | None = None
+
+    def __post_init__(self) -> None:
+        require_paired(self.terminal_state, self.end_of_run)
 
 
 class ModelClient(Protocol):
@@ -305,12 +328,22 @@ class AgentLoop:
             if verdict.exceeded:
                 transition = self.machine.terminate_on_ceiling(
                     self.session_id, verdict, at=self.clock())
-                self.write_transition_span(transition)
+                # T066. The cause is built from the same verdict the transition
+                # was, so the marker and the predicate inputs on the span cannot
+                # name different ceilings.
+                marker = EndOfRun(
+                    session_id=self.session_id,
+                    reason=REASON_CEILING_REACHED,
+                    at=transition.at,
+                    exhaustion=ExhaustionCause.from_verdict(verdict),
+                )
+                self.write_transition_span(transition, end_of_run=marker)
                 return LoopOutcome(
                     turns=tuple(turns),
                     terminal_state=verdict.terminal_state,
                     text=turns[-1].text if turns else "",
                     merged_state=merged,
+                    end_of_run=marker,
                 )
             if (max_turns_this_attempt is not None
                     and this_attempt >= max_turns_this_attempt):
@@ -344,12 +377,18 @@ class AgentLoop:
             if not record.tool_calls:
                 transition = self.machine.complete(
                     self.session_id, at=self.clock())
-                self.write_transition_span(transition)
+                marker = EndOfRun(
+                    session_id=self.session_id,
+                    reason=REASON_COMPLETED,
+                    at=transition.at,
+                )
+                self.write_transition_span(transition, end_of_run=marker)
                 return LoopOutcome(
                     turns=tuple(turns),
                     terminal_state=terminal.COMPLETED.name,
                     text=record.text,
                     merged_state=merged,
+                    end_of_run=marker,
                 )
 
     # -- one turn ----------------------------------------------------------
@@ -612,13 +651,24 @@ class AgentLoop:
             fields=bounded.fields,
         )
 
-    def write_transition_span(self, transition: StateTransition) -> None:
+    def write_transition_span(
+        self, transition: StateTransition, *, end_of_run: EndOfRun | None = None
+    ) -> None:
         """Put a lifecycle edge on the trace (Principle VI at v1.3.0).
 
         Public because the runner takes the edges the loop does not — the
         interruption and the unclassifiable fault — and a second implementation
         of this would be a second chance to omit the `terminal_state` column that
         `contracts/trace-record.md`'s readers select on.
+
+        **`end_of_run` is what puts T066's raw signals on the record**, and it
+        is optional here for one reason only: the two non-terminal edges,
+        `interrupt` and `resume`, end no run and have no marker to carry. Every
+        terminal edge has one, which is what `LoopOutcome`'s pairing enforces on
+        the caller-visible side. Its content goes in `detail` rather than in a
+        column because a fault's error identity is the only field of it that is
+        new to the trace, and adding a column for a value one edge in five
+        carries would make every other span state that it is absent.
 
         The turn is the journalled count rather than a position in this attempt,
         so the span sits after the last turn it followed rather than at turn 0 of
@@ -644,6 +694,8 @@ class AgentLoop:
             at=transition.at,
             transition=transition,
             terminal_state=transition.terminal_state,
+            detail=({} if end_of_run is None
+                    else {"end_of_run": end_of_run.to_record()}),
         ))
 
     def _write_model_span(self, turn_index: int, response: ModelResponse) -> None:
