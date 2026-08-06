@@ -1659,6 +1659,109 @@ proof "T062 schema gate — a later revision's payload is read for what it recog
   's = s.replace("    if schema not in READABLE_MODEL_OUTCOME_SCHEMAS:", "    if False:")'
 
 # ---------------------------------------------------------------------------
+# OD-27 — the operator-declared price path.
+#
+# The arms above prove the table is reachable. These prove that opening a
+# *second* way in did not reopen what T063 closed. Two families, and they fail
+# in opposite directions:
+#
+#   - the **refusals**, where the tamper admits a declaration that should not
+#     be admitted. Every one of them under-charges, which is the direction that
+#     makes a ceiling fail to fire, and every one of them looks like a
+#     simplification rather than a defect.
+#   - the **provenance**, where the tamper still prices correctly and loses the
+#     record of *whose* rate it was. Nothing goes red on its own: the totals are
+#     right, the session runs, and the only casualty is a later reader's ability
+#     to tell a declared figure from a published one. That is precisely the
+#     class this harness exists for, because a passing suite is not evidence.
+
+# The limb the decision turns on. The tamper is not sabotage — it is the edit
+# an author makes on being told the two-band rule is annoying for a vendor
+# whose card they believe is flat. It reintroduces the invented boundary with
+# the operator's name on it.
+proof "OD-27 context threshold — a single rate is accepted for a two-column card" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_a_single_rate_is_refused_where_the_vendors_card_has_two_columns" \
+  's = s.replace("    if len(price.tiers) < 2:\n        raise OperatorPriceError(", "    if False:\n        raise OperatorPriceError(")'
+
+# The way round it. Satisfying "supply both columns" by shape while supplying
+# one column by content is what a reader who copied a row does, and the tamper
+# is the reading that treats a boundary at which nothing changes as a boundary.
+proof "OD-27 identical bands — one column read twice satisfies the two-band rule" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_the_same_rate_twice_is_refused_because_it_is_one_column_read_twice" \
+  's = s.replace("        if cheaper or not dearer:", "        if cheaper:")'
+
+# The address half of the two-address property. The tamper is the sympathetic
+# one: the operator has a rate for the alias, the alias is a real string the
+# vendor documents, so price it.
+proof "OD-27 alias address — a declaration is accepted against a moving pointer" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_an_alias_is_not_an_address_a_declaration_may_use" \
+  's = s.replace("        refused = REFUSED_ADDRESSES.get((self.provider, self.model))", "        refused = None")'
+
+# The sourced rate's protection. A declaration that construction admits for a
+# key the table already holds is a sourced rate displaced by an unsourced one,
+# and nothing downstream reports the substitution.
+proof "OD-27 vendor precedence — a declaration is allowed to shadow a sourced rate" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_a_declaration_cannot_displace_a_rate_read_off_a_vendors_page" \
+  's = s.replace("        if (self.provider, self.model) in PRICES:\n            raise OperatorPriceError(", "        if False:\n            raise OperatorPriceError(")'
+
+# FR-058's treatment, which is the whole of limb ④. Removing the lookup leaves
+# a preflight that returns a plausible line for a model nothing prices — worse
+# than no preflight, because the operator has now read a startup log saying the
+# deployment is priced.
+proof "OD-27 startup preflight — an unpriceable model is discovered at its first call" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_an_unpriceable_model_is_refused_at_startup_not_at_its_first_call" \
+  's = s.replace("    entry = entry_in_force(provider, model, as_of=as_of,\n                           operator_prices=operator_prices)\n    bands = ", "    entry = next(iter(PRICES.values()))[0]\n    bands = ")'
+
+# The provenance family starts here, and this arm is the one to read. The
+# tamper prices the turn **correctly** — the figure, the ceiling and the
+# terminal state are all unchanged — and records a declared rate as a published
+# one. It is also the plausible edit: `PROVENANCE_VENDOR` is right for the
+# branch above it, and reusing it reads as tidying.
+proof "OD-27 seam provenance — a declared rate is recorded as a published one" \
+  src/runtime/providers/adapter.py \
+  "tests/unit/test_provider_adapter.py::test_a_declaration_reaches_the_seam_and_the_response_says_it_was_one" \
+  's = s.replace("        spend = priced.usd\n        provenance = priced.provenance", "        spend = priced.usd\n        provenance = costs.PROVENANCE_VENDOR")'
+
+# The record type's own guard. Without it a construction site can supply a
+# figure and no provenance, which is the `0.0` defect one field over: a number
+# that reads as authoritative because nothing beside it says otherwise.
+proof "OD-27 paired fields — a spend figure is admitted with no provenance beside it" \
+  src/runtime/turn.py \
+  "tests/unit/test_provider_adapter.py::test_a_spend_figure_without_a_provenance_is_refused" \
+  's = s.replace("        if (self.spend_usd is None) != (self.spend_provenance is None):", "        if False:")'
+
+# FR-038, and the argument is the `model` arm's above continued. A span
+# carrying `(provider, model)` and a figure sends a later reader to
+# `costs.PRICES` to check a rate that was never in it.
+proof "OD-27 span provenance — the model call span drops where the rate came from" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_the_span_says_whether_the_rate_was_published_or_declared" \
+  's = s.replace("                \"spend_provenance\": response.spend_provenance,", "")'
+
+# The journal's disclosure. The tamper leaves the provenance decoded and
+# unreported, which is the write-only state this field was nearly left in: read
+# by the module that decodes it and visible to nobody resuming the session.
+proof "OD-27 resume disclosure — an operator-priced turn resumes indistinguishable from a sourced one" \
+  src/runtime/resume.py \
+  "tests/unit/test_resume.py::test_a_declared_price_survives_the_journal_as_a_declared_one" \
+  's = s.replace("        elif response.spend_provenance == PROVENANCE_OPERATOR:\n            operator_priced.append(turn_index)", "        elif False:\n            operator_priced.append(turn_index)")'
+
+# The migration. A revision-2 payload has a spend and no provenance, and the
+# tamper is the cautious-looking reading: do not claim to know, leave it unset.
+# It fails on the pairing rule one layer up, which is the point — "unknown" is
+# not a state this record admits, because the revision's silence has exactly
+# one meaning.
+proof "OD-27 revision-2 migration — a pre-OD-27 payload comes back with no provenance" \
+  src/runtime/resume.py \
+  "tests/unit/test_resume.py::test_a_revision_two_payload_comes_back_as_a_vendor_price" \
+  's = s.replace("            if raw_provenance is None and spend is not None:\n                provenance = PROVENANCE_VENDOR", "            if False:\n                provenance = PROVENANCE_VENDOR")'
+
+# ---------------------------------------------------------------------------
 # The suite's own harness.
 #
 # `tests/conftest.py` is not a mechanism the specification names, and it is under
