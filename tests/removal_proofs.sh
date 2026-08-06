@@ -462,6 +462,19 @@ proof "Q-10 no-default bounds — a default added" \
   "tests/invariants/test_no_default_bounds.py" \
   's = s.replace(chr(34)+"memory.max on the session cgroup"+chr(34)+", no_default_reason=_NO_DEFAULT_BOUND"+chr(41), chr(34)+"memory.max on the session cgroup"+chr(34)+", default="+chr(34)+"512MiB"+chr(34)+chr(41))'
 
+# The proof above plants on SANDBOX_MEMORY_MAX, which three separate sites cover — INV-006 by name,
+# the fail-loud check by requirement, and the loader test by absence — so it proves the property is
+# checked *somewhere* and cannot notice any one of those sites narrowing. This one plants on
+# MODEL_PRICES_OPERATOR, and the two are not redundant: measured against this exact plant, the old
+# requirement-gated check flagged nothing, `test_no_default_bounds.py` and `test_result_bound.py`
+# passed, and the widened check was the only thing in the repository that failed. It is the arm that
+# would notice the selector being tidied back to a requirement list, which is how the key came to be
+# uncovered in the first place.
+proof "OD-27 operator prices — a default added beside its own no-default reason" \
+  src/contracts/config.py \
+  "tests/contract/test_configuration_failloud.py::test_no_key_that_states_a_no_default_reason_acquires_a_default" \
+  's = s.replace("no_default_reason=_NO_DEFAULT_OPERATOR_PRICES)", "no_default_reason=_NO_DEFAULT_OPERATOR_PRICES, default=\x22none\x22)")'
+
 
 # ---------------------------------------------------------------------------
 # The cross-language capability boundary.

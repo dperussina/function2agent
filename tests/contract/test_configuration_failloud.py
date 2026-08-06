@@ -135,20 +135,75 @@ def test_nothing_is_started_when_configuration_fails(tmp_path, monkeypatch) -> N
     cfg.load(cfg.SUPERVISOR_KEYS, VALID)
 
 
-def test_no_required_key_acquires_a_default() -> None:
-    """Q-10 and FR-005, as a standing check rather than a review habit."""
-    for key in cfg.SUPERVISOR_KEYS:
-        if key.requirement in ("FR-049", "FR-005"):
-            assert key.default is None, (
-                f"{key.name} acquired the default {key.default!r}. FR-005 and "
-                "FR-049 state none, and a ceiling filled from an invented "
-                "default is an unbounded liability wearing a number."
-            )
-            assert key.no_default_reason, (
-                f"{key.name} has no default and does not say why; the startup "
-                "message would tell an operator to set it without telling "
-                "them it is unsafe to guess"
-            )
+DECLARED: tuple[cfg.Key, ...] = tuple(
+    {key.name: key for key in (*cfg.SUPERVISOR_KEYS, *cfg.RUNTIME_KEYS)}.values()
+)
+STATES_A_REASON = tuple(k for k in DECLARED if k.no_default_reason)
+
+
+def test_no_key_that_states_a_no_default_reason_acquires_a_default() -> None:
+    """Q-10 and FR-005, as a standing check rather than a review habit.
+
+    **Selected on the reason field, over every declared tuple.** It used to be
+    selected on `key.requirement in ("FR-049", "FR-005")` over
+    `SUPERVISOR_KEYS` alone, which let a *citation string* decide what a
+    *structural* property covered. Two consequences, and the second is why the
+    selector moved rather than the container:
+
+    * it reached eight of the twelve keys carrying a reason, the runtime-only
+      four falling outside the container; and
+    * retagging a key silently moved it in or out of the check.
+      `MODEL_PRICES_OPERATOR` sat inside it only because it was mis-tagged
+      `FR-005`, and correcting that tag to OD-27 would have dropped it out —
+      so widening the container while keeping the requirement gate would have
+      covered the one key it covered *because it was wrong*, and stopped the
+      moment it was right.
+
+    The property is the one the reason field states out loud: **a key whose
+    schema says it deliberately ships no default must not ship one.** The
+    regression that catches is a default appearing beside a reason text nobody
+    thought to delete, which is an invented number wearing an argument against
+    inventing it.
+    """
+    assert STATES_A_REASON, (
+        "no declared key states a no-default reason. The selector has stopped "
+        "selecting — this check now passes over nothing"
+    )
+    assert {k.name for k in STATES_A_REASON} & {k.name for k in cfg.RUNTIME_KEYS}, (
+        "the selector reaches no runtime-only key. It has narrowed back to the "
+        "supervisor's container, which is the gap it was widened to close"
+    )
+    for key in STATES_A_REASON:
+        assert key.default is None, (
+            f"{key.name} acquired the default {key.default!r} while still "
+            f"declaring why it has none ({key.requirement}). A ceiling filled "
+            "from an invented default is an unbounded liability wearing a "
+            "number, and one filled beside its own no-default reason is that "
+            "liability wearing an authorisation."
+        )
+
+
+def test_every_bound_and_ceiling_says_why_it_has_no_default() -> None:
+    """The other half, and it keeps the requirement gate on purpose.
+
+    Above asserts that a key stating a reason has no default; this asserts
+    that a bound or a ceiling *states one at all* — which the selector above
+    cannot do, since a key with neither a default nor a reason is exactly the
+    key it does not select. FR-049 and FR-005 are named here because the
+    obligation is theirs: `F2A_TENANT_ID` is also required and also defaults
+    to nothing, and owes no argument, because nobody is tempted to guess it.
+    """
+    obliged = [k for k in DECLARED if k.requirement in ("FR-049", "FR-005")]
+    assert len(obliged) == 8, (
+        f"the bound-and-ceiling set moved to {len(obliged)}: "
+        f"{sorted(k.name for k in obliged)}"
+    )
+    for key in obliged:
+        assert key.no_default_reason, (
+            f"{key.name} has no default and does not say why; the startup "
+            "message would tell an operator to set it without telling "
+            "them it is unsafe to guess"
+        )
 
 
 def test_a_key_outside_the_schema_is_not_readable() -> None:

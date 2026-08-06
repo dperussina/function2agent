@@ -218,8 +218,14 @@ RUNTIME_KEYS: tuple[Key, ...] = (
         "at. Without it the reference relocates an unbounded liability from "
         "the transcript onto a disk nothing bounds",
         no_default_reason=_NO_DEFAULT_RESULT_BOUND),
-    # OD-27 — no default, and 'none' is a value rather than an absence.
-    Key("MODEL_PRICES_OPERATOR", Kind.STR, "FR-005",
+    # OD-27 — no default, and 'none' is a value rather than an absence. The
+    # requirement field names the authority that *states* the disposition, not
+    # the treatment it borrows: the FR-049 bounds cite FR-049 though they take
+    # Q-10's treatment, and the FR-005 ceilings cite FR-005 though they take
+    # Q-10's rather than FR-047's. OD-27 limb ④ is what states this key is
+    # required with no default; FR-058 is what OD-27 calls "the precedent in
+    # shape", and it governs bounding a tool result, not pricing a model.
+    Key("MODEL_PRICES_OPERATOR", Kind.STR, "OD-27",
         "the operator's own declared rates, for models no vendor page in "
         "`costs.PRICES` prices. A path to a declaration file, or the literal "
         "'none'. Nothing is filled in from it that the operator did not "
