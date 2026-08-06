@@ -1407,6 +1407,32 @@ proof "T047 cancellation — the terminal state teardown recorded is not reporte
   "tests/unit/test_cancellation.py::test_a_cancelled_run_names_operator_terminated_as_its_terminal_state" \
   's = s.replace("        marker = outcome.end_of_run if outcome.end_of_run is not None else recorded", "        marker = outcome.end_of_run")'
 
+# T066. The two raw signals whose *content* is the whole point of them, proved
+# separately because one tamper covering both would not say which was missing.
+#
+# The first is the identity. `terminated.unrecoverable_fault` is FR-006's name
+# for a fault the runtime cannot classify further, and before T066 that was
+# **all** a reader got — the exception's type and message went out with the
+# traceback. The tamper keeps a marker, keeps a fault, and replaces the identity
+# with a constant, so only the arm that reads the type moves. A tamper that
+# removed the field would instead trip `EndOfRun`'s own pairing check and fail
+# every fault path for a reason that is not this one.
+proof "T066 error identity — the fault marker names a constant, not the exception" \
+  src/runtime/runner.py \
+  "tests/unit/test_runner.py::test_a_faulted_run_records_which_exception_ended_it" \
+  's = s.replace("                    error=ErrorIdentity.from_exception(\n                        raised if raised is not None\n                        else RuntimeError(\n                            \"the loop returned no outcome and raised nothing\")),", "                    error=ErrorIdentity(\"Exception\", \"a fault\"),")'
+
+# The second is the marker reaching the durable record at all. `LoopOutcome` and
+# `RunOutcome` refuse a terminal state without one, so the *return value* is
+# guarded structurally; the **span** is not, and a caller-visible marker that
+# never lands on the trace leaves an operator reading the record exactly where
+# finding 006 found them. Declared against the ceiling arm rather than the fault
+# arm so this proof and the one above have different targets.
+proof "T066 end-of-run marker — the signal never reaches the trace" \
+  src/runtime/loop.py \
+  "tests/unit/test_runner.py::test_a_ceiling_termination_records_which_ceiling_and_on_what_reading" \
+  's = s.replace("            detail=({} if end_of_run is None\n                    else {\"end_of_run\": end_of_run.to_record()}),", "            detail={},")'
+
 # T046. **Not a proof of the terminated refusal.** That guard was tried here and
 # the tamper was vacuous: removing it drops the caller through to the "no edge
 # out of {state}" branch, which is also a RunnerError also naming TERMINATED, so
