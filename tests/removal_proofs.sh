@@ -1012,6 +1012,16 @@ proof "T050 lock release — a refused insert keeps its transaction open" \
   "tests/integration/test_store_concurrent_writers.py::test_a_refused_insert_does_not_wedge_another_connection" \
   's = s.replace("                self._rollback_if_outermost()\n                raise UniquenessError(f\x22{table}: {exc}\x22)", "                raise UniquenessError(f\x22{table}: {exc}\x22)")'
 
+# T050. The rendezvous is what makes the probe's children one-writer-per-process
+# rather than hopefully-one-writer-per-process, and removing it is invisible in
+# every arm: `Pool` reuses a worker only sometimes, so the measurements stay
+# green and quietly run on fewer connections than they name. Deleting the wait
+# is a two-character edit with no red test unless one is kept pointed at it.
+proof "T050 writer rendezvous — children no longer wait to be one-per-process" \
+  tests/integration/test_store_concurrent_writers.py \
+  "tests/integration/test_store_concurrent_writers.py::test_the_rendezvous_refuses_a_pool_that_reuses_a_worker" \
+  's = s.replace("        _BARRIER.wait(timeout=timeout)", "        pass")'
+
 # T049. The guarded update is the whole mechanism and its return value was
 # discarded before this task; the proof is that discarding it again is noticed.
 proof "T049 guarded transition — a transition that matched nothing reports success" \
