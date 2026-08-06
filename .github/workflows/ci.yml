@@ -523,7 +523,7 @@ jobs:
     # 330 + 300 + 300 = 930s = 15.5 minutes, still inside 20, leaving 870s of
     # hang budget — still two full cap firings and change. **The bound holds
     # unchanged and no value here moves.** The likely cause of the +12s is that
-    # `acdf5f7` also put `tools/proof_attribution.py`'s 149 arms under
+    # `acdf5f7` also put `tools/proof_attribution.py`'s 147 arms under
     # `proof_timeout.py`, one subprocess each, which none of the 40 sampled
     # runs carried — **that is a reading of the diff, not a measurement.** If a
     # later sample shows the trend continuing, re-derive the whole table by the

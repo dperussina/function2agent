@@ -1082,7 +1082,7 @@ leave the maximum disagreeing with the min, median and p90 beside it, and substi
 above would silently rewrite a derivation nobody performed. Re-running the sum on it instead:
 330 + 300 + 300 = 930s, 15.5 minutes, still inside 20, leaving 870s of hang budget — still two full cap
 firings and change, so **the bound holds and nothing moves**. The likely cause of the +12s is that
-`acdf5f7` also put `proof_attribution.py`'s 149 arms under `proof_timeout.py`, one subprocess each,
+`acdf5f7` also put `proof_attribution.py`'s 147 arms under `proof_timeout.py`, one subprocess each,
 which none of the 40 sampled runs carried; that is a reading of the diff and not a measurement. The
 handling follows [`gen_claims.py`](#generated-claims--gen_claimspy)'s rule for a figure with a narrative
 half: a number sitting inside a derivation is not a site to overwrite, because advancing the digits
