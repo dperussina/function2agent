@@ -1060,10 +1060,12 @@ continue into a five-minute forcible-termination window. They run and there is n
 The renderer exits non-zero on a missing record, which is correct and useless: it reports the
 absence, not the arm.
 
-**The comment committed at `acdf5f7` states this one step too strongly** — it says the `if: always()`
-steps "do not run". Per the reference above they do. The bound it justifies is unaffected, because
-what those steps need does not exist by the time they run, but the mechanism as written in
-`.github/workflows/ci.yml` is wrong and is still there.
+**The comment committed at `acdf5f7` stated this one step too strongly** — it said the `if: always()`
+steps "do not run". Per the reference above they do. The bound it justifies was unaffected, because
+what those steps need does not exist by the time they run. **Corrected in
+`.github/workflows/ci.yml` at both sites, 2026-08-06**, and that file now states the mechanism the
+short way and points here. `acdf5f7`'s own commit message still carries the stronger claim and
+cannot be corrected in place; this paragraph is the record that it is wrong.
 
 So the bound is a **sum, not a multiple**, and the arithmetic is the part a future editor would
 otherwise re-derive or casually tighten: 318s observed maximum, from the 40-run table in that file's
@@ -1072,6 +1074,20 @@ reaching it again in `proof_attribution.py`, is 918s — 15.3 minutes, rounded u
 882s of hang budget over the observed maximum, two full cap firings and change. Three simultaneously
 hanging arms exceed it, and that is the deliberate stopping point: at three the cap is not containing
 the problem, so losing the record is no longer the worse outcome.
+
+**The observed maximum has since moved, and 318 is left standing anyway — it is what this derivation
+read, not a live gauge.** The first run under the new bound, `31105229783` at `acdf5f7`, took **330s**
+(13:17:34Z to 13:23:04Z). It postdates the 40-run sample, so substituting it into the table would
+leave the maximum disagreeing with the min, median and p90 beside it, and substituting it into the sum
+above would silently rewrite a derivation nobody performed. Re-running the sum on it instead:
+330 + 300 + 300 = 930s, 15.5 minutes, still inside 20, leaving 870s of hang budget — still two full cap
+firings and change, so **the bound holds and nothing moves**. The likely cause of the +12s is that
+`acdf5f7` also put `proof_attribution.py`'s 149 arms under `proof_timeout.py`, one subprocess each,
+which none of the 40 sampled runs carried; that is a reading of the diff and not a measurement. The
+handling follows [`gen_claims.py`](#generated-claims--gen_claimspy)'s rule for a figure with a narrative
+half: a number sitting inside a derivation is not a site to overwrite, because advancing the digits
+without advancing the sentence around them turns detectable staleness into undetectable inconsistency.
+If a later sample shows the trend continuing, re-derive the whole table rather than advance one cell.
 
 **The rule generalises past CI: when an inner mechanism's whole output is a record it writes at the
 end, an outer bound set inside the window the inner one needs converts an informative failure into a

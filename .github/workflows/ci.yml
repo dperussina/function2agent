@@ -59,9 +59,17 @@
 # **These are fallbacks, not the primary bound.** The primary bound is the
 # per-arm cap `tools/proof_timeout.py` applies inside both of those tools. That
 # distinction sets the *floor* on the removal-proofs value, because a job
-# timeout **cancels the job** — the `if: always()` steps do not run — so a
-# bound chosen inside the window where the per-arm cap would fire and publish
-# its record destroys the exact diagnostic the cap exists to produce.
+# timeout **cancels the job** and the cap's whole product is a record
+# `tests/removal_proofs.sh` writes at its last line, out of a `mktemp -d` an
+# `EXIT` trap removes. A bound chosen inside the window where the cap would
+# fire therefore destroys the diagnostic the cap exists to produce — and not
+# only for the arm that hung, but for every arm in the run.
+#
+# **The `if: always()` steps do run on a cancel; they find nothing to render.**
+# A job timeout is a cancellation, and GitHub re-evaluates unfinished steps'
+# conditions on a cancel, so `always()` stays true. Same bound, different
+# mechanism. `tools/README.md` § "An outer bound inside an inner bound's
+# window" is the full treatment and carries the references.
 #
 # **Derived from this workflow's own history rather than picked.** Job
 # durations over the 40 most recent runs — 200 observations, 191 success and 9
@@ -74,6 +82,12 @@
 #     corpus gates    40     28   39.0     42     44     5m
 #     go test         40     19   25.0     28     29     5m
 #     invariants      40      7   11.0     13     18     5m
+#
+# **That is a closed sample, not a running maximum.** It is the 40 runs that
+# existed when the bounds were set, and a later observation does not belong in
+# it — folding one in would leave the max disagreeing with the min, median and
+# p90 beside it. One has been taken since; it is recorded beside the derivation
+# it bears on, in the `removal-proofs` job below.
 #
 # **5 minutes is a floor, and it is stated as one rather than dressed up as a
 # derivation.** Three jobs finish in under a minute every time; for those the
@@ -487,12 +501,33 @@ jobs:
     # `REMOVAL_PROOF_TIMEOUT` in the harness below, plus 300s for the same arm
     # reaching the same cap again in `tools/proof_attribution.py`, is 918s =
     # 15.3 minutes. That is the longest a run can legitimately take *and still
-    # reach the `if: always()` steps that publish its record, which a job
-    # timeout would skip*. 20 minutes rounds it up and leaves 882s of hang
-    # budget over the observed max — two full cap firings and change. Three
-    # simultaneously hanging arms exceed it, and that is the right place to
-    # give up: at three the cap is not containing the problem and the fallback
-    # is supposed to fire.
+    # leave the record its `if: always()` steps exist to publish*. The harness
+    # writes that record from exactly two places — the baseline abort, and the
+    # line after the last proof — out of a `mktemp -d` an `EXIT` trap removes,
+    # so a cancelled harness leaves nothing for **any** arm. The `always()`
+    # steps below do run on a cancel and find nothing to render, which reaches
+    # the same bound by a better route; `tools/README.md` § "An outer bound
+    # inside an inner bound's window" has it in full.
+    #
+    # 20 minutes rounds 918s up and leaves 882s of hang budget over that
+    # observed max — two full cap firings and change. Three simultaneously
+    # hanging arms exceed it, and that is the right place to give up: at three
+    # the cap is not containing the problem and the fallback is supposed to
+    # fire.
+    #
+    # **Re-checked against the first run under this bound, and 318 stands as
+    # written because it is what the derivation above read.** Run 31105229783
+    # (`acdf5f7`) took **330s** — 13:17:34Z to 13:23:04Z. It postdates the
+    # 40-run sample in this file's header, so it is recorded here rather than
+    # substituted into either the table or the sum. Re-running the sum on it:
+    # 330 + 300 + 300 = 930s = 15.5 minutes, still inside 20, leaving 870s of
+    # hang budget — still two full cap firings and change. **The bound holds
+    # unchanged and no value here moves.** The likely cause of the +12s is that
+    # `acdf5f7` also put `tools/proof_attribution.py`'s 149 arms under
+    # `proof_timeout.py`, one subprocess each, which none of the 40 sampled
+    # runs carried — **that is a reading of the diff, not a measurement.** If a
+    # later sample shows the trend continuing, re-derive the whole table by the
+    # command in the header rather than advancing this one figure.
     #
     # Raising `REMOVAL_PROOF_TIMEOUT` without raising this trades the cap's
     # diagnostic for a cancelled job. They move together.
