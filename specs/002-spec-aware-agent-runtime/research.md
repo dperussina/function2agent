@@ -13,7 +13,7 @@ deliberately did not: the specification names no language, framework, library or
 its own quality checklist scored that as a deliberate pass.
 
 Most of the stack is **not** decided here. It was decided in feature 001 and recorded as owner
-decisions **OD-01** through ~~**OD-14**~~ ~~**OD-21**~~ **OD-25** in that feature's
+decisions **OD-01** through ~~**OD-14**~~ ~~**OD-21**~~ ~~**OD-25**~~ **OD-28** in that feature's
 [`plan.md`](../001-discovery-validation/plan.md), which is the authority for the register's extent.
 *(**Range corrected 2026-08-03**, and the reasoning is recorded because a prior pass deliberately
 left it alone. The sentence was read as a claim about **provenance** — which decisions came out of
@@ -47,7 +47,19 @@ the separator immediately, so the `~~` and `**` this sentence is maintained with
 check's second gate admits a whole-register claim only where the range is parenthesised,
 bracketed, or led by a colon or a dash — which this sentence, being ordinary prose, is not.
 **Either alone is sufficient to hide it**, so a fix to the pattern would not by itself put this
-site under guard.)* §1 records how each binding one is honoured, and —
+site under guard.
+**Range advanced again 2026-08-06 to OD-28, and this time it had gone three entries behind rather
+than one** — OD-26 on 2026-08-05, OD-27 and OD-28 on 2026-08-06, none of the three propagated here
+when it landed. That is the guard note above coming true twice more, and it is recorded rather than
+quietly fixed, because the interval is the only evidence of how long this site can drift unnoticed.
+The provenance sentence extends the same way: **OD-26 adjudicates between two artifacts in this
+repository rather than settling a design question, naming `src/contracts/terminal.py` authoritative
+for terminal-state membership and `data-model.md` §2.1 a derived view of it; OD-27 admits an
+operator-declared model rate as a second provenance rather than a second row; and OD-28 keeps the
+`SessionTable` → `Repository` migration deferred and routes the shape to `tasks.md` T016's note
+rather than re-litigating it.** **None of the three changes anything decided in this document** —
+OD-26 and OD-27 bear on the production specification and its code, and OD-28 schedules no work at
+all.)* §1 records how each binding one is honoured, and —
 *(**Updated 2026-08-03.** The owner has since answered every question in §5, and three answers became
 **OD-15**, **OD-16** and **OD-17**. OD-15 partially reverses OD-01 and is annotated at §1.1, T-01,
 T-02, T-03, T-04, T-06 and T-08. Nothing below is deleted and no measurement is amended.)* —

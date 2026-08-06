@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ **twenty-seven** owner decisions
-(OD-01 through OD-27, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ **twenty-eight** owner decisions
+(OD-01 through OD-28, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -48,8 +48,15 @@ rather than a requirement. **Extended 2026-08-06 with OD-27**, which is differen
 way: it is the first entry here that **re-opens a question a task had recorded as closed by
 construction** — `tasks.md`'s T210 — and it does so because the thing that closed the question was
 the design, and the design landing is what made the closure cost a provider. Its principal output is
-a *second provenance* rather than a requirement or a check.)*
-~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ **The last eighteen
+a *second provenance* rather than a requirement or a check. **Extended 2026-08-06 with OD-28**, taken
+the same day and different in kind a fourth way: it is the first entry here whose principal output is
+a **routing instruction** rather than a disposition — it schedules no work, changes no code and moves
+no requirement text, and what it adds is that a debt three passes have now re-derived from three
+directions is *decided* rather than outstanding. It is also the register's **second adopt-and-defer**
+entry after OD-24, and the first to carry its expiry condition as a named artifact rather than as a
+measurement, on OD-24's own re-examination showing that the ground which fails quietly is the one
+satisfied without anybody noticing.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ **The last nineteen
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -81,7 +88,11 @@ is a disposition the loop continues past**, and **OD-27 admits an operator-decla
 no vendor page prices, as a second provenance carried on the record rather than a second row in the
 table, while refusing a single rate for a card that prices in two context columns and publishes no
 boundary — the refusal being the limb the decision turns on, because one number there would be the
-invented boundary wearing the operator's name.**
+invented boundary wearing the operator's name**, and **OD-28 keeps the `SessionTable` → `Repository`
+migration deferred on two grounds and routes future instances of the shape to T016's note rather than
+re-litigating them, while naming the artifact that expires the first ground — a supervisor entry point
+opening the session store, at which instant the WAL first-open race is live and nothing in the tree
+will notice.**
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -3231,6 +3242,145 @@ no startup path in `src/` yet, and that is stated rather than left to be found**
 constructs a `ModelResponse` outside `adapter.py` and `resume.py` either, for the same reason — T210's
 seam has no caller in the product yet. `require_priceable` is that seam's startup half and lands in
 the same state. Wiring both is one task and it is not this decision's.
+
+### OD-28 — the `SessionTable` → `Repository` migration stays deferred, and the shape is routed to T016's note rather than re-litigated; the deferral expires the moment a supervisor process constructs a session store
+
+**Decided 2026-08-06**, answering the one question
+[finding 033](../002-spec-aware-agent-runtime/findings/033-session-table-wal-race-unreachable-and-owed-to-migration.md)
+raised for an owner and deliberately declined to answer: **when does
+[`src/supervisor/session_table.py`](../../src/supervisor/session_table.py) migrate onto `Repository`?**
+The finding measured the defect on both limbs, recommended against a local patch, and minted no number
+— on [finding 026](../002-spec-aware-agent-runtime/findings/026-pivot-root-check-measured.md)'s rule
+that a number copied into a finding goes stale in the direction that tells the next author to reuse a
+taken one. This entry supplies the number and the ruling. **It confirms the finding rather than
+correcting it**, which is why the finding's text is untouched.
+
+**What is deferred, stated so nothing is smuggled.** `SessionTable` does not use `Repository`. It calls
+`sqlite3.connect` directly and runs `executescript(SCHEMA)` whose **first statement** is
+`PRAGMA journal_mode=WAL`, so the concurrent-first-open defect `ff202ae` closed inside
+[`Repository._enter_wal`](../../src/contracts/repository.py) does not reach it; and all six of its
+write methods plus `__init__` leak raw `sqlite3.OperationalError`, where the repository layer's
+callers get the `StoreBusyError` / `StoreWedgedError` / `StoreUnusableError` split. Both were measured
+rather than argued, and neither is repaired.
+
+> #### ⚠️ A DEFERRAL IS NOT A DECLINE, AND THE MIGRATION IS NOT WITHDRAWN
+>
+> **The migration is owed and stays owed. Only its schedule is set, and it is set to *not now*.**
+> Nothing below withdraws it, re-opens whether `SessionTable` belongs inside the repository layer, or
+> licenses a design that assumes it never will. The exemption that keeps T016's scanner green —
+> [`tests/invariants/test_writer_ownership.py`](../../tests/invariants/test_writer_ownership.py)'s
+> `permitted` entry, `# predates T016; see below` — is a **deferral recorded in the open**, and its own
+> failure message says so in terms: *"it is a **known migration**, recorded here rather than hidden by
+> widening the scan."* This entry ratifies that wording; it does not convert it into a carve-out on
+> the merits. **OD-24** is the precedent in shape — adopt the model, gate the build — and this is the
+> register's second adopt-and-defer entry.
+
+**Two grounds, and they must be kept distinct because the second is durable and the first can expire.**
+
+**① Nothing the migration fixes is reachable today, and the reachability is *by current usage* rather
+than by construction.** Re-verified against the tree at `7e874d7` rather than read off the finding:
+**nothing in `src/` constructs a `SessionTable` at all.** The only reference in the product is
+[`lease.py`](../../src/supervisor/lease.py)'s import of the type for an annotation. Every construction
+in the tree is a test or a tool, and each creates the file sequentially before anything else attaches.
+The race needs two processes to first-open a **brand-new** store simultaneously — a store already in
+WAL is immune, a second open succeeding in 0.28 ms even against an `EXCLUSIVE` holder — so the hazard
+is specifically *concurrency on the conversion*, which happens once in a file's life. **Only the proxy
+is safe by construction** (`mode=ro` plus `query_only`, doubly enforced in Go, and a read-only open of
+a nonexistent file fails outright). Everything else is safe by accident. **This ground is a fact about
+the current tree and it is exactly the kind that expires**, which is why the expiry condition below is
+the operative half of this entry rather than a footnote to it.
+
+**② Phase 3 is the critical path and the migration is not mechanical**, so the work would be bought at
+the expense of the path and would not be a day of it. Finding 033 names three obstacles found by
+reading, none of which is an edit: `Repository` prepends `tenant_id` and `deployment_id` to every table
+and filters every read by them, while `resolve()` deliberately carries **no** tenant predicate, because
+the proxy resolves an opaque handle before it knows whose it is — reconciling that with FR-035's scope
+columns is a design question; `session` is not in T017's ownership map; and the schema is a **committed
+cross-language conformance vector** the Go proxy reads by column name, so changing it is a two-language
+change plus a regenerated fixture. **This ground does not expire by being satisfied.** It is spent when
+Phase 3 closes, and that is an observable event rather than a silent one.
+
+**Why a local patch is refused rather than merely not scheduled.** Reproducing `_engine_errors`, the
+four `StoreUnavailableError` subclasses and the `_enter_wal` convergence loop inside `SessionTable`
+would be roughly **120 lines duplicating a module this file is scheduled to start using**, plus a
+removal proof for each new mechanism — all of which the migration then deletes. A patch is therefore
+not a cheap down payment on the migration; it is work the migration charges twice for. **That is the
+whole of why this is a deferral and not a backlog item somebody could pick up cheaply.**
+
+> #### ⚠️ THE EXPIRY CONDITION, WHICH IS THIS ENTRY'S MOST IMPORTANT CONTENT
+>
+> **Ground ① is satisfied by the tree staying as it is, and a deferral whose ground can be satisfied
+> without anyone noticing is the defect OD-24's re-examination was about.** That entry's ground ② was
+> *discharged* — collected and spent, nothing about it wrong — and the register said nothing for a day
+> while the derived copy had already been struck. **The failure mode is not a wrong ground; it is a
+> ground that quietly stops applying.** So the condition is stated here in a form whose loss is
+> checkable rather than left to be noticed:
+>
+> **Ground ① retires the moment a supervisor process constructs a `SessionTable` against a store that
+> may be cold** — that is, the moment any second party can first-open the session store concurrently
+> with another. At that instant the race is live, and **nothing in the tree will notice**: no rule,
+> test or assertion anywhere says the file must be created before a second writer attaches, and the
+> `permitted` entry that suspends T016's third clause is silent about reachability. There is no
+> `def main`, no `[project.scripts]` and no `console_scripts` anywhere in Python `src/` today —
+> verified at `7e874d7`, the only two `__main__` blocks being `# pragma: no cover` operator utilities
+> — and `src/proxy/main.go`, the one real entry point, is the read-only side that cannot be a party to
+> this race. **That absence is the only thing holding ground ①.**
+>
+> **Where the condition already lives, so it travels with whatever falsifies it.** It is held in
+> **T016**'s note in [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md), with a pointer from
+> **T159** — the four-OCI-images task, which is where a supervisor process first becomes concrete.
+> **T159 delivers a supervisor *image* and does not name what runs inside it**, which is precisely the
+> gap this condition has to cross, so it is named here: the artifact that retires ground ① is a
+> supervisor **entry point** that opens the session store, whether it arrives under T159, under T160's
+> compose bundle, or under a task that does not exist yet. **Ground ② retires when Phase 3 closes.**
+> **When either retires, this entry is re-read; when both have, the migration is scheduled.**
+>
+> **Neither retirement is a measurement, and no further probing will move this deferral** — which is
+> the useful part. Finding 033 measured everything there is to measure here on one platform, and a
+> second platform would change no limb of this decision.
+
+**The routing half, which is the part that changes behaviour.** *Stop working around it.* Three
+separate passes have now reached this shape from three directions — the WAL race, the engine-exception
+leak, and [T108](../002-spec-aware-agent-runtime/tasks.md)'s lease renewer, whose four live options
+include *catch the engine exception here* and *complete T016's migration*, with the fourth being the
+one the other three are working around. **A future instance of this shape is routed to T016's note and
+recorded there; it is not re-litigated, and it does not mint a task.** The distinction a reader must be
+able to make on arrival is between a **decided** deferral with a named expiry condition and an
+oversight nobody got to, and T016's note is where that distinction is made — which is why the routing
+half lands there rather than here.
+
+**What this decision does not license.**
+- **Not** a ruling that the leaked `sqlite3.OperationalError` surface is acceptable in general.
+  Obligation 2's scanner exempts `session_table.py` **by name**, and its own failure message calls that
+  *a known migration* — a deferral, not a carve-out. The general rule is untouched: engine exceptions
+  do not belong above the connection layer, and the recorded route to compliance here is the file
+  moving **inside** the layer that already holds the rule, not the rule being copied out to it.
+- **Not** a licence to add a second exemption on this precedent. The `permitted` list has three entries
+  and each carries its own stated reason; this entry ratifies one of them and says nothing in favour of
+  a fourth.
+- **Not** a claim that the defect is harmless. It is unreached, which is a different thing, and the
+  difference is the entire reason the expiry condition is written down.
+- **Not** a resolution of T108. The lease renewer dies permanently on the first exception of any kind,
+  and that is wrong whichever layer the table sits behind. The migration would remove one of its
+  causes; it does not answer the question T108 puts.
+- **Not** a re-sizing of anything. No estimate is attached, no band is collapsed, and finding 033 is
+  explicit that it does not establish whether the migration is correctly sized.
+
+**Authorises** the standing `permitted` entry for
+[`src/supervisor/session_table.py`](../../src/supervisor/session_table.py) in
+[`tests/invariants/test_writer_ownership.py`](../../tests/invariants/test_writer_ownership.py), and
+**T016**'s **PARTIAL** tick — the interface landed and holds, the line's third clause does not hold
+tree-wide, and the exemption is what makes the checkbox green. Nothing in code changes and no
+requirement text moves.
+
+**Propagated to** [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) at **T016**'s note, which
+already held the migration debt and the reachability condition and now records that the deferral is
+**decided** rather than outstanding, names this entry, and names the artifact that retires ground ①.
+**Finding 033 is annotated with a dated pointer and not otherwise touched** — it is an authority
+document, its recommendation is confirmed rather than contradicted, and a finding that measured a
+problem should say where the problem was subsequently ruled on. **T159's note is left as it stands**:
+it already carries the condition and a pointer to T016, and the naming this entry adds belongs at the
+anchor rather than duplicated at the pointer.
 
 ## Open items this plan does not resolve
 

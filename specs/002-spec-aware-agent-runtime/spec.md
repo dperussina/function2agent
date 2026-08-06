@@ -13,7 +13,7 @@
 This is the production specification. It follows feature 001, which planned fifteen numbered
 experiments, reached nine ladder positions, ran eight of them, and closed with a verdict
 ([`VERDICT.md`](../001-discovery-validation/VERDICT.md)). Its binding scope decisions are the owner
-decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ ~~OD-21~~ **OD-25** in [`plan.md`](../001-discovery-validation/plan.md)
+decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ ~~OD-21~~ ~~OD-25~~ **OD-28** in [`plan.md`](../001-discovery-validation/plan.md)
 *(extended 2026-08-03: **OD-15** drops ADK for v1 and partially reverses OD-01, **OD-16** removes
 `litellm` from the shipped product, and **OD-17** makes Linux the only supported platform. None of
 the three changes a requirement in this document; all three change what the plan builds against)*.
@@ -38,6 +38,17 @@ those three state properties, OD-24 states the mechanism, and it is adopted with
 **OD-25** is the decision authorising FR-058 in full, including its unit rule and its ceiling; the
 register records FR-058's own text as unchanged by it, because what FR-058 lacked was a decision to
 cite rather than a decision.
+**Extended 2026-08-05 with OD-26 and 2026-08-06 with OD-27 and OD-28; the bound above is advanced to
+OD-28 to match, having been three entries behind.** **None of the three changes a requirement in this
+document**, and the reason differs in each case, which is why they are not pooled. **OD-26**
+adjudicates between two artifacts rather than settling a design question — `src/contracts/terminal.py`
+is authoritative for FR-006's terminal-state membership and `data-model.md` §2.1 is a derived view of
+it — so what moves is a diagram, not a requirement. **OD-27** admits an operator-declared rate for a
+model no vendor page prices, as a second *provenance* rather than a second row, and it is expressly
+**not** a weakening of the spend ceiling: a model neither priced nor declared still refuses, now at
+startup as well as at the call. **OD-28** keeps the `SessionTable` → `Repository` migration deferred
+and routes future instances of the shape to `tasks.md` T016's note; it schedules no work, moves no
+requirement text, and its operative half is an expiry condition rather than a disposition.
 
 **What the product is.** The operator points the system at a codebase and at a *named running
 deployment* of that codebase. The system derives contracts from the source, establishes what the
@@ -2496,7 +2507,7 @@ above depends on each of them.
   `/speckit-implement` for any feature that adds a permission tier, and this feature adds one
   (FR-008 through FR-012).
 - **Feature 001's record.** [`VERDICT.md`](../001-discovery-validation/VERDICT.md) for what was
-  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-21~~ **OD-25**, and
+  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-21~~ ~~OD-25~~ **OD-28**, and
   [`research/14-architecture-synthesis.md`](../../research/14-architecture-synthesis.md) for the
   decision, contradiction and uncertainty registers.
 - **A reference application** that is real, data-driven, seedable and publishes its operations, for

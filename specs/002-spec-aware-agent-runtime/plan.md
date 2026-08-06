@@ -8,7 +8,7 @@ criteria** *(recounted 2026-08-04 against the document; the struck figures were 
 FR-058 was added)*, five user stories, four deviation records)
 
 **Constitution**: ~~v1.2.0~~ **v1.3.0** *(amended 2026-08-03 by **OD-22**; Principle VI restated over a
-tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ ~~**OD-21**~~ **OD-25**
+tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ ~~**OD-21**~~ ~~**OD-25**~~ **OD-28**
 *(extended 2026-08-03 after the owner reviewed this gate — see the banner under Summary — and
 extended again the same day: **OD-18** through **OD-21** were taken at the specification's clarify
 session and recorded retroactively, and this plan already relies on two of them, at FR-002's
@@ -17,7 +17,19 @@ four entries above OD-21 are progressively less *inherited*: **OD-22** amends th
 cited on this line already, **OD-23** bears on FR-024 and this plan does not discuss it, and
 **OD-24** and **OD-25** were both taken against this feature's own documents — OD-24 supplying the
 privilege model behind the Target Platform line below, OD-25 authorising the FR-058 row in Complexity
-Tracking. The bound is the register's extent; the parenthetical is which of it this plan leans on.)*
+Tracking. The bound is the register's extent; the parenthetical is which of it this plan leans on.
+**Advanced to OD-28 on 2026-08-06**, three entries behind, **and the gradient above reaches its
+endpoint: none of OD-26, OD-27 and OD-28 is *inherited* in any sense.** All three were taken during
+feature 002 and against feature 002's own artifacts — OD-26 naming `src/contracts/terminal.py`
+authoritative over this feature's `data-model.md` §2.1, OD-27 against `src/runtime/providers/costs.py`
+and `tasks.md` T210, and OD-28 against `tasks.md` T016 and this feature's finding 033. **The bound
+advances anyway, and that is this line's rule rather than an exception to it**: the sentence above
+says the bound is the register's extent, so it tracks what the register holds and the parenthetical
+carries what this plan leans on. Recording them by *not* advancing would make the bound mean two
+things at once — extent up to OD-21 and inheritance after it — which is the reading the sentence
+above exists to foreclose. **What this plan leans on is unchanged by all three**: OD-26 moves a
+diagram this plan does not restate, OD-27 touches no line here, and OD-28 schedules no work and moves
+no requirement text.)*
 ([feature 001 plan](../001-discovery-validation/plan.md)) | **Evidence base**:
 [feature 001 verdict](../001-discovery-validation/VERDICT.md)
 

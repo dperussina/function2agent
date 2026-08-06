@@ -12,6 +12,22 @@ raises for an owner — *when does `session_table.py` migrate onto `Repository`*
 recorded answer and an existing home (see [§5](#5-job-3--the-answer-is-already-recorded-and-it-says-migrate));
 no new number is attached, on [finding 026](./026-pivot-root-check-measured.md)'s rule that a number
 copied into a finding goes stale in the direction that tells the next author to reuse a taken one.
+**⚠️ Answered 2026-08-06 by [OD-28](../../001-discovery-validation/plan.md), in feature 001's register.
+The sentence above stands as written and is not struck** — it is true of *this pass*, and its
+reasoning is what left the number to be minted at the register rather than here. **The ruling confirms
+this finding rather than contradicting it**: the migration stays deferred, on the two grounds
+[§3](#3-job-1b--is-it-reachable-a-census-of-every-constructor-in-the-tree) and
+[§5](#5-job-3--the-answer-is-already-recorded-and-it-says-migrate) supply — nothing it fixes is
+reachable, and the migration is not mechanical while Phase 3 is the critical path — and the
+recommendation against a local patch in [§5](#5-job-3--the-answer-is-already-recorded-and-it-says-migrate)
+is adopted in full. **Two things OD-28 adds that this document deliberately did not.** It states an
+**expiry condition** for the first ground, naming the artifact that retires it — a supervisor entry
+point that opens the session store — because [§3](#3-job-1b--is-it-reachable-a-census-of-every-constructor-in-the-tree)'s
+*"not reachable today, and not protected against tomorrow"* is precisely the kind of ground that can
+stop applying with nothing in the tree reporting it. And it makes the shape **routable**: a future
+pass arriving at the WAL race, the engine-exception leak or T108's renewer is recorded at `tasks.md`
+T016's note and stops there, rather than re-deriving this finding a fourth time. **Nothing measured
+here is revised, and no figure in this document moves.**
 **Model spend**: **$0.0000.** No model was called and no credential was read. Four local process
 runs totalling about 55 seconds of wall clock, most of it spent deliberately waiting out busy
 timeouts.
