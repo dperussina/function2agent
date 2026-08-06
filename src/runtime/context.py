@@ -165,31 +165,37 @@ def states_for(
       Opus 4.5 / Sonnet 4.6 and later it does not apply at all — those models
       keep every prior turn's blocks.
 
-    **All four of those readings are vendor documentation and none of them is
-    measured. See finding 030, which is about exactly that.** Corrected
-    2026-08-05, hours after the paragraph above landed: this said *"three of
-    them enforce it"* and *"Only Anthropic degrades quietly on a miss; the
-    other three fail the request."* Only OpenAI's and Google's quotes carry
-    error language. **xAI's is an imperative**, and the one live arm in this
-    corpus bearing on it points the other way — finding 016's negative control
-    blanked `encrypted_content` on every assistant message of a `grok-4.5`
-    chain and recorded `provider_errored: false`. That disagreement — this
-    docstring against that artifact — is registered as **C-21** in
-    `research/14-architecture-synthesis.md` §4, partially resolved: the
-    textual half closed when this paragraph was corrected, and what keeps the
-    row open is that the narrow claim below still has no measurement behind
-    it. Whether xAI rejects a chain
-    with a *hole* in it, as against one carrying *nothing*, is a different
-    request and is unmeasured. Anthropic's quiet degradation has never been
-    observed in either direction.
+    **All four are readings of vendor documentation, and documentation is not
+    behaviour.** Three have since been measured against live providers and one
+    of the readings was falsified. **Which limb stands, which was narrowed and
+    which fell is deliberately not recorded here.** That is finding 031's
+    result and **C-21**'s in `research/14-architecture-synthesis.md` §4, and an
+    evidence ledger kept in a docstring rots on somebody else's next arm while
+    the authority it copies stays correct — the shape `tools/README.md` records
+    under *a derived copy and its authority*. This paragraph was on its fourth
+    text in six hours of 2026-08-05 before it stopped enumerating and started
+    pointing, and a fifth ledger here would only have scheduled a sixth.
 
-    **None of that is a reason to send less**, and the asymmetry is the reason:
-    FR-037 says never dropped whatever a vendor does; the mis-attachment
-    `reinject` now refuses is wrong on every provider; and being wrong in this
-    direction costs input tokens, where being wrong in the other costs a
-    rejected request on the two providers that document one and a silently
-    degraded turn on Anthropic — which finding 016 result 7 measured to be
-    invisible in the answer.
+    **The one inference to refuse, because it is the one the measurement
+    invites.** A provider measured to *accept* a request with the state
+    withheld was measured to accept it, not to be undamaged by it — every arm
+    that was accepted answered a scenario with no answer depending on the
+    withheld reasoning. **Anthropic's quiet degradation has never been observed
+    in either direction.**
+
+    **None of that is a reason to send less**, and the asymmetry carries more
+    weight now rather than less, because only one provider turned out to enforce
+    anything. FR-037 says never dropped whatever a vendor does. The
+    mis-attachment `reinject` refuses is wrong on a provider that errors, on one
+    that degrades quietly and on one that ignores the field entirely, so it
+    needs no vendor to agree with it — that half of the argument is out of
+    measurement's reach in either direction. And the two directions cost
+    differently: being wrong this way costs input tokens, where being wrong the
+    other way costs a rejected request on Google — the only enforcement anyone
+    here has measured — and, on the other three, a degradation nobody has
+    measured and that the answer would not reveal, since finding 016 result 7
+    stripped the field from every assistant message of a live `grok-4.5` chain
+    and it still chained and still answered correctly.
 
     **T-02 is unchanged and is why this stops rather than filters.** Handing
     another provider's state over would hand an opaque blob to something that
