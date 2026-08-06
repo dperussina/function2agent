@@ -1397,6 +1397,135 @@ proof "T060 exhaustion — a run that played one of six turns reports no news" \
   's = s.replace("        missing = sorted(\n            set(range(len(self.cassette.interactions))) - self._served)", "        missing = []")'
 
 # ---------------------------------------------------------------------------
+# T062, T063 and T065 — the cost table, its refusal, and the backstop that does
+# not read it.
+#
+# The independence claim of T065 is the one thing in this group that cannot be
+# scored by this harness, and the reason is structural rather than an omission:
+# the claim is *"the backstop still fires with the cost table gone"*, which is a
+# test that must still PASS under a tamper, and every arm here is scored on a
+# test FAILING. It is planted and run instead, in-process, by
+# `test_the_backstop_fires_with_the_cost_table_emptied` — which empties `PRICES`
+# and makes `price_usd` raise on everything before asserting the backstop is
+# unmoved. What IS scored below is the guard that keeps it that way.
+
+# T063, and rule 3 of the house methodology in one line. A prefix match is the
+# degradation a contributor reaches for the first time an operator configures a
+# dated variant of an id the table holds — and it turns the accepting set into
+# its complement: `claude-sonnet` is then priced as whichever member of the
+# family sorted first, at a rate nobody chose, for a model nobody priced.
+proof "T063 fail-closed lookup — a family prefix is priced as one of its members" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_a_family_prefix_is_not_priced_as_one_of_its_members" \
+  's = s.replace("    entries = PRICES.get((provider, model))", "    entries = next((v for (p, m), v in PRICES.items() if p == provider and m.startswith(model)), None)")'
+
+# T062. The address guard on an entry. Without it `source=\"the vendor pricing
+# page\"` is accepted, which is the exact shape a price recalled from memory
+# takes: it reads as a citation and there is nothing to open. FR-005 forbids a
+# ceiling filled from an invented default, and a fabricated conversion rate is
+# that failure one level down from the ceiling itself.
+proof "T062 sourced entries — a citation nobody can open is accepted" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_an_entry_whose_source_is_prose_rather_than_an_address_is_refused" \
+  's = s.replace("            if not value.startswith(\"https://\"):", "            if False:")'
+
+# T063 on the date rather than on the model. Falling back to the nearest
+# interval is the plausible edit and it is unsound in a way no assertion on the
+# figure can catch: it prices a call at a rate that was not in force, and
+# because a scheduled change can go either way the direction of the error is
+# unknowable. The named test is the only arm that separates this from the
+# in-force lookup, which the tamper leaves working.
+proof "T063 date window — a date no entry covers is priced from the nearest one" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_a_date_no_entry_covers_fails_closed_rather_than_picking_the_nearest" \
+  's = s.replace("    covering = [entry for entry in entries if entry.covers(as_of)]", "    covering = [entry for entry in entries if entry.covers(as_of)] or [entries[0]]")'
+
+# T062'"'"'s no-uniformity clause, on the one provider whose source states a
+# second band. Collapsing to the first band is what a table with one rate per
+# model would do, and it under-charges every long-context request by a factor of
+# two — the direction that makes a spend ceiling fail to fire.
+proof "T062 prompt-length bands — every request is priced at the lowest band" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_the_xai_prompt_length_tier_switches_at_the_stated_threshold" \
+  's = s.replace("        if tier.min_input_tokens <= input_tokens:", "        if False:")'
+
+# FR-058'"'"'s disqualification, kept structural. With the unit gate gone a
+# float reaches the arithmetic and prices cleanly, so a caller who divided a
+# byte count by an average tokens-per-byte figure on the way in gets an answer
+# rather than a refusal. That is the one enforcement basis FR-058 rules out by
+# name, and nothing downstream of here could tell it from a token count.
+proof "T062 unit gate — a non-integer token count is priced instead of refused" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_a_float_token_count_is_refused_rather_than_divided" \
+  's = s.replace("    if isinstance(value, bool) or not isinstance(value, int):", "    if False:")'
+
+# T064'"'"'s residue. The reservation exists to over-count — `ledger.py`:
+# *"the crash counts the reservation, which is too much rather than too little"*
+# — and the split between input and output is not known before the call. Taking
+# the cheaper of the two rates inverts that, and on Opus the reservation is then
+# a fifth of what the call can cost. It still looks like a derived figure.
+proof "T064 reservation figure — the spend reservation is derived at the cheaper rate" \
+  src/runtime/providers/costs.py \
+  "tests/unit/test_provider_costs.py::test_the_reservation_is_derived_at_the_dearer_of_the_two_rates" \
+  's = s.replace("    dearer = max(tier.input_usd_per_mtok, tier.output_usd_per_mtok)", "    dearer = min(tier.input_usd_per_mtok, tier.output_usd_per_mtok)")'
+
+# T065'"'"'s independence, scored from the side this harness can score. The
+# tamper is the import a contributor adds the first time the backstop wants to
+# know what a call cost; the guard is what refuses it. The other direction —
+# the backstop firing with the table emptied — is planted in-process instead,
+# for the reason given at the head of this group.
+proof "T065 independence — the backstop is made downstream of the cost table" \
+  src/runtime/budget_backstop.py \
+  "tests/unit/test_budget_backstop.py::test_the_backstop_imports_nothing_from_the_cost_table" \
+  's = s.replace("from src.runtime.journal import STEP_MODEL_CALL", "from src.runtime.journal import STEP_MODEL_CALL\nfrom src.runtime.providers.costs import PRICES  # noqa: F401")'
+
+# T065. The property that separates a backstop from a fifth ceiling. research/02
+# measured the removed dependency'"'"'s ceiling defaulting to `None`, and a
+# maximum a caller can raise is that ceiling with an extra argument: the same
+# configuration mistake that put the four FR-005 ceilings out of reach puts this
+# one out of reach too, and nothing stops the loop.
+proof "T065 unraisable maximum — the backstop can be widened by its caller" \
+  src/runtime/budget_backstop.py \
+  "tests/unit/test_budget_backstop.py::test_the_maximum_cannot_be_raised" \
+  's = s.replace("        if maximum > MAX_MODEL_CALLS:", "        if False:")'
+
+# T065. The metric. Counting every journalled step makes a turn with eight tool
+# calls cost nine, so the backstop fires on tool-heavy work that spent almost
+# nothing — and an operator whose runs die early removes the backstop, which is
+# the one outcome it cannot survive.
+proof "T065 metric — tool steps are counted as model calls" \
+  src/runtime/budget_backstop.py \
+  "tests/unit/test_budget_backstop.py::test_tool_calls_are_not_counted" \
+  's = s.replace("        return sum(1 for step in self.journal.steps(session_id)\n                   if getattr(step, \"step_kind\", None) == STEP_MODEL_CALL)", "        return len(self.journal.steps(session_id))")'
+
+# T065. The off-by-one, and it is not cosmetic: `check` runs before the call it
+# guards, so `>` permits one call past the maximum every time. The arm below it
+# in the same file — that it does not fire under the maximum — passes under this
+# tamper, which is what makes the named test the one that separates them.
+proof "T065 boundary — the backstop permits one call past its maximum" \
+  src/runtime/budget_backstop.py \
+  "tests/unit/test_budget_backstop.py::test_it_fires_at_the_maximum_not_one_past_it" \
+  's = s.replace("        if made >= self.maximum:", "        if made > self.maximum:")'
+
+# T065 in the loop, which is where it either stops something or does not. The
+# tamper leaves the module, the tests and the constructor argument all intact
+# and green; only the call site goes. That is exactly how a guard rots, and the
+# named arm is the only one in the suite that runs a loop past a ceiling.
+proof "T065 wiring — the backstop is built by the loop and never consulted" \
+  src/runtime/loop.py \
+  "tests/unit/test_budget_backstop.py::test_the_loop_is_stopped_by_the_backstop_with_every_ceiling_out_of_reach" \
+  's = s.replace("            if pending_turn is None:\n                self.backstop.check(self.session_id)", "            if False:\n                self.backstop.check(self.session_id)")'
+
+# T065. On by default, because a guard a construction site can omit is absent
+# from every construction site written before it existed. The tamper is the
+# ordinary-looking version: honour what you were passed, and pass nothing when
+# nobody asked for one.
+proof "T065 default — a loop constructed without a backstop gets none" \
+  src/runtime/loop.py \
+  "tests/unit/test_budget_backstop.py::test_the_default_loop_carries_a_backstop_nobody_had_to_pass" \
+  's = s.replace("        self.backstop = backstop or CallCountBackstop(journal)", "        self.backstop = backstop")'
+
+# ---------------------------------------------------------------------------
 # The suite's own harness.
 #
 # `tests/conftest.py` is not a mechanism the specification names, and it is under

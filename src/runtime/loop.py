@@ -120,6 +120,7 @@ from src.runtime.trace import (
     SpanWriter,
     TOOL_CALL,
 )
+from src.runtime.budget_backstop import CallCountBackstop
 from src.runtime.trace_budget import Consumption
 
 # Re-exported rather than defined here: `resume.py` builds a `TurnRecord` and
@@ -177,6 +178,7 @@ class AgentLoop:
         assembler: ContextAssembler | None = None,
         merge_policy: MergePolicy | None = None,
         cancel: Callable[[], bool] | None = None,
+        backstop: CallCountBackstop | None = None,
     ) -> None:
         self.session_id = session_id
         self.store = store
@@ -211,6 +213,12 @@ class AgentLoop:
         # nothing to say which is right. Killing work already in flight is the
         # sandbox's teardown and belongs to a later capability.
         self.cancel = cancel or (lambda: False)
+        # T065. `None` builds one rather than switching it off, and there is no
+        # value of this argument that disables it: a backstop a construction
+        # site can omit is absent from every construction site that predates it.
+        # It is given the journal the loop already holds, because the count that
+        # survives a crash is the one on disk (finding 006).
+        self.backstop = backstop or CallCountBackstop(journal)
 
     def run(
         self, prompt: str, *, max_turns_this_attempt: int | None = None
@@ -261,6 +269,19 @@ class AgentLoop:
                     turns=tuple(turns), terminal_state=None,
                     text=turns[-1].text if turns else "",
                     cancelled=True, merged_state=merged)
+
+            # T065, and **before** the configured ceilings on purpose. Those are
+            # four numbers off one channel, and the spend one is unenforceable
+            # for any model `costs.py` has no entry for. If this ran second, a
+            # `ceiling_verdict` that raised — or four ceilings set high in one
+            # bad config — would take the backstop with them, which is the
+            # simultaneous failure T065 exists to survive.
+            #
+            # Skipped for a resumed turn whose model call is already on disk:
+            # that turn makes no new call, and refusing it would strand a
+            # session that has already paid for the answer.
+            if pending_turn is None:
+                self.backstop.check(self.session_id)
 
             verdict = self.store.ceiling_verdict(self.session_id, self.budget)
             if verdict.exceeded:

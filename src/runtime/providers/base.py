@@ -147,9 +147,19 @@ class ParsedTurn:
     assistant: WireTurn | None = None
     input_tokens: int = 0
     output_tokens: int = 0
-    #: Populated only where the provider itself reports a cost. xAI does; the
-    #: other three report tokens and the conversion needs T062's price table,
-    #: which does not exist. `None` here means *not reported*, never zero.
+    #: Populated only where the provider itself reports a cost. `None` here
+    #: means *not reported*, never zero.
+    #:
+    #: **The second half of this comment was true until T062 and is not now.**
+    #: It read *"the conversion needs T062's price table, which does not
+    #: exist"*. It does: `costs.price_usd` converts the two token counts above
+    #: into USD for every `(provider, model)` it has a sourced entry for, and
+    #: refuses the rest rather than returning zero. What is still missing is a
+    #: *caller* — nothing in `src/` builds a `runtime.turn.ModelResponse` from
+    #: a `ParsedTurn`, so no wired path carries these figures to the ledger, and
+    #: `ModelResponse` has neither the model identifier nor the input/output
+    #: split that pricing needs. That adapter is not T062's and is not named by
+    #: any task in `tasks.md`.
     cost_usd: float | None = None
 
 
