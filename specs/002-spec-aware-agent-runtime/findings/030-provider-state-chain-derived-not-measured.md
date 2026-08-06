@@ -372,9 +372,12 @@ the failure mode that would spend the ceiling without producing a reading.
 
 ~~Nothing in this section was applied.~~ **Superseded in part 2026-08-05: the two register entries were
 approved and landed by a later pass, as recorded in the banners under [§7.1](#71-to-research14-architecture-synthesismd-52--a-new-uncertainty-entry)
-and [§7.2](#72-to-research14-architecture-synthesismd-4--a-contradiction-row). Nothing in
+and [§7.2](#72-to-research14-architecture-synthesismd-4--a-contradiction-row). ~~Nothing in
 [§7.3](#73-a-question-about-fr-037-with-candidate-text--and-the-recommendation-is-to-make-no-edit) was
-applied and no requirement was touched.** All three are the owner's.
+applied and no requirement was touched.~~ **All three are now routed. The requirement question in
+[§7.3](#73-a-question-about-fr-037-with-candidate-text--and-the-recommendation-is-to-make-no-edit) was
+DECLINED on 2026-08-05, with its grounds and the counter-argument against it recorded in the banner
+there. No requirement was touched and FR-037 is unchanged.** All three were the owner's.
 
 **The formatting escape, so it does not read as a mistake.** Inside each quoted block the identifier
 is written in a code span and the link path is the one correct **from the destination file**, not from
@@ -457,6 +460,44 @@ in terms. The high-water mark was `C-20` when this was written.
 > | `C-21` | **NEWLY OPENED 2026-08-05 — a source docstring and a committed live artifact disagree about whether xAI rejects a conversation with its opaque field missing.** `src/runtime/context.py::states_for` states *"Only Anthropic degrades quietly on a miss; the other three fail the request."* `specs/001-discovery-validation/harness/provider-sdk-roundtrip/results/negative-control.json` records `"provider_errored": false` for a live `grok-4.5` chain with `encrypted_content` blanked on every assistant message. | **Partially resolved, and the docstring loses on the point of overlap.** The docstring's claim carries no condition, so the measured drop-all case falls inside its scope and the sentence is wrong as written. The narrower claim it was reaching for — that xAI rejects a chain with a *hole* rather than a chain with *nothing* — is untouched by the measurement and remains unmeasured; those are different requests and a validator could distinguish them. The docstring was corrected on 2026-08-05 to say what the evidence supports; the register row is retained because the *narrow* claim still has no measurement behind it. | `[finding 030](../specs/002-spec-aware-agent-runtime/findings/030-provider-state-chain-derived-not-measured.md)` §2 |
 
 ### 7.3 A question about FR-037, with candidate text — **and the recommendation is to make no edit**
+
+> **DECLINED 2026-08-05 by the owner. FR-037 is unchanged and
+> [`spec.md`](../spec.md) was not edited.** The recommendation this section made was accepted, and the
+> grounds are recorded here rather than merely acted on, so the proposal is not re-derived by the next
+> pass to notice the gap.
+>
+> **The grounds, both of which the owner named.** ① **The mechanism already refuses the case, and three
+> removal proofs hold the refusal** — not one, and they cover the two halves separately, which is why
+> the count is worth stating: `T061 re-injection — a chain that does not line up is zipped short
+> instead of refused` disables the length check and requires
+> `test_a_chain_that_does_not_line_up_with_the_conversation_is_refused` to start failing;
+> `T061 re-injection — every state is written onto the newest assistant entry` restores **the
+> mis-attachment shape itself**, the pre-`c25b85b` behaviour that put a `signature` key on a `tool_use`
+> block; and `T061 re-injection — the opaque state is counted as written and written nowhere` covers the
+> slot with no path to land at. All three are in
+> [`tests/removal_proofs.sh`](../../../tests/removal_proofs.sh) over
+> [`src/runtime/providers/state.py`](../../../src/runtime/providers/state.py). ② **This corpus has
+> repeatedly found after-the-fact specification text to be its weakest kind of guard**, and the opening
+> paragraph of this section is itself an instance: FR-037 already said *never dropped* while the
+> implementation dropped, and no amount of requirement text caught it.
+>
+> **The counter-argument that was heard and not taken, recorded because a declination carrying only the
+> winning side invites the same proposal again.** *A future reimplementation of the provider layer reads
+> FR-037, not `reinject`. The removal proofs pin **today's** mechanism; the requirement governs the
+> **next** one.* That is the strongest form of the case for the edit and nothing above refutes it — the
+> three proofs are all tampers against one file, so they lapse with the file. The decision is that the
+> gap is narrower than the cost of the precedent, not that the gap is imaginary.
+>
+> **So the residue, stated as a residue rather than as a closed question.** Cross-turn mis-attachment is
+> forbidden by **mechanism alone**. A reimplementation that satisfies FR-037's words as written —
+> first-class on every turn, verbatim, never dropped, never merged across providers — can still
+> re-attach a turn's state to a different turn of the same provider and violate nothing textual. The one
+> thing standing between that and a silent defect is
+> [`state.py`](../../../src/runtime/providers/state.py)'s positional-alignment refusal, and
+> [§9](#9-the-two-defects-c25b85b-closed-with-attributions-re-derived) records that this defect took
+> **two independently reasonable functions** to produce and that neither author was wrong about their
+> own contract, because there was no contract. That is the case the counter-argument is about, and it is
+> open.
 
 **FR-037 needs no change to condemn either defect, and that is worth recording as a positive result
 about the requirement.** *Never dropped* condemns the drop directly. The requirement was doing its job;
