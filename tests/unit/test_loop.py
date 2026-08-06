@@ -23,7 +23,9 @@ The other load-bearing arms:
 
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
+import json
 
 import pytest
 
@@ -32,6 +34,9 @@ from src.contracts.repository import Repository
 from src.runtime.context import ContextAssembler
 from src.runtime.loop import AgentLoop, LoopError, ModelResponse, TurnRecord
 from src.runtime.dispatch import ToolCall
+from src.runtime.providers.adapter import model_response
+from src.runtime.providers.base import ParsedTurn
+from src.runtime.turn import UnpricedTurnError
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import Ceilings, SessionStore
@@ -182,12 +187,22 @@ def _model(*turns):
     return call
 
 
+# **Why these declare `spend_usd=0.0` rather than leaving it unset.**
+# `ModelResponse.spend_usd` defaults to `None`, meaning *nothing priced this
+# turn*, and `AgentLoop` refuses such a response rather than accruing zero for
+# it — that refusal is the whole point of the field's type. These fakes are a
+# different case from an unpriced one: `provider="test"` reaches no vendor, so
+# the turn genuinely costs nothing and `0.0` is the measurement rather than a
+# stand-in for a figure nobody computed. A test that wants a spend states one,
+# as `test_the_reconciled_spend_...` below does.
 def _finish(text: str = "done", **kw) -> ModelResponse:
+    kw.setdefault("spend_usd", 0.0)
     return ModelResponse(provider="test", provider_state=b"state", text=text,
                          tool_calls=(), **kw)
 
 
 def _asks(*names, state: bytes = b"state", **kw) -> ModelResponse:
+    kw.setdefault("spend_usd", 0.0)
     return ModelResponse(
         provider="test", provider_state=state, text="", tool_calls=tuple(
             ToolCall(index=i, call_id=f"c{i}", name=name)
@@ -437,6 +452,122 @@ def test_the_token_ceiling_is_checked_against_the_journal(tmp_path) -> None:
 
     assert outcome.terminal_state == terminal.TOKEN_CEILING.name
     assert h.budget.totals(SESSION).tokens >= 50
+    h.close()
+
+
+# ---------------------------------------------------------------------------
+# FR-005's spend dimension, priced end to end.
+#
+# **A wired path is not a firing ceiling, and this is the arm that tells them
+# apart.** Before the pricing seam existed the wiring was complete —
+# `reconcile` took a `spend_usd`, the ledger summed it, `ceiling_verdict`
+# compared it and `terminated.spend_ceiling_reached` existed — and the ceiling
+# still could not fire, because every `ModelResponse` carried the field's `0.0`
+# default. That is the same shape finding 029 measured on wall clock:
+# *"the comparison, the wiring and `terminated.wall_clock_ceiling_reached` all
+# worked; the numerator was missing."* So these arms assert the **total**, not
+# only the terminal state: a terminal state can be reached by a reservation
+# left outstanding, and an exact total can only come from the table.
+
+
+def _priced(*names: str, inputs: int = 1_000_000, outputs: int = 1_000_000,
+            model: str = "claude-sonnet-5",
+            provider: str = "anthropic") -> ModelResponse:
+    """One turn, carried through the real adapter and priced by the real table.
+
+    Deliberately not a hand-written `ModelResponse` with a plausible float on
+    it. The subject here is that a *provider turn* reaches the ledger as money,
+    so the arm has to start where a driver's output starts.
+    """
+    return model_response(
+        ParsedTurn(
+            provider=provider, text="", provider_state=b"state",
+            input_tokens=inputs, output_tokens=outputs,
+            tool_calls=tuple(
+                ToolCall(index=i, call_id=f"c{i}", name=name)
+                for i, name in enumerate(names)),
+        ),
+        model=model, as_of=dt.date(2026, 8, 5))
+
+
+def test_the_spend_ceiling_fires_on_a_turn_priced_from_the_cost_table(
+    tmp_path,
+) -> None:
+    """The planted case: real rates, a real ceiling, and it stops the session.
+
+    `claude-sonnet-5` inside its introductory window is $2.00/Mtok in and
+    $10.00/Mtok out, so a turn of one million each is **$12.00**. Against a
+    $20.00 ceiling: turn 0 runs and accrues 12, turn 1 sees 12 < 20 and runs to
+    24, turn 2 sees 24 >= 20 and terminates. Two turns, $24.00, and the figure
+    is checkable against the table by hand.
+
+    The token ceiling is lifted out of the way on purpose — two million tokens
+    a turn would trip it first and this arm would then be measuring the wrong
+    dimension while still going green.
+    """
+    h = Harness(tmp_path, ceilings=_ceilings(spend_usd=20.0, tokens=10 ** 9))
+    h.machine.start(SESSION, at=1.0)
+
+    outcome = h.loop(_model(*[_priced("t")] * 10), lambda c: "r").run("p")
+
+    assert outcome.terminal_state == terminal.SPEND_CEILING.name
+    assert len(outcome.turns) == 2, (
+        "the ceiling should be reached at the top of the third turn"
+    )
+    # **The load-bearing assertion.** The reservation is $0.001 a turn, so a
+    # session whose spend never got priced totals about $0.002 here and never
+    # reaches $20 at all. Only the table produces $24.00.
+    assert h.budget.totals(SESSION).spend_usd == pytest.approx(24.0)
+    h.close()
+
+
+def test_an_unpriced_turn_stops_the_loop_rather_than_accruing_zero(
+    tmp_path,
+) -> None:
+    """The counterfactual, and the defect this whole seam removes.
+
+    A response nobody priced used to accrue `0.0` and let the session run on
+    under a spend ceiling that could never be reached. It now refuses at the
+    reconcile, which is the earliest point the price could have been known.
+    """
+    h = Harness(tmp_path, ceilings=_ceilings(spend_usd=20.0))
+    h.machine.start(SESSION, at=1.0)
+    unpriced = ModelResponse(provider="anthropic", provider_state=b"state",
+                             text="", tool_calls=(), tokens=2_000_000)
+
+    with pytest.raises(UnpricedTurnError, match="counted at zero"):
+        h.loop(_model(unpriced), lambda c: "r").run("p")
+
+    # The reservation stays outstanding, which over-counts rather than under-
+    # counts — the direction `ledger.py` argues for on a crash, arriving here
+    # for the same reason: the turn happened and its cost is unknown.
+    assert h.budget.totals(SESSION).spend_usd == pytest.approx(0.001)
+    h.close()
+
+
+def test_the_model_call_span_records_the_model_the_price_was_computed_at(
+    tmp_path,
+) -> None:
+    """A spend figure with no model beside it is a number nobody can check.
+
+    FR-038 requires an attribution reproducible from the trace alone, and the
+    rate a turn was priced at is keyed on `(provider, model)`.
+    """
+    h = Harness(tmp_path, ceilings=_ceilings(spend_usd=1_000.0, tokens=10 ** 9))
+    h.machine.start(SESSION, at=1.0)
+    h.loop(_model(_priced()), lambda c: "r").run("p")
+
+    spans = h.repo.select("trace_span", where={"kind": "model_call"})
+    assert len(spans) == 1
+    payload = json.loads(spans[0]["payload"])
+    detail = payload["detail"]
+    assert detail["provider"] == "anthropic"
+    assert detail["model"] == "claude-sonnet-5"
+    assert detail["input_tokens"] == 1_000_000
+    assert detail["output_tokens"] == 1_000_000
+    # The rate is `(provider, model, date)` and the span carries the first two,
+    # so the figure beside them is recomputable rather than merely recorded.
+    assert payload["cost"]["spend_usd"] == pytest.approx(12.0)
     h.close()
 
 

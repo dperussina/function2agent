@@ -91,8 +91,13 @@ def _clock():
     return now
 
 
+# `spend_usd=0.0` is stated rather than left to default here and below. The
+# default is `None` — nothing priced this turn — and the loop refuses that
+# rather than accruing zero. A fake provider reaching no vendor costs nothing,
+# so zero is the measurement.
 def _finish(text: str = "done") -> ModelResponse:
-    return ModelResponse(provider="test", provider_state=b"s", text=text)
+    return ModelResponse(provider="test", provider_state=b"s", text=text,
+                         spend_usd=0.0)
 
 
 def _start(rig, **over):
@@ -173,7 +178,7 @@ def test_attach_resumes_an_interrupted_session_and_keeps_its_ceilings(
 
     def model(context):
         return ModelResponse(
-            provider="test", provider_state=b"s", text="",
+            provider="test", provider_state=b"s", text="", spend_usd=0.0,
             tool_calls=(_call(),))
 
     first = _start(rig, ceilings=Ceilings(
@@ -224,7 +229,7 @@ def test_turn_indexes_continue_across_attempts(tmp_path) -> None:
 
     def model(context):
         return ModelResponse(provider="test", provider_state=b"s", text="",
-                             tool_calls=(_call(),))
+                             spend_usd=0.0, tool_calls=(_call(),))
 
     first = _start(rig, model=model, max_turns_this_attempt=2)
     assert [t.turn_index for t in first.turns] == [0, 1]
@@ -352,7 +357,7 @@ def test_a_failed_teardown_with_nothing_in_flight_is_raised(tmp_path) -> None:
         _start(rig,
                model=lambda c: ModelResponse(
                    provider="test", provider_state=b"s", text="",
-                   tool_calls=(_call(),)),
+                   spend_usd=0.0, tool_calls=(_call(),)),
                max_turns_this_attempt=1)
     rig.close()
 
@@ -366,7 +371,8 @@ def test_a_ceiling_reached_run_is_torn_down_with_the_ceilings_state(
         ceilings=Ceilings(spend_usd=100.0, tokens=1_000_000,
                           wall_clock_seconds=10_000.0, turns=2),
         model=lambda c: ModelResponse(provider="test", provider_state=b"s",
-                                      text="", tool_calls=(_call(),)))
+                                      text="", spend_usd=0.0,
+                                      tool_calls=(_call(),)))
 
     assert outcome.terminal_state == terminal.TURN_CEILING.name
     assert rig.lifecycle.get(SESSION).honoured_at(0.0) is False

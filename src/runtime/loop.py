@@ -70,10 +70,28 @@ graph, and the topology is a `while` with a ceiling check at the top of it.
    reason. Time in which no attempt is running is **not** counted; see
    `_accrue_elapsed` for the clause of FR-005 that decides it.
 
-**What this slice still does not do.** The reservation figures are the
-operator's declaration until T062's cost table exists. `src/runtime/ledger.py`
-states what that costs: the crash window loses `actual − reserved` when the
-actual is larger, which is a residue this ordering reduces rather than removes.
+8. **A turn's spend is priced, and an unpriced turn stops the session.** The
+   figure `reconcile` accrues comes from `costs.price_usd` by way of
+   `providers/adapter.py`, and `ModelResponse.require_spend_usd` refuses a
+   response nothing priced rather than accruing `0.0` for it. Before that, the
+   field defaulted to zero and this loop accrued zero on every path — the same
+   shape finding 029 measured on wall clock, where *"the comparison, the wiring
+   and `terminated.wall_clock_ceiling_reached` all worked; the numerator was
+   missing."* A provider `costs.py` prices nothing for — OpenAI, on the grounds
+   `costs.UNPRICED` records — therefore fails closed here, which is T063's
+   intended outcome rather than a defect in this loop.
+
+**What this slice still does not do — corrected 2026-08-05, and the first half
+of what stood here is now false.** It read *"the reservation figures are the
+operator's declaration until T062's cost table exists"*. The table exists and
+is now reached: `costs.reservation_spend_usd` derives the spend reservation
+from the token reservation, and the reconcile above replaces it with a priced
+measurement. What remains true is the second half. `src/runtime/ledger.py`
+states what the ordering costs: the crash window loses `actual − reserved`
+when the actual is larger, which is a residue this ordering reduces rather than
+removes. `ReservationPolicy.wall_clock_seconds` is still an operator
+declaration, and `costs.DERIVABLE_RESERVATION_FIELDS` is the enumerated reason
+no table of dollars per token can supply it.
 """
 
 from __future__ import annotations
@@ -370,8 +388,20 @@ class AgentLoop:
         # used to be passed as `0.0` here, which is why the reservation was the
         # only figure that ever reached it and why an orphaned reservation was
         # the only way to fire the ceiling (finding 029).
+        #
+        # **`require_spend_usd`, not `spend_usd`, and this is the ceiling's one
+        # gate.** The spend figure used to default to `0.0` for every caller,
+        # so this line accrued zero on every path and the spend ceiling was
+        # unenforceable for the same reason finding 029 measured the wall-clock
+        # one to be: the numerator was missing. An unpriced turn now refuses
+        # here rather than accruing nothing. It refuses *after* the call, which
+        # is the only place it can — the price is a function of the token
+        # counts the call returns — and the consequence is the one the ledger
+        # is designed around: the reservation stays outstanding and the turn is
+        # counted at its estimate, which over-counts rather than under-counts.
         self.budget.reconcile(
-            reservation, spend_usd=response.spend_usd, tokens=response.tokens,
+            reservation, spend_usd=response.require_spend_usd(),
+            tokens=response.tokens,
             wall_clock_seconds=_interval(call_started, call_finished),
             at=call_finished)
         self.journal.commit_outcome(
@@ -625,13 +655,23 @@ class AgentLoop:
             outcome=OUTCOME_OK,
             attempt_kind=ATTEMPT_FIRST,
             versions=self.versions,
-            cost=self._cost(response.spend_usd, response.tokens),
+            cost=self._cost(response.require_spend_usd(), response.tokens),
             at=self.clock(),
             # The digest, never the bytes.
             detail={
                 "provider": response.provider,
+                # **The model, not only the provider.** A span carrying a spend
+                # figure and no model identifier records a number nobody can
+                # check: the rate it was computed at is keyed on
+                # `(provider, model)`, and two models on one provider differ by
+                # up to 5x. FR-038 requires an attribution reproducible from
+                # the trace alone, and a price is not reproducible without the
+                # row it came from.
+                "model": response.model,
                 "provider_state_digest": state_digest(response.provider_state),
                 "tool_calls": len(response.tool_calls),
+                "input_tokens": response.input_tokens,
+                "output_tokens": response.output_tokens,
             },
         ))
 

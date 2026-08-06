@@ -63,6 +63,26 @@ class ResumeError(RuntimeError):
 # in it rather than raising.
 
 
+#: The model-outcome payload's schema revision.
+#:
+#: **Revision 1 is the payloads written before the pricing seam existed, and it
+#: is identified by the absence of this key rather than by its presence.** A
+#: version marker cannot be back-filled into journals already on disk, so the
+#: only reading available for a payload without one is *written by the code
+#: that had no marker*, and that is exactly revision 1.
+#:
+#: The revision matters for one field and the reason is not a rename. A
+#: revision-1 payload carries `spend_usd: 0.0`, and that zero was never a
+#: price: nothing in `src/` priced a turn, so it is the old default standing
+#: where a figure should have been. Reading it forward as *priced at zero*
+#: would restore, on the resume path, precisely the silent zero this seam was
+#: built to remove. See `_decode_model_outcome`.
+MODEL_OUTCOME_SCHEMA = 2
+
+#: The revision a payload with no `schema` key was written at.
+LEGACY_MODEL_OUTCOME_SCHEMA = 1
+
+
 def encode_model_outcome(response: ModelResponse) -> dict[str, Any]:
     """A model call's outcome, without the opaque state.
 
@@ -70,12 +90,25 @@ def encode_model_outcome(response: ModelResponse) -> dict[str, Any]:
     dict goes through JSON and FR-037 forbids interpreting the state. It travels
     in `turn_journal.provider_state`, which `commit_outcome` takes as its own
     argument.
+
+    `spend_usd` is written as JSON `null` for an unpriced turn rather than
+    coerced to `0.0`, and the token split is written beside it so that a
+    journalled price can be re-derived from what it was computed over. A price
+    recorded as a single number is a number no later reader can check against
+    the table it came from.
     """
     return {
+        "schema": MODEL_OUTCOME_SCHEMA,
         "provider": response.provider,
+        "model": response.model,
         "text": response.text,
-        "spend_usd": float(response.spend_usd),
+        "spend_usd": (None if response.spend_usd is None
+                      else float(response.spend_usd)),
         "tokens": int(response.tokens),
+        "input_tokens": (None if response.input_tokens is None
+                         else int(response.input_tokens)),
+        "output_tokens": (None if response.output_tokens is None
+                          else int(response.output_tokens)),
         "tool_calls": [
             {
                 "index": call.index,
@@ -112,10 +145,55 @@ def encode_tool_outcome(
 
 
 def _decode_model_outcome(step: JournalStep) -> ModelResponse:
+    """Rebuild one committed model outcome, at whichever revision wrote it.
+
+    **The migration decision, and why it is neither a refusal nor a silent
+    default.** A journal written before the pricing seam has no model
+    identifier and no token split, so a turn reconstructed from it cannot be
+    re-priced. Three dispositions were available and two are wrong here.
+
+    *Refusing the resume* was rejected because it buys nothing on the dimension
+    it would protect and costs a great deal elsewhere. A resumed turn's spend
+    **does not pass through this reconstruction**: `AgentLoop._finish_turn`
+    neither reserves nor reconciles, on the stated ground that the earlier
+    attempt's reservation for this turn was either reconciled or is still
+    outstanding. The ledger is a separate durable store and this change does
+    not touch it, so the spend ceiling for a pre-change session is exactly as
+    enforceable after this change as before. Refusing would strand a session
+    that has already paid for its answer — the thing `_finish_turn` exists to
+    prevent — in exchange for no ceiling accuracy at all.
+
+    *Reading the old `spend_usd: 0.0` forward as a price* is the disposition
+    that would be silent, and it is the defect this seam removes arriving one
+    layer down. That zero was the old default in a field nothing computed, not
+    a turn that cost nothing.
+
+    So: a **version gate**, reconstructing a revision-1 payload with its spend
+    explicitly `None`. `ModelResponse.require_spend_usd` raises on that, so no
+    future path can add it to a total by accident, and `ResumePlan.unpriced_turns`
+    names the turns so a caller reads the fact rather than inferring it from a
+    figure that looks like money.
+
+    A payload from a **later** revision is refused. Reading unknown-future
+    fields is guessing at a format this code has never seen, and the direction
+    of the error is unknowable.
+    """
     payload = step.outcome
     if payload is None:  # pragma: no cover — callers check `is_complete` first
         raise ResumeError(
             f"turn {step.turn_index}'s model call has no committed outcome")
+    schema = payload.get("schema", LEGACY_MODEL_OUTCOME_SCHEMA)
+    if schema not in (LEGACY_MODEL_OUTCOME_SCHEMA, MODEL_OUTCOME_SCHEMA):
+        raise ResumeError(
+            f"turn {step.turn_index}'s model outcome declares schema "
+            f"{schema!r}; this build reads "
+            f"{LEGACY_MODEL_OUTCOME_SCHEMA} and {MODEL_OUTCOME_SCHEMA}. A "
+            "payload from a later revision is refused rather than read for the "
+            "fields that happen to be recognisable — that is the rebuild-from-"
+            "what-the-adapter-recognised defect finding 016 exists to catch, "
+            "arriving through the journal."
+        )
+    legacy = schema == LEGACY_MODEL_OUTCOME_SCHEMA
     try:
         calls = tuple(
             ToolCall(
@@ -126,13 +204,32 @@ def _decode_model_outcome(step: JournalStep) -> ModelResponse:
             )
             for item in payload["tool_calls"]
         )
+        if legacy:
+            # The recorded `spend_usd` is deliberately **not** read. See the
+            # docstring: at revision 1 it is the old default and not a price.
+            model, spend, inputs, outputs = "", None, None, None
+        else:
+            model = str(payload["model"])
+            raw_spend = payload["spend_usd"]
+            raw_in = payload["input_tokens"]
+            raw_out = payload["output_tokens"]
+            spend = None if raw_spend is None else float(raw_spend)
+            inputs = None if raw_in is None else int(raw_in)
+            outputs = None if raw_out is None else int(raw_out)
+        # **One construction, not one per revision.** Two would be two sites for
+        # every field they share — including `provider_state`, whose single
+        # occurrence a T056 removal proof matches on — and two places for a
+        # later field to be added to only one of.
         return ModelResponse(
             provider=str(payload["provider"]),
             provider_state=step.provider_state,
             text=str(payload["text"]),
             tool_calls=tuple(sorted(calls, key=lambda c: c.index)),
-            spend_usd=float(payload["spend_usd"]),
+            model=model,
+            spend_usd=spend,
             tokens=int(payload["tokens"]),
+            input_tokens=inputs,
+            output_tokens=outputs,
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise ResumeError(
@@ -203,13 +300,32 @@ class UnfinishedTurn:
 
 @dataclass(frozen=True)
 class ResumePlan:
-    """What a resumed attempt starts from. Pure; built from the journal alone."""
+    """What a resumed attempt starts from. Pure; built from the journal alone.
+
+    `unpriced_turns` carries the turns whose reconstructed spend is `None` —
+    in practice, turns journalled before the model identifier and the token
+    split were recorded. **Disclosed on the plan rather than raised**, which is
+    exactly how `abandoned` is treated and for the same stated reason: *"a hole
+    a caller can read is a fact and a hole it cannot is a discrepancy."*
+
+    Disclosure is the right shape here specifically because a resumed turn's
+    spend does not reach the ledger through this plan — the earlier attempt
+    already reconciled it or is still holding its reservation — so these turns
+    are not missing from the spend total. What is missing is the *reconstruction's*
+    copy of it, and a caller that reads a figure off a reconstructed response
+    needs to be told which ones are not figures.
+    """
 
     session_id: str
     records: tuple[TurnRecord, ...]
     unfinished: UnfinishedTurn | None
     next_turn_index: int
     abandoned: tuple[int, ...]
+    unpriced_turns: tuple[int, ...] = ()
+
+    @property
+    def has_unpriced_spend(self) -> bool:
+        return bool(self.unpriced_turns)
 
     @property
     def is_fresh(self) -> bool:
@@ -241,6 +357,7 @@ def plan_resume(journal: TurnJournal, session_id: str) -> ResumePlan:
 
     records: list[TurnRecord] = []
     abandoned: list[int] = []
+    unpriced: list[int] = []
     unfinished: UnfinishedTurn | None = None
 
     for turn_index in sorted(by_turn):
@@ -261,6 +378,8 @@ def plan_resume(journal: TurnJournal, session_id: str) -> ResumePlan:
             continue
 
         response = _decode_model_outcome(model)
+        if not response.is_priced:
+            unpriced.append(turn_index)
         completed: list[ToolResult] = []
         pending: list[ToolCall] = []
         for call in response.tool_calls:
@@ -317,4 +436,5 @@ def plan_resume(journal: TurnJournal, session_id: str) -> ResumePlan:
         unfinished=unfinished,
         next_turn_index=journal.next_turn_index(session_id),
         abandoned=tuple(abandoned),
+        unpriced_turns=tuple(unpriced),
     )

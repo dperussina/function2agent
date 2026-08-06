@@ -1599,6 +1599,66 @@ proof "T065 default — a loop constructed without a backstop gets none" \
   's = s.replace("        self.backstop = backstop or CallCountBackstop(journal)", "        self.backstop = backstop")'
 
 # ---------------------------------------------------------------------------
+# The seam that makes the cost table reachable.
+#
+# T062 built the table and T063 the lookup, and neither could price a running
+# session: the loop's `ModelResponse` carried no model identifier and no token
+# split, so nothing in `src/` could call `price_usd` with the arguments it
+# needs. Every turn therefore reached the ledger at the field's `0.0` default
+# and FR-005's spend ceiling could not fire. That is finding 029's shape on a
+# second dimension — *"the comparison, the wiring and the terminal state all
+# worked; the numerator was missing"* — so the arms below are aimed at the
+# numerator and not at the comparison.
+
+# The one call to the table from the one module allowed to make it. The tamper
+# is the plausible one: keep the seam, keep the split, and put a number on it
+# without asking what the vendor charges.
+proof "T063 pricing seam — the adapter invents a price instead of reading the table" \
+  src/runtime/providers/adapter.py \
+  "tests/unit/test_provider_adapter.py::test_a_parsed_turn_arrives_priced_from_the_vendors_own_rates" \
+  's = s.replace("        spend = costs.price_usd(\n            provider=parsed.provider, model=model,\n            input_tokens=inputs, output_tokens=outputs, as_of=as_of)", "        spend = 0.0")'
+
+# The refusal that makes `spend_usd = None` mean something. Without it `None`
+# is just a default nobody set, and the tamper is exactly the coercion the
+# docstring says no helper will be offered for.
+proof "FR-005 unpriced refusal — an unpriced turn is counted at zero instead" \
+  src/runtime/turn.py \
+  "tests/unit/test_provider_adapter.py::test_an_unpriced_response_refuses_to_produce_a_spend_figure" \
+  's = s.replace("        if self.spend_usd is None:\n            raise UnpricedTurnError(", "        if self.spend_usd is None:\n            return 0.0\n        if False:\n            raise UnpricedTurnError(")'
+
+# The call site, which is the half that actually stops a session. The module
+# can refuse all it likes while the loop asks for the raw field; that is the
+# same rot shape as the backstop arm above, one layer down.
+proof "FR-005 accrual — the loop reads the raw field rather than requiring a price" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_an_unpriced_turn_stops_the_loop_rather_than_accruing_zero" \
+  's = s.replace("            reservation, spend_usd=response.require_spend_usd(),", "            reservation, spend_usd=(response.spend_usd or 0.0),")'
+
+# FR-038. A spend figure with no model beside it is not reproducible, because
+# the rate is keyed on `(provider, model)` and two models on one provider
+# differ by up to 5x. The tamper keeps the span, the cost and the provider.
+proof "FR-038 attribution — the model call span drops the model it was priced at" \
+  src/runtime/loop.py \
+  "tests/unit/test_loop.py::test_the_model_call_span_records_the_model_the_price_was_computed_at" \
+  's = s.replace("                \"model\": response.model,", "")'
+
+# The journal side of the same decision. A revision-1 payload records `0.0`
+# because that was the field default, and the tamper is the reading any author
+# would reach for first: the number is right there, so use it.
+proof "T062 journal migration — a pre-pricing turn resumes at its recorded zero" \
+  src/runtime/resume.py \
+  "tests/unit/test_resume.py::test_a_turn_journaled_before_prices_existed_comes_back_unpriced" \
+  's = s.replace("            model, spend, inputs, outputs = \"\", None, None, None", "            model, spend, inputs, outputs = \"\", float(payload.get(\"spend_usd\") or 0.0), None, None")'
+
+# Finding 016's defect arriving through the journal instead of the wire: a
+# payload from a revision this build has never seen still has fields this build
+# recognises, and reading those is how a rebuild silently drops the rest.
+proof "T062 schema gate — a later revision's payload is read for what it recognises" \
+  src/runtime/resume.py \
+  "tests/unit/test_resume.py::test_a_payload_from_a_later_revision_is_refused_not_partially_read" \
+  's = s.replace("    if schema not in (LEGACY_MODEL_OUTCOME_SCHEMA, MODEL_OUTCOME_SCHEMA):", "    if False:")'
+
+# ---------------------------------------------------------------------------
 # The suite's own harness.
 #
 # `tests/conftest.py` is not a mechanism the specification names, and it is under

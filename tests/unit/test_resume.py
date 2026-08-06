@@ -40,6 +40,8 @@ from src.runtime.journal import (
     tool_step_index,
 )
 from src.runtime.resume import (
+    LEGACY_MODEL_OUTCOME_SCHEMA,
+    MODEL_OUTCOME_SCHEMA,
     ResumeError,
     encode_model_outcome,
     encode_tool_outcome,
@@ -388,3 +390,151 @@ def test_state_writes_recorded_before_the_crash_are_reconstructed(tmp_path) -> N
     record = plan_resume(journal, SESSION).records[0]
     assert record.tool_results[0].writes == {"cursor": 7}
     journal.repo.close()
+
+
+# ---------------------------------------------------------------------------
+# Journals written before turns carried a price.
+#
+# The migration question this answers: a session journaled before the pricing
+# seam existed has model outcomes with a `spend_usd` of `0.0` — the field's old
+# **default**, written by every response nobody priced. Reading that back as a
+# price would resume the session with a spend total that is arithmetically valid
+# and factually invented, and FR-005's ceiling would then be compared against
+# it. So revision 1 payloads come back **unpriced** and the plan says which
+# turns they were. Refusing the resume outright was the alternative and is worse
+# for the same reason a crash over-counts rather than under-counts: the turns
+# happened, and losing them re-runs their tools.
+
+
+def _legacy_payload(response: ModelResponse) -> dict:
+    """What `encode_model_outcome` wrote before the schema key existed."""
+    payload = encode_model_outcome(response)
+    del payload["schema"]
+    for key in ("model", "input_tokens", "output_tokens"):
+        payload.pop(key, None)
+    # The old default, which is exactly the value that must not be believed.
+    payload["spend_usd"] = 0.0
+    return payload
+
+
+def _write_legacy_model_step(journal: TurnJournal, turn: int,
+                             response: ModelResponse) -> None:
+    journal.intend(
+        session_id=SESSION, turn_index=turn, step_index=MODEL_STEP_INDEX,
+        step_kind=STEP_MODEL_CALL, effect_id="model", effectful=True,
+        payload={"turn": turn}, at=1.0)
+    journal.commit_outcome(
+        session_id=SESSION, turn_index=turn, step_index=MODEL_STEP_INDEX,
+        payload=_legacy_payload(response),
+        provider_state=response.provider_state, at=2.0)
+
+
+def test_a_turn_journaled_before_prices_existed_comes_back_unpriced(
+    tmp_path,
+) -> None:
+    """`0.0` in a revision-1 payload is the old default, not a measurement.
+
+    The payload says `0.0` and the plan still reports the turn as unpriced, so
+    what is being asserted is that the recorded figure was **not believed** —
+    which is the whole of the migration decision.
+    """
+    journal = _journal(tmp_path)
+    _write_legacy_model_step(journal, 0, _response(text="done"))
+
+    plan = plan_resume(journal, SESSION)
+    assert plan.unpriced_turns == (0,)
+    assert plan.has_unpriced_spend is True
+    # And the turn itself survives: refusing the resume was the alternative, and
+    # it loses work that actually happened.
+    assert plan.records[0].text == "done"
+    journal.repo.close()
+
+
+def test_the_plan_names_which_resumed_turns_have_no_price(tmp_path) -> None:
+    """An unpriced turn the plan did not disclose is one nobody can act on.
+
+    The caller's choice — refuse the resume, re-price, or continue knowing the
+    total is a floor — is only available if the plan says *which* turns are
+    affected, so this is part of the plan's contract and not a log line.
+    """
+    journal = _journal(tmp_path)
+    _write_legacy_model_step(journal, 0, _response(text="a"))
+    _write_model_step(journal, 1, _response(text="b"), at=10.0)
+
+    plan = plan_resume(journal, SESSION)
+    # Specific, not a flag on the whole session: turn 1 was written at the
+    # current revision and carries a real figure, and a session-level flag would
+    # make the two indistinguishable.
+    assert plan.unpriced_turns == (0,)
+    assert len(plan.records) == 2
+    journal.repo.close()
+
+
+def test_a_payload_from_a_later_revision_is_refused_not_partially_read(
+    tmp_path,
+) -> None:
+    """Finding 016's defect, arriving through the journal rather than the wire.
+
+    A payload this build does not understand has fields this build does
+    recognise, and reading those is how a rebuild silently drops whatever it did
+    not know about.
+    """
+    journal = _journal(tmp_path)
+    response = _response(text="done")
+    payload = encode_model_outcome(response)
+    payload["schema"] = MODEL_OUTCOME_SCHEMA + 1
+    journal.intend(
+        session_id=SESSION, turn_index=0, step_index=MODEL_STEP_INDEX,
+        step_kind=STEP_MODEL_CALL, effect_id="model", effectful=True,
+        payload={"turn": 0}, at=1.0)
+    journal.commit_outcome(
+        session_id=SESSION, turn_index=0, step_index=MODEL_STEP_INDEX,
+        payload=payload, provider_state=response.provider_state, at=2.0)
+
+    with pytest.raises(ResumeError, match="declares schema"):
+        plan_resume(journal, SESSION)
+    journal.repo.close()
+
+
+def test_a_turn_written_now_carries_the_model_the_price_was_computed_at(
+    tmp_path,
+) -> None:
+    """The other half of the gate: revision 2 records what revision 1 lacked.
+
+    A journalled price is only checkable if what it was computed *over* is
+    journalled beside it, because the rate is keyed on `(provider, model)` and
+    applied to a token split. A lone float is a number no later reader can
+    reconcile with the table it supposedly came from.
+    """
+    journal = _journal(tmp_path)
+    response = ModelResponse(
+        provider="test", provider_state=b"opaque", text="done", tool_calls=(),
+        model="claude-sonnet-5", spend_usd=12.0, tokens=30,
+        input_tokens=10, output_tokens=20)
+    payload = encode_model_outcome(response)
+
+    assert payload["schema"] == MODEL_OUTCOME_SCHEMA
+    assert MODEL_OUTCOME_SCHEMA > LEGACY_MODEL_OUTCOME_SCHEMA
+    assert payload["model"] == "claude-sonnet-5"
+    assert (payload["input_tokens"], payload["output_tokens"]) == (10, 20)
+    assert payload["spend_usd"] == 12.0
+
+    _write_model_step(journal, 0, response)
+    plan = plan_resume(journal, SESSION)
+    # Priced, so it is absent from the disclosure rather than merely present in
+    # the records.
+    assert plan.unpriced_turns == ()
+    assert plan.has_unpriced_spend is False
+    journal.repo.close()
+
+
+def test_an_unpriced_turn_is_journaled_as_null_and_not_as_zero(tmp_path) -> None:
+    """The encoder's half of the same decision, at the other end of the round
+    trip: `None` must not become `0.0` on the way to disk, or the next reader
+    inherits the defect the decoder above refuses to repeat."""
+    response = ModelResponse(
+        provider="test", provider_state=b"opaque", text="", tool_calls=())
+    payload = encode_model_outcome(response)
+
+    assert payload["spend_usd"] is None
+    assert payload["input_tokens"] is None and payload["output_tokens"] is None

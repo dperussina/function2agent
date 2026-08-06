@@ -119,13 +119,19 @@ def _clock():
     return now
 
 
+# `spend_usd=0.0` is stated rather than left to default. The default is `None`,
+# meaning nothing priced the turn, and the loop refuses that rather than
+# accruing zero; a fake provider that reaches no vendor genuinely costs nothing,
+# which is a measurement and not a stand-in.
 def _asks(name: str = "t") -> ModelResponse:
     return ModelResponse(provider="test", provider_state=b"state", text="",
+                         spend_usd=0.0,
                          tool_calls=(ToolCall(index=0, call_id="c0", name=name),))
 
 
 def _finish() -> ModelResponse:
-    return ModelResponse(provider="test", provider_state=b"state", text="done")
+    return ModelResponse(provider="test", provider_state=b"state", text="done",
+                         spend_usd=0.0)
 
 
 def _start(rig: Rig, model, execute, token: CancelToken | None = None):
