@@ -69,6 +69,7 @@ threshold** before you write any edit-and-restore loop of your own.
 | `cite_advisor.py` | **Not a check and not a generator.** Ranks every requirement against each contract's subject and lists the high scorers the contract does not name. No finding changes its exit code, nothing imports it, the gate does not know it exists. |
 | `tamper.py` | The matcher `tests/removal_proofs.sh` edits source with. Exact first, whitespace-tolerant second, unique always. See [Removal-proof rot](#removal-proof-rot--tamperpy-and-check_tamperspy). |
 | `check_tampers.py` | Static rot check over every removal proof: does each tamper still name one live site, and does each test still exist? No pytest, no Go, no privileges. |
+| `proof_timeout.py` | **Not a check.** The per-arm wall-clock cap `tests/removal_proofs.sh` runs every proof under, and the reason it exists rather than `timeout(1)`: macOS ships none. Exits `124`, which the harness scores as `timed-out` — never `proved`, because a killed process is non-zero for a reason that says nothing about the mechanism, and never `skipped`, because that is how an arm leaves a green run unnoticed. |
 | `proof_attribution.py` | **Not a check.** For each removal proof, the test that actually fails once its tamper lands — the reading a human does to decide whether a proof proves what it claims. |
 | `removal_proofs_summary.py` | **Not a check either.** Writes the harness's JSON record — one entry per proof, plus the kernel, privilege and toolchains the totals are a property of — and renders it for a CI run page. It exists because a green job is one bit, and one bit cannot separate a run where every arm fired from one where the kernel arms all skipped. On the harness's abort path it deliberately emits no totals at all: a record that reads as success out of a run that measured nothing is the defect, not the fix. |
 | `selftest.py` | Proof that each check fires, that none fires on well-formed input, and that the generator writes digits and nothing else. |
@@ -960,6 +961,45 @@ of a correct edit to a derived document leaving the authority standing — the f
 citation that three sweeps declined to follow, where the label was right and the document it pointed
 at carried the false claim. Both share one shape: *the artifact you edited and the artifact that
 governs are not the same artifact, and its name does not tell you which one you have.*
+
+### A proof arm with no terminator does not report a hang; it reports whatever the eventual kill looks like
+
+**On 2026-08-05 the `T065 wiring` arm ran for 56 minutes of continuous CPU without returning, and the
+archived record from earlier that evening scored the same arm `proved`.** Both are explained by one
+mechanism. `proof()` reads a **non-zero exit** as the tampered test having noticed the mechanism was
+removed. A killed process is also non-zero. So a hang does not stay a hang: somebody eventually kills
+the pytest child, command substitution returns 130, and the arm is printed `proved` and recorded
+`proved` in a run that then completes green.
+
+The arm could not have been earned. Its tamper removes the loop's only `backstop.check` call while the
+test's own ceilings are all deliberately out of reach — that is what makes it a second guard rather
+than the first one counted twice — so with the backstop gone the runaway loop has no terminator of any
+kind. **The test cannot fail. It can only not return.** Measured at `1208e06` on a tree carrying no
+other changes: no return in 90s.
+
+**The scoring half was measured rather than inferred.** A planted arm whose tamper sends its own
+process `SIGTERM` — which is what an externally killed hang looks like from `proof()`'s side — printed
+`proved` and the harness exited **0**.
+
+Three fixes, because there are three defects and each leaves the others standing:
+
+- **Scoring, in `proof()` and `go_proof()`.** A status above 128 is a signalled child, and a signalled
+  child evaluated no assertion. It is now scored `unproven` with reason `proof-killed-by-signal`
+  rather than `proved`. This is the one that closes the fabrication route: without it a cap only makes
+  the hang rarer, and any *other* way of killing an arm still buys a green tick.
+- **Per arm, in the harness.** `tools/proof_timeout.py` caps every arm and exits `124`, which
+  `proof()` scores as `timed-out` — its own outcome, never `proved` and never `skipped`, named in the
+  summary and failing the run. A skip would have been the worse of the two mistakes available: it
+  reads as "not attempted in this environment", which is how an arm leaves a green run unnoticed.
+- **Per test, in the test.** A cap turns a hang into a red run; it does not turn it into a proof. The
+  arm still has to be able to *fail*, so its stub provider now refuses past a call count an order of
+  magnitude above any maximum `CallCountBackstop` will accept. Untampered the backstop trips first and
+  the guard is never reached; tampered it raises in under two seconds.
+
+**The generalisation is the part worth keeping.** Whenever a tamper removes the *only* thing that
+stops a loop, the tampered test has no failure mode left. Ask it of every arm whose test runs
+something unbounded, and give the test its own bound — one that cannot be mistaken for the mechanism
+under proof.
 
 ## Roles: who is authoritative
 

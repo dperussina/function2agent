@@ -91,6 +91,21 @@ TAMPER="$SRC/tools/tamper.py"
 BASELINE_PY="$WORK/.baseline-pytest.txt"
 BASELINE_GO="$WORK/.baseline-go.txt"
 
+# A wall-clock cap on one arm, and the script that applies it. See
+# `tools/proof_timeout.py` for why this is a script rather than `timeout(1)`
+# (macOS ships none) and why a timed-out arm gets its own outcome below.
+#
+# 300s is chosen against a measurement, not a feeling: the whole untampered
+# suite is 980 outcomes in ~10s on the machine this was set on, and a proof runs
+# **one** test. The slowest arms are the kernel-mechanism ones and they are
+# seconds. So this is two orders of magnitude above any arm that is working, and
+# an arm that reaches it is not slow — it is not coming back. Raise it with
+# REMOVAL_PROOF_TIMEOUT if a genuinely long arm ever appears; do not lower it to
+# make a hang report faster, because then it stops distinguishing the two.
+CAP="$SRC/tools/proof_timeout.py"
+PROOF_TIMEOUT="${REMOVAL_PROOF_TIMEOUT:-300}"
+TIMED_OUT_STATUS=124
+
 # One line per proof, tab separated, in the order they ran. Lives in $WORK so an
 # interrupted run cannot leave a partial file behind that looks like a result.
 RECORDS="$WORK/.summary-records"
@@ -103,6 +118,11 @@ SUMMARY="${REMOVAL_PROOFS_SUMMARY:-$SRC/tests/batteries/results/removal-proofs.l
 PASS=0
 FAIL=0
 SKIP=0
+# Counted apart from FAIL on purpose. An arm that did not return is not an arm
+# that was demonstrated to still pass; it is an arm nobody measured, and folding
+# it into either existing bucket loses the one fact worth keeping. It carries
+# the same weight as FAIL in the exit status at the foot of this file.
+TIMEOUT=0
 HAVE_GO=0
 
 # The proof currently running. `_record` reads them so the call sites stay one
@@ -128,7 +148,7 @@ _write_summary () {
   F2A_STATUS="$1" \
   F2A_ABORT_REASON="${2:-}" \
   F2A_RECORDS="$RECORDS" \
-  F2A_PASS="$PASS" F2A_FAIL="$FAIL" F2A_SKIP="$SKIP" \
+  F2A_PASS="$PASS" F2A_FAIL="$FAIL" F2A_SKIP="$SKIP" F2A_TIMEOUT="$TIMEOUT" \
   F2A_PY_TOTAL="${_py_total:-}" F2A_PY_FAILED="${_py_failed:-}" \
   F2A_GO_TOTAL="${_go_total:-}" F2A_GO_FAILED="${_go_failed:-}" \
   F2A_HAVE_GO="$HAVE_GO" \
@@ -282,6 +302,49 @@ apply_tamper () {
   return 0
 }
 
+# report_timeout is the one place a non-returning arm is scored, and it scores
+# it as neither of the two things it superficially resembles.
+#
+# Not `proved`: `proof()` reads non-zero as the tampered test having failed, and
+# a killed process is non-zero for a reason that says nothing about the
+# mechanism. That is not hypothetical — it is how a hung arm has already been
+# recorded green, because a hang does not stay a hang and whoever kills the
+# child hands `proof()` a 130 it cannot tell from a real failure.
+#
+# Not `skipped` either: a skip means the arm was not attempted and the count of
+# skips is read as the population this run did not cover. A timeout was
+# attempted and consumed the cap, and burying it there is how an arm leaves a
+# green run without anyone noticing it went.
+report_timeout () {
+  echo "  TIMED OUT $1 — did not return within ${PROOF_TIMEOUT}s"
+  echo "            Not scored as proved: a hang is not a demonstrated failure."
+  echo "            Not scored as skipped: it ran, and nobody knows the outcome."
+  _record timed-out proof-did-not-return
+  TIMEOUT=$((TIMEOUT+1))
+}
+
+# report_signalled closes the route the cap above only makes rarer.
+#
+# A shell reports a signalled child as `128 + signum`, and `proof()` reads every
+# non-zero status as the tampered test having failed. So a killed process is
+# scored **proved** — measured, not reasoned: a planted arm whose tamper sends
+# itself SIGTERM prints `proved` and exits the harness 0. That is how a hung arm
+# becomes a green record the moment somebody loses patience with it, and it is
+# the likeliest explanation for `T065 wiring` reading `proved` in the archive
+# from 21:59 on 2026-08-05 while the same arm could not terminate at all.
+#
+# A tampered test that dies by signal has not reported anything either way: no
+# assertion was evaluated, and a segfault or an OOM kill says the tampered
+# source did something violent rather than that the test noticed. Scored
+# unproven, which is the bucket for "attempted and did not demonstrate".
+report_signalled () {
+  echo "  SIGNALLED $1 — the test process died on signal $(($2 - 128)), so nothing was asserted"
+  echo "            A signalled process is non-zero for a reason that says nothing"
+  echo "            about the mechanism. Not scored as proved."
+  _record unproven proof-killed-by-signal
+  FAIL=$((FAIL+1))
+}
+
 proof () {
   local name="$1" file="$2" test="$3" python_edit="$4"
   local verdict
@@ -292,9 +355,14 @@ proof () {
   apply_tamper "$name" "$file" "$python_edit" || return
 
   local output status
-  output=$(python3 -m pytest "$test" -q -p no:cacheprovider 2>&1)
+  output=$(python3 "$CAP" "$PROOF_TIMEOUT" \
+             python3 -m pytest "$test" -q -p no:cacheprovider 2>&1)
   status=$?
-  if [ "$status" -eq 0 ]; then
+  if [ "$status" -eq "$TIMED_OUT_STATUS" ]; then
+    report_timeout "$name"
+  elif [ "$status" -gt 128 ]; then
+    report_signalled "$name" "$status"
+  elif [ "$status" -eq 0 ]; then
     echo "  UNPROVEN  $name — the test still passes with the mechanism removed"
     _record unproven still-passes-without-the-mechanism
     FAIL=$((FAIL+1))
@@ -424,9 +492,14 @@ go_proof () {
   # in the pattern. One future arm reusing both would be served the previous
   # arm's verdict, which is a proof reporting a result it did not take.
   local output
-  output=$(cd "$WORK/src/proxy" && go test -count=1 -run "$test" ./... 2>&1)
+  output=$(cd "$WORK/src/proxy" \
+             && python3 "$CAP" "$PROOF_TIMEOUT" go test -count=1 -run "$test" ./... 2>&1)
   local status=$?
-  if [ "$status" -eq 0 ]; then
+  if [ "$status" -eq "$TIMED_OUT_STATUS" ]; then
+    report_timeout "$name"
+  elif [ "$status" -gt 128 ]; then
+    report_signalled "$name" "$status"
+  elif [ "$status" -eq 0 ]; then
     echo "  UNPROVEN  $name — the test still passes with the mechanism removed"
     _record unproven still-passes-without-the-mechanism
     FAIL=$((FAIL+1))
@@ -1551,13 +1624,20 @@ proof "e4ef6e6 basetemp reaping — a live process's directory is reaped too" \
   's = s.replace("        try:\n            os.kill(int(name), 0)\n        except ProcessLookupError:\n            shutil.rmtree(os.path.join(root, name), ignore_errors=True)\n        except PermissionError:\n            continue  # Alive and owned by someone else.", "        shutil.rmtree(os.path.join(root, name), ignore_errors=True)")'
 
 echo
-if [ "$SKIP" -gt 0 ]; then
-  echo "$PASS proved, $FAIL unproven, $SKIP skipped"
-else
-  echo "$PASS proved, $FAIL unproven"
+_verdict="$PASS proved, $FAIL unproven"
+[ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
+# Named unconditionally when non-zero and never folded into the others, because
+# the whole point of the outcome is that it is visible from the summary line.
+[ "$TIMEOUT" -gt 0 ] && _verdict="$_verdict, $TIMEOUT TIMED OUT"
+echo "$_verdict"
+if [ "$TIMEOUT" -gt 0 ]; then
+  echo
+  echo "  $TIMEOUT arm(s) did not return within ${PROOF_TIMEOUT}s and were not measured."
+  echo "  This run is NOT green. Re-running will not help: an arm that hangs has no"
+  echo "  terminator once its mechanism is removed, and needs one in its own test."
 fi
 # After the last proof and before the verdict, so the record can only ever
 # describe arms that actually ran. It reports; it decides nothing — the line
 # below is still the only thing that carries the exit status.
 _write_summary complete
-[ "$FAIL" -eq 0 ]
+[ "$FAIL" -eq 0 ] && [ "$TIMEOUT" -eq 0 ]

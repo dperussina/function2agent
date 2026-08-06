@@ -100,6 +100,16 @@ REASONS = {
     "still-passes-without-the-mechanism": (
         "the test still passes with the mechanism removed"
     ),
+    "proof-killed-by-signal": (
+        "the tampered test's process died on a signal, so no assertion was "
+        "evaluated; a signalled process is non-zero for a reason that says "
+        "nothing about the mechanism and is never scored as proved"
+    ),
+    "proof-did-not-return": (
+        "the tampered test did not return within the harness's per-arm cap, so "
+        "the mechanism was NOT measured; a hang is not a demonstrated failure "
+        "and is never scored as proved"
+    ),
 }
 
 
@@ -243,7 +253,8 @@ def write(out_path: str) -> int:
         proved = _int_or_none("F2A_PASS") or 0
         unproven = _int_or_none("F2A_FAIL") or 0
         skipped = _int_or_none("F2A_SKIP") or 0
-        if proved + unproven + skipped != len(proofs):
+        timed_out = _int_or_none("F2A_TIMEOUT") or 0
+        if proved + unproven + skipped + timed_out != len(proofs):
             doc["status"] = "inconsistent"
         doc["baseline"] = {
             "python_outcomes": _int_or_none("F2A_PY_TOTAL"),
@@ -255,11 +266,15 @@ def write(out_path: str) -> int:
             "proved": proved,
             "unproven": unproven,
             "skipped": skipped,
+            "timed_out": timed_out,
             "entries_recorded": len(proofs),
         }
         doc["skipped_titles"] = [p["title"] for p in proofs if p["outcome"] == "skipped"]
         doc["unproven_titles"] = [
             p["title"] for p in proofs if p["outcome"] == "unproven"
+        ]
+        doc["timed_out_titles"] = [
+            p["title"] for p in proofs if p["outcome"] == "timed-out"
         ]
         doc["proofs"] = proofs
         doc["what_this_is_a_property_of"] = _caveats(env, have_go, skipped)
@@ -345,13 +360,18 @@ def render(in_path: str) -> int:
     proved = totals.get("proved", 0)
     unproven = totals.get("unproven", 0)
     skipped = totals.get("skipped", 0)
+    # `.get` with a default rather than `[...]`, because every record written
+    # before the per-arm cap existed has no such key and those runs still have
+    # to render. A missing key means the run predates the cap, not that it had
+    # none — see the timed-out section below, which says so.
+    timed_out = totals.get("timed_out", 0)
 
     print("## Removal proofs\n")
-    print("| proved | unproven | **skipped** | entries |")
-    print("|---:|---:|---:|---:|")
+    print("| proved | unproven | **skipped** | **timed out** | entries |")
+    print("|---:|---:|---:|---:|---:|")
     print(
-        "| {} | {} | **{}** | {} |\n".format(
-            proved, unproven, skipped, totals.get("entries_recorded")
+        "| {} | {} | **{}** | **{}** | {} |\n".format(
+            proved, unproven, skipped, timed_out, totals.get("entries_recorded")
         )
     )
     print("Measured on {}.\n".format(ident))
@@ -374,6 +394,20 @@ def render(in_path: str) -> int:
         print()
     else:
         print("Every declared arm was exercised in this environment.\n")
+
+    if timed_out:
+        print(
+            "### {} arm(s) DID NOT RETURN\n\n"
+            "Each of these was attempted and consumed the harness's per-arm cap "
+            "without reporting, so its mechanism was not measured. A timed-out "
+            "arm is neither proved nor skipped: scoring it proved would read a "
+            "killed process as a demonstrated failure, and scoring it skipped "
+            "would let it leave a green run unnoticed.\n".format(timed_out)
+        )
+        for proof in doc.get("proofs", []):
+            if proof["outcome"] == "timed-out":
+                print("- **{}** — {}".format(proof["title"], proof.get("reason_text")))
+        print()
 
     if unproven:
         print("### {} unproven\n".format(unproven))

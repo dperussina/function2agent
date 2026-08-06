@@ -353,9 +353,45 @@ def test_the_backstop_does_not_consult_the_budget_ledger(tmp_path) -> None:
 # In the loop, with FR-005's four ceilings put out of reach.
 
 
-def _runaway_loop(harness, *, backstop):
+class StubExhausted(RuntimeError):
+    """The stub was asked for a turn that no correctly-wired ceiling permits.
+
+    Deliberately not a `BackstopTripped` and deliberately not caught: it exists
+    to make the arm below fail, and a guard the assertion could mistake for the
+    mechanism would be worse than no guard at all.
+    """
+
+
+# Ten times the largest maximum `CallCountBackstop.__init__` will accept — it
+# refuses anything above `MAX_MODEL_CALLS` — so no correctly-configured backstop
+# can reach this, and the untampered path never sees it. Tied to the constant
+# rather than written as a literal so that raising the sourced figure cannot
+# quietly move the guard underneath the thing it is guarding.
+_STUB_GUARD = MAX_MODEL_CALLS * 10
+
+
+def _runaway_loop(harness, *, backstop, guard_at: int = _STUB_GUARD):
     """A loop whose provider always asks for another tool, so only a ceiling
-    stops it."""
+    stops it — and a provider that counts, so a *removed* ceiling stops the
+    test rather than the machine.
+
+    **The counter is not scaffolding; it is what makes the arm below provable.**
+    Without it the loop had no terminator of any kind once its backstop was
+    disarmed, which is the exact configuration `tests/removal_proofs.sh` puts it
+    in: the tamper for "T065 wiring" replaces `if pending_turn is None:` with
+    `if False:`, removing the only `backstop.check` call, while the arm's own
+    ceilings are all set out of reach on purpose. A test with nothing left to
+    stop it cannot fail. It can only not return — and `proof()` reads a
+    non-return as neither proved nor unproven but as nothing at all, so the run
+    hangs. Measured on 2026-08-05 at `1208e06` with the tamper applied by hand:
+    no return in 90s, and a concurrent pass recorded 56 minutes of continuous
+    CPU on the same arm.
+
+    So the provider refuses past `guard_at`. Untampered, the backstop trips at
+    its maximum and this is never reached. Tampered, it raises,
+    `pytest.raises(BackstopTripped)` does not match it, and the arm fails in
+    seconds — which is what the proof needed all along.
+    """
     from src.runtime.loop import AgentLoop
     from src.runtime.turn import ModelResponse, ToolCall
 
@@ -363,8 +399,19 @@ def _runaway_loop(harness, *, backstop):
 
     def model(_context):
         asked["n"] += 1
+        if asked["n"] > guard_at:
+            raise StubExhausted(
+                f"the stub provider was asked for model call {asked['n']}, past "
+                f"the {guard_at} it will answer. Nothing stopped this loop: the "
+                f"backstop is the only guard configured to reach, and it did "
+                f"not. Failing here rather than running forever."
+            )
+        # `spend_usd=0.0` stated, not defaulted: the default means *unpriced*
+        # and the loop refuses it, which would stop this session for the wrong
+        # reason. The point of this arm is that the **backstop** stops it while
+        # every configured ceiling is out of reach.
         return ModelResponse(
-            provider="test", provider_state=b"s", text="more",
+            provider="test", provider_state=b"s", text="more", spend_usd=0.0,
             tool_calls=(ToolCall(call_id=f"c{asked['n']}", name="t",
                                  arguments={}, index=0),))
 
@@ -405,8 +452,15 @@ def test_the_loop_is_stopped_by_the_backstop_with_every_ceiling_out_of_reach(
         assert "3" in str(caught.value)
         # Exactly the permitted number of calls reached the provider, so the
         # backstop stopped the run *before* the fourth rather than after it.
+        #
+        # This doubles as the statement that `_runaway_loop`'s stub guard took
+        # no part in the result: it answers 200 calls and only 3 were asked for,
+        # so what stopped this run was the backstop and nothing else. The guard
+        # is there for the tampered path, and an arm that could not tell the two
+        # apart would be the vacuity the guard was added to prevent.
         assert CallCountBackstop(harness.journal).calls_made(
             loop_fixtures.SESSION) == 3
+        assert _STUB_GUARD > 3
     finally:
         harness.close()
 
