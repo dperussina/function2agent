@@ -22,6 +22,14 @@ a *dated change* for one of them; xAI prices in two *prompt-length tiers* with a
 stated threshold; Google prices flat but per modality and per service tier. A
 later contributor flattening this to one rate per model breaks
 `test_the_table_holds_three_structurally_different_schedules`.
+
+**A fourth family was added 2026-08-06 under OD-27 and lives at the bottom of
+this file: the operator-declared path.** It is here rather than in a file of
+its own because a declared rate and a sourced one are read through the same
+lookup and priced by the same arithmetic, and the assertions that matter are
+the ones comparing the two — a file boundary between them would make the
+comparison arms pick a side to live on. The arm to read first is
+`test_a_single_rate_is_refused_where_the_vendors_card_has_two_columns`.
 """
 
 from __future__ import annotations
@@ -35,11 +43,16 @@ from src.runtime.providers.base import PROVIDERS
 from src.runtime.providers.costs import (
     DERIVABLE_RESERVATION_FIELDS,
     PRICES,
+    PROVENANCE_VENDOR,
     MissingPriceError,
+    OperatorPrice,
+    OperatorPriceBook,
+    OperatorPriceError,
     PriceEntry,
     Rate,
     priced_models,
     price_usd,
+    require_priceable,
     reservation_spend_usd,
 )
 
@@ -236,7 +249,8 @@ def test_a_flat_rate_model_prices_as_the_source_states() -> None:
     charged = price_usd(provider="anthropic", model="claude-opus-5",
                         input_tokens=1_000_000, output_tokens=1_000_000,
                         as_of=DAY)
-    assert charged == pytest.approx(30.0)
+    assert charged.usd == pytest.approx(30.0)
+    assert charged.provenance == PROVENANCE_VENDOR
 
 
 def test_the_dated_change_the_anthropic_source_schedules_is_honoured() -> None:
@@ -251,9 +265,9 @@ def test_the_dated_change_the_anthropic_source_schedules_is_honoured() -> None:
                          as_of=dt.date(2026, 8, 31), **million)
     first_day_after = price_usd(provider="anthropic", model="claude-sonnet-5",
                                 as_of=dt.date(2026, 9, 1), **million)
-    assert last_day == pytest.approx(12.0), "the introductory $2/$10"
-    assert first_day_after == pytest.approx(18.0), "the standard $3/$15"
-    assert first_day_after > last_day
+    assert last_day.usd == pytest.approx(12.0), "the introductory $2/$10"
+    assert first_day_after.usd == pytest.approx(18.0), "the standard $3/$15"
+    assert first_day_after.usd > last_day.usd
 
 
 def test_a_date_no_entry_covers_fails_closed_rather_than_picking_the_nearest() -> None:
@@ -273,12 +287,12 @@ def test_the_xai_prompt_length_tier_switches_at_the_stated_threshold() -> None:
     at = price_usd(provider="xai", model="grok-4.5",
                    input_tokens=200_000, output_tokens=1_000_000, as_of=DAY)
 
-    assert under == pytest.approx(199_999 / 1e6 * 2.00 + 6.00)
-    assert at == pytest.approx(200_000 / 1e6 * 4.00 + 12.00), (
+    assert under.usd == pytest.approx(199_999 / 1e6 * 2.00 + 6.00)
+    assert at.usd == pytest.approx(200_000 / 1e6 * 4.00 + 12.00), (
         "the higher tier must re-rate the output too; the source says all "
         "tokens in the request"
     )
-    assert at > under
+    assert at.usd > under.usd
 
 
 def test_the_table_holds_three_structurally_different_schedules() -> None:
@@ -336,7 +350,7 @@ def test_zero_tokens_costs_nothing_and_is_not_an_error() -> None:
     path is for a missing *price*, and conflating the two would make an empty
     turn look like an unpriced model."""
     assert price_usd(provider="anthropic", model="claude-opus-5",
-                     input_tokens=0, output_tokens=0, as_of=DAY) == 0.0
+                     input_tokens=0, output_tokens=0, as_of=DAY).usd == 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -366,7 +380,7 @@ def test_a_token_reservation_becomes_a_spend_reservation() -> None:
     # Reserved at the *output* rate, which is the larger of the two: the split
     # between input and output is not known before the call, and the ledger's
     # whole argument is that a reservation must over-count.
-    assert derived == pytest.approx(2_000 / 1e6 * 25.0)
+    assert derived.usd == pytest.approx(2_000 / 1e6 * 25.0)
 
 
 def test_the_reservation_is_derived_at_the_dearer_of_the_two_rates() -> None:
@@ -378,7 +392,7 @@ def test_the_reservation_is_derived_at_the_dearer_of_the_two_rates() -> None:
     derived = reservation_spend_usd(provider="anthropic",
                                     model="claude-opus-5", tokens=1_000_000,
                                     as_of=DAY)
-    assert derived > cheapest
+    assert derived.usd > cheapest
 
 
 def test_a_reservation_for_an_unpriced_model_fails_closed() -> None:
@@ -397,8 +411,410 @@ def test_the_derived_figure_is_accepted_by_the_ledger_it_is_for() -> None:
 
     policy = ReservationPolicy(
         spend_usd=reservation_spend_usd(provider="xai", model="grok-4.5",
-                                        tokens=8_000, as_of=DAY),
+                                        tokens=8_000, as_of=DAY).usd,
         tokens=8_000,
         wall_clock_seconds=30.0,
     )
     assert policy.spend_usd == pytest.approx(8_000 / 1e6 * 6.00)
+
+
+# ---------------------------------------------------------------------------
+# OD-27 — the operator-declared path.
+#
+# Read `test_a_single_rate_is_refused_where_the_vendors_card_has_two_columns`
+# first. It is the arm the decision turns on, and every other arm below is
+# about keeping the two provenances apart once one has been admitted.
+
+
+def _declared(model: str = "gpt-5-mini", *, tiers: tuple[Rate, ...],
+              provider: str = "openai", **kw) -> OperatorPrice:
+    """A well-formed declaration, so each arm below varies one thing."""
+    kw.setdefault("display_name", "GPT-5 mini")
+    kw.setdefault("declared_by", "platform-eng@example.invalid")
+    kw.setdefault("declaration_ref", "contracts/openai-2026-q3.md")
+    kw.setdefault("declared_on", "2026-08-01")
+    kw.setdefault("scope", "standard synchronous tier, uncached input, text")
+    return OperatorPrice(provider=provider, model=model, tiers=tiers, **kw)
+
+
+#: Two columns and the boundary between them, which is what OpenAI's page
+#: withholds and what a declaration for that provider has to supply.
+_TWO_COLUMNS = (Rate(0.25, 2.00), Rate(0.50, 4.00, min_input_tokens=128_000))
+
+
+def test_a_single_rate_is_refused_where_the_vendors_card_has_two_columns() -> None:
+    """OD-27 limb ②, and the arm the whole decision turns on.
+
+    `costs.UNPRICED["openai"]` records that the vendor prices in a *"Short
+    context"* and a *"Long context"* column and states no threshold. A
+    declaration carrying one number asserts the boundary does not exist, which
+    the vendor's own page contradicts — and picking the cheap column
+    under-charges, which is the direction that makes a ceiling **fail to
+    fire**. Admitting it would recreate that defect with the operator's name
+    on it, which is worse than the present refusal because it looks
+    authorised.
+    """
+    with pytest.raises(OperatorPriceError, match="a single rate is refused"):
+        _declared(tiers=(Rate(0.25, 2.00),))
+
+
+def test_the_same_rate_twice_is_refused_because_it_is_one_column_read_twice() -> None:
+    """The way round limb ② that a well-meaning author reaches for first.
+
+    Two identical bands satisfy *"supply both columns"* by shape and supply
+    one column by content, and nothing here can tell a card that genuinely
+    quotes the same figure twice from a reader who copied one row. The first
+    reading produces exactly the under-charge the limb exists to stop, so the
+    shape is refused rather than resolved.
+    """
+    flat = (Rate(0.25, 2.00), Rate(0.25, 2.00, min_input_tokens=128_000))
+    with pytest.raises(OperatorPriceError, match="must be dearer"):
+        _declared(tiers=flat)
+
+
+def test_a_cheaper_long_context_band_is_refused_as_well() -> None:
+    """The other direction, refused for a reason the first arm does not give.
+
+    `Rate.min_input_tokens` means *re-rate the whole request at this band*, so
+    a cheaper upper band inverts what the shape asserts. Left admitted it
+    would be a discount that grows with prompt length, which under-charges in
+    the same direction as the single rate.
+    """
+    inverted = (Rate(0.50, 4.00), Rate(0.25, 2.00, min_input_tokens=128_000))
+    with pytest.raises(OperatorPriceError, match="must be dearer"):
+        _declared(tiers=inverted)
+
+
+def test_the_refusal_names_the_remedy_rather_than_only_the_rule() -> None:
+    """An operator told *"refused"* supplies the same thing again.
+
+    The message has to say the vendor prices in two columns and that the
+    threshold is what is owed, because the operator holds a rate card and this
+    module does not.
+    """
+    with pytest.raises(OperatorPriceError) as raised:
+        _declared(tiers=(Rate(0.25, 2.00),))
+
+    message = str(raised.value)
+    assert "Short context" in message and "Long context" in message
+    assert "threshold" in message
+
+
+def test_both_columns_and_the_threshold_are_admitted_and_the_band_switches() -> None:
+    """Limb ② is a gate rather than a wall: supplying what the page withheld
+    gets the model priced, and the threshold the operator stated is the one
+    that re-rates the request."""
+    book = OperatorPriceBook([_declared(tiers=_TWO_COLUMNS)])
+    common = dict(provider="openai", model="gpt-5-mini", output_tokens=0,
+                  as_of=DAY, operator_prices=book)
+
+    under = price_usd(input_tokens=127_999, **common)
+    at = price_usd(input_tokens=128_000, **common)
+
+    assert under.usd == pytest.approx(127_999 / 1e6 * 0.25)
+    assert at.usd == pytest.approx(128_000 / 1e6 * 0.50)
+    assert at.usd > under.usd
+
+
+def test_a_provider_with_no_published_columns_may_declare_a_single_rate() -> None:
+    """The refusal is scoped to the enumerated providers and is not a general
+    ban on flat rates.
+
+    Stated because a rule that refused every single-band declaration would be
+    refusing the shape most vendors publish, and the next reader would relax
+    it in the wrong place.
+    """
+    flat = OperatorPriceBook([_declared(
+        provider="google", model="gemini-4-experimental",
+        display_name="Gemini 4 Experimental", tiers=(Rate(1.0, 4.0),))])
+
+    priced = price_usd(provider="google", model="gemini-4-experimental",
+                       input_tokens=1_000_000, output_tokens=0, as_of=DAY,
+                       operator_prices=flat)
+
+    assert priced.usd == pytest.approx(1.0)
+
+
+def test_a_declared_figure_says_it_was_declared() -> None:
+    """OD-27's record limb: the provenance travels with the figure.
+
+    Asserted on the value `price_usd` returns rather than on a log line,
+    because a log is gone with the process that wrote it and the reader who
+    needs this is holding a total months later.
+    """
+    book = OperatorPriceBook([_declared(tiers=_TWO_COLUMNS)])
+
+    priced = price_usd(provider="openai", model="gpt-5-mini",
+                       input_tokens=1_000, output_tokens=1_000, as_of=DAY,
+                       operator_prices=book)
+
+    assert priced.provenance == costs.PROVENANCE_OPERATOR
+    assert priced.is_operator_declared is True
+    assert "platform-eng@example.invalid" in priced.attribution
+
+
+def test_a_sourced_figure_and_a_declared_one_are_not_the_same_value() -> None:
+    """The comparison, because each half asserted alone would pass against a
+    constant. A `PricedSpend` that answered `operator` for everything would
+    satisfy the arm above."""
+    declared = price_usd(provider="openai", model="gpt-5-mini",
+                         input_tokens=1_000, output_tokens=0, as_of=DAY,
+                         operator_prices=OperatorPriceBook(
+                             [_declared(tiers=_TWO_COLUMNS)]))
+    sourced = price_usd(provider="anthropic", model="claude-opus-5",
+                        input_tokens=1_000, output_tokens=0, as_of=DAY)
+
+    assert declared.provenance != sourced.provenance
+    assert sourced.provenance == PROVENANCE_VENDOR
+    assert sourced.is_operator_declared is False
+
+
+def test_the_figure_cannot_be_reached_by_an_implicit_coercion() -> None:
+    """No `__float__`, on purpose.
+
+    An implicit coercion would let a caller drop the provenance without
+    writing anything, which is the one thing `PricedSpend` exists to prevent.
+    `.usd` is the explicit act, in the shape `Config.raw()` establishes.
+    """
+    priced = price_usd(provider="anthropic", model="claude-opus-5",
+                       input_tokens=1_000, output_tokens=0, as_of=DAY)
+
+    with pytest.raises(TypeError):
+        float(priced)
+    assert priced.usd == pytest.approx(1_000 / 1e6 * 5.0)
+
+
+def test_a_declaration_cannot_displace_a_rate_read_off_a_vendors_page() -> None:
+    """Refused at construction, so the operator learns at startup rather than
+    discovering a sourced rate had quietly stopped being used.
+
+    Nothing is unblocked by admitting it — that session already runs — and
+    what is risked is the ambiguity `validate_schedule` refuses between two
+    vendor rates, arriving from the other side.
+    """
+    with pytest.raises(OperatorPriceError, match="already priced"):
+        _declared(provider="anthropic", model="claude-opus-5",
+                  display_name="Claude Opus 5", tiers=(Rate(1.0, 1.0),))
+
+
+def test_the_vendor_table_wins_when_it_grows_a_row_under_a_built_book(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    """The second enforcement, which holds where the first cannot.
+
+    `OperatorPrice` refuses a key `PRICES` holds *at construction*, so a book
+    can only come to shadow a sourced rate if the table grows the row
+    afterwards — which is what the next sourced entry to land does to every
+    deployment already holding a declaration for that model. The lookup order
+    is what covers it, and it is asserted separately because the two failures
+    happen at different times and only this one happens after shipping.
+    """
+    key = ("google", "gemini-4-preview")
+    book = OperatorPriceBook([_declared(
+        provider="google", model="gemini-4-preview",
+        display_name="Gemini 4 Preview", tiers=(Rate(99.0, 99.0),))])
+
+    monkeypatch.setitem(PRICES, key, (PriceEntry(
+        provider="google", model="gemini-4-preview", tiers=(Rate(1.0, 4.0),),
+        source=costs.GOOGLE_PRICING, model_id_source=costs.GOOGLE_PRICING,
+        retrieved=costs.READ_ON, scope=costs.STANDARD_SCOPE),))
+
+    priced = price_usd(provider="google", model="gemini-4-preview",
+                       input_tokens=1_000_000, output_tokens=0, as_of=DAY,
+                       operator_prices=book)
+
+    assert priced.provenance == PROVENANCE_VENDOR
+    assert priced.usd == pytest.approx(1.0), "the sourced rate, not 99.0"
+
+
+def test_an_alias_is_not_an_address_a_declaration_may_use() -> None:
+    """OD-27 limb ③, first half.
+
+    The absence at an alias is **the address and not the number**, so no rate
+    repairs it: the vendor's own page says an alias resolves to a dated id,
+    which can move with no event this table observes.
+    """
+    with pytest.raises(OperatorPriceError, match="not an address"):
+        _declared(provider="anthropic", model="claude-sonnet-4-5",
+                  display_name="Claude Sonnet 4.5", tiers=(Rate(3.0, 15.0),))
+
+
+def test_the_alias_refusal_names_the_dated_identifier_that_works() -> None:
+    """A refusal with no remedy reads as a product that cannot serve the
+    model. The dated identifier is priced already, so the cost of this
+    refusal is a rewritten line rather than a blocked session."""
+    with pytest.raises(OperatorPriceError) as raised:
+        _declared(provider="anthropic", model="claude-haiku-4-5",
+                  display_name="Claude Haiku 4.5", tiers=(Rate(1.0, 5.0),))
+
+    assert "dated identifier" in str(raised.value)
+    assert ("anthropic", "claude-haiku-4-5-20251001") in priced_models()
+
+
+def test_every_recorded_absence_says_whether_a_declaration_reaches_it() -> None:
+    """Limb ③'s coverage rule, asserted rather than left to the module guard.
+
+    A reader who finds two of three absences answered assumes the third was
+    overlooked. The module refuses to import without this, and this arm is
+    what says so out loud — including that the answers are three *different*
+    ones, since three copies of *"reachable"* would satisfy a set comparison.
+    """
+    assert set(costs.OPERATOR_REACH) == set(costs.UNPRICED)
+    assert costs.OPERATOR_REACH["openai"].startswith("REACHABLE")
+    assert costs.OPERATOR_REACH["anthropic-aliases"].startswith("NOT REACHABLE")
+    assert costs.OPERATOR_REACH["xai-cost-in-usd-ticks"].startswith(
+        "OUT OF SCOPE")
+
+
+def test_a_declaration_states_who_made_it_and_where_it_lives() -> None:
+    """What stands in for a source, given a declaration has none.
+
+    A vendor entry cites a page and a date; this cites a party and a
+    document. Both are required, because a figure nobody can trace is
+    carrying a spend ceiling either way.
+    """
+    for blank in ("declared_by", "declaration_ref"):
+        with pytest.raises(OperatorPriceError, match=f"no {blank}"):
+            _declared(tiers=_TWO_COLUMNS, **{blank: ""})
+
+
+def test_a_declaration_records_both_addresses() -> None:
+    """The two-address property, carried over from `PriceEntry`.
+
+    Vendors publish against display names and accept requests against API
+    identifiers, and an operator's contract is written against whichever one
+    their vendor put on it. A declaration recording only one cannot be
+    checked against the card it was read from.
+    """
+    with pytest.raises(OperatorPriceError, match="no display name"):
+        _declared(tiers=_TWO_COLUMNS, display_name="")
+    with pytest.raises(OperatorPriceError, match="matches nothing"):
+        _declared(model="", tiers=_TWO_COLUMNS)
+
+
+def test_two_declarations_in_force_on_one_day_are_refused() -> None:
+    """The set-level check no single declaration can make.
+
+    `validate_schedule` refuses this between vendor entries and the argument
+    transfers unchanged: two rates in force answers differently depending on
+    which line was written first.
+    """
+    with pytest.raises(OperatorPriceError, match="two declarations"):
+        OperatorPriceBook([
+            _declared(tiers=_TWO_COLUMNS),
+            _declared(tiers=_TWO_COLUMNS, declared_on="2026-08-07"),
+        ])
+
+
+def test_a_declared_zero_is_a_declaration_and_not_an_absence() -> None:
+    """The distinction `spend_usd: float | None` made one layer down.
+
+    A model an operator *forgot* must not price at nothing. A zero an
+    operator *wrote* is accountable, is carried as operator provenance, and is
+    named at startup — which is where a rate that disables the spend
+    dimension has to be read.
+    """
+    free = OperatorPriceBook([_declared(
+        provider="google", model="gemini-4-internal",
+        display_name="Gemini 4 (internal allocation)",
+        tiers=(Rate(0.0, 0.0),))])
+
+    priced = price_usd(provider="google", model="gemini-4-internal",
+                       input_tokens=1_000_000, output_tokens=1_000_000,
+                       as_of=DAY, operator_prices=free)
+    assert priced.usd == 0.0
+    assert priced.provenance == costs.PROVENANCE_OPERATOR
+
+    with pytest.raises(MissingPriceError):
+        price_usd(provider="google", model="gemini-4-forgotten",
+                  input_tokens=1_000_000, output_tokens=1_000_000,
+                  as_of=DAY, operator_prices=free)
+
+
+def test_an_empty_book_prices_nothing_rather_than_pricing_at_zero() -> None:
+    """The default that would be dangerous is one that produces a figure."""
+    with pytest.raises(MissingPriceError):
+        price_usd(provider="openai", model="gpt-5-mini", input_tokens=1,
+                  output_tokens=1, as_of=DAY,
+                  operator_prices=costs.NO_OPERATOR_PRICES)
+
+
+def test_a_declaration_outside_its_stated_interval_is_not_extrapolated() -> None:
+    """A contract has an end date and the rate after it is not this rate.
+
+    Same treatment as a vendor entry outside its interval: refuse rather than
+    reach for the nearest, because the direction of the error is unknowable.
+    """
+    expired = OperatorPriceBook([_declared(
+        tiers=_TWO_COLUMNS, declared_on="2026-01-01",
+        effective_until="2026-06-30")])
+
+    with pytest.raises(MissingPriceError, match="no price in force"):
+        price_usd(provider="openai", model="gpt-5-mini", input_tokens=1,
+                  output_tokens=1, as_of=DAY, operator_prices=expired)
+
+
+# ---------------------------------------------------------------------------
+# OD-27 limb ④ — the startup preflight.
+
+
+def test_an_unpriceable_model_is_refused_at_startup_not_at_its_first_call() -> None:
+    """FR-058's treatment: absence makes startup fail loudly.
+
+    Without this the deployment starts, accepts a session, builds a request,
+    calls the provider — and refuses *after* the money for that call is
+    spent.
+    """
+    with pytest.raises(MissingPriceError):
+        require_priceable(provider="openai", model="gpt-5-mini", as_of=DAY)
+
+
+def test_the_preflight_catches_a_declaration_written_against_the_wrong_address() -> None:
+    """The failure nothing at construction can see.
+
+    An operator whose contract prices *"GPT-5 mini"* and who declares that
+    string as the identifier has a well-formed book matching no request this
+    runtime will make — unpriced *while looking configured*, the worst of the
+    three states. What sees it is asking at startup whether the model in
+    force is priced.
+    """
+    mis_addressed = OperatorPriceBook([_declared(
+        model="GPT-5 mini", display_name="GPT-5 mini", tiers=_TWO_COLUMNS)])
+
+    with pytest.raises(MissingPriceError):
+        require_priceable(provider="openai", model="gpt-5-mini", as_of=DAY,
+                          operator_prices=mis_addressed)
+    # And the same book is fine for the address it was actually written for,
+    # so the arm above is about the mismatch rather than about the book.
+    require_priceable(provider="openai", model="GPT-5 mini", as_of=DAY,
+                      operator_prices=mis_addressed)
+
+
+def test_the_startup_line_names_the_provenance_and_the_rate() -> None:
+    """What the operator reads before a session runs.
+
+    It matters most for a declared zero: a rate that disables the spend
+    dimension is a thing to read up front, not to infer afterwards from a
+    total that never moved.
+    """
+    free = OperatorPriceBook([_declared(
+        provider="google", model="gemini-4-internal",
+        display_name="Gemini 4 (internal allocation)",
+        tiers=(Rate(0.0, 0.0),))])
+
+    line = require_priceable(provider="google", model="gemini-4-internal",
+                             as_of=DAY, operator_prices=free)
+
+    assert costs.PROVENANCE_OPERATOR in line
+    assert "platform-eng@example.invalid" in line
+    assert "$0.0/MTok in" in line
+
+
+def test_the_startup_line_for_a_sourced_rate_points_at_the_page_and_the_day() -> None:
+    """The comparison arm. A line that said `operator` for everything would
+    satisfy the one above."""
+    line = require_priceable(provider="anthropic", model="claude-opus-5",
+                             as_of=DAY)
+
+    assert PROVENANCE_VENDOR in line
+    assert costs.ANTHROPIC_PRICING in line
+    assert costs.READ_ON in line

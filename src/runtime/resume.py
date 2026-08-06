@@ -47,6 +47,7 @@ from src.runtime.journal import (
     TurnJournal,
     tool_step_index,
 )
+from src.runtime.providers.costs import PROVENANCE_OPERATOR, PROVENANCE_VENDOR
 from src.runtime.turn import ModelResponse, TurnRecord
 
 
@@ -77,10 +78,32 @@ class ResumeError(RuntimeError):
 #: where a figure should have been. Reading it forward as *priced at zero*
 #: would restore, on the resume path, precisely the silent zero this seam was
 #: built to remove. See `_decode_model_outcome`.
-MODEL_OUTCOME_SCHEMA = 2
+#:
+#: **Revision 3 adds `spend_provenance` (OD-27).** A revision-2 payload has a
+#: spend and no provenance, and the reading for it is not an inference: the
+#: operator-declared path did not exist when revision 2 was written, so every
+#: revision-2 spend was computed from `costs.PRICES` and is vendor-provenanced
+#: **by construction**. That is a stronger claim than the one revision 1 gets,
+#: and the difference is worth keeping visible. At revision 1 the field existed
+#: and held a default nothing computed, so reading it forward would have
+#: invented a price; at revision 2 the *mechanism* that could have produced the
+#: other value did not exist, so reading it forward invents nothing.
+MODEL_OUTCOME_SCHEMA = 3
+
+#: The revision at which a spend was necessarily vendor-derived, because no
+#: other kind of rate could reach the journal.
+VENDOR_ONLY_MODEL_OUTCOME_SCHEMA = 2
 
 #: The revision a payload with no `schema` key was written at.
 LEGACY_MODEL_OUTCOME_SCHEMA = 1
+
+#: Every revision this build reads. Enumerated rather than a range, because a
+#: range accepts a revision nobody wrote a decoder branch for.
+READABLE_MODEL_OUTCOME_SCHEMAS: frozenset[int] = frozenset({
+    LEGACY_MODEL_OUTCOME_SCHEMA,
+    VENDOR_ONLY_MODEL_OUTCOME_SCHEMA,
+    MODEL_OUTCOME_SCHEMA,
+})
 
 
 def encode_model_outcome(response: ModelResponse) -> dict[str, Any]:
@@ -104,6 +127,7 @@ def encode_model_outcome(response: ModelResponse) -> dict[str, Any]:
         "text": response.text,
         "spend_usd": (None if response.spend_usd is None
                       else float(response.spend_usd)),
+        "spend_provenance": response.spend_provenance,
         "tokens": int(response.tokens),
         "input_tokens": (None if response.input_tokens is None
                          else int(response.input_tokens)),
@@ -174,6 +198,18 @@ def _decode_model_outcome(step: JournalStep) -> ModelResponse:
     names the turns so a caller reads the fact rather than inferring it from a
     figure that looks like money.
 
+    **Revision 2's missing provenance is filled in, and revision 1's missing
+    price is not, and the asymmetry is the whole point.** OD-27 added
+    `spend_provenance` at revision 3. A revision-2 payload carries a spend and
+    no provenance, and it is reconstructed as **vendor**-provenanced — not as
+    a guess, but because the operator-declared path did not exist when any
+    revision-2 payload was written, so `costs.PRICES` is the only thing that
+    could have produced the figure. Contrast revision 1, where the field
+    *existed* and held a default nothing computed: reading that forward would
+    invent a price, and reading revision 2's provenance forward invents
+    nothing. A version gate is only sound where the older revision's silence
+    has exactly one reading, and these two revisions differ in whether it does.
+
     A payload from a **later** revision is refused. Reading unknown-future
     fields is guessing at a format this code has never seen, and the direction
     of the error is unknowable.
@@ -183,11 +219,11 @@ def _decode_model_outcome(step: JournalStep) -> ModelResponse:
         raise ResumeError(
             f"turn {step.turn_index}'s model call has no committed outcome")
     schema = payload.get("schema", LEGACY_MODEL_OUTCOME_SCHEMA)
-    if schema not in (LEGACY_MODEL_OUTCOME_SCHEMA, MODEL_OUTCOME_SCHEMA):
+    if schema not in READABLE_MODEL_OUTCOME_SCHEMAS:
         raise ResumeError(
             f"turn {step.turn_index}'s model outcome declares schema "
             f"{schema!r}; this build reads "
-            f"{LEGACY_MODEL_OUTCOME_SCHEMA} and {MODEL_OUTCOME_SCHEMA}. A "
+            f"{sorted(READABLE_MODEL_OUTCOME_SCHEMAS)}. A "
             "payload from a later revision is refused rather than read for the "
             "fields that happen to be recognisable — that is the rebuild-from-"
             "what-the-adapter-recognised defect finding 016 exists to catch, "
@@ -208,6 +244,7 @@ def _decode_model_outcome(step: JournalStep) -> ModelResponse:
             # The recorded `spend_usd` is deliberately **not** read. See the
             # docstring: at revision 1 it is the old default and not a price.
             model, spend, inputs, outputs = "", None, None, None
+            provenance = None
         else:
             model = str(payload["model"])
             raw_spend = payload["spend_usd"]
@@ -216,6 +253,17 @@ def _decode_model_outcome(step: JournalStep) -> ModelResponse:
             spend = None if raw_spend is None else float(raw_spend)
             inputs = None if raw_in is None else int(raw_in)
             outputs = None if raw_out is None else int(raw_out)
+            # Revision 2 wrote no provenance and could only have written a
+            # vendor one. `.get` rather than `[...]` for that revision alone,
+            # and the value substituted is a fact about what code existed —
+            # not a default standing in for a figure nobody computed, which is
+            # the case one revision below and is handled the opposite way.
+            raw_provenance = payload.get("spend_provenance")
+            if raw_provenance is None and spend is not None:
+                provenance = PROVENANCE_VENDOR
+            else:
+                provenance = (None if raw_provenance is None
+                              else str(raw_provenance))
         # **One construction, not one per revision.** Two would be two sites for
         # every field they share — including `provider_state`, whose single
         # occurrence a T056 removal proof matches on — and two places for a
@@ -227,6 +275,7 @@ def _decode_model_outcome(step: JournalStep) -> ModelResponse:
             tool_calls=tuple(sorted(calls, key=lambda c: c.index)),
             model=model,
             spend_usd=spend,
+            spend_provenance=provenance,
             tokens=int(payload["tokens"]),
             input_tokens=inputs,
             output_tokens=outputs,
@@ -314,6 +363,18 @@ class ResumePlan:
     are not missing from the spend total. What is missing is the *reconstruction's*
     copy of it, and a caller that reads a figure off a reconstructed response
     needs to be told which ones are not figures.
+
+    **`operator_priced_turns` is the same disclosure for OD-27's second
+    provenance, and it is here rather than only in the payload for the reason
+    `unpriced_turns` is.** `TurnRecord` carries no spend, so a provenance
+    decoded and not disclosed would be a field this module reads and no caller
+    can see — which is the write-only shape a removal proof cannot tell from a
+    field nothing reads. What a resuming caller has to be able to ask is
+    *"is any part of this session's recorded total an operator's declaration
+    rather than a published rate?"*, and the answer has to survive the process
+    that computed it. Named as the positive set — the turns that **are**
+    operator-priced — because the complement is the reading that goes wrong on
+    a provenance nobody has added yet.
     """
 
     session_id: str
@@ -322,10 +383,15 @@ class ResumePlan:
     next_turn_index: int
     abandoned: tuple[int, ...]
     unpriced_turns: tuple[int, ...] = ()
+    operator_priced_turns: tuple[int, ...] = ()
 
     @property
     def has_unpriced_spend(self) -> bool:
         return bool(self.unpriced_turns)
+
+    @property
+    def has_operator_declared_spend(self) -> bool:
+        return bool(self.operator_priced_turns)
 
     @property
     def is_fresh(self) -> bool:
@@ -358,6 +424,7 @@ def plan_resume(journal: TurnJournal, session_id: str) -> ResumePlan:
     records: list[TurnRecord] = []
     abandoned: list[int] = []
     unpriced: list[int] = []
+    operator_priced: list[int] = []
     unfinished: UnfinishedTurn | None = None
 
     for turn_index in sorted(by_turn):
@@ -380,6 +447,8 @@ def plan_resume(journal: TurnJournal, session_id: str) -> ResumePlan:
         response = _decode_model_outcome(model)
         if not response.is_priced:
             unpriced.append(turn_index)
+        elif response.spend_provenance == PROVENANCE_OPERATOR:
+            operator_priced.append(turn_index)
         completed: list[ToolResult] = []
         pending: list[ToolCall] = []
         for call in response.tool_calls:
@@ -437,4 +506,5 @@ def plan_resume(journal: TurnJournal, session_id: str) -> ResumePlan:
         next_turn_index=journal.next_turn_index(session_id),
         abandoned=tuple(abandoned),
         unpriced_turns=tuple(unpriced),
+        operator_priced_turns=tuple(operator_priced),
     )

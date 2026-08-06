@@ -180,6 +180,16 @@ _CEILING_KEYS: tuple[Key, ...] = tuple(
     key for key in SUPERVISOR_KEYS if key.name.startswith("SESSION_CEILING_")
 )
 
+_NO_DEFAULT_OPERATOR_PRICES = (
+    "OD-27 states no default, on FR-058's treatment rather than FR-047's. The "
+    "distinction this key exists to hold open is between *nobody was asked* "
+    "and *the operator declares nothing*, and an optional key collapses them: "
+    "an unset key would be the state of a deployment that never heard of the "
+    "mechanism and of one that considered it and declined, which are the same "
+    "two readings `spend_usd: float | None` separates one layer down. Set it "
+    "to a declaration file, or to the literal 'none' to declare nothing."
+)
+
 _NO_DEFAULT_RESULT_BOUND = (
     "FR-058 states the bound is required configuration and states no default. "
     "An unset per-result bound is not a number nobody measured; it is the "
@@ -208,6 +218,14 @@ RUNTIME_KEYS: tuple[Key, ...] = (
         "at. Without it the reference relocates an unbounded liability from "
         "the transcript onto a disk nothing bounds",
         no_default_reason=_NO_DEFAULT_RESULT_BOUND),
+    # OD-27 — no default, and 'none' is a value rather than an absence.
+    Key("MODEL_PRICES_OPERATOR", Kind.STR, "FR-005",
+        "the operator's own declared rates, for models no vendor page in "
+        "`costs.PRICES` prices. A path to a declaration file, or the literal "
+        "'none'. Nothing is filled in from it that the operator did not "
+        "write, and a model neither this key nor the table prices fails at "
+        "startup rather than at its first call",
+        no_default_reason=_NO_DEFAULT_OPERATOR_PRICES),
     Key("F2A_STATE_DIR", Kind.PATH, "FR-033",
         "directory holding the runtime's own store — the journal, the ledger "
         "and the ceilings. Outside the session's mount namespace"),

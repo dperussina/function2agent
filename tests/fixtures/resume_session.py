@@ -80,6 +80,7 @@ from src.runtime.dispatch import ToolCall  # noqa: E402
 from src.runtime.journal import TurnJournal, tool_step_index  # noqa: E402
 from src.runtime.ledger import BudgetLedger, ReservationPolicy  # noqa: E402
 from src.runtime.loop import AgentLoop, ModelResponse  # noqa: E402
+from src.runtime.providers.costs import PROVENANCE_OPERATOR  # noqa: E402
 from src.runtime.result_bound import ResultBound, RetentionStore  # noqa: E402
 from src.runtime.session_state import SessionStateMachine  # noqa: E402
 from src.runtime.session_store import Ceilings, SessionStore  # noqa: E402
@@ -95,6 +96,12 @@ LEASE = 2_000_000_000.0
 # without asking the child. Deliberately not round in binary: a figure like 0.5
 # would make a lost accrual and a halved one produce the same total.
 SPEND_PER_TURN = 0.03
+# OD-27 requires a spend figure to say where its rate came from, and this one
+# came from the line above rather than from any vendor's page — which is a
+# declaration, and is the state `PROVENANCE_OPERATOR` names. Writing `vendor`
+# would be this fixture claiming a source it does not have, in the one field
+# that exists to tell those apart.
+SPEND_PROVENANCE = PROVENANCE_OPERATOR
 TOKENS_PER_TURN = 7
 RESERVE_SPEND = 0.01
 RESERVE_TOKENS = 3
@@ -311,14 +318,16 @@ class Child:
             return ModelResponse(
                 provider="fixture", provider_state=state_for(turn),
                 text=f"done after {turn + 1} turns", tool_calls=(),
-                spend_usd=SPEND_PER_TURN, tokens=TOKENS_PER_TURN)
+                spend_usd=SPEND_PER_TURN, spend_provenance=SPEND_PROVENANCE,
+                tokens=TOKENS_PER_TURN)
         return ModelResponse(
             provider="fixture", provider_state=state_for(turn), text="",
             tool_calls=tuple(
                 ToolCall(index=i, call_id=f"t{turn}c{i}", name=f"tool-{i}")
                 for i in range(self.tools)
             ),
-            spend_usd=SPEND_PER_TURN, tokens=TOKENS_PER_TURN)
+            spend_usd=SPEND_PER_TURN, spend_provenance=SPEND_PROVENANCE,
+            tokens=TOKENS_PER_TURN)
 
     def execute(self, call: ToolCall) -> str:
         self._tick()

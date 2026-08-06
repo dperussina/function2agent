@@ -25,6 +25,14 @@ from dataclasses import dataclass
 from typing import Any
 
 from src.runtime.dispatch import ToolCall, ToolResult
+# The provenance vocabulary has one owner, and it is the module that decides a
+# rate's provenance rather than the one that records it. A second copy here
+# would be two definitions of one closed set, which is the drift `OD-26` had to
+# adjudicate between a diagram and a taxonomy — cheaper to not create than to
+# reconcile. The import is a leaf: `costs` reaches `providers.base` and
+# `dispatch`, and nothing under `providers/` imports this module except
+# `adapter.py`, which the package's `__init__` does not load.
+from src.runtime.providers.costs import PROVENANCES
 
 
 class LoopError(RuntimeError):
@@ -79,6 +87,21 @@ class ModelResponse:
     `input_tokens` and `output_tokens` are the split pricing needs, and they
     are present-or-absent **together**. A half-split reads like a whole one and
     prices at whichever half survived.
+
+    **`spend_provenance` says whether the figure beside it came from a vendor's
+    published page or from an operator's declaration (OD-27), and it is
+    present-or-absent together with `spend_usd`.** The pairing is the point.
+    The argument already written a few lines down for carrying `model` on the
+    trace span is the whole argument for this field too: *a span carrying a
+    spend figure and no model identifier records a number nobody can check,
+    because the rate it was computed at is keyed on `(provider, model)`.* A
+    rate an operator declared is not keyed on anything a later reader can
+    reach — the row it came from is not in this repository — so a figure
+    recorded without its provenance is unreproducible in exactly the way
+    FR-038 forbids, and it is unreproducible *silently*, because it looks
+    identical to a sourced one. Letting the two fields come apart would put a
+    number that reads as authoritative next to nothing saying otherwise, which
+    is the `0.0` defect one field over.
     """
 
     provider: str
@@ -87,6 +110,7 @@ class ModelResponse:
     tool_calls: tuple[ToolCall, ...] = ()
     model: str = ""
     spend_usd: float | None = None
+    spend_provenance: str | None = None
     tokens: int = 0
     input_tokens: int | None = None
     output_tokens: int | None = None
@@ -115,6 +139,21 @@ class ModelResponse:
                     f"spend_usd is {self.spend_usd}. A negative spend lowers "
                     "a running total, which is a ceiling walked back under."
                 )
+        if (self.spend_usd is None) != (self.spend_provenance is None):
+            raise LoopError(
+                f"spend_usd is {self.spend_usd!r} and spend_provenance is "
+                f"{self.spend_provenance!r}. Both or neither: a figure with "
+                "no provenance is a number a later reader cannot check and "
+                "cannot tell from a sourced one, and a provenance with no "
+                "figure describes a price that was never computed."
+            )
+        if (self.spend_provenance is not None
+                and self.spend_provenance not in PROVENANCES):
+            raise LoopError(
+                f"spend_provenance is {self.spend_provenance!r}; the declared "
+                f"values are {sorted(PROVENANCES)}. An undeclared one would "
+                "be carried into a record nothing downstream can interpret."
+            )
         halves = (self.input_tokens, self.output_tokens)
         if (self.input_tokens is None) != (self.output_tokens is None):
             raise LoopError(

@@ -36,6 +36,7 @@ import pytest
 
 import tests.unit.test_loop as loop_fixtures
 from src.runtime import budget_backstop
+from src.runtime.providers.costs import PROVENANCE_OPERATOR
 from src.runtime.budget_backstop import (
     MAX_MODEL_CALLS,
     BackstopError,
@@ -412,6 +413,7 @@ def _runaway_loop(harness, *, backstop, guard_at: int = _STUB_GUARD):
         # every configured ceiling is out of reach.
         return ModelResponse(
             provider="test", provider_state=b"s", text="more", spend_usd=0.0,
+            spend_provenance=PROVENANCE_OPERATOR,
             tool_calls=(ToolCall(call_id=f"c{asked['n']}", name="t",
                                  arguments={}, index=0),))
 

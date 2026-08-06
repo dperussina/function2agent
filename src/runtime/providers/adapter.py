@@ -46,6 +46,18 @@ records why neither model `wire_openai` branches on has a rate that could be
 cited. `price_usd` therefore raises `MissingPriceError` for that provider, this
 module does not catch it, and an OpenAI session stops rather than running with
 an unenforceable spend ceiling. That is T063 working, not a defect here.
+
+**OD-27 gives that provider a second route and this module carries the
+difference through rather than flattening it.** An operator may declare a rate
+for a model nothing here prices, and `operator_prices` is how one reaches this
+seam. What must not happen is the two arriving at `ModelResponse` looking
+alike: a figure computed from a vendor's published page is reproducible from
+`(provider, model, date)` and a figure computed from a declaration is not,
+because the row it came from is not in this repository. So `price_usd` returns
+the provenance beside the number and this module writes both onto the response.
+The book defaults to empty, which refuses rather than prices — the default that
+would be dangerous is one that produces a figure, and this one produces
+`MissingPriceError`.
 """
 
 from __future__ import annotations
@@ -62,7 +74,11 @@ class AdapterError(ProviderError):
 
 
 def model_response(
-    parsed: ParsedTurn, *, model: str, as_of: dt.date
+    parsed: ParsedTurn,
+    *,
+    model: str,
+    as_of: dt.date,
+    operator_prices: costs.OperatorPriceBook = costs.NO_OPERATOR_PRICES,
 ) -> ModelResponse:
     """Carry one parsed provider turn up to the loop, priced.
 
@@ -99,11 +115,18 @@ def model_response(
     inputs = parsed.input_tokens
     outputs = parsed.output_tokens
     if parsed.cost_usd is not None:
+        # The vendor's own billing figure. Its provenance is the vendor's, and
+        # emphatically not the operator's: nothing an operator declared was
+        # consulted to produce it.
         spend = float(parsed.cost_usd)
+        provenance = costs.PROVENANCE_VENDOR
     else:
-        spend = costs.price_usd(
+        priced = costs.price_usd(
             provider=parsed.provider, model=model,
-            input_tokens=inputs, output_tokens=outputs, as_of=as_of)
+            input_tokens=inputs, output_tokens=outputs, as_of=as_of,
+            operator_prices=operator_prices)
+        spend = priced.usd
+        provenance = priced.provenance
     return ModelResponse(
         provider=parsed.provider,
         provider_state=parsed.provider_state,
@@ -111,6 +134,7 @@ def model_response(
         tool_calls=parsed.tool_calls,
         model=model,
         spend_usd=spend,
+        spend_provenance=provenance,
         tokens=inputs + outputs,
         input_tokens=inputs,
         output_tokens=outputs,

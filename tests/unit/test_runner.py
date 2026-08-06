@@ -20,6 +20,7 @@ import pytest
 from src.contracts import terminal
 from src.contracts.repository import Repository
 from src.runtime.loop import ModelResponse
+from src.runtime.providers.costs import PROVENANCE_OPERATOR
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.runner import Runner, RunnerError
 from src.runtime.session_state import SessionStateMachine
@@ -94,10 +95,13 @@ def _clock():
 # `spend_usd=0.0` is stated rather than left to default here and below. The
 # default is `None` — nothing priced this turn — and the loop refuses that
 # rather than accruing zero. A fake provider reaching no vendor costs nothing,
-# so zero is the measurement.
+# so zero is the measurement. Its provenance is `operator` (OD-27) for the same
+# reason: the zero came from this harness declaring it, not from a page, and
+# `vendor` would be a source claimed rather than held.
 def _finish(text: str = "done") -> ModelResponse:
     return ModelResponse(provider="test", provider_state=b"s", text=text,
-                         spend_usd=0.0)
+                         spend_usd=0.0,
+                         spend_provenance=PROVENANCE_OPERATOR)
 
 
 def _start(rig, **over):
@@ -179,7 +183,7 @@ def test_attach_resumes_an_interrupted_session_and_keeps_its_ceilings(
     def model(context):
         return ModelResponse(
             provider="test", provider_state=b"s", text="", spend_usd=0.0,
-            tool_calls=(_call(),))
+            spend_provenance=PROVENANCE_OPERATOR, tool_calls=(_call(),))
 
     first = _start(rig, ceilings=Ceilings(
         spend_usd=100.0, tokens=1_000_000, wall_clock_seconds=10_000.0,
@@ -229,7 +233,9 @@ def test_turn_indexes_continue_across_attempts(tmp_path) -> None:
 
     def model(context):
         return ModelResponse(provider="test", provider_state=b"s", text="",
-                             spend_usd=0.0, tool_calls=(_call(),))
+                             spend_usd=0.0,
+                             spend_provenance=PROVENANCE_OPERATOR,
+                             tool_calls=(_call(),))
 
     first = _start(rig, model=model, max_turns_this_attempt=2)
     assert [t.turn_index for t in first.turns] == [0, 1]
@@ -357,7 +363,8 @@ def test_a_failed_teardown_with_nothing_in_flight_is_raised(tmp_path) -> None:
         _start(rig,
                model=lambda c: ModelResponse(
                    provider="test", provider_state=b"s", text="",
-                   spend_usd=0.0, tool_calls=(_call(),)),
+                   spend_usd=0.0, spend_provenance=PROVENANCE_OPERATOR,
+                   tool_calls=(_call(),)),
                max_turns_this_attempt=1)
     rig.close()
 
@@ -372,6 +379,7 @@ def test_a_ceiling_reached_run_is_torn_down_with_the_ceilings_state(
                           wall_clock_seconds=10_000.0, turns=2),
         model=lambda c: ModelResponse(provider="test", provider_state=b"s",
                                       text="", spend_usd=0.0,
+                                      spend_provenance=PROVENANCE_OPERATOR,
                                       tool_calls=(_call(),)))
 
     assert outcome.terminal_state == terminal.TURN_CEILING.name

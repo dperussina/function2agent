@@ -36,6 +36,7 @@ from src.runtime.loop import AgentLoop, LoopError, ModelResponse, TurnRecord
 from src.runtime.dispatch import ToolCall
 from src.runtime.providers.adapter import model_response
 from src.runtime.providers.base import ParsedTurn
+from src.runtime.providers.costs import PROVENANCE_OPERATOR
 from src.runtime.turn import UnpricedTurnError
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.session_state import SessionStateMachine
@@ -195,14 +196,24 @@ def _model(*turns):
 # the turn genuinely costs nothing and `0.0` is the measurement rather than a
 # stand-in for a figure nobody computed. A test that wants a spend states one,
 # as `test_the_reconciled_spend_...` below does.
+#
+# **And why the provenance beside it is `operator` and not `vendor`.** OD-27
+# requires a spend to say where its rate came from, and these zeros came from
+# no vendor page — there is no page for `provider="test"`. They came from this
+# harness deciding what a fake call costs, which is a declaration and is the
+# state `PROVENANCE_OPERATOR` names. Writing `vendor` here would be the fake
+# claiming a source it does not have, in the one field that exists to tell
+# those apart.
 def _finish(text: str = "done", **kw) -> ModelResponse:
     kw.setdefault("spend_usd", 0.0)
+    kw.setdefault("spend_provenance", PROVENANCE_OPERATOR)
     return ModelResponse(provider="test", provider_state=b"state", text=text,
                          tool_calls=(), **kw)
 
 
 def _asks(*names, state: bytes = b"state", **kw) -> ModelResponse:
     kw.setdefault("spend_usd", 0.0)
+    kw.setdefault("spend_provenance", PROVENANCE_OPERATOR)
     return ModelResponse(
         provider="test", provider_state=state, text="", tool_calls=tuple(
             ToolCall(index=i, call_id=f"c{i}", name=name)

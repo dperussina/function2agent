@@ -1616,7 +1616,7 @@ proof "T065 default — a loop constructed without a backstop gets none" \
 proof "T063 pricing seam — the adapter invents a price instead of reading the table" \
   src/runtime/providers/adapter.py \
   "tests/unit/test_provider_adapter.py::test_a_parsed_turn_arrives_priced_from_the_vendors_own_rates" \
-  's = s.replace("        spend = costs.price_usd(\n            provider=parsed.provider, model=model,\n            input_tokens=inputs, output_tokens=outputs, as_of=as_of)", "        spend = 0.0")'
+  's = s.replace("        priced = costs.price_usd(\n            provider=parsed.provider, model=model,\n            input_tokens=inputs, output_tokens=outputs, as_of=as_of,\n            operator_prices=operator_prices)\n        spend = priced.usd\n        provenance = priced.provenance", "        spend = 0.0\n        provenance = costs.PROVENANCE_VENDOR")'
 
 # The refusal that makes `spend_usd = None` mean something. Without it `None`
 # is just a default nobody set, and the tamper is exactly the coercion the
@@ -1656,7 +1656,7 @@ proof "T062 journal migration — a pre-pricing turn resumes at its recorded zer
 proof "T062 schema gate — a later revision's payload is read for what it recognises" \
   src/runtime/resume.py \
   "tests/unit/test_resume.py::test_a_payload_from_a_later_revision_is_refused_not_partially_read" \
-  's = s.replace("    if schema not in (LEGACY_MODEL_OUTCOME_SCHEMA, MODEL_OUTCOME_SCHEMA):", "    if False:")'
+  's = s.replace("    if schema not in READABLE_MODEL_OUTCOME_SCHEMAS:", "    if False:")'
 
 # ---------------------------------------------------------------------------
 # The suite's own harness.

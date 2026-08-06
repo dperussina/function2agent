@@ -39,6 +39,7 @@ from src.contracts.repository import Repository
 from src.contracts.transition import ST_OPERATOR_TERMINATED
 from src.runtime.dispatch import ToolCall
 from src.runtime.loop import ModelResponse
+from src.runtime.providers.costs import PROVENANCE_OPERATOR
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.runner import CancelToken, Runner, RunnerError
 from src.runtime.session_state import SessionStateError, SessionStateMachine
@@ -122,16 +123,20 @@ def _clock():
 # `spend_usd=0.0` is stated rather than left to default. The default is `None`,
 # meaning nothing priced the turn, and the loop refuses that rather than
 # accruing zero; a fake provider that reaches no vendor genuinely costs nothing,
-# which is a measurement and not a stand-in.
+# which is a measurement and not a stand-in. `spend_provenance` is `operator`
+# (OD-27) because the zero is this harness's declaration and there is no vendor
+# page behind it.
 def _asks(name: str = "t") -> ModelResponse:
     return ModelResponse(provider="test", provider_state=b"state", text="",
                          spend_usd=0.0,
+                         spend_provenance=PROVENANCE_OPERATOR,
                          tool_calls=(ToolCall(index=0, call_id="c0", name=name),))
 
 
 def _finish() -> ModelResponse:
     return ModelResponse(provider="test", provider_state=b"state", text="done",
-                         spend_usd=0.0)
+                         spend_usd=0.0,
+                         spend_provenance=PROVENANCE_OPERATOR)
 
 
 def _start(rig: Rig, model, execute, token: CancelToken | None = None):

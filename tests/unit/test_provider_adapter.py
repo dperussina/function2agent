@@ -205,7 +205,8 @@ def test_an_unpriced_response_refuses_to_produce_a_spend_figure() -> None:
 def test_a_priced_zero_is_a_figure_and_not_an_absence() -> None:
     """The distinction the whole `float | None` type exists to carry."""
     response = ModelResponse(provider="anthropic", provider_state=None, text="",
-                             spend_usd=0.0)
+                             spend_usd=0.0,
+                             spend_provenance=costs.PROVENANCE_VENDOR)
 
     assert response.is_priced is True
     assert response.require_spend_usd() == 0.0
@@ -226,7 +227,115 @@ def test_a_split_that_disagrees_with_the_total_is_refused() -> None:
 def test_a_negative_spend_is_refused() -> None:
     with pytest.raises(LoopError, match="walked back under"):
         ModelResponse(provider="anthropic", provider_state=None, text="",
-                      spend_usd=-0.01)
+                      spend_usd=-0.01,
+                      spend_provenance=costs.PROVENANCE_VENDOR)
+
+
+# ---------------------------------------------------------------------------
+# OD-27 — the provenance the seam carries, and the record it lands on.
+
+
+#: An operator's own rate for the model this repository refuses to price, in
+#: the shape OD-27 requires of that provider: both context columns and the
+#: threshold between them.
+_OPENAI_DECLARED = costs.OperatorPriceBook([costs.OperatorPrice(
+    provider="openai", model="gpt-5-mini", display_name="GPT-5 mini",
+    tiers=(costs.Rate(0.25, 2.00),
+           costs.Rate(0.50, 4.00, min_input_tokens=128_000)),
+    declared_by="platform-eng@example.invalid",
+    declaration_ref="contracts/openai-2026-q3.md",
+    declared_on="2026-08-01",
+    scope="standard synchronous tier, uncached input, text",
+)])
+
+
+def test_a_declaration_reaches_the_seam_and_the_response_says_it_was_one() -> None:
+    """OD-27's whole point, end to end.
+
+    Before it, this provider's session could not run at all. After it, the
+    session runs *and* the record says the figure came from a declaration —
+    the second half being what stops a declared total reading as a sourced
+    one months later, when the reader who has to check it goes looking for
+    the row in `costs.PRICES` and does not find it.
+    """
+    response = model_response(
+        _parsed("openai", inputs=1_000_000, outputs=0),
+        model="gpt-5-mini", as_of=TODAY, operator_prices=_OPENAI_DECLARED)
+
+    # A million prompt tokens is past the threshold the declaration states, so
+    # this is the long-context column — the one a single-rate declaration
+    # would have under-charged by half.
+    assert response.spend_usd == pytest.approx(0.50)
+    assert response.spend_provenance == costs.PROVENANCE_OPERATOR
+
+
+def test_a_turn_priced_from_the_table_says_vendor_on_the_same_field() -> None:
+    """The comparison arm. A seam hardcoding `operator` would satisfy the one
+    above, and a seam hardcoding `vendor` would satisfy this one; only the two
+    together say the field is carrying the lookup's answer."""
+    response = model_response(
+        _parsed("anthropic", inputs=1_000_000, outputs=0),
+        model="claude-opus-5", as_of=TODAY,
+        operator_prices=_OPENAI_DECLARED)
+
+    assert response.spend_provenance == costs.PROVENANCE_VENDOR
+
+
+def test_a_provider_reported_cost_is_the_vendors_and_not_the_operators() -> None:
+    """The branch that does not consult the table at all.
+
+    A vendor's server-side billing figure is the vendor's provenance even on a
+    call where an operator declared a rate — nothing the operator wrote was
+    read to produce it, and marking it `operator` would attribute a figure to
+    somebody who did not supply it.
+    """
+    response = model_response(
+        _parsed("openai", inputs=10, outputs=10, cost_usd=0.25),
+        model="gpt-5-mini", as_of=TODAY, operator_prices=_OPENAI_DECLARED)
+
+    assert response.spend_usd == pytest.approx(0.25)
+    assert response.spend_provenance == costs.PROVENANCE_VENDOR
+
+
+def test_the_seam_still_fails_closed_for_a_model_nobody_declared() -> None:
+    """OD-27 is not a relaxation of T063: the book is an enumerated addition
+    to the accepting set and everything outside it still refuses."""
+    with pytest.raises(costs.MissingPriceError):
+        model_response(_parsed("openai", inputs=10, outputs=10),
+                       model="gpt-5-nano", as_of=TODAY,
+                       operator_prices=_OPENAI_DECLARED)
+
+
+def test_a_spend_figure_without_a_provenance_is_refused() -> None:
+    """Present-or-absent together, on the record type itself.
+
+    A figure with nothing beside it saying where its rate came from is a
+    number a later reader cannot check and cannot tell from a sourced one.
+    That is the `0.0` defect this type already closed, one field over.
+    """
+    with pytest.raises(LoopError, match="Both or neither"):
+        ModelResponse(provider="anthropic", provider_state=None, text="",
+                      spend_usd=1.0)
+
+
+def test_a_provenance_without_a_figure_is_refused() -> None:
+    """The other half, which is not the same mistake: it describes a price
+    that was never computed."""
+    with pytest.raises(LoopError, match="Both or neither"):
+        ModelResponse(provider="anthropic", provider_state=None, text="",
+                      spend_provenance=costs.PROVENANCE_VENDOR)
+
+
+def test_an_undeclared_provenance_is_refused_rather_than_carried() -> None:
+    """The vocabulary is closed and has one owner.
+
+    A free string would be carried into a span and a journal payload that
+    nothing downstream can interpret, and it would be carried *silently* —
+    the reader who has to interpret it is not the author who wrote it.
+    """
+    with pytest.raises(LoopError, match="declared values are"):
+        ModelResponse(provider="anthropic", provider_state=None, text="",
+                      spend_usd=1.0, spend_provenance="contract")
 
 
 # ---------------------------------------------------------------------------

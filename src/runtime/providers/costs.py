@@ -71,11 +71,33 @@ this file. *(The `4.0` in
 is a vendored constant describing a third party's configuration, not ours, and
 is not a source for anything here.)*
 
+**Two provenances, and they are two types rather than one type with a flag.**
+`PriceEntry` is a rate read off a vendor's page. `OperatorPrice` is a rate an
+operator declares under **OD-27**, for a model no vendor page priced here. They
+share the band arithmetic and share nothing else, because the whole point is
+that a spend figure derived from a declaration must not be confusable with one
+derived from a published rate. A discriminant field on one type is confusable by
+any caller that forgets to read it; two types carry the distinction to every call
+site. `price_usd` therefore returns `PricedSpend` — the figure *and* where the
+rate came from — and reaching the bare number is `.usd`, an explicit act in the
+shape `Config.raw()` already establishes for FR-043's markings.
+
+**What an operator may declare, and the one thing they may not.** See
+`OperatorPrice`. The refusal that matters is the context-tiered one: OpenAI's
+page prices in a *"Short context"* and a *"Long context"* column and states no
+boundary, so a single rate for one of those models is the invented boundary
+wearing the operator's name — which is worse than today's refusal, because it
+looks authorised. `CONTEXT_TIERED_WITHOUT_THRESHOLD` is the enumerated list and
+`OperatorPrice` refuses a single band for anything on it.
+
 **What this does not do, and must not be read as doing.**
 [`research/14`](../../../research/14-architecture-synthesis.md) §5.1 records
 **U-30** as still open on whether an in-process budget channel can be trusted at
 all. This module is in-process. It closes nothing of U-30: a correct conversion
-rate on an untrusted channel is a correct rate on an untrusted channel.
+rate on an untrusted channel is a correct rate on an untrusted channel. An
+operator-declared rate does not close it either and is not offered as doing so:
+it moves who is accountable for the number, not whether the channel carrying it
+can be trusted.
 """
 
 from __future__ import annotations
@@ -99,6 +121,32 @@ class MissingPriceError(CostTableError):
     *priced at zero*. Those are the two readings an untyped failure collapses,
     and the second is the one that makes a spend ceiling unenforceable.
     """
+
+
+class OperatorPriceError(CostTableError):
+    """OD-27 — an operator declaration that cannot be as described.
+
+    Distinct from `MissingPriceError` because the two land on different people.
+    A missing price is a gap in this table and its remedy is a sourced entry; a
+    refused declaration is a gap in what the *operator* supplied and its remedy
+    is a corrected declaration. Collapsing them would tell an operator who
+    declared half a rate card that the model is unpriced, which is true and
+    useless.
+    """
+
+
+# --------------------------------------------------------------------------
+# Provenance. Two values, and neither is a default anywhere: the provenance of
+# a rate is a property of the type that holds it, so there is no field for a
+# later entry to leave unset or set wrongly.
+
+#: Read off a vendor's published page, on a stated date. `PriceEntry`.
+PROVENANCE_VENDOR = "vendor"
+#: Declared by an operator under OD-27, against no published page.
+#: `OperatorPrice`.
+PROVENANCE_OPERATOR = "operator"
+
+PROVENANCES: frozenset[str] = frozenset({PROVENANCE_VENDOR, PROVENANCE_OPERATOR})
 
 
 # --------------------------------------------------------------------------
@@ -158,6 +206,30 @@ class Rate:
             )
 
 
+def _validate_bands(label: str, tiers: Sequence[Rate]) -> None:
+    """The band schedule's own shape, shared by both provenances.
+
+    Written once rather than twice because a vendor's bands and an operator's
+    bands are the same arithmetic — `tier_for` cannot tell them apart and must
+    not have to. What differs between the two is *which* declarations are
+    admitted at all, and that lives on the types.
+    """
+    if not tiers:
+        raise CostTableError(f"{label}: no rate bands")
+    floors = [tier.min_input_tokens for tier in tiers]
+    if floors[0] != 0:
+        raise CostTableError(
+            f"{label}: the lowest band starts at {floors[0]}, so a request "
+            "below that is priced by nothing"
+        )
+    if floors != sorted(set(floors)):
+        raise CostTableError(
+            f"{label}: bands {floors} are not in strictly ascending order, so "
+            "which one applies depends on the order they happen to be written "
+            "in"
+        )
+
+
 @dataclass(frozen=True)
 class PriceEntry:
     """One model's rate over one interval, with the addresses it came from.
@@ -209,21 +281,7 @@ class PriceEntry:
                 "cannot be checked against the page it came from."
             )
         dt.date.fromisoformat(self.retrieved)
-        if not self.tiers:
-            raise CostTableError(
-                f"{self.provider}/{self.model}: no rate bands")
-        floors = [tier.min_input_tokens for tier in self.tiers]
-        if floors[0] != 0:
-            raise CostTableError(
-                f"{self.provider}/{self.model}: the lowest band starts at "
-                f"{floors[0]}, so a request below that is priced by nothing"
-            )
-        if floors != sorted(set(floors)):
-            raise CostTableError(
-                f"{self.provider}/{self.model}: bands {floors} are not in "
-                "strictly ascending order, so which one applies depends on "
-                "the order they happen to be written in"
-            )
+        _validate_bands(f"{self.provider}/{self.model}", self.tiers)
         for name in ("effective_from", "effective_until"):
             value = getattr(self, name)
             if value is not None:
@@ -233,6 +291,21 @@ class PriceEntry:
                 f"{self.provider}/{self.model}: the interval "
                 f"{self.starts}..{self.ends} is empty"
             )
+
+    @property
+    def provenance(self) -> str:
+        """Always `PROVENANCE_VENDOR`, and a property rather than a field.
+
+        A field would be a place an operator entry could claim a vendor's
+        provenance, which is the one confusion this distinction exists to make
+        impossible. The provenance of a rate is which type holds it.
+        """
+        return PROVENANCE_VENDOR
+
+    @property
+    def attribution(self) -> str:
+        """Where a reader goes to check this rate. The page and the day."""
+        return f"{self.source} (read {self.retrieved})"
 
     @property
     def starts(self) -> dt.date:
@@ -417,6 +490,381 @@ UNPRICED: Mapping[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# OD-27 — the operator-declared path, and the three absences above measured
+# against it.
+#
+# The corpus forbids *invented* defaults, not *operator-declared* values.
+# **FR-058** is the precedent this follows in shape: required configuration
+# with no default, startup failing loudly when it is absent, and a
+# configuration outside what the requirement permits **refused rather than
+# clamped**. `ReservationPolicy` refuses an unset spend or token figure on the
+# same reasoning. What is added here is the third instance of that one pattern
+# and not a new one, which is what keeps it a decision rather than a loophole.
+
+
+#: Providers whose published rate card prices by context length in **two
+#: columns with no stated boundary between them**.
+#:
+#: **This is the list that makes the refusal executable rather than advisory.**
+#: An operator declaring a rate for one of these models must supply both
+#: columns and the threshold; a single rate is refused. The reasoning is
+#: `UNPRICED["openai"]`'s second ground, unchanged and now load-bearing in a
+#: second place: picking either column requires inventing the boundary, the
+#: cheap column under-charges, and under-charging is the direction that makes a
+#: ceiling **fail to fire** — the failure the spend ceiling exists to remove.
+#: Letting an operator supply one number here would recreate that defect with
+#: the operator's name on it, which is worse than the present refusal because
+#: it looks authorised.
+CONTEXT_TIERED_WITHOUT_THRESHOLD: Mapping[str, str] = {
+    "openai": (
+        f"{OPENAI_PRICING}, read {READ_ON}, prices this provider's models in "
+        "a 'Short context' and a 'Long context' column and states no "
+        "threshold between them. A declaration carrying one rate is a claim "
+        "that the boundary does not exist, which the vendor's own page "
+        "contradicts; a declaration carrying one rate *twice* is equally "
+        "consistent with having read the card and with having read one column "
+        "twice, and this module cannot tell those apart. Supply both columns "
+        "and the prompt-token threshold your own rate card states."
+    ),
+}
+
+
+#: `(provider, model)` pairs no declaration may address, and why each is
+#: refused rather than reached.
+#:
+#: **An alias is refused because the defect is the address, not the number.**
+#: An operator can supply the rate an alias is billed at today; nobody can
+#: supply the model it will name tomorrow. `UNPRICED["anthropic-aliases"]`
+#: quotes the vendor: an alias is *"a convenience pointer that resolves to a
+#: dated model ID"*, so a rate attached to one becomes a rate for whatever it
+#: resolves to next, silently and with no event this table could observe. The
+#: two-address property is what fails: the second address is not an address.
+#: The remedy is available and cheap, which is why this is a refusal rather
+#: than a hardship — declare against the dated identifier, which is stable, is
+#: what the request is actually made against, and is already priced here.
+REFUSED_ADDRESSES: Mapping[tuple[str, str], str] = {
+    ("anthropic", "claude-sonnet-4-5"): "alias for claude-sonnet-4-5-20250929",
+    ("anthropic", "claude-haiku-4-5"): "alias for claude-haiku-4-5-20251001",
+}
+
+
+#: Every key of `UNPRICED`, measured against this path: what a declaration can
+#: and cannot reach. **Stated for all three rather than for the one that
+#: changed**, because a reader who finds two of three answered will assume the
+#: third was overlooked.
+OPERATOR_REACH: Mapping[str, str] = {
+    "openai": (
+        "REACHABLE, conditionally. This is the absence that forced OD-27: "
+        "with the table wired to a running session, an OpenAI session fails "
+        "closed on spend and cannot run at all. A declaration is admitted — "
+        "and only with both context columns and the threshold between them, "
+        "per CONTEXT_TIERED_WITHOUT_THRESHOLD."
+    ),
+    "anthropic-aliases": (
+        "NOT REACHABLE, and enumerated in REFUSED_ADDRESSES so the refusal is "
+        "executed rather than described. The absence is an unstable address "
+        "and no rate fixes an address. Nothing is blocked by the refusal: the "
+        "dated identifier the alias resolves to is priced above."
+    ),
+    "xai-cost-in-usd-ticks": (
+        "OUT OF SCOPE by construction, which is neither reachable nor "
+        "refused, and the distinction is worth the word. That absence is a "
+        "missing *unit scale* — what one `cost_in_usd_ticks` tick is worth — "
+        "and this path declares USD per million tokens. There is nothing an "
+        "operator could type here that would engage it, so there is nothing "
+        "to refuse; and xAI's per-token rates are already sourced above, so "
+        "no session is blocked. A tick scale is owed a source, not a "
+        "declaration."
+    ),
+}
+
+
+@dataclass(frozen=True)
+class OperatorPrice:
+    """OD-27 — a rate an operator declares, for a model no page here priced.
+
+    **Why this is a separate type from `PriceEntry` and not a flag on it.** A
+    spend figure derived from a declaration has to stay distinguishable from
+    one derived from a published rate, at the point where somebody decides
+    whether to trust the total. A discriminant field is distinguishable only to
+    a caller that remembers to read it; a separate type is distinguishable to
+    the type checker at every call site, and `price_usd` returns the
+    provenance beside the figure so that a caller cannot record one without
+    the other.
+
+    **Two addresses here as well, and for the same reason they are on
+    `PriceEntry`.** Vendors publish against display names and accept requests
+    against API identifiers, and an operator's own contract is a document
+    written against whichever of the two their vendor put on it. A declaration
+    naming only the contract's name would match nothing the runtime ever calls
+    — landing back at unpriced *while looking configured*, which is the worst
+    of the three states. `model` is the identifier the request is made
+    against and is what the lookup is keyed on; `display_name` is what the
+    declaration was read from. `require_priceable` is what turns a mismatch
+    between them into a startup failure instead of a first-call surprise.
+
+    **What stands in for a source, given there is not one.** A vendor entry
+    cites a page and a date. A declaration cannot, and pretending otherwise —
+    an `https://` field holding an internal wiki link — would make the two
+    look alike in exactly the field that is supposed to tell them apart. So
+    the substitute is not a weaker citation but a different kind of one:
+    `declared_by` names an accountable party and `declaration_ref` names where
+    the declaration lives. *Who says so* is what replaces *which page says so*,
+    and both are required.
+
+    **A declared rate of zero is a declaration and is admitted.** It is not
+    the same state as no declaration, which refuses. That distinction is the
+    one `b2d124f` made by typing `spend_usd` as `float | None`, and collapsing
+    it here would put it straight back: a model an operator forgot would be
+    priced at nothing and the ceiling would never fire. A zero that was
+    *declared* is accountable, is carried as operator-provenance on every
+    record it produces, and is named by `require_priceable` at startup, which
+    is where a rate that disables the spend dimension has to be read.
+
+    **What this type may not do**, each refused in `__post_init__`:
+
+    - *Address a model already priced from its vendor's page.* Nothing is
+      unblocked by it — that session already runs — and what is risked is a
+      sourced rate silently displaced by an unsourced one. It is the same
+      ambiguity `validate_schedule` refuses between two vendor rates: two
+      rates in force is not a table a reader can check.
+    - *Address one of `REFUSED_ADDRESSES`.*
+    - *Carry a single band where the vendor's card has two columns and no
+      stated boundary.* See `CONTEXT_TIERED_WITHOUT_THRESHOLD`.
+    """
+
+    provider: str
+    #: The API identifier requests are made against. What the lookup is keyed
+    #: on, because it is the string that reaches the vendor.
+    model: str
+    #: The name the operator's own rate card prices against.
+    display_name: str
+    tiers: tuple[Rate, ...]
+    #: The accountable party. This is what stands where `source` stands on a
+    #: vendor entry, and it is a name rather than an address on purpose.
+    declared_by: str
+    #: Where the declaration itself lives, so a reader can go and read it.
+    declaration_ref: str
+    #: ISO date the declaration was made.
+    declared_on: str
+    #: What the rate covers. Required for the same reason `PriceEntry.scope`
+    #: is: a contract prices several things at once too.
+    scope: str
+    effective_from: str | None = None
+    effective_until: str | None = None
+    note: str = ""
+
+    def __post_init__(self) -> None:
+        require_provider(self.provider)
+        label = f"{self.provider}/{self.model or '<empty model name>'}"
+        if not self.model:
+            raise OperatorPriceError(
+                "a declaration must name the API identifier requests are made "
+                "against. A declaration keyed on nothing matches nothing, and "
+                "the session it was written for stays unpriced while the "
+                "configuration reads as complete."
+            )
+        if not self.display_name:
+            raise OperatorPriceError(
+                f"{label}: no display name. Vendors publish against display "
+                "names and accept requests against API identifiers, and a "
+                "declaration that records only one of the two cannot be "
+                "checked against the rate card it was read from — which is "
+                "the claim most likely to have been filled in from memory."
+            )
+        for name in ("declared_by", "declaration_ref"):
+            if not getattr(self, name):
+                raise OperatorPriceError(
+                    f"{label}: no {name}. A declared rate cites no vendor "
+                    "page by construction, so what stands in its place is who "
+                    "declared it and where the declaration lives. Without "
+                    "both, a figure nobody can trace is carrying a spend "
+                    "ceiling."
+                )
+        if not self.scope:
+            raise OperatorPriceError(
+                f"{label}: no scope. A rate card prices several things at "
+                "once — tier, modality, cache state — so a figure that does "
+                "not say which one it is cannot be checked against the "
+                "declaration it came from."
+            )
+        dt.date.fromisoformat(self.declared_on)
+        if (self.provider, self.model) in PRICES:
+            raise OperatorPriceError(
+                f"{label} is already priced from its vendor's page, so this "
+                "declaration is refused rather than allowed to displace it. "
+                "Nothing is unblocked by admitting it — that session already "
+                "runs — and what it risks is a sourced rate silently replaced "
+                "by an unsourced one. This is the ambiguity `validate_schedule` "
+                "refuses between two vendor rates, arriving from the other "
+                "side: two rates in force on one day is not a table a reader "
+                "can check. OD-27 authorises declarations for models nothing "
+                "prices; a negotiated rate for a listed model is a different "
+                "question and is not decided by it."
+            )
+        refused = REFUSED_ADDRESSES.get((self.provider, self.model))
+        if refused is not None:
+            raise OperatorPriceError(
+                f"{label} is not an address a declaration may use: "
+                f"{refused}. The absence here is the address and not the "
+                "number, so no rate repairs it — the identifier can start "
+                "naming a different model with no event this table could "
+                "observe. Declare against the dated identifier instead, which "
+                "is what the request is made against and is priced already. "
+                "See costs.UNPRICED['anthropic-aliases']."
+            )
+        _validate_bands(label, self.tiers)
+        _require_stated_threshold(self)
+        for name in ("effective_from", "effective_until"):
+            value = getattr(self, name)
+            if value is not None:
+                dt.date.fromisoformat(value)
+        if self.starts > self.ends:
+            raise OperatorPriceError(
+                f"{label}: the interval {self.starts}..{self.ends} is empty")
+
+    @property
+    def provenance(self) -> str:
+        return PROVENANCE_OPERATOR
+
+    @property
+    def attribution(self) -> str:
+        """Where a reader goes to check this rate: who declared it, and where.
+
+        Deliberately not shaped like `PriceEntry.attribution`'s address. The
+        two are read by the same reader and must not look alike.
+        """
+        return (f"declared by {self.declared_by} at {self.declaration_ref} "
+                f"on {self.declared_on}")
+
+    @property
+    def starts(self) -> dt.date:
+        return dt.date.fromisoformat(self.effective_from or self.declared_on)
+
+    @property
+    def ends(self) -> dt.date:
+        if self.effective_until is None:
+            return dt.date.max
+        return dt.date.fromisoformat(self.effective_until)
+
+    def covers(self, day: dt.date) -> bool:
+        return self.starts <= day <= self.ends
+
+
+def _require_stated_threshold(price: OperatorPrice) -> None:
+    """The context-tiered refusal, and the two ways round it that are closed.
+
+    A provider on `CONTEXT_TIERED_WITHOUT_THRESHOLD` prices in two columns and
+    publishes no boundary. A declaration for one of its models is admitted only
+    if it supplies what the page withheld:
+
+    1. **At least two bands.** One band is the invented boundary — an assertion
+       that the rate does not change, which the vendor's own page contradicts.
+    2. **A threshold above zero.** `_validate_bands` already fixes the lowest
+       band at zero, so the second band's floor *is* the boundary, and a second
+       band starting at zero would be two rates in force at once.
+    3. **An upper band that is actually dearer.** Two identical bands are
+       equally consistent with having read the rate card and with having read
+       one column twice, and nothing here can tell those apart; the second
+       reading produces exactly the under-charge this gate exists to stop. A
+       *cheaper* upper band is refused too — `Rate.min_input_tokens` means "re-
+       rate the whole request at this band", so a cheaper one inverts the
+       direction the shape asserts.
+
+    **A genuinely flat contract rate is refused by this gate, and that is the
+    intended outcome rather than a gap.** If an operator's card holds one
+    number for a model the vendor prices in two columns, that is a discrepancy
+    to settle with the vendor, not one for this table to resolve by picking a
+    reading. Refusing costs a startup failure with a message naming the
+    remedy. Admitting costs a ceiling that does not fire, discovered from a
+    bill.
+
+    This rule is **not** applied to `PriceEntry`. A vendor page says what it
+    says, and a table that refused a published shape would be second-guessing
+    the source it exists to transcribe.
+    """
+    reason = CONTEXT_TIERED_WITHOUT_THRESHOLD.get(price.provider)
+    if reason is None:
+        return
+    label = f"{price.provider}/{price.model}"
+    if len(price.tiers) < 2:
+        raise OperatorPriceError(
+            f"{label}: a single rate is refused for this provider. {reason}"
+        )
+    for lower, upper in zip(price.tiers, price.tiers[1:]):
+        cheaper = (upper.input_usd_per_mtok < lower.input_usd_per_mtok
+                   or upper.output_usd_per_mtok < lower.output_usd_per_mtok)
+        dearer = (upper.input_usd_per_mtok > lower.input_usd_per_mtok
+                  or upper.output_usd_per_mtok > lower.output_usd_per_mtok)
+        if cheaper or not dearer:
+            raise OperatorPriceError(
+                f"{label}: the band at {upper.min_input_tokens} prompt tokens "
+                f"is ({upper.input_usd_per_mtok}, {upper.output_usd_per_mtok}) "
+                f"against ({lower.input_usd_per_mtok}, "
+                f"{lower.output_usd_per_mtok}) below it. A long-context band "
+                "must be dearer than the band beneath it on at least one rate "
+                "and cheaper on neither. Two identical bands assert a boundary "
+                "at which nothing changes, which is not a boundary and is "
+                "what one column read twice looks like. A cheaper upper band "
+                f"inverts the re-rating the shape asserts. {reason}"
+            )
+
+
+class OperatorPriceBook:
+    """Every declaration one deployment supplies, validated as a set.
+
+    **Constructed, not registered.** There is no module-level mutable table an
+    import could add to. A declaration reaches a price lookup because a caller
+    passed this object to it, which is what makes *"which prices were in
+    force"* answerable from the call rather than from whichever imports ran.
+
+    The set-level check is the one an individual declaration cannot make:
+    two declarations for one model whose intervals overlap. `validate_schedule`
+    already refuses that between vendor entries and the argument transfers
+    unchanged — two rates in force on one day answers differently depending on
+    which line was written first.
+    """
+
+    def __init__(self, prices: Sequence[OperatorPrice] = ()) -> None:
+        by_key: dict[tuple[str, str], list[OperatorPrice]] = {}
+        for price in prices:
+            by_key.setdefault((price.provider, price.model), []).append(price)
+        for key, group in by_key.items():
+            ordered = sorted(group, key=lambda p: p.starts)
+            for earlier, later in zip(ordered, ordered[1:]):
+                if later.starts <= earlier.ends:
+                    raise OperatorPriceError(
+                        f"{key[0]}/{key[1]}: two declarations are in force on "
+                        f"{later.starts}. A schedule with an overlap answers "
+                        "differently depending on which line was written "
+                        "first, so neither is used."
+                    )
+        self._by_key: Mapping[tuple[str, str], tuple[OperatorPrice, ...]] = {
+            key: tuple(sorted(group, key=lambda p: p.starts))
+            for key, group in by_key.items()
+        }
+
+    def get(self, provider: str, model: str) -> tuple[OperatorPrice, ...]:
+        return self._by_key.get((provider, model), ())
+
+    def declared_models(self) -> frozenset[tuple[str, str]]:
+        """The enumerated accepting set this book adds, stated positively."""
+        return frozenset(self._by_key)
+
+    def __len__(self) -> int:
+        return len(self._by_key)
+
+
+#: A deployment that declares nothing. **Named rather than spelled `None`.**
+#: An empty book and an absent one produce the same outcome here — a refusal,
+#: which is the safe direction — so the distinction that matters is not at this
+#: layer. It is at configuration, where `MODEL_PRICES_OPERATOR` is required
+#: with no default so that *"the operator declares nothing"* is a thing somebody
+#: wrote down rather than a key nobody set.
+NO_OPERATOR_PRICES = OperatorPriceBook()
+
+
 #: Which of `ReservationPolicy`'s estimated figures this table can derive.
 #:
 #: **Stated as the accepting set, never as a complement.** *"It cannot derive
@@ -454,26 +902,98 @@ def _require_token_count(name: str, value: Any) -> int:
     return value
 
 
-def entry_in_force(provider: str, model: str, *, as_of: dt.date) -> PriceEntry:
+@dataclass(frozen=True)
+class PricedSpend:
+    """A spend figure and where its rate came from, as one value.
+
+    **The two travel together because separating them is the defect.** A
+    number that reads as authoritative because nothing beside it says otherwise
+    is the same shape as the `0.0` that made *"nobody priced this"* and *"this
+    cost nothing"* one state. `.usd` reaches the bare figure, and reaching it
+    is an explicit act in the shape `Config.raw()` already establishes for
+    FR-043's markings: possible, because these are numbers and have to be
+    added up, and written down, which is the whole difference between an
+    omission and a decision.
+
+    There is deliberately no `__float__`. An implicit coercion would let a
+    caller drop the provenance without writing anything, which is the one
+    thing this type exists to prevent.
+    """
+
+    usd: float
+    #: `PROVENANCE_VENDOR` or `PROVENANCE_OPERATOR`.
+    provenance: str
+    provider: str
+    model: str
+    #: Where a reader goes to check the rate this was computed at.
+    attribution: str
+
+    def __post_init__(self) -> None:
+        if self.provenance not in PROVENANCES:
+            raise CostTableError(
+                f"{self.provenance!r} is not a declared provenance; the two "
+                f"are {sorted(PROVENANCES)}"
+            )
+
+    @property
+    def is_operator_declared(self) -> bool:
+        """Stated positively, never as *"not vendor"*.
+
+        A complement over a field that later grows a third provenance answers
+        the wrong way round on the value nobody thought of, and the wrong way
+        round here is the one that reads a declared rate as a published one.
+        """
+        return self.provenance == PROVENANCE_OPERATOR
+
+
+def entry_in_force(
+    provider: str,
+    model: str,
+    *,
+    as_of: dt.date,
+    operator_prices: OperatorPriceBook = NO_OPERATOR_PRICES,
+) -> PriceEntry | OperatorPrice:
     """The one entry covering `as_of`, or a refusal (T063).
 
     **Enumerated, never complemented.** The lookup is an exact key into
-    `PRICES`. There is no prefix match, no alias resolution, no family
-    fallback and no case folding: a rule of the form *"anything that looks
-    close enough is priced"* fails open on the first model nobody anticipated,
-    and that is precisely the model nobody priced.
+    `PRICES`, then into the book. There is no prefix match, no alias
+    resolution, no family fallback and no case folding: a rule of the form
+    *"anything that looks close enough is priced"* fails open on the first
+    model nobody anticipated, and that is precisely the model nobody priced.
+
+    **The vendor table is consulted first and a declaration cannot displace
+    it**, which is enforced twice over: `OperatorPrice` refuses to be
+    constructed for a key `PRICES` holds, and this lookup would not reach it
+    if one existed. Two enforcements because the first is the one that gives a
+    good message and the second is the one that holds if the table grows a row
+    after a book was built.
+
+    **The book's default is empty and that is not a silent fallback.** An
+    absent book produces a refusal, not a figure; the default that would be
+    dangerous is one that fills in a number. Where *"the operator declared
+    nothing"* has to be distinguished from *"nobody was asked"* is at
+    configuration, and `MODEL_PRICES_OPERATOR` is required there with no
+    default for exactly that reason.
     """
     require_provider(provider)
+    entries: tuple[PriceEntry, ...] | tuple[OperatorPrice, ...] | None
     entries = PRICES.get((provider, model))
     if entries is None:
+        entries = operator_prices.get(provider, model) or None
+    if entries is None:
         known = sorted(m for p, m in PRICES if p == provider)
+        declared = sorted(m for p, m in operator_prices.declared_models()
+                          if p == provider)
         raise MissingPriceError(
             f"{provider}/{model or '<empty model name>'} has no cost entry. "
             "Nothing prices it, so its spend ceiling cannot be enforced and "
             "the call is refused rather than counted at zero. Priced for this "
-            f"provider: {known or 'nothing — see costs.UNPRICED'}. Add an "
-            "entry with the address the rate was read at and the day it was "
-            "read; do not supply a rate from memory."
+            f"provider: {known or 'nothing — see costs.UNPRICED'}. Declared "
+            f"by the operator for this provider: {declared or 'nothing'}. Add "
+            "an entry with the address the rate was read at and the day it "
+            "was read; do not supply a rate from memory. Where no page prices "
+            "it, OD-27's operator declaration is the other route, and "
+            "costs.OPERATOR_REACH says which absences it reaches."
         )
     covering = [entry for entry in entries if entry.covers(as_of)]
     if not covering:
@@ -493,7 +1013,7 @@ def entry_in_force(provider: str, model: str, *, as_of: dt.date) -> PriceEntry:
     return covering[0]
 
 
-def tier_for(entry: PriceEntry, *, input_tokens: int) -> Rate:
+def tier_for(entry: PriceEntry | OperatorPrice, *, input_tokens: int) -> Rate:
     """The dearest band whose floor this prompt reaches.
 
     Ascending floors are enforced at construction, so the last band at or
@@ -507,24 +1027,77 @@ def tier_for(entry: PriceEntry, *, input_tokens: int) -> Rate:
 
 
 def price_usd(*, provider: str, model: str, input_tokens: Any,
-              output_tokens: Any, as_of: dt.date) -> float:
+              output_tokens: Any, as_of: dt.date,
+              operator_prices: OperatorPriceBook = NO_OPERATOR_PRICES,
+              ) -> PricedSpend:
     """What one call cost, in USD, from the provider's own reported usage.
 
     `as_of` is required and has no default. A default of *today* would make
     the answer depend on the clock of whichever process asked, and on a
     scheduled boundary that is the difference between two rates the source
     states.
+
+    **Returns `PricedSpend` rather than a float**, so that the provenance of
+    the rate travels with the figure to every place the figure is recorded.
+    A caller wanting the number writes `.usd`.
     """
     inputs = _require_token_count("input_tokens", input_tokens)
     outputs = _require_token_count("output_tokens", output_tokens)
-    entry = entry_in_force(provider, model, as_of=as_of)
+    entry = entry_in_force(provider, model, as_of=as_of,
+                           operator_prices=operator_prices)
     tier = tier_for(entry, input_tokens=inputs)
-    return (inputs / 1_000_000 * tier.input_usd_per_mtok
-            + outputs / 1_000_000 * tier.output_usd_per_mtok)
+    return PricedSpend(
+        usd=(inputs / 1_000_000 * tier.input_usd_per_mtok
+             + outputs / 1_000_000 * tier.output_usd_per_mtok),
+        provenance=entry.provenance,
+        provider=provider,
+        model=model,
+        attribution=entry.attribution,
+    )
+
+
+def require_priceable(*, provider: str, model: str, as_of: dt.date,
+                      operator_prices: OperatorPriceBook = NO_OPERATOR_PRICES,
+                      ) -> str:
+    """OD-27's startup gate. Returns a line naming the rate that will be used.
+
+    **Why a preflight exists at all, when the price lookup already refuses.**
+    Without one, a deployment configured against an unpriced model starts,
+    accepts a session, builds a request, calls a provider — and *then* refuses,
+    after the money for that call has been spent. FR-058's treatment is the one
+    this follows: an unset bound *"MUST make startup fail loudly, naming what
+    is missing"*, and the reason transfers exactly. Absence must not be
+    discovered from the first turn.
+
+    **It is also the only thing that catches a declaration written against the
+    wrong address.** An operator whose contract prices *"GPT-5 mini"* and who
+    declares that string as the identifier has configured a book that matches
+    no request this runtime will ever make. Nothing at construction can see
+    that, because the declaration is well formed. What sees it is asking, at
+    startup, whether *the model in force* is priced — which is this function.
+    The failure is loud and names both addresses, so the mismatch reads as a
+    mismatch rather than as an unpriced model.
+
+    The returned line is for the startup log, and it names the provenance and
+    the rate. That matters most for a declared **zero**: a rate that disables
+    the spend dimension is a thing to read before a session runs, not to infer
+    afterwards from a total that never moved.
+    """
+    entry = entry_in_force(provider, model, as_of=as_of,
+                           operator_prices=operator_prices)
+    bands = "; ".join(
+        f"from {tier.min_input_tokens} prompt tokens: "
+        f"${tier.input_usd_per_mtok}/MTok in, ${tier.output_usd_per_mtok}/MTok out"
+        for tier in entry.tiers
+    )
+    return (f"{provider}/{model} — {entry.provenance} rate in force on "
+            f"{as_of}, {entry.attribution}. {bands}.")
 
 
 def reservation_spend_usd(*, provider: str, model: str, tokens: int,
-                          as_of: dt.date) -> float:
+                          as_of: dt.date,
+                          operator_prices: OperatorPriceBook = NO_OPERATOR_PRICES,
+                          ) -> PricedSpend:
     """T064's residue: the spend reservation, derived rather than declared.
 
     `ReservationPolicy` carries three estimated figures and this derives one of
@@ -543,12 +1116,27 @@ def reservation_spend_usd(*, provider: str, model: str, tokens: int,
     A table of dollars per token has no time dimension:
     `DERIVABLE_RESERVATION_FIELDS` is the enumerated answer and `tasks.md`'s
     T064 note carries the reasoning.
+
+    **Returns `PricedSpend` for the same reason `price_usd` does, and the
+    reason is not symmetry.** A reservation is normally released and replaced
+    by the reconciled figure, so it looks like a number whose provenance does
+    not survive. It survives on exactly the path this ledger is built for: a
+    crash leaves the reservation outstanding and *it* becomes the durable
+    total. A figure that can end up being the recorded one carries where it
+    came from.
     """
     reserved = _require_token_count("tokens", tokens)
-    entry = entry_in_force(provider, model, as_of=as_of)
+    entry = entry_in_force(provider, model, as_of=as_of,
+                           operator_prices=operator_prices)
     tier = tier_for(entry, input_tokens=reserved)
     dearer = max(tier.input_usd_per_mtok, tier.output_usd_per_mtok)
-    return reserved / 1_000_000 * dearer
+    return PricedSpend(
+        usd=reserved / 1_000_000 * dearer,
+        provenance=entry.provenance,
+        provider=provider,
+        model=model,
+        attribution=entry.attribution,
+    )
 
 
 # Every schedule is validated as the table is built, by `_schedule`. This is the
@@ -562,3 +1150,17 @@ for _key, _entries in PRICES.items():
                 f"{_key} holds an entry for "
                 f"{(_entry.provider, _entry.model)}"
             )
+
+# OD-27's coverage invariant, checked as the module loads rather than left to a
+# test. Every recorded absence has to have been measured against the operator
+# path — reachable, refused, or out of scope — because the failure this guards
+# is a *fourth* absence being added later and quietly inheriting whichever
+# answer the reader assumes. An absence with no answer is the gap that reads as
+# an oversight, which is the thing `UNPRICED` exists to stop one level up.
+if set(OPERATOR_REACH) != set(UNPRICED):
+    raise CostTableError(
+        f"OPERATOR_REACH answers {sorted(OPERATOR_REACH)} and UNPRICED "
+        f"records {sorted(UNPRICED)}. Every recorded absence states whether "
+        "an operator declaration reaches it; one that does not will be read "
+        "as whichever answer the reader already had in mind."
+    )

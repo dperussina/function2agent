@@ -42,12 +42,14 @@ from src.runtime.journal import (
 from src.runtime.resume import (
     LEGACY_MODEL_OUTCOME_SCHEMA,
     MODEL_OUTCOME_SCHEMA,
+    VENDOR_ONLY_MODEL_OUTCOME_SCHEMA,
     ResumeError,
     encode_model_outcome,
     encode_tool_outcome,
     plan_resume,
 )
 from src.runtime.trace import OUTCOME_OK, OUTCOME_UPSTREAM_FAULT
+from src.runtime.providers.costs import PROVENANCE_OPERATOR, PROVENANCE_VENDOR
 from src.runtime.turn import ModelResponse
 
 TENANT, DEPLOYMENT, SESSION = "t-1", "d-1", "sess-1"
@@ -66,8 +68,11 @@ def _call(index: int) -> ToolCall:
 
 def _response(*, text: str = "", calls: tuple[ToolCall, ...] = (),
               state: bytes | None = b"opaque") -> ModelResponse:
+    # A declared figure: `provider="test"` has no vendor page, so OD-27's
+    # provenance for it is `operator`. See `test_loop.py`'s note at `_finish`.
     return ModelResponse(provider="test", provider_state=state, text=text,
-                         tool_calls=calls, spend_usd=0.25, tokens=17)
+                         tool_calls=calls, spend_usd=0.25,
+                         spend_provenance=PROVENANCE_OPERATOR, tokens=17)
 
 
 def _write_model_step(
@@ -509,7 +514,8 @@ def test_a_turn_written_now_carries_the_model_the_price_was_computed_at(
     journal = _journal(tmp_path)
     response = ModelResponse(
         provider="test", provider_state=b"opaque", text="done", tool_calls=(),
-        model="claude-sonnet-5", spend_usd=12.0, tokens=30,
+        model="claude-sonnet-5", spend_usd=12.0,
+        spend_provenance=PROVENANCE_VENDOR, tokens=30,
         input_tokens=10, output_tokens=20)
     payload = encode_model_outcome(response)
 
@@ -525,6 +531,113 @@ def test_a_turn_written_now_carries_the_model_the_price_was_computed_at(
     # the records.
     assert plan.unpriced_turns == ()
     assert plan.has_unpriced_spend is False
+    journal.repo.close()
+
+
+# ---------------------------------------------------------------------------
+# OD-27 — the journal's third revision, and what the second one's silence
+# means.
+
+
+def test_a_declared_price_survives_the_journal_as_a_declared_one(
+    tmp_path,
+) -> None:
+    """The provenance is durable, which is the point of putting it here.
+
+    A startup log says which rate was in force and is gone with the process
+    that wrote it. The reader who has to decide whether a resumed total can be
+    checked is holding the journal, so the journal is where the answer has to
+    be.
+    """
+    journal = _journal(tmp_path)
+    response = ModelResponse(
+        provider="test", provider_state=b"opaque", text="done", tool_calls=(),
+        model="gpt-5-mini", spend_usd=0.5,
+        spend_provenance=PROVENANCE_OPERATOR, tokens=30,
+        input_tokens=10, output_tokens=20)
+
+    payload = encode_model_outcome(response)
+    assert payload["schema"] == MODEL_OUTCOME_SCHEMA
+    assert payload["spend_provenance"] == PROVENANCE_OPERATOR
+
+    _write_model_step(journal, 0, response)
+    # A second turn priced from a vendor's page, so the disclosure below is
+    # naming a turn rather than describing the session.
+    _write_model_step(journal, 1, ModelResponse(
+        provider="test", provider_state=b"opaque", text="done", tool_calls=(),
+        model="claude-opus-5", spend_usd=1.0,
+        spend_provenance=PROVENANCE_VENDOR, tokens=30,
+        input_tokens=10, output_tokens=20), at=10.0)
+
+    plan = plan_resume(journal, SESSION)
+
+    assert plan.operator_priced_turns == (0,)
+    assert plan.has_operator_declared_spend is True
+    assert plan.unpriced_turns == ()
+    journal.repo.close()
+
+
+def test_a_revision_two_payload_comes_back_as_a_vendor_price(tmp_path) -> None:
+    """The migration, and it is a fact rather than an inference.
+
+    A revision-2 payload has a spend and no provenance. It is read as vendor
+    because the operator path did not exist when any revision-2 payload was
+    written, so `costs.PRICES` is the only thing that could have produced the
+    figure — which is a different kind of claim from revision 1's, where the
+    field existed and held a default nothing computed. The spend is believed
+    here and refused there, and this arm is what says the two revisions are
+    treated differently on purpose.
+    """
+    journal = _journal(tmp_path)
+    response = ModelResponse(
+        provider="test", provider_state=b"opaque", text="done", tool_calls=(),
+        model="claude-opus-5", spend_usd=3.0,
+        spend_provenance=PROVENANCE_OPERATOR, tokens=30,
+        input_tokens=10, output_tokens=20)
+    payload = encode_model_outcome(response)
+    # Age the payload back to the revision before OD-27: the key did not
+    # exist, so it is removed rather than nulled.
+    payload["schema"] = VENDOR_ONLY_MODEL_OUTCOME_SCHEMA
+    del payload["spend_provenance"]
+
+    journal.intend(
+        session_id=SESSION, turn_index=0, step_index=MODEL_STEP_INDEX,
+        step_kind=STEP_MODEL_CALL, effect_id="model", effectful=True,
+        payload={"turn": 0}, at=1.0)
+    journal.commit_outcome(
+        session_id=SESSION, turn_index=0, step_index=MODEL_STEP_INDEX,
+        payload=payload, provider_state=response.provider_state, at=2.0)
+
+    plan = plan_resume(journal, SESSION)
+
+    # Believed — the figure is not discarded the way revision 1's is — and
+    # read as a published rate, which is what the disclosure being *empty*
+    # says. An `unknown` provenance would have shown up here.
+    assert plan.unpriced_turns == ()
+    assert plan.operator_priced_turns == ()
+    assert plan.has_operator_declared_spend is False
+    journal.repo.close()
+
+
+def test_a_revision_one_payload_gets_no_provenance_because_it_gets_no_price(
+    tmp_path,
+) -> None:
+    """The contrast that makes the arm above a decision rather than a default.
+
+    At revision 1 the spend is not read at all, so there is nothing for a
+    provenance to describe. Filling one in would attach a source to a figure
+    this build has just refused to believe.
+    """
+    journal = _journal(tmp_path)
+    _write_legacy_model_step(journal, 0, _response(text="done"))
+
+    plan = plan_resume(journal, SESSION)
+
+    assert plan.unpriced_turns == (0,)
+    assert plan.operator_priced_turns == (), (
+        "an unpriced turn is not an operator-priced one; the two disclosures "
+        "have to be able to disagree or neither says anything"
+    )
     journal.repo.close()
 
 
