@@ -887,8 +887,11 @@ proof "FR-036 trace — the Secret scan covers only detail again" \
   "tests/contract/test_trace_spans.py::test_a_secret_nested_in_any_carrier_field_is_refused" \
   's = s.replace("    for f in fields(span):\n        _refuse_secrets(getattr(span, f.name), f.name)", "    _refuse_secrets(span.detail, \x22detail\x22)")'
 
-proof "FR-036 trace — the Secret scan stops at a nested dataclass" \
-  src/runtime/trace.py \
+# The walker itself now lives in src/contracts/secret.py because the event
+# stream needs the same refusal and a second copy would drift. The proof
+# follows the code; the target test is unchanged.
+proof "FR-036 — the shared Secret scan stops at a nested dataclass" \
+  src/contracts/secret.py \
   "tests/contract/test_trace_spans.py::test_a_secret_nested_in_any_carrier_field_is_refused" \
   's = s.replace("    elif is_dataclass(value) and not isinstance(value, type):", "    elif False:")'
 

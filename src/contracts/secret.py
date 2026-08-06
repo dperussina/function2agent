@@ -14,7 +14,8 @@ redaction marker or raises.
 from __future__ import annotations
 
 import hashlib
-from typing import Any, NoReturn
+from dataclasses import fields, is_dataclass
+from typing import Any, Mapping, NoReturn, Type
 
 REDACTED = "<redacted:Secret>"
 
@@ -125,3 +126,49 @@ class Secret:
         # Hash the fingerprint, not the value, so a Secret in a dict key does
         # not put the value into any hash-collision debug output.
         return hash(("Secret", self.fingerprint()))
+
+
+def refuse_secrets(
+    value: Any, path: str, *, raise_as: Type[Exception], destination: str
+) -> None:
+    """Refuse a `Secret` anywhere inside `value`. FR-036, once.
+
+    **Why this lives beside the type rather than in each channel that carries
+    one.** `src/runtime/trace.py` needs it for a span and `src/runtime/events.py`
+    needs it for a caller-visible event, and the two are the same rule about the
+    same type. Two copies are two chances for one of them to be relaxed, and the
+    relaxation that matters is the same in both: a nesting shape the walk stops
+    at. The rule about where a credential may not go belongs with the credential.
+
+    Descends through mappings — **keys as well as values**, because
+    `{Secret(...): "x"}` is a credential in the record just as much as a value
+    is — through sequences, and through **nested dataclasses**, the last because
+    a credential-bearing field is usually one dataclass hop from the object being
+    checked rather than a raw mapping on it, and a scan that stopped at the first
+    object walked past all of them.
+
+    `raise_as` and `destination` are the caller's, so the refusal names the
+    channel the author was writing to. A shared guard that raised one type would
+    make every caller catch a stranger's exception, and a shared message would
+    tell a reader to look at the wrong artifact.
+    """
+    if isinstance(value, Secret):
+        raise raise_as(
+            f"{path} holds a Secret. A credential must not reach "
+            f"{destination} (FR-036); pass a reference, not the value."
+        )
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            refuse_secrets(key, f"{path}.<key>", raise_as=raise_as,
+                           destination=destination)
+            refuse_secrets(item, f"{path}.{key}", raise_as=raise_as,
+                           destination=destination)
+    elif is_dataclass(value) and not isinstance(value, type):
+        for member in fields(value):
+            refuse_secrets(getattr(value, member.name),
+                           f"{path}.{member.name}", raise_as=raise_as,
+                           destination=destination)
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            refuse_secrets(item, f"{path}[]", raise_as=raise_as,
+                           destination=destination)

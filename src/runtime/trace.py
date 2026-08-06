@@ -41,11 +41,11 @@ writers over one repository and across the crash a resumed session survives.
 from __future__ import annotations
 
 import threading
-from dataclasses import dataclass, field, fields, is_dataclass
+from dataclasses import dataclass, field, fields
 from typing import Any, Mapping
 
 from src.contracts.repository import Repository, UniquenessError
-from src.contracts.secret import Secret
+from src.contracts.secret import refuse_secrets
 from src.contracts.terminal import is_terminal
 from src.contracts.transition import StateTransition
 from src.runtime.result_bound import BoundFields
@@ -349,6 +349,13 @@ def _refuse_secrets_anywhere(span: Span) -> None:
     Enumerating `dataclasses.fields(span)` means the guard's coverage is the
     type's shape. A field cannot be added without being scanned, because
     nobody has to remember anything for that to happen.
+
+    **The walk itself moved to `src/contracts/secret.py` when T069 needed the
+    same rule for the caller-visible event stream.** What stays here is which
+    object is walked and what the refusal is called; the descent — mapping keys
+    as well as values, sequences, and nested dataclasses — is one implementation
+    for both channels, because two copies of a nesting rule are two chances for
+    one of them to stop one hop short.
     """
     for f in fields(span):
         _refuse_secrets(getattr(span, f.name), f.name)
@@ -360,30 +367,8 @@ def _refuse_secrets(value: Any, path: str) -> None:
     `Secret` has no serializer, so it would render as a redaction marker rather
     than a credential — but a marker in a trace is a field somebody will later
     "fix" by unwrapping. Refusing it here means the credential never gets close.
-
-    Descends through mappings, sequences and **nested dataclasses**, the last
-    because a span's credential-bearing fields are mostly not raw mappings:
-    `decision.matched`, `transition.predicate_inputs[].value` and
-    `versions.by_kind` are each one dataclass hop from the span, and a scan
-    that stopped at the first object walked past all three.
     """
-    if isinstance(value, Secret):
-        raise SpanError(
-            f"{path} holds a Secret. A credential must not reach a trace "
-            "(FR-036); pass a reference, not the value."
-        )
-    if isinstance(value, Mapping):
-        for key, item in value.items():
-            # Keys too: `{Secret(...): "x"}` is a credential in the record
-            # just as much as a value is.
-            _refuse_secrets(key, f"{path}.<key>")
-            _refuse_secrets(item, f"{path}.{key}")
-    elif is_dataclass(value) and not isinstance(value, type):
-        for f in fields(value):
-            _refuse_secrets(getattr(value, f.name), f"{path}.{f.name}")
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            _refuse_secrets(item, f"{path}[]")
+    refuse_secrets(value, path, raise_as=SpanError, destination="a trace")
 
 
 class SpanWriter:
