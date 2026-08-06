@@ -81,6 +81,7 @@ from src.runtime.dispatch import ToolCall
 from src.runtime.loop import AgentLoop, LoopOutcome, ModelClient, TurnRecord
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.session_state import SessionStateMachine
+from src.runtime.progress import StallPolicy
 from src.runtime.session_store import Ceilings, LifecycleGateway, SessionStore
 from src.runtime.signals import (
     REASON_CANCELLED,
@@ -188,6 +189,7 @@ class Runner:
         deployment_id: str,
         clock: Callable[[], float],
         lease_interval_seconds: float,
+        stall: StallPolicy,
         assembler: ContextAssembler | None = None,
         merge_policy: MergePolicy | None = None,
     ) -> None:
@@ -207,6 +209,14 @@ class Runner:
         self.deployment_id = deployment_id
         self.clock = clock
         self.lease_interval_seconds = lease_interval_seconds
+        # T067. Deployment configuration rather than a `start()` argument, and
+        # the split from `ceilings` is on purpose: a ceiling is a per-session
+        # liability the caller is spending, and FR-006's threshold is a
+        # property of how this deployment decides an agent is going nowhere. It
+        # also has to hold for `attach()`, which takes no ceilings at all —
+        # putting it on the call would leave a resumed session with no
+        # threshold, which is the one place a stall is most likely.
+        self.stall = stall
         self.assembler = assembler
         self.merge_policy = merge_policy
 
@@ -491,6 +501,7 @@ class Runner:
             execute=execute,
             versions=self.versions,
             clock=self.clock,
+            stall=self.stall,
             assembler=self.assembler,
             merge_policy=self.merge_policy,
             cancel=token,

@@ -60,6 +60,16 @@ OPERATOR_TERMINATED = TerminalState(
     "— a human operator, or a consumer cancelling programmatically. The name "
     "predates the second case and is kept: it is a wire string the Go "
     "enforcement point and the conformance vectors both read.")
+NO_PROGRESS = TerminalState(
+    "terminated.no_progress", "FR-006",
+    "a configured number of consecutive turns made no progress — no turn "
+    "produced the session's result and none issued a tool call new to the "
+    "session. The predicate is FR-006's, defined 2026-08-03, and lives in "
+    "src/runtime/progress.py; this is the name it ends the session under. "
+    "Separately named from terminated.turn_ceiling_reached deliberately: a "
+    "stalled session that ran out its turns would otherwise be recorded as "
+    "having exhausted a budget, which is a different report to an operator "
+    "than an agent that was going nowhere.")
 UNRECOVERABLE_FAULT = TerminalState(
     "terminated.unrecoverable_fault", "FR-006",
     "a fault the runtime cannot classify further. Named, bounded, and "
@@ -71,7 +81,7 @@ TAXONOMY: tuple[TerminalState, ...] = (
     COMPLETED,
     SPEND_CEILING, TOKEN_CEILING, WALL_CLOCK_CEILING, TURN_CEILING,
     MEMORY_BOUND, CPU_BOUND, PROCESS_BOUND,
-    CAPABILITY_LAPSED, OPERATOR_TERMINATED, UNRECOVERABLE_FAULT,
+    CAPABILITY_LAPSED, OPERATOR_TERMINATED, NO_PROGRESS, UNRECOVERABLE_FAULT,
 )
 
 NAMES: frozenset[str] = frozenset(state.name for state in TAXONOMY)

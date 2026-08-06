@@ -1433,6 +1433,37 @@ proof "T066 end-of-run marker — the signal never reaches the trace" \
   "tests/unit/test_runner.py::test_a_ceiling_termination_records_which_ceiling_and_on_what_reading" \
   's = s.replace("            detail=({} if end_of_run is None\n                    else {\"end_of_run\": end_of_run.to_record()}),", "            detail={},")'
 
+# T067. Three mechanisms, three different failures if removed.
+#
+# The predicate consulted at all. Without it a repeating agent still stops —
+# T065's backstop catches it at twenty calls, or the turn ceiling does — which
+# is why the arm reads the *name* rather than the fact of stopping. FR-006's
+# complaint about an unset threshold is precisely that the session ends under
+# the wrong name, and this tamper is that complaint made concrete.
+proof "T067 stall predicate — the loop never consults it" \
+  src/runtime/loop.py \
+  "tests/unit/test_progress.py::test_a_repeating_agent_ends_in_no_progress_and_not_at_the_turn_ceiling" \
+  's = s.replace("            stall = evaluate_stall(turns, self.stall)\n            if stall.stalled:", "            stall = evaluate_stall(turns, self.stall)\n            if False:")'
+
+# The count derived from the journal rather than held per attempt. This is the
+# property the predicate was written as a pure function of the records in order
+# to have: FR-007 resumes in a new process, and a per-process count resets at
+# every crash, so an agent that stalls, crashes and goes on stalling never
+# terminates. The tamper narrows the input to the turns this attempt appended,
+# which is what a counter on the loop object would see.
+proof "T067 stall count — the predicate sees only this process's turns" \
+  src/runtime/loop.py \
+  "tests/unit/test_progress.py::test_the_count_carries_across_an_attempt_boundary" \
+  's = s.replace("            stall = evaluate_stall(turns, self.stall)", "            stall = evaluate_stall(list(turns)[len(plan.records):], self.stall)")'
+
+# The refusal that keeps the reading on the record. `terminated.no_progress`
+# without its two figures says only that a threshold nobody can see was crossed,
+# and the bare `terminate()` is the route that would drop them.
+proof "T067 stall readings — the bare terminate() accepts the member" \
+  src/runtime/session_state.py \
+  "tests/unit/test_progress.py::test_the_bare_terminate_refuses_this_member" \
+  's = s.replace("_NEEDS_READINGS = {ST_CEILING_REACHED, ST_NO_PROGRESS}", "_NEEDS_READINGS = {ST_CEILING_REACHED}")'
+
 # T046. **Not a proof of the terminated refusal.** That guard was tried here and
 # the tamper was vacuous: removing it drops the caller through to the "no edge
 # out of {state}" branch, which is also a RunnerError also naming TERMINATED, so

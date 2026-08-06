@@ -80,6 +80,7 @@ REASON_COMPLETED = "completed"
 REASON_CANCELLED = "cancelled"
 REASON_CEILING_REACHED = "ceiling_reached"
 REASON_FAULTED = "faulted"
+REASON_NO_PROGRESS = "no_progress"
 
 #: Reason → the taxonomy member it names, or `None` where the member is carried
 #: by the signal's own cause. `ceiling_reached` is the one such case: FR-005 has
@@ -91,6 +92,13 @@ _MEMBER_BY_REASON: dict[str, str | None] = {
     REASON_CANCELLED: terminal.OPERATOR_TERMINATED.name,
     REASON_CEILING_REACHED: None,
     REASON_FAULTED: terminal.UNRECOVERABLE_FAULT.name,
+    # T067. No cause field beside it, unlike `ceiling_reached`. That one needs
+    # one because four members share the reason and the marker would otherwise
+    # not say which; this reason names exactly one member, and the reading that
+    # fired it is already a predicate input on the `state_transition` span the
+    # marker rides in. A second copy there would be the same figure recorded
+    # twice with nothing keeping them equal.
+    REASON_NO_PROGRESS: terminal.NO_PROGRESS.name,
 }
 
 REASONS: frozenset[str] = frozenset(_MEMBER_BY_REASON)

@@ -80,6 +80,7 @@ from src.runtime.dispatch import ToolCall  # noqa: E402
 from src.runtime.journal import TurnJournal, tool_step_index  # noqa: E402
 from src.runtime.ledger import BudgetLedger, ReservationPolicy  # noqa: E402
 from src.runtime.loop import AgentLoop, ModelResponse  # noqa: E402
+from src.runtime.progress import StallPolicy  # noqa: E402
 from src.runtime.providers.costs import PROVENANCE_OPERATOR  # noqa: E402
 from src.runtime.result_bound import ResultBound, RetentionStore  # noqa: E402
 from src.runtime.session_state import SessionStateMachine  # noqa: E402
@@ -270,6 +271,15 @@ class Child:
             versions=ArtifactVersions(
                 TENANT, DEPLOYMENT, {"prompt": "sha256:" + "0" * 64}),
             clock=self.clock,
+            # T067. This child exists to drive a session into one of FR-005's
+            # four ceilings across three `SIGKILL`s, and it does that by
+            # repeating one tool call — which is a stall under FR-006's
+            # predicate. A threshold low enough to fire would end every arm as
+            # `terminated.no_progress` and the battery would stop measuring
+            # ceilings at all. Above the turn ceiling, so the ceiling is what
+            # this fixture reaches; the stall's own crossing-a-resume arm is in
+            # `tests/unit/test_progress.py`.
+            stall=StallPolicy(consecutive_turns=self.ceilings.turns + 1),
             assembler=_HookedAssembler(self.on_turn_boundary),
         )
 

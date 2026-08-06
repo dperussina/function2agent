@@ -38,6 +38,7 @@ from src.runtime.providers.adapter import model_response
 from src.runtime.providers.base import ParsedTurn
 from src.runtime.providers import costs
 from src.runtime.providers.costs import PROVENANCE_OPERATOR
+from src.runtime.progress import StallPolicy
 from src.runtime.turn import UnpricedTurnError
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.session_state import SessionStateMachine
@@ -56,6 +57,16 @@ from src.supervisor.session_table import SessionTable, capability_digest
 TENANT, DEPLOYMENT, SESSION = "t-1", "d-1", "sess-1"
 LEASE = 2_000_000_000.0
 VERSIONS = ArtifactVersions(TENANT, DEPLOYMENT, {"prompt": "sha256:" + "0" * 64})
+
+# T067. FR-006's stall threshold is required configuration with no default, so
+# every construction site has to state a number — that refusal is the point of
+# it. Most arms in this file drive the same tool call repeatedly to burn turns,
+# which is a stall by FR-006's own predicate, so they declare a threshold above
+# anything they run. That is not a workaround: it is the configuration FR-006
+# names for a deployment that does not want the predicate to fire, and it keeps
+# each of these arms measuring the mechanism it is named for. The arms that
+# *are* about the stall declare a threshold low enough to reach.
+NO_STALL = StallPolicy(consecutive_turns=1_000)
 
 
 class Tok:
@@ -111,7 +122,7 @@ class Harness:
         self.retention = RetentionStore(root=tmp_path / "scratch",
                                         session_id=SESSION, max_bytes=1_000_000)
 
-    def loop(self, model, execute, *, clock=None) -> AgentLoop:
+    def loop(self, model, execute, *, clock=None, stall=None) -> AgentLoop:
         return AgentLoop(
             session_id=SESSION,
             store=self.store,
@@ -125,6 +136,7 @@ class Harness:
             execute=execute,
             versions=VERSIONS,
             clock=clock or _clock(),
+            stall=stall or NO_STALL,
         )
 
     def close(self):

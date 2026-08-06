@@ -211,6 +211,7 @@ def test_every_terminal_state_has_a_rule_that_can_produce_it() -> None:
         "terminated.capability_lapsed": tr.ST_CAPABILITY_LAPSED,
         "terminated.operator_terminated": tr.ST_OPERATOR_TERMINATED,
         "terminated.unrecoverable_fault": tr.ST_UNRECOVERABLE_FAULT,
+        "terminated.no_progress": tr.ST_NO_PROGRESS,
     }
     assert set(coverage) == terminal.NAMES, (
         "the terminal taxonomy and the transition rules have drifted apart; "

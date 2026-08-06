@@ -133,6 +133,17 @@ ST_UNRECOVERABLE_FAULT = TransitionRule(
     "Reaching it is a defect report (FR-006).",
 )
 
+ST_NO_PROGRESS = TransitionRule(
+    "ST-011", "no_progress", True,
+    "RUNNING → TERMINATED with terminated.no_progress. FR-006's stall "
+    "condition: a configured number of consecutive turns made no progress. "
+    "The predicate input is the observed run of no-progress turns against the "
+    "declared threshold. It selects among alternatives on ST-006's precedent "
+    "and for ST-006's reason — a stalled session is usually also approaching "
+    "a ceiling, so which limit was seen first is the thing the reader cannot "
+    "recover from the outcome alone.",
+)
+
 ST_SESSION_INTERRUPTED = TransitionRule(
     "ST-009", "session_interrupted", False,
     "RUNNING → INTERRUPTED. The session stopped without ending; no limit was "
@@ -148,7 +159,7 @@ ST_SESSION_RESUMED = TransitionRule(
 RULES: tuple[TransitionRule, ...] = (
     ST_SESSION_STARTED, ST_LEASE_RENEWED, ST_WORK_COMPLETED,
     ST_BOUND_EXHAUSTED, ST_CEILING_REACHED, ST_CAPABILITY_LAPSED,
-    ST_OPERATOR_TERMINATED, ST_UNRECOVERABLE_FAULT,
+    ST_OPERATOR_TERMINATED, ST_UNRECOVERABLE_FAULT, ST_NO_PROGRESS,
     ST_SESSION_INTERRUPTED, ST_SESSION_RESUMED,
 )
 RULES_BY_ID = {rule.rule_id: rule for rule in RULES}

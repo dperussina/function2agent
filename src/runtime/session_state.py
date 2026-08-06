@@ -34,6 +34,7 @@ from __future__ import annotations
 from src.contracts import terminal
 from src.contracts.transition import (
     ST_CEILING_REACHED,
+    ST_NO_PROGRESS,
     ST_OPERATOR_TERMINATED,
     ST_SESSION_INTERRUPTED,
     ST_SESSION_RESUMED,
@@ -47,6 +48,7 @@ from src.contracts.transition import (
     StateTransition,
     TransitionRule,
 )
+from src.runtime.progress import StallVerdict
 from src.runtime.session_store import CeilingVerdict, LifecycleGateway
 
 # Which rule ends a session, for the terminal states a caller names directly.
@@ -60,7 +62,17 @@ _RULE_BY_TERMINAL: dict[str, TransitionRule] = {
     terminal.TOKEN_CEILING.name: ST_CEILING_REACHED,
     terminal.WALL_CLOCK_CEILING.name: ST_CEILING_REACHED,
     terminal.TURN_CEILING.name: ST_CEILING_REACHED,
+    terminal.NO_PROGRESS.name: ST_NO_PROGRESS,
 }
+
+# The rules whose reading is the whole content of the record, and which
+# therefore may not be reached through the bare `terminate()`. Both select
+# among alternatives, so `StateTransition` already refuses one built with no
+# predicate inputs — but it refuses it *after* the caller has decided to
+# terminate, and `terminate()` would have had nothing to hand it. Naming them
+# in a set rather than in two `is` comparisons is what makes the third one an
+# entry here instead of a branch someone forgets to add.
+_NEEDS_READINGS = {ST_CEILING_REACHED, ST_NO_PROGRESS}
 
 
 class SessionStateError(RuntimeError):
@@ -142,11 +154,16 @@ class SessionStateMachine:
                 "— FR-049's three bounds and FR-050's lapsed capability — are "
                 "recorded by the process that observes them."
             )
-        if rule is ST_CEILING_REACHED:
+        if rule in _NEEDS_READINGS:
+            entry = ("terminate_on_ceiling() so the readings of the other "
+                     "three ceilings are on the record"
+                     if rule is ST_CEILING_REACHED else
+                     "terminate_on_stall() so the observed run of no-progress "
+                     "turns and the declared threshold are on the record")
             raise SessionStateError(
-                f"{state!r} is one of FR-005's ceilings, which selects among "
-                "four alternatives. Use terminate_on_ceiling() so the readings "
-                "of the other three are on the record (Principle VI)."
+                f"{state!r} is produced by {rule.rule_id} ({rule.reason}), "
+                f"which selects among alternatives. Use {entry} "
+                "(Principle VI)."
             )
         return self._move(
             session_id,
@@ -182,6 +199,37 @@ class SessionStateMachine:
             rule=ST_CEILING_REACHED,
             terminal_state=state,
             predicate_inputs=verdict.readings,
+            apply=lambda: self.lifecycle.terminate(session_id, state),
+            at=at,
+        )
+
+    def terminate_on_stall(
+        self, session_id: str, verdict: StallVerdict, *, at: float
+    ) -> StateTransition:
+        """FR-006's stall condition, carrying the reading that fired it.
+
+        The verdict is required rather than the bare name, for the reason
+        `terminate_on_ceiling` states one method up: the reading exists only on
+        the verdict, and a caller holding the name alone has already lost it.
+        Here that loss would be total rather than partial — the ceiling case at
+        least still names which of four ceilings, and `terminated.no_progress`
+        on its own says only that a threshold nobody can see was crossed.
+        """
+        if not verdict.stalled:
+            raise SessionStateError(
+                f"this verdict is not a stall: {verdict.observed} consecutive "
+                f"turns without progress against a threshold of "
+                f"{verdict.declared}. Terminating on evidence that says the "
+                "session was making progress is a defect, not an edge."
+            )
+        state = terminal.NO_PROGRESS.name
+        return self._move(
+            session_id,
+            expect=STATE_RUNNING,
+            to_state=STATE_TERMINATED,
+            rule=ST_NO_PROGRESS,
+            terminal_state=state,
+            predicate_inputs=(verdict.reading,),
             apply=lambda: self.lifecycle.terminate(session_id, state),
             at=at,
         )

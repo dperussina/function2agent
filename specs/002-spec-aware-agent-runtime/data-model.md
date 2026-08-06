@@ -175,7 +175,7 @@ row here that names no member.
 | `terminated.capability_lapsed` | FR-050 | member |
 | `terminated.operator_terminated` | FR-006 | member |
 | `terminated.unrecoverable_fault` | FR-006 | member |
-| `terminated.no_progress` | FR-006 | owed — **T067**, predicate unwritable as specified |
+| `terminated.no_progress` | FR-006 | member |
 | ~~`terminated.denied_operation`~~ | — | struck — **OD-26**, 2026-08-05 |
 
 **`member` means the taxonomy carries it; `owed` means it does not yet and a task says so; `struck`
@@ -212,9 +212,17 @@ permitting one, so an `owed` row whose member has since landed fails the gate ra
 > the stall condition below, and no requirement in this specification wants a denial to be terminal.
 > A terminal state for one would make the *first* refusal fatal.
 >
-> **⑤ `terminated.no_progress` is owed, not struck, and the difference is deliberate.** Its predicate
-> is *unwritable as specified* under [`tasks.md`](./tasks.md) **T067** — a recorded debt, and striking
-> it would convert a gap something is tracking into one nothing is.
+> **⑤ ~~`terminated.no_progress` is owed, not struck, and the difference is deliberate.~~** ~~Its
+> predicate is *unwritable as specified* under [`tasks.md`](./tasks.md) **T067** — a recorded debt, and
+> striking it would convert a gap something is tracking into one nothing is.~~
+>
+> **Discharged 2026-08-06 under T067, and the row above now reads `member`.** The paragraph was right
+> to keep the debt visible and it kept it visible long enough to be paid. What made it payable is that
+> FR-006 defined the predicate on 2026-08-03 — see the note under **Invariants** below, which was
+> written the same day and is the reason this one went stale rather than staying true. The member is
+> in `src/contracts/terminal.py`, the predicate is `src/runtime/progress.py`, the edge is
+> `SessionStateMachine.terminate_on_stall` under rule **ST-011**, and the threshold is required
+> configuration on `Runner` with no default.
 
 **Invariants.** Only `RUNNING` with a live lease is honoured by the enforcement point. A resumed
 session keeps its `session_id` and its capability handle; resume renews the lease and never issues a

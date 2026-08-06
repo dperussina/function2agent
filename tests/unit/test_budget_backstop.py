@@ -428,7 +428,13 @@ def _runaway_loop(harness, *, backstop, guard_at: int = _STUB_GUARD):
         budget=harness.budget, journal=harness.journal, spans=harness.spans,
         machine=harness.machine, bound=harness.bound,
         retention=harness.retention, model=model, execute=lambda _call: "ok",
-        versions=loop_fixtures.VERSIONS, clock=clock, backstop=backstop)
+        versions=loop_fixtures.VERSIONS, clock=clock, backstop=backstop,
+        # T065's arms put every configured limit out of reach so the backstop
+        # is the only thing that can stop the loop. FR-006's threshold is a
+        # configured limit, so it goes out of reach with the other four — a
+        # stall firing here would make this file prove the backstop while
+        # something else did the stopping.
+        stall=loop_fixtures.NO_STALL)
 
 
 def test_the_loop_is_stopped_by_the_backstop_with_every_ceiling_out_of_reach(

@@ -510,7 +510,7 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 > than it replaces: the caller's name and the caller's marker are resolved from
 > one variable, so dropping teardown's contribution is one edit, and two
 > resolutions of one question can no longer disagree with each other.
-- [ ] T067 Terminal taxonomy over those signals, with a named member per ceiling, per bound, plus `no_progress`, ~~`denied_operation`~~ *(struck 2026-08-05 — **OD-26**)* and `completed`, in ~~`src/runtime/terminal.py`~~ **`src/contracts/terminal.py`** (FR-006, [`data-model.md`](./data-model.md) §2.1)
+- [X] T067 Terminal taxonomy over those signals, with a named member per ceiling, per bound, plus `no_progress`, ~~`denied_operation`~~ *(struck 2026-08-05 — **OD-26**)* and `completed`, in ~~`src/runtime/terminal.py`~~ **`src/contracts/terminal.py`** (FR-006, [`data-model.md`](./data-model.md) §2.1)
 
 > **T067's path corrected 2026-08-05, and its remaining work is smaller than the line reads but is
 > not a file move.** The struck path named a module that does not exist. **The taxonomy is already
@@ -536,6 +536,41 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 > the divergence running the other way: three members the runtime already reaches were absent from
 > §2.1's own diagram. **All five divergences are now reconciled and `check_corpus.py`'s
 > `lifecycle-taxonomy` check is what keeps them so.**
+>
+> **⚠️ TICKED FULLY 2026-08-06, and the tick overturns the block above rather than working around
+> it.** The paragraph reads "T067 cannot complete while that stands", and a PARTIAL tick on T058's
+> precedent was the expected outcome. It is the wrong outcome, because **the premise is stale**:
+> **FR-006 does define the stall condition.** [`spec.md`](./spec.md) FR-006 names it — a turn makes
+> progress when it issues a tool call the session has not issued before, or produces a result — and
+> requires the consecutive-turn threshold to be operator-declared with no default. Row 6 of the
+> loose-requirements table was true when written and stopped being true when FR-006 was extended; no
+> pass re-read it. So the member is built, not deferred, and the block is struck below.
+>
+> **What landed.** `terminated.no_progress` in the taxonomy; **ST-011** in
+> `src/contracts/transition.py` carrying `selects_among_alternatives=True`, because the member is
+> chosen over the alternatives rather than forced; `src/runtime/progress.py` holding `StallPolicy`,
+> `StallVerdict` and the predicate; `SessionStateMachine.terminate_on_stall()` alongside
+> `terminate_on_ceiling()`, with `_NEEDS_READINGS` making the **bare `terminate()` refuse both
+> members** so neither can reach the record without the figures that justify it. Per **OD-26** the
+> taxonomy carries membership only and `_move` carries the transition; nothing about the edge was
+> written into `terminal.py`.
+>
+> **Three decisions worth the reader's time.** *(a)* **"Not issued before" is a content address of
+> `(tool, arguments, outcome)` and deliberately not of the body** — FR-055's canonical
+> serialization, so a retry that fails the same way twice is the same call and a retry that starts
+> succeeding is not. Addressing the body would make a tool returning a timestamp look like progress
+> forever. *(b)* **The count is a pure function of the journal's records, not a counter on the loop
+> object.** FR-007 resumes in a new process; a per-attempt counter resets at every crash, so an agent
+> that stalls, crashes and goes on stalling would never terminate. A proof holds this. *(c)* **The
+> threshold has no default and `StallPolicy` is a required argument** at every `AgentLoop` and
+> `Runner` construction site — FR-033 and **Q-10** both refuse a silently-chosen bound, and a
+> keyword with a default is exactly the silent choice.
+>
+> **Observed, not read.** `tests/unit/test_progress.py`, 16 passed. Three tampers scored by
+> `removal_proofs.sh`: the loop not consulting the predicate (the arm reads the *name*, because
+> T065's backstop and the turn ceiling both still stop a repeating agent — stopping is not the
+> claim), the count narrowed to this attempt's turns, and `_NEEDS_READINGS` dropped to the ceiling
+> member alone.
 - [ ] T068 [P] Test that a clean completion and a mid-loop cancellation are distinguishable from the caller's side, in `tests/unit/test_terminal_distinguishable.py` — the indistinguishable case is the false-success shape the corpus names as a very common and very expensive bug
 
 ### Capability 9 — the event stream the serving surface renders
@@ -1179,7 +1214,7 @@ pass writes only `tasks.md`.
 | 3 | **FR-003** and admission | [`data-model.md`](./data-model.md) gives `Deployment` a `correspondence_evidence` field described as "what established that this source produced this deployment (FR-003)", and [`quickstart.md`](./quickstart.md) step 2 says admission "establishes correspondence between the running deployment and the source commit". **FR-003 says neither.** It requires the agent to act only through the external interface; nothing in the specification says how correspondence is established or what evidence suffices — yet admission cannot complete without it | T078 |
 | 4 | **FR-024** | "Where no check of **stated precision** can be derived" creates the entire not-verifiable state, and where precision is stated is unspecified — in the derived check, in the caller's request, or in the target's published specification. **SC-005**'s detection and false-alarm figures are scored against whatever this resolves to, so the criterion's meaning moves with it | T125 |
 | 5 | **FR-045** and **SC-019** | Both speak of "each reporting window" and "the first production reporting window" with no window length and no report surface defined. The *absence of a threshold* here is deliberate and correct; the absence of a window is not stated as deliberate anywhere | T130, T188 |
-| 6 | **FR-006**'s stall condition | [`data-model.md`](./data-model.md) names `terminated.no_progress` as an FR-006 stall condition. Neither FR-006 nor any success criterion defines what no progress is, so the predicate that fires it is unwritable as specified | T067 |
+| ~~6~~ | ~~**FR-006**'s stall condition~~ **DISCHARGED 2026-08-06** | ~~[`data-model.md`](./data-model.md) names `terminated.no_progress` as an FR-006 stall condition. Neither FR-006 nor any success criterion defines what no progress is, so the predicate that fires it is unwritable as specified~~ **The row was true when written and stopped being true when FR-006 was extended.** FR-006 now defines progress — a turn that issues a tool call the session has not issued before, or produces a result — and requires the consecutive-turn threshold to be operator-declared with no default. The predicate is `src/runtime/progress.py` and the member is in the taxonomy. **The count above still reads six; it is five** | ~~T067~~ |
 
 **Two further items are deferred by decision rather than loose, and the difference matters.**
 **FR-041**'s threshold is unset because pre-registration for a per-call gate is an owner act that

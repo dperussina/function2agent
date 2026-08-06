@@ -123,11 +123,13 @@ from src.runtime.resume import (
     encode_tool_outcome,
     plan_resume,
 )
+from src.runtime.progress import StallPolicy, evaluate_stall
 from src.runtime.session_state import SessionStateMachine
 from src.runtime.session_store import SessionStore
 from src.runtime.signals import (
     REASON_CEILING_REACHED,
     REASON_COMPLETED,
+    REASON_NO_PROGRESS,
     EndOfRun,
     ExhaustionCause,
     require_paired,
@@ -216,6 +218,7 @@ class AgentLoop:
         execute: Callable[[ToolCall], str],
         versions: ArtifactVersions,
         clock: Callable[[], float],
+        stall: StallPolicy,
         assembler: ContextAssembler | None = None,
         merge_policy: MergePolicy | None = None,
         cancel: Callable[[], bool] | None = None,
@@ -239,6 +242,13 @@ class AgentLoop:
         self.execute = execute
         self.versions = versions
         self.clock = clock
+        # T067. Required with no default, and the asymmetry with `backstop`
+        # two fields down is deliberate rather than an inconsistency. A
+        # backstop must not be omittable, so `None` builds one; a *threshold*
+        # has no value this specification may invent, so FR-033 makes an
+        # omission a refusal at construction. Between them they cover the two
+        # ways a limit goes missing: nobody wired it, and nobody chose it.
+        self.stall = stall
         # The context budget defaults to the model's window minus one result
         # bound, so a full-size bounded result always fits into the next turn.
         self.assembler = assembler or ContextAssembler(
@@ -345,6 +355,39 @@ class AgentLoop:
                     merged_state=merged,
                     end_of_run=marker,
                 )
+            # T067, FR-006's stall condition, and **after** the ceilings on
+            # purpose. Both can be true on the same iteration: a session that
+            # has been repeating itself is usually also spending turns. The
+            # ceilings are the operator's declared liability bound and this is
+            # a detection over them, so when the two arrive together the bound
+            # is what the record names — and when the threshold is set below
+            # the turn ceiling, which is the configuration that makes this
+            # member reachable at all, the stall arrives strictly earlier and
+            # wins by arriving first. Ordering it the other way would let a
+            # stall threshold silently stand in for a ceiling.
+            #
+            # Evaluated at the top of a turn over `turns`, which on a resumed
+            # attempt is the journal's records rather than this process's, so
+            # a session that stalls, crashes and resumes goes on counting from
+            # where it was instead of starting again at zero.
+            stall = evaluate_stall(turns, self.stall)
+            if stall.stalled:
+                transition = self.machine.terminate_on_stall(
+                    self.session_id, stall, at=self.clock())
+                marker = EndOfRun(
+                    session_id=self.session_id,
+                    reason=REASON_NO_PROGRESS,
+                    at=transition.at,
+                )
+                self.write_transition_span(transition, end_of_run=marker)
+                return LoopOutcome(
+                    turns=tuple(turns),
+                    terminal_state=terminal.NO_PROGRESS.name,
+                    text=turns[-1].text if turns else "",
+                    merged_state=merged,
+                    end_of_run=marker,
+                )
+
             if (max_turns_this_attempt is not None
                     and this_attempt >= max_turns_this_attempt):
                 return LoopOutcome(

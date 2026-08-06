@@ -20,6 +20,7 @@ import pytest
 from src.contracts import terminal
 from src.contracts.repository import Repository
 from src.runtime.loop import ModelResponse
+from src.runtime.progress import StallPolicy
 from src.runtime.providers.costs import PROVENANCE_OPERATOR
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.runner import Runner, RunnerError
@@ -75,6 +76,11 @@ class Rig:
             deployment_id=DEPLOYMENT,
             clock=_clock(),
             lease_interval_seconds=LEASE,
+            # T067. Above anything these arms run, for the reason
+            # `tests/unit/test_loop.py`'s NO_STALL states at length: this file
+            # is about start, attach and teardown, and several of its arms
+            # repeat one tool call to burn turns.
+            stall=StallPolicy(consecutive_turns=1_000),
         )
 
     def close(self):

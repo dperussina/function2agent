@@ -43,6 +43,7 @@ from src.contracts.repository import Repository  # noqa: E402
 from src.runtime.dispatch import ToolCall  # noqa: E402
 from src.runtime.journal import TurnJournal  # noqa: E402
 from src.runtime.ledger import BudgetLedger, ReservationPolicy  # noqa: E402
+from src.runtime.progress import StallPolicy  # noqa: E402
 from src.runtime.loop import AgentLoop, ModelResponse  # noqa: E402
 from src.runtime.result_bound import ResultBound, RetentionStore  # noqa: E402
 from src.runtime.session_state import SessionStateMachine  # noqa: E402
@@ -202,6 +203,10 @@ class Probe:
             versions=ArtifactVersions(
                 TENANT, DEPLOYMENT, {"prompt": "sha256:" + "0" * 64}),
             clock=self.clock,
+            # This probe's whole question is which of FR-005's ceilings a run
+            # reaches, so FR-006's threshold is put beyond every arm rather
+            # than left to interact with the answer.
+            stall=StallPolicy(consecutive_turns=self.arm.turns + 1),
         )
 
     def model(self, context) -> ModelResponse:

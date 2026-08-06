@@ -39,6 +39,7 @@ from src.contracts.repository import Repository
 from src.contracts.transition import ST_OPERATOR_TERMINATED
 from src.runtime.dispatch import ToolCall
 from src.runtime.loop import ModelResponse
+from src.runtime.progress import StallPolicy
 from src.runtime.providers.costs import PROVENANCE_OPERATOR
 from src.runtime.result_bound import ResultBound, RetentionStore
 from src.runtime.runner import CancelToken, Runner, RunnerError
@@ -103,6 +104,13 @@ class Rig:
             deployment_id=DEPLOYMENT,
             clock=_clock(),
             lease_interval_seconds=LEASE,
+            # T067. A cancellation arm drives the same tool call until the
+            # consumer cancels, which is a stall by FR-006's predicate. A
+            # threshold that fired would end these runs as
+            # `terminated.no_progress` and the file would stop being about
+            # cancellation at all — the exact confusion T068 exists to rule
+            # out, arriving through the configuration instead of the code.
+            stall=StallPolicy(consecutive_turns=1_000),
         )
 
     def close(self):
