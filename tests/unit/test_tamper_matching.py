@@ -31,7 +31,10 @@ Go toolchain, a Linux kernel and root, and is therefore not.
 
 from __future__ import annotations
 
+import os
+import pathlib
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -285,3 +288,99 @@ def test_the_gate_fails_on_a_proofs_file_it_cannot_read(
         "the gate passed a proofs file it could not read:\n" + result.stdout
     )
     assert expect_in_output in result.stdout, result.stdout
+
+
+# ---------------------------------------------------------------------------
+# The stale-bytecode collision, and the harness line that closes it.
+
+_GUARDED = (
+    "def reachable(per_row, scoped):\n"
+    "    if per_row and scoped is not None:\n"
+    "        return False\n"
+    "    return True\n"
+)
+#: The *same length*, a different mechanism removed. Two `if <cond>:` sites
+#: rewritten to `if False:` differ from their originals by the same number of
+#: bytes far more often than not, and this pair is the shape that actually
+#: occurred in `repository.py`.
+_TAMPERED = (
+    "def reachable(per_row, scoped):\n"
+    "    if False:  # noqa                 \n"
+    "        return False\n"
+    "    return True\n"
+)
+
+
+def _import_and_ask(package: pathlib.Path) -> str:
+    return subprocess.run(
+        [sys.executable, "-c",
+         "import guarded; print(guarded.reachable(True, 'tenant'))"],
+        cwd=str(package), capture_output=True, text=True, check=True,
+    ).stdout.strip()
+
+
+def test_a_tampered_module_of_the_same_size_is_read_from_a_stale_pyc(tmp_path):
+    """The hazard, planted — because the harness scored an arm on it.
+
+    CPython decides a cached `.pyc` is current from the source's
+    `(mtime-in-whole-seconds, size)`. Two removal proofs that tamper one file
+    inside the same second with edits of equal byte length therefore make the
+    second import the **first one's** compiled module: it reports on a
+    mechanism it never removed, `UNPROVEN` when the stale bytecode still holds
+    the guard and `proved` when it does not.
+
+    This is not a story about clock resolution. It is asserted here because
+    the harness has no way to notice — both readings are ordinary outcomes —
+    and because the mitigation below is one `rm` that reads like tidying and
+    would be removed by anyone who did not know this.
+    """
+    package = tmp_path / "pkg"
+    package.mkdir()
+    source = package / "guarded.py"
+    source.write_text(_GUARDED)
+    assert _import_and_ask(package) == "False", "the guard is not being read"
+    assert (package / "__pycache__").is_dir(), (
+        "no bytecode was cached, so this arm cannot be about stale bytecode"
+    )
+
+    stamp = source.stat().st_mtime
+    source.write_text(_TAMPERED)
+    assert source.stat().st_size == len(_GUARDED), (
+        "the two versions differ in size, so this arm is not reproducing the "
+        "collision it is named for"
+    )
+    os.utime(source, (stamp, stamp))
+
+    assert _import_and_ask(package) == "False", (
+        "the tampered source was actually imported, so the collision this "
+        "arm plants did not occur and the assertion below proves nothing "
+        "about the mitigation"
+    )
+
+    shutil.rmtree(package / "__pycache__")
+    assert _import_and_ask(package) == "True", (
+        "dropping the cached bytecode did not make the tampered source take "
+        "effect, so removing __pycache__ is not the mitigation"
+    )
+
+
+def test_the_harness_drops_cached_bytecode_around_every_tamper():
+    """The mitigation is three call sites, and one of them is not enough.
+
+    The tamper edits the file, and so does the restore — a proof that put the
+    original back inside the same second, at the same size as some later
+    tamper, collides in exactly the same way. So the drop has to happen on the
+    way in and on both ways out, and this counts them rather than looking for
+    the function once.
+    """
+    text = PROOF_FILE.read_text()
+    assert "drop_bytecode () {" in text, (
+        "the harness has no bytecode drop at all; see the arm above for what "
+        "that costs"
+    )
+    calls = len(re.findall(r"^\s*drop_bytecode \"\$file\"", text, re.M))
+    assert calls >= 3, (
+        f"drop_bytecode is called at {calls} site(s). It belongs after the "
+        f"tamper and after each restore; a missing one is a silent collision "
+        f"between whichever two proofs happen to land next to each other"
+    )

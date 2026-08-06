@@ -293,13 +293,40 @@ apply_tamper () {
     _record unproven "$reason"
     FAIL=$((FAIL+1))
     mv "$file.orig" "$file"
+    drop_bytecode "$file"
     return 1
   fi
   if [ "$mode" = OK_NORMALIZED ]; then
     echo "  drifted   $name — the tamper matched only after whitespace normalization (a formatter moved this site)"
     _P_DRIFTED=yes
   fi
+  # **Bytecode, and it is not housekeeping.** CPython decides a cached `.pyc` is
+  # current from the source's `(mtime-in-WHOLE-SECONDS, size)` — so two proofs
+  # that tamper the same file inside one second with edits of the same byte
+  # length make the second one import the FIRST one's compiled module. The
+  # second proof then reports on a mechanism it never removed, in whichever
+  # direction that happens to fall: `UNPROVEN` when the stale bytecode still
+  # holds the guard, and `proved` when it does not.
+  #
+  # Measured on 2026-08-06, not reasoned. Two `if <cond>:` → `if False:` edits
+  # on `repository.py` are both exactly 32 bytes shorter, and the second scored
+  # UNPROVEN in the harness while failing correctly when run by hand — the only
+  # difference being that the harness ran them 0.4s apart. Forcing the two
+  # mtimes equal reproduces it on demand; a `sleep 1` between them hides it.
+  #
+  # This is a defect of the harness and not of either proof, so it is fixed
+  # here rather than by choosing tamper strings that happen not to collide.
+  # Scoped to the tampered file's own package: the rest of the copied tree's
+  # caches match their sources and recompiling them per proof is a real cost
+  # over ~190 arms.
+  drop_bytecode "$file"
   return 0
+}
+
+# See the note in `apply_tamper`. Called on the way in AND on the way out,
+# because a restore is the same edit in reverse and can collide the same way.
+drop_bytecode () {
+  rm -rf "$(dirname "$1")/__pycache__"
 }
 
 # report_timeout is the one place a non-returning arm is scored, and it scores
@@ -383,6 +410,7 @@ proof () {
     PASS=$((PASS+1))
   fi
   mv "$file.orig" "$file"
+  drop_bytecode "$file"
 }
 
 proof "FR-048 mount namespace — pivot_root removed" \
@@ -433,8 +461,13 @@ proof "FR-050 opaque handle — a structured claim instead" \
 # The tamper restores the swallow rather than deleting the handler: `return` in place of `raise` is
 # the edit a contributor would actually make, and it is the state this file shipped until 2026-08-06.
 # What makes this a proof of the *report* and not of the renewal count is that the arm's own
-# `RENEWALS 1` assertion still passes under the tamper — one planted SQLITE_BUSY stops renewal at 1
+# `RENEWALS 1` assertion still passes under the tamper — one planted failure stops renewal at 1
 # of 12 either way, and the lease is 0.5s expired either way. Only the stderr assertion moves.
+#
+# It targets the loop's TERMINAL branch specifically. Since the T016 migration `_loop` has two, and
+# the arm this runs plants a raw `sqlite3.OperationalError` — which after the migration is not a
+# store error at all and so can only reach the terminal one. The four-space indent difference is
+# what keeps the tamper off the tolerated branch's `raise`.
 proof "FR-050 lease renewal — the swallow restored, so a failed renewal is silent again" \
   src/supervisor/lease.py \
   "tests/integration/test_lease_revocation.py::test_a_failed_renewal_is_not_silent" \
@@ -538,6 +571,7 @@ go_proof () {
     PASS=$((PASS+1))
   fi
   mv "$file.orig" "$file"
+  drop_bytecode "$file"
 }
 
 proof "conformance — the supervisor's digest convention changed" \
