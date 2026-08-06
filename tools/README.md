@@ -70,7 +70,7 @@ threshold** before you write any edit-and-restore loop of your own.
 | `tamper.py` | The matcher `tests/removal_proofs.sh` edits source with. Exact first, whitespace-tolerant second, unique always. See [Removal-proof rot](#removal-proof-rot--tamperpy-and-check_tamperspy). |
 | `check_tampers.py` | Static rot check over every removal proof: does each tamper still name one live site, and does each test still exist? No pytest, no Go, no privileges. |
 | `proof_timeout.py` | **Not a check.** The per-arm wall-clock cap `tests/removal_proofs.sh` runs every proof under, and the reason it exists rather than `timeout(1)`: macOS ships none. Exits `124`, which the harness scores as `timed-out` — never `proved`, because a killed process is non-zero for a reason that says nothing about the mechanism, and never `skipped`, because that is how an arm leaves a green run unnoticed. |
-| `proof_attribution.py` | **Not a check.** For each removal proof, the test that actually fails once its tamper lands — the reading a human does to decide whether a proof proves what it claims. |
+| `proof_attribution.py` | **Not a check.** For each removal proof, the test that actually fails once its tamper lands — the reading a human does to decide whether a proof proves what it claims. Applies every tamper, so it runs each one under `proof_timeout.py` at the same cap the harness uses; a run that was killed reports `TIMED OUT` or `SIGNALLED` and never `fails NOTHING`, which would be a claim that the test passed made by a run that never reached an assertion. |
 | `removal_proofs_summary.py` | **Not a check either.** Writes the harness's JSON record — one entry per proof, plus the kernel, privilege and toolchains the totals are a property of — and renders it for a CI run page. It exists because a green job is one bit, and one bit cannot separate a run where every arm fired from one where the kernel arms all skipped. On the harness's abort path it deliberately emits no totals at all: a record that reads as success out of a run that measured nothing is the defect, not the fix. |
 | `selftest.py` | Proof that each check fires, that none fires on well-formed input, and that the generator writes digits and nothing else. |
 | `threshold_probe.py` | Proof that each numeric threshold is pinned: moves every tolerance, window, bound and distance by one unit and requires the self-test to break. |
@@ -1001,7 +1001,7 @@ other changes: no return in 90s.
 process `SIGTERM` — which is what an externally killed hang looks like from `proof()`'s side — printed
 `proved` and the harness exited **0**.
 
-Three fixes, because there are three defects and each leaves the others standing:
+Four fixes, because there are four defects and each leaves the others standing:
 
 - **Scoring, in `proof()` and `go_proof()`.** A status above 128 is a signalled child, and a signalled
   child evaluated no assertion. It is now scored `unproven` with reason `proof-killed-by-signal`
@@ -1015,6 +1015,18 @@ Three fixes, because there are three defects and each leaves the others standing
   arm still has to be able to *fail*, so its stub provider now refuses past a call count an order of
   magnitude above any maximum `CallCountBackstop` will accept. Untampered the backstop trips first and
   the guard is never reached; tampered it raises in under two seconds.
+- **Per arm again, in `proof_attribution.py`.** That tool applies *every* tamper too, ran with no cap
+  of any kind, and sits in the same CI job under `if: always()` — the one remaining uncapped path over
+  the arms the cap was built for. It did not hang only because the per-test bound above held the line,
+  which is the test-level fix doing the cap's work. It now runs each tampered test under the same
+  `tools/proof_timeout.py` at the same `REMOVAL_PROOF_TIMEOUT`, and — the load-bearing half — a killed
+  run gets its own report rather than the `fails NOTHING` line. `fails NOTHING` says *the test still
+  passes*, which is a reading of a run that finished; printing it for a run that was killed is the
+  harness's fabricated `proved` one tool over. A cap fired is `TIMED OUT`, a signal is `SIGNALLED`, and
+  both are named again at the foot of the listing. Verified by planting, not by reading: two throwaway
+  arms — one whose tamper removes a loop's only bound, one whose tamper makes the test signal its own
+  process — report `TIMED OUT` and `SIGNALLED` under an 8-second cap, where the same plant against the
+  pre-fix tool did not return in 75 seconds.
 
 **The generalisation is the part worth keeping.** Whenever a tamper removes the *only* thing that
 stops a loop, the tampered test has no failure mode left. Ask it of every arm whose test runs

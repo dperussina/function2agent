@@ -61,11 +61,61 @@ modes are separated because they call for different answers:
 
 The baseline costs one `pytest` invocation and one `go test` invocation for the
 whole file, against the fifty-one of each the proof loop makes.
+
+---------------------------------------------------------------------------
+THE CAP, AND WHY A KILLED RUN IS ITS OWN OUTCOME RATHER THAN A THIRD SILENCE
+
+This tool applies **every** tamper in the file and runs the arm's test. Some of
+those tampers remove the only thing that stops a loop, and the tampered test
+then has no failure mode left: it does not fail, it does not return. Two such
+arms are on record and `tools/proof_timeout.py` names both. Finding 032 records
+what one costs uncapped — 56 minutes of continuous CPU on a laptop, and here,
+in CI, against a job limit rather than somebody's patience.
+
+So every tampered run goes through `tools/proof_timeout.py`, at the same
+`REMOVAL_PROOF_TIMEOUT` `tests/removal_proofs.sh` puts on the same arms. That
+script rather than `subprocess.run(timeout=)`, for the reason its own docstring
+gives: `subprocess.run` kills the direct child only, and a tampered arm can
+leave children behind (`tests/unit/test_supervisor_lease.py` spawns
+interpreters that outlive a killed parent). The cap runs the command in its own
+session and kills the **group**. A partial kill is the shape that let the
+original hang survive being killed.
+
+**A cap without its own outcome would be the shallower half of the fix.**
+Finding 032's keeper distinction is that the cap only made the hang rarer, and
+the *scoring* is what closed the hole: what fabricated a proof in the harness
+was reading a killed process as a result. The identical shape is available
+here. A killed run emits no `FAILED` line, and no `FAILED` line prints `fails
+NOTHING — the test still passes` — a claim about the mechanism, made by a run
+that never reached an assertion. That is the harness's fabricated `proved` one
+tool over, pointing the other way and with the same cause.
+
+A killed run therefore gets its own report and never the `fails` line:
+
+  - **TIMED OUT** — the cap fired (exit 124).
+  - **SIGNALLED** — the run died on a signal (exit > 128) without reporting: an
+    OOM kill, a segfault in tampered source, a runner tearing the job down. The
+    cap does not govern those, which is the whole of finding 032's point.
+
+Neither is `NO TEST`, which says the baseline never had that test, and neither
+is the `CANNOT RUN` refusal above, which says there is no baseline at all and
+so nothing can be attributed. These are per-proof, because every other proof in
+the file was attributed fine.
+
+**The exit status stays 0.** This tool decides nothing (see the head of this
+docstring) and these are the harness's own arms: `tests/removal_proofs.sh` runs
+the same tamper against the same test under the same cap and *does* gate,
+scoring `timed-out` with its own counter or `unproven` for a signal. A second
+red light on the same fact would be a second place to tune. What is added
+instead is a tail block naming the affected proofs, because one line inside a
+hundred-and-fifty-proof listing in a collapsed CI `<details>` block is not
+somewhere a reader finds anything.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import pathlib
 import re
 import shutil
@@ -81,6 +131,17 @@ from tamper import TamperError, apply_snippet  # noqa: E402
 REPO = pathlib.Path(__file__).resolve().parent.parent
 _FAILED = re.compile(r"^(?:FAILED|ERROR) (\S+)", re.M)
 _GO_FAIL = re.compile(r"^ *--- FAIL: (\S+)", re.M)
+
+# The wall-clock cap on one tampered run. See the docstring section above for
+# why this script and not `subprocess.run(timeout=)`.
+CAP = REPO / "tools" / "proof_timeout.py"
+TIMED_OUT = 124  # what `proof_timeout.py` exits, and GNU `timeout(1)` before it
+
+# The harness's own knob, shared on purpose. These are the harness's arms, and
+# a cap raisable in one tool but not the other would let the same arm be
+# bounded in one place and run unbounded in the other — which is the state this
+# tool was in until now.
+PROOF_TIMEOUT = os.environ.get("REMOVAL_PROOF_TIMEOUT", "300")
 
 # The baseline outcome lines. `pytest -v` writes `NODE_ID OUTCOME`; `go test -v`
 # writes `--- OUTCOME: TestName`, indented for a subtest and not for a parent.
@@ -157,6 +218,42 @@ def baseline_go(outcomes: list[tuple[str, str]], pattern: str) -> str:
     return verdict
 
 
+def _capped(argv: list[str], cwd: pathlib.Path) -> tuple[str, int]:
+    """One tampered run, under the cap. Returns its output and its status.
+
+    stdout and stderr are read together because the cap merges them anyway, and
+    because `_run_baseline_py` above already reads them together for the same
+    reason: a tampered run's diagnosis is in whichever stream it chose.
+    """
+    proc = subprocess.run(
+        [sys.executable, str(CAP), PROOF_TIMEOUT, *argv],
+        cwd=cwd, capture_output=True, text=True,
+    )
+    return proc.stdout + proc.stderr, proc.returncode
+
+
+def _report_unobserved(status: int) -> str | None:
+    """The lines for a run that was killed, or None if it reported for itself.
+
+    Kept apart from `_report_unrunnable` below because the two answer different
+    questions. That one asks whether the arm was worth attempting, from the
+    baseline, before the tamper. This one asks whether the attempt produced an
+    observation at all — and the answer `no` must not be spelled `fails
+    NOTHING`, which is a reading of a run that finished.
+    """
+    if status == TIMED_OUT:
+        return (f"    TIMED OUT did not return within {PROOF_TIMEOUT}s and was "
+                "killed, so it names nothing\n"
+                "              Not `fails NOTHING` — that describes a run that "
+                "finished and this one did not.")
+    if status > 128:
+        return (f"    SIGNALLED died on signal {status - 128} without reporting, "
+                "so it names nothing\n"
+                "              Not `fails NOTHING` — no assertion was evaluated, "
+                "so nothing was observed to pass.")
+    return None
+
+
 def _report_unrunnable(verdict: str, test: str) -> str | None:
     """The one line saying why a proof was not attempted, or None to attempt it."""
     if verdict == ABSENT:
@@ -174,6 +271,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--only", default="", help="substring filter on the proof name")
     args = parser.parse_args(argv)
+
+    # Before anything is copied or run. An unparseable cap makes
+    # `proof_timeout.py` exit 2 on every arm, which reads here as a run that
+    # produced no failure — the `fails NOTHING` sweep this tool's own docstring
+    # was written about. Refusing is the same answer as the baseline abort's,
+    # for the same reason: the tool cannot do the thing it prints.
+    try:
+        float(PROOF_TIMEOUT)
+    except ValueError:
+        print(f"REMOVAL_PROOF_TIMEOUT={PROOF_TIMEOUT!r} is not a number of "
+              "seconds. Refusing to run uncapped.", file=sys.stderr)
+        return 2
 
     proofs = [
         p
@@ -233,6 +342,9 @@ def main(argv: list[str] | None = None) -> int:
         )))
         print()
 
+        # Proofs whose run was killed rather than finished, for the tail block.
+        killed: list[tuple[str, int]] = []
+
         for proof in proofs:
             # The baseline lookup. A proof whose test did not run untampered
             # cannot be scored by whether it fails tampered.
@@ -263,20 +375,21 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             target.write_text(tampered)
             try:
+                status = 0
                 if proof.kind == "py":
-                    out = subprocess.run(
+                    out, status = _capped(
                         [sys.executable, "-m", "pytest", proof.test, "-q", "--tb=no",
                          "-p", "no:cacheprovider"],
-                        cwd=work, capture_output=True, text=True,
-                    ).stdout
+                        work,
+                    )
                     failed = _FAILED.findall(out)
                     if not failed and re.search(r"\d+ skipped", out) and " passed" not in out:
                         failed = ["(the test did not run here — privilege or platform)"]
                 elif have_go:
-                    out = subprocess.run(
+                    out, status = _capped(
                         ["go", "test", "-v", "-run", proof.test, "./..."],
-                        cwd=work / "src" / "proxy", capture_output=True, text=True,
-                    ).stdout
+                        work / "src" / "proxy",
+                    )
                     failed = _GO_FAIL.findall(out)
                 else:
                     failed = ["(no Go toolchain)"]
@@ -285,10 +398,35 @@ def main(argv: list[str] | None = None) -> int:
 
             print(proof.name)
             print(f"    claims  {proof.test}")
+            # Before the `fails` lines and not beside them: a killed run has no
+            # findall result worth printing, and printing one anyway is how a
+            # non-observation gets read as an observation.
+            unobserved = _report_unobserved(status)
+            if unobserved is not None:
+                killed.append((proof.name, status))
+                print(unobserved)
+                print()
+                continue
             if not failed:
                 print("    fails   NOTHING — the test still passes")
             for node in failed:
                 print(f"    fails   {node}")
+            print()
+
+        if killed:
+            # Named again here because the per-proof line above is one of a
+            # hundred and fifty, inside a collapsed `<details>` block on the run
+            # page. An outcome nobody scrolls to is the quiet form of not having
+            # one.
+            print(f"{len(killed)} proof(s) produced no observation — the run was "
+                  "killed rather than finished:")
+            for name, status in killed:
+                label = "TIMED OUT" if status == TIMED_OUT else "SIGNALLED"
+                print(f"    {label} {name}")
+            print()
+            print("  None of these is `fails NOTHING`. `tests/removal_proofs.sh`")
+            print("  runs the same arms under the same cap and does gate on them:")
+            print("  a timeout scores `timed-out` there, a signal `unproven`.")
             print()
     finally:
         shutil.rmtree(work, ignore_errors=True)

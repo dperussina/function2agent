@@ -45,6 +45,44 @@
 # advisory until somebody makes it required, and a required check is named by
 # its *job name* — renaming a job silently detaches whatever rule referenced
 # it. That is not a hypothetical; the job below was renamed on 2026-08-04.
+#
+# ---------------------------------------------------------------------------
+# THE JOB BOUNDS, AND WHERE EACH NUMBER CAME FROM
+#
+# Every job below carries `timeout-minutes`. Until 2026-08-06 none did, so a
+# hang anywhere fell through to GitHub's 360-minute default — and this workflow
+# has a *documented* way to hang. `tests/removal_proofs.sh` and
+# `tools/proof_attribution.py` both apply tampers that can remove the only
+# thing stopping a loop, leaving the tampered test with no failure mode left.
+# Finding 032 measured one at 56 minutes of continuous CPU.
+#
+# **These are fallbacks, not the primary bound.** The primary bound is the
+# per-arm cap `tools/proof_timeout.py` applies inside both of those tools. That
+# distinction sets the *floor* on the removal-proofs value, because a job
+# timeout **cancels the job** — the `if: always()` steps do not run — so a
+# bound chosen inside the window where the per-arm cap would fire and publish
+# its record destroys the exact diagnostic the cap exists to produce.
+#
+# **Derived from this workflow's own history rather than picked.** Job
+# durations over the 40 most recent runs — 200 observations, 191 success and 9
+# failure — taken as `completed_at - started_at` from
+# `gh api repos/{owner}/{repo}/actions/runs/<id>/jobs`, on 2026-08-06:
+#
+#     job              n    min    med    p90    max     set
+#     removal proofs  40    183  263.5    302    318    20m
+#     pytest          40     10   90.5    100    107    10m
+#     corpus gates    40     28   39.0     42     44     5m
+#     go test         40     19   25.0     28     29     5m
+#     invariants      40      7   11.0     13     18     5m
+#
+# **5 minutes is a floor, and it is stated as one rather than dressed up as a
+# derivation.** Three jobs finish in under a minute every time; for those the
+# variance is runner provisioning and package download, not the work, so a
+# value scaled off the work would be measuring PyPI. What the floor buys is
+# real all the same: 72x tighter than the default, and it fires on a hang.
+#
+# Re-derive rather than nudge. The command above is the whole method, and a
+# bound raised to quiet a flake has stopped measuring anything.
 
 name: CI
 
@@ -56,6 +94,10 @@ jobs:
   invariants:
     name: invariants (milliseconds, no model)
     runs-on: ubuntu-latest
+    # The floor. 18s observed max, so this is 17x — and the honest reading is
+    # that the runner and one `pip install --require-hashes` are the whole of
+    # the variance here, since the runner itself takes milliseconds.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/runner-identity
@@ -91,6 +133,10 @@ jobs:
     # audit aid, documented in `tools/README.md` with its invocations.
     name: corpus gates (consistency, no model)
     runs-on: ubuntu-latest
+    # The floor, and the tightest of the three in real terms: 44s observed max
+    # is 6.8x, and this job installs nothing at all, so it has no download leg
+    # for the floor to be covering.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/runner-identity
@@ -159,6 +205,11 @@ jobs:
   python:
     name: pytest (kernel mechanisms included)
     runs-on: ubuntu-latest
+    # 107s observed max, so 5.6x — wider than the floor jobs get because this
+    # is the only one that both installs the full pinned lock and runs
+    # privileged kernel work under `sudo`, and because its `if: always()` steps
+    # are what publish the outcome record a failing run is read from.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/runner-identity
@@ -431,6 +482,21 @@ jobs:
     # restores the ordinary route.
     name: removal proofs (do the tests catch removal)
     runs-on: ubuntu-latest
+    # **Derived, not scaled — this is the one job where the per-arm cap sets
+    # the floor.** 318s observed max, plus 300s for one arm reaching
+    # `REMOVAL_PROOF_TIMEOUT` in the harness below, plus 300s for the same arm
+    # reaching the same cap again in `tools/proof_attribution.py`, is 918s =
+    # 15.3 minutes. That is the longest a run can legitimately take *and still
+    # reach the `if: always()` steps that publish its record, which a job
+    # timeout would skip*. 20 minutes rounds it up and leaves 882s of hang
+    # budget over the observed max — two full cap firings and change. Three
+    # simultaneously hanging arms exceed it, and that is the right place to
+    # give up: at three the cap is not containing the problem and the fallback
+    # is supposed to fire.
+    #
+    # Raising `REMOVAL_PROOF_TIMEOUT` without raising this trades the cap's
+    # diagnostic for a cancelled job. They move together.
+    timeout-minutes: 20
     # A passing suite says the code works. It does not say the tests would
     # notice if a mechanism were deleted, and that is the property this
     # repository's rules actually require. Left out of CI, the proofs rot
@@ -533,6 +599,10 @@ jobs:
   go:
     name: go test (the enforcement point)
     runs-on: ubuntu-latest
+    # The floor. 29s observed max is 10x, and every one of those observations
+    # was taken with a warm `setup-go` cache; a cold module download plus a
+    # `-race` build is the variance the floor is here to absorb.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/runner-identity
