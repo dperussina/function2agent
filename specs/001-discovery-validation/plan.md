@@ -55,7 +55,10 @@ no requirement text, and what it adds is that a debt three passes have now re-de
 directions is *decided* rather than outstanding. It is also the register's **second adopt-and-defer**
 entry after OD-24, and the first to carry its expiry condition as a named artifact rather than as a
 measurement, on OD-24's own re-examination showing that the ground which fails quietly is the one
-satisfied without anybody noticing.)*
+satisfied without anybody noticing. **✅ Discharged the same day it was taken** — the named artifact
+was commissioned within hours and the migration was done ahead of it, which makes it the first entry
+here whose expiry condition fired, and the first evidence that writing the condition as an artifact
+rather than as a measurement was the right form.)*
 ~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ **The last nineteen
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
@@ -88,11 +91,13 @@ is a disposition the loop continues past**, and **OD-27 admits an operator-decla
 no vendor page prices, as a second provenance carried on the record rather than a second row in the
 table, while refusing a single rate for a card that prices in two context columns and publishes no
 boundary — the refusal being the limb the decision turns on, because one number there would be the
-invented boundary wearing the operator's name**, and **OD-28 keeps the `SessionTable` → `Repository`
-migration deferred on two grounds and routes future instances of the shape to T016's note rather than
+invented boundary wearing the operator's name**, and **OD-28 kept the `SessionTable` → `Repository`
+migration deferred on two grounds and routed future instances of the shape to T016's note rather than
 re-litigating them, while naming the artifact that expires the first ground — a supervisor entry point
 opening the session store, at which instant the WAL first-open race is live and nothing in the tree
-will notice.**
+will notice. That artifact was commissioned the same day and the migration was done ahead of it, so
+OD-28 is ✅ discharged 2026-08-06 by the named condition being met rather than by anyone re-reading
+the entry — which is the property it was written for.**
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -3245,6 +3250,40 @@ the same state. Wiring both is one task and it is not this decision's.
 
 ### OD-28 — the `SessionTable` → `Repository` migration stays deferred, and the shape is routed to T016's note rather than re-litigated; the deferral expires the moment a supervisor process constructs a session store
 
+> #### ✅ DISCHARGED 2026-08-06 — GROUND ① EXPIRED BY BEING SATISFIED, AND THE MIGRATION IS DONE
+>
+> **Written at the entry, on the same day, because the failure this entry names is a ground that
+> quietly stops applying while only a derived copy is corrected.** OD-24 is the precedent and it is
+> cited below in exactly these terms; correcting T016's note and leaving this standing would have been
+> that failure with the documents swapped.
+>
+> **Ground ① is retired.** The owner decided to build a **process entry point for the Python
+> runtime** — the T029 seam, recorded at `f167d7e` — which is precisely the artifact the expiry
+> condition below names: *a supervisor entry point that opens the session store*. The condition was
+> written to be satisfied by an event rather than noticed by an audit, and it was. **The migration was
+> then done first, before the entry point exists**, so the hazard was removed rather than made live
+> and chased: `SessionTable` now opens `Repository.unscoped(..., role=ROLE_SUPERVISOR)` and issues
+> every statement through the layer.
+>
+> **Ground ② was not waited out and is not claimed to have been.** Phase 3 has not closed. What
+> changed is that the ground's own content — *the migration is not mechanical* — was paid rather than
+> deferred: the three obstacles finding 033 named were reconciled inside the repository layer
+> (`session` declared `scope_per_row` in the ownership map, a `NotEqual` predicate for the
+> second-termination guard, the conformance fixture regenerated from the supervisor's own writer and
+> read unchanged by the Go arm). The deferral is **discharged by the work being done**, not expired.
+>
+> **Measured either side rather than read off the diff.** Four processes at an N-party barrier, twelve
+> trials of four cold first-opens: **8 of 12 trials produced a loser, 17 losers over 48 opens**
+> before; **0 and 0** after. Six of eight calls on the write surface leaked raw
+> `sqlite3.OperationalError` under a planted `EXCLUSIVE` holder before; **none** after.
+>
+> **What this changes below.** The `permitted` entry this entry authorises **no longer exists** — it
+> was removed with the migration and the scan is green with nothing suspended. T016's tick is clean
+> rather than `PARTIAL`. The *routing* half — a future instance of this shape is recorded rather than
+> re-litigated — is spent along with the deferral it routed, and the general rule it protected is
+> unchanged and now holds tree-wide. **Nothing is re-sized here and no task is minted**, which this
+> entry required of anyone touching it and remains true of closing it.
+
 **Decided 2026-08-06**, answering the one question
 [finding 033](../002-spec-aware-agent-runtime/findings/033-session-table-wal-race-unreachable-and-owed-to-migration.md)
 raised for an owner and deliberately declined to answer: **when does
@@ -3366,12 +3405,15 @@ half lands there rather than here.
 - **Not** a re-sizing of anything. No estimate is attached, no band is collapsed, and finding 033 is
   explicit that it does not establish whether the migration is correctly sized.
 
-**Authorises** the standing `permitted` entry for
+~~**Authorises** the standing `permitted` entry for
 [`src/supervisor/session_table.py`](../../src/supervisor/session_table.py) in
 [`tests/invariants/test_writer_ownership.py`](../../tests/invariants/test_writer_ownership.py), and
 **T016**'s **PARTIAL** tick — the interface landed and holds, the line's third clause does not hold
 tree-wide, and the exemption is what makes the checkbox green. Nothing in code changes and no
-requirement text moves.
+requirement text moves.~~ **Spent 2026-08-06 with the discharge above.** Both authorisations are
+gone rather than lapsed: the `permitted` entry was deleted and the scan passes without it, and
+T016's tick is clean. The paragraph is struck rather than deleted because what it authorised is the
+fact the discharge has to be checkable against.
 
 **Propagated to** [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) at **T016**'s note, which
 already held the migration debt and the reachability condition and now records that the deferral is

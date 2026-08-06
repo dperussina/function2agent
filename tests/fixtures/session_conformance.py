@@ -27,6 +27,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from src.supervisor import session_table
 from src.supervisor.session_table import SessionTable, capability_digest
 
 HERE = Path(__file__).parent
@@ -110,6 +111,20 @@ def rows() -> list[dict]:
     ]
 
 
+def _force_lease(table: SessionTable, row: dict) -> None:
+    """Set `lease_expires_at` with none of the writer's state guards.
+
+    Deliberately reaching past `SessionTable` — the two rows that need this
+    are exactly the ones the supervisor's own writer refuses to produce, which
+    is why they are in the fixture at all.
+    """
+    table._repo.update(  # noqa: SLF001 — deliberate, see the rows' `why`
+        session_table.TABLE,
+        where={"session_id": row["session_id"]},
+        values={"lease_expires_at": row["lease_expires_at"]},
+    )
+
+
 def build(db_path: Path) -> list[dict]:
     """Write the fixture database using the supervisor's own writer.
 
@@ -135,17 +150,16 @@ def build(db_path: Path) -> list[dict]:
             if row["state"] == "TERMINATED":
                 table.terminate(row["session_id"], "terminated.operator_terminated")
             # The adversarial row: put the lease back after termination, which
-            # the supervisor's own writer will not do. Raw SQL, and visibly so.
+            # the supervisor's own writer will not do. Written through the
+            # repository but around `SessionTable`'s state guards — visibly so,
+            # and no longer as raw SQL, because since the T016 migration there
+            # is no SQL above the repository layer to write.
             if row["session_id"] == "sess-terminated-live-lease":
-                table._exec(  # noqa: SLF001 — deliberate, see the row's `why`
-                    "UPDATE session SET lease_expires_at=? WHERE session_id=?",
-                    (row["lease_expires_at"], row["session_id"]),
-                )
+                _force_lease(table, row)
             if row["state"] == "RUNNING" and row["session_id"] == "sess-expired":
-                table._exec(  # noqa: SLF001 — `renew` refuses a past instant
-                    "UPDATE session SET lease_expires_at=? WHERE session_id=?",
-                    (row["lease_expires_at"], row["session_id"]),
-                )
+                # `renew` refuses a past instant, and a past instant is the
+                # whole point of this row.
+                _force_lease(table, row)
 
             # Read the row back rather than trusting the declaration above: the
             # first version of this fixture recorded what it intended to write,

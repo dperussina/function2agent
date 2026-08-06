@@ -47,10 +47,20 @@ class TableOwnership:
     writer: str
     readers: frozenset[str]
     note: str = ""
+    #: Whether FR-035's two scope columns travel on the **row** rather than on
+    #: the connection. See `scope_is_per_row` for what that changes and why it
+    #: is declared here rather than passed at a call site.
+    scope_per_row: bool = False
 
 
-def _own(table: str, writer: str, *readers: str, note: str = "") -> TableOwnership:
-    return TableOwnership(table, writer, frozenset(readers), note)
+def _own(
+    table: str,
+    writer: str,
+    *readers: str,
+    note: str = "",
+    scope_per_row: bool = False,
+) -> TableOwnership:
+    return TableOwnership(table, writer, frozenset(readers), note, scope_per_row)
 
 
 # data-model.md's table, transcribed row by row. The group names there are
@@ -58,7 +68,24 @@ def _own(table: str, writer: str, *readers: str, note: str = "") -> TableOwnersh
 # per table and a group is not something a connection writes to.
 OWNERSHIP: tuple[TableOwnership, ...] = (
     # session, lease, capability → supervisor; read by runtime and proxy.
-    _own("session", ROLE_SUPERVISOR, ROLE_RUNTIME, ROLE_PROXY),
+    _own("session", ROLE_SUPERVISOR, ROLE_RUNTIME, ROLE_PROXY,
+         scope_per_row=True,
+         note="**The scope travels on the row, not on the connection.** The "
+              "supervisor is one process serving every tenant, so its session "
+              "store holds rows for all of them and there is no one "
+              "(tenant, deployment) a connection to it could be opened as. "
+              "And the read that matters is `resolve`, which looks a row up "
+              "by an opaque capability digest — FR-050 layer 1 resolves the "
+              "handle *before* it knows whose it is, which is the whole "
+              "reason the handle is opaque, so a tenant predicate on that "
+              "read is not merely unnecessary but unanswerable. FR-035 is "
+              "unweakened: both columns are still on every row and still "
+              "`NOT NULL`; what moves is who supplies them. The layer "
+              "**requires** them from the caller here instead of supplying "
+              "them, which is the same guarantee with the enforcement "
+              "inverted. It is declared on the table rather than passed per "
+              "call for the reason this module's docstring gives about "
+              "ownership: an argument is what somebody in a hurry passes."),
     _own("lease", ROLE_SUPERVISOR, ROLE_RUNTIME, ROLE_PROXY),
     _own("capability", ROLE_SUPERVISOR, ROLE_RUNTIME, ROLE_PROXY),
 
@@ -143,6 +170,33 @@ def writer_of(table: str) -> str:
             "decided the ownership of, which is how two processes end up "
             "writing it."
         ) from None
+
+
+def scope_is_per_row(table: str) -> bool:
+    """Whether this table's FR-035 scope columns are supplied per row.
+
+    `False` — the ordinary case — means the repository supplies `tenant_id`
+    and `deployment_id` from the connection's own scope, refuses a caller that
+    tries to set them, and filters every read by them.
+
+    `True` means the reverse on all three counts: the caller must supply both
+    on every write, reads carry no scope predicate, and a unique group is
+    indexed without the scope columns prepended. The three move together
+    because they are one decision — an index prefixed with columns the reads
+    do not filter on would let two tenants hold the same key while the read
+    that has to tell them apart cannot see the difference.
+
+    A table with no entry raises rather than defaulting, because a default
+    here is the quiet answer in both directions.
+    """
+    return BY_TABLE[table].scope_per_row if table in BY_TABLE else _unknown(table)
+
+
+def _unknown(table: str) -> bool:
+    raise OwnershipError(
+        f"{table!r} has no declared ownership, so how its rows carry "
+        "tenant_id and deployment_id has not been decided (data-model.md §0)."
+    )
 
 
 def require_write(table: str, role: str) -> None:

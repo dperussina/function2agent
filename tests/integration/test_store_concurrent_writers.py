@@ -79,7 +79,7 @@ from pathlib import Path
 
 import pytest
 
-from src.contracts import ownership
+from src.contracts import ownership, terminal
 from src.contracts.repository import (
     BUSY_TIMEOUT_S,
     CONVERGENCE_WINDOW_S,
@@ -90,6 +90,7 @@ from src.contracts.repository import (
     StoreWedgedError,
     UniquenessError,
 )
+from src.supervisor.session_table import SessionTable, capability_digest
 
 TABLE = "trace_span"          # runtime-owned
 CEILING_TABLE = "session_ceiling"
@@ -969,3 +970,247 @@ def _open_a_brand_new_store(path: str, label: str, repo_root: str) -> tuple:
         return (os.getpid(), "opened", repo.journal_mode(), repo.wal_entry)
     finally:
         repo.close()
+
+
+# ---------------------------------------------------------------------------
+# The same three plants, aimed at `SessionTable`.
+#
+# Every arm above measures `Repository` directly. These re-run the identical
+# instruments against the one caller that used to sit *beside* it — a raw
+# `sqlite3.connect` and an `executescript` whose first statement was the WAL
+# pragma — and they are here rather than in a session-specific file because
+# what they assert is that the property transferred, which is only meaningful
+# next to the arm it transferred from.
+#
+# Worse there than here, before the migration, for a reason the arms below
+# still depend on: the pragma preceded the table creation, so an aborted script
+# left a file with no session table at all. The `resolve()` call in the surface
+# arm is what would have caught that; it is not incidental.
+
+
+def _session_row(table: SessionTable, session_id: str) -> str:
+    """Seed one row and hand back the digest that resolves it."""
+    handle = f"handle-for-{session_id}"
+    table.create(
+        session_id=session_id,
+        tenant_id="t-1",
+        deployment_id="d-1",
+        capability_sha256=capability_digest(handle),
+        lease_expires_at=time.time() + 60.0,
+    )
+    return capability_digest(handle)
+
+
+def test_a_session_stores_first_open_converges_instead_of_raising(
+    tmp_path,
+) -> None:
+    """The cold-start defect, planted at the caller that used to carry it.
+
+    Same shape as the repository arm: a holder takes RESERVED on a brand-new
+    file so the conversion **cannot** succeed, then does what the winner of the
+    real race does. What is new is the second assertion. Before the migration a
+    loser did not merely raise — its schema script aborted at statement one, so
+    the file it left behind had no `session` table. Requiring `get` to answer
+    is what distinguishes "opened and converged" from "opened onto a store the
+    layer never finished building".
+
+    `wal_entry` is read off the repository the table now holds, and `peer` is
+    reachable by exactly one path, so this cannot pass on a run where the
+    opener simply won.
+    """
+    path = str(tmp_path / "sessions" / "cold.sqlite3")
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    _new_rollback_mode_store(path)
+    holder = _hold(path, "IMMEDIATE")
+
+    started = threading.Barrier(2)
+    failures: list[str] = []
+
+    def release_after_the_open_has_failed() -> None:
+        started.wait(timeout=_RENDEZVOUS_TIMEOUT_S)
+        time.sleep(_HOLD_THE_LOCK_S)
+        try:
+            holder.execute("ROLLBACK")
+            holder.execute("PRAGMA journal_mode=WAL")
+        except BaseException as exc:  # noqa: BLE001
+            failures.append(f"{type(exc).__name__}: {exc}")
+
+    winner = threading.Thread(target=release_after_the_open_has_failed)
+    winner.start()
+    try:
+        started.wait(timeout=_RENDEZVOUS_TIMEOUT_S)
+        loser = SessionTable(path)
+    finally:
+        winner.join(timeout=_RENDEZVOUS_TIMEOUT_S)
+        holder.close()
+
+    assert failures == [], f"the plant's own winner failed: {failures}"
+    assert loser._repo.wal_entry == WAL_ENTRY_PEER, (   # noqa: SLF001
+        f"the opener reported {loser._repo.wal_entry!r}, so it won the "  # noqa: SLF001
+        "conversion rather than losing it and this run measured nothing."
+    )
+    assert loser.get("absent") is None, (
+        "the losing opener returned a table it cannot read. Before the "
+        "migration this is the state a loser left behind — the WAL pragma "
+        "aborted the schema script before the table was created — and it is "
+        "the half that an exception-free open would otherwise hide."
+    )
+    loser.close()
+
+
+def test_a_session_store_on_a_wedged_file_refuses_as_a_store_error(
+    tmp_path,
+) -> None:
+    """A lock nobody will release must not read as momentary contention.
+
+    This is the arm T108's renewer split turns on. `EXCLUSIVE` blocks the
+    shared lock underneath the conversion, so the busy handler is consulted and
+    runs to exhaustion — and outlasting the whole timeout is the *evidence* the
+    classification rests on rather than a guess about the holder.
+
+    Before the migration this raised `sqlite3.OperationalError`, which is one
+    undifferentiated fact and is why the renewer could only die on everything.
+    """
+    path = str(tmp_path / "sessions" / "wedged.sqlite3")
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    _new_rollback_mode_store(path)
+    holder = _hold(path, "EXCLUSIVE")
+    try:
+        began = time.monotonic()
+        with pytest.raises(StoreWedgedError) as caught:
+            SessionTable(path)
+        waited = time.monotonic() - began
+    finally:
+        holder.execute("ROLLBACK")
+        holder.close()
+
+    assert not isinstance(caught.value, StoreBusyError), (
+        "a permanently held lock was reported as momentary contention. The "
+        "renewer tolerates that class, so this misclassification is what "
+        "would make its bounded retry unbounded."
+    )
+    assert waited >= BUSY_TIMEOUT_S * 0.5, (
+        f"the refusal came back in {waited:.3f}s, well inside the "
+        f"{BUSY_TIMEOUT_S}s busy timeout, so the busy handler did not run to "
+        "exhaustion and 'wedged' is not what was measured."
+    )
+
+
+def test_no_sqlite_exception_escapes_the_session_write_surface(
+    tmp_path, monkeypatch
+) -> None:
+    """All six writers and both readers, against a real held lock.
+
+    The count is the whole point. A prior pass measured **six of six writers
+    plus `__init__` leaking `sqlite3.OperationalError`**, both reads surviving;
+    this requires zero leaks and the same two reads. Naming every method rather
+    than sampling one is deliberate — the leak was per-method, so an arm
+    covering `renew` alone would leave five to be found again later.
+
+    The two reads are asserted to *succeed*, not merely to be caught. WAL
+    readers do not block on a writer, and that is the property the proxy's
+    read-only open depends on; a `select` that started raising here would mean
+    the store had lost it.
+    """
+    monkeypatch.setattr("src.contracts.repository.BUSY_TIMEOUT_S", 1.0)
+
+    path = str(tmp_path / "sessions" / "surface.sqlite3")
+    owner = SessionTable(path)
+    digest = _session_row(owner, "s-live")
+    owner.mark_running("s-live")
+
+    holder = _hold(path, "EXCLUSIVE")
+    leaked: list[str] = []
+    succeeded: list[str] = []
+
+    def attempt(name: str, call) -> None:
+        try:
+            call()
+            succeeded.append(name)
+        except sqlite3.Error as exc:
+            leaked.append(f"{name}: {type(exc).__name__}: {exc}")
+        except StoreUnavailableError:
+            pass
+
+    attempt("get", lambda: owner.get("s-live"))
+    attempt("resolve", lambda: owner.resolve(digest))
+    attempt("create", lambda: _session_row(owner, "s-new"))
+    attempt("mark_running", lambda: owner.mark_running("s-live"))
+    attempt("mark_interrupted", lambda: owner.mark_interrupted("s-live"))
+    attempt("mark_resumed", lambda: owner.mark_resumed("s-live", 1.0))
+    attempt("renew", lambda: owner.renew("s-live", 2.0))
+    attempt("terminate", lambda: owner.terminate("s-live", terminal.COMPLETED.name))
+
+    try:
+        holder.execute("ROLLBACK")
+    finally:
+        holder.close()
+        owner.close()
+
+    assert leaked == [], (
+        "an engine exception reached a caller from the session surface:\n  "
+        + "\n  ".join(leaked) +
+        "\nThis is the leak the migration exists to close, and a caller "
+        "catching `sqlite3.OperationalError` is coupled to the substrate "
+        "exactly as one holding SQL is."
+    )
+    assert succeeded == ["get", "resolve"], (
+        f"{succeeded} completed against an exclusively locked store. The two "
+        "reads are expected to succeed — that is what WAL was chosen for, and "
+        "it is what the proxy's read-only open relies on — and the six writes "
+        "are not."
+    )
+
+
+def test_several_processes_opening_a_brand_new_session_store_all_get_one(
+    tmp_path,
+) -> None:
+    """The real configuration, kept as the regression the entry point needs.
+
+    Not the plant, for the reason recorded above the repository's equivalent:
+    the race occurs on roughly two thirds of runs and no party count makes it
+    certain, so this can only assert the safety property. It is kept because a
+    supervisor entry point starting several processes against a store that does
+    not exist yet is precisely this, and because it is the instrument the
+    before-and-after was read from — **8 of 12 trials with a loser, 17 losers
+    over 48 opens** before the migration, 0 and 0 after.
+
+    A store with no `session` table would pass an exception-only check, so each
+    child reads back through `get` before reporting success.
+    """
+    path = str(tmp_path / "sessions" / "cold.sqlite3")
+    root = _repo_root()
+    results = _run(_open_a_brand_new_session_store,
+                   [(path, f"p{n}", root) for n in range(WRITERS)])
+
+    _assert_one_process_each([pid for pid, _, _ in results], WRITERS)
+
+    raised = [detail for _, outcome, detail in results if outcome != "opened"]
+    assert raised == [], (
+        "opening a brand-new session store from several processes at once "
+        "failed:\n  " + "\n  ".join(raised)
+    )
+    modes = {mode for _, _, mode in results}
+    assert modes == {"wal"}, (
+        f"{modes} — an opener returned a store in a journal mode this layer "
+        "does not run against, which is worse than the refusal it replaced."
+    )
+
+
+def _open_a_brand_new_session_store(path: str, label: str,
+                                    repo_root: str) -> tuple:
+    """Child entry point. The barrier is before the open, as the open is raced."""
+    sys.path.insert(0, repo_root)
+    _BARRIER.wait(timeout=_RENDEZVOUS_TIMEOUT_S)
+    try:
+        table = SessionTable(path)
+    except BaseException as exc:  # noqa: BLE001 — the arm's whole subject
+        return (os.getpid(), "raised", f"{type(exc).__name__}: {exc}")
+    try:
+        # Reading is not decoration. The pre-migration loser left a file whose
+        # `session` table had never been created, and an arm that only checked
+        # for an exception would have scored that as a clean open.
+        table.get("absent")
+        return (os.getpid(), "opened", table._repo.journal_mode())  # noqa: SLF001
+    finally:
+        table.close()

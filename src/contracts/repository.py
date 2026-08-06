@@ -8,6 +8,16 @@ let a caller omit or override. A row with no tenant is a row that a
 tenant-scoped query either misses or wrongly returns, and both are worse than a
 write that fails.
 
+*One table's scope travels on the row instead of on the connection*, and the
+obligation is unweakened rather than excepted there: the columns are still
+declared by this layer, still `NOT NULL`, and still on every row — what
+inverts is that the caller supplies them and this layer **requires** them.
+`ownership.scope_is_per_row` is where that is declared, `Repository.unscoped`
+is the only way to reach such a table, and the `session` row in `ownership.py`
+carries the reason. It is one table because there is one read in the system
+that resolves an **opaque** handle before the tenant is knowable (FR-050 layer
+1), which makes a tenant predicate on it unanswerable rather than redundant.
+
 **2. No engine-specific SQL above the connection layer.** Callers pass table
 names and column mappings; they never pass SQL. This is what makes T-06's
 "v1's store has no observed substrate" survivable — the substrate can be
@@ -46,6 +56,7 @@ import sqlite3
 import threading
 import time
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Mapping, Sequence
 
@@ -54,6 +65,7 @@ from src.contracts.ownership import (
     OwnershipError,
     require_read,
     require_write,
+    scope_is_per_row,
 )
 
 # The two columns FR-035 requires on every row. Supplied by this layer.
@@ -180,6 +192,37 @@ def _is_lock_error(exc: BaseException) -> bool:
     return "is locked" in str(exc).lower()
 
 
+@dataclass(frozen=True)
+class NotEqual:
+    """A `where` value meaning "any row whose column is *not* this".
+
+    The only non-equality predicate this layer offers, and it is a value
+    rather than a string so that it stays engine-neutral: a caller writes
+    `where={"state": NotEqual("TERMINATED")}` and never `"state != ?"`.
+
+    It exists for one shape and the shape is worth naming, because it is the
+    difference between a guard and a comment. The supervisor's `terminate`
+    moves a row only while it is not already terminal, so that a second
+    termination changes **zero** rows and the caller can tell — FR-006's
+    subject is that the recorded outcome is the one that happened, and an
+    unguarded update would quietly overwrite the first terminal state with the
+    second. Expressed as an equality over the complement it would be a list
+    this layer has to keep in step with the caller's state machine, which is
+    the coupling the predicate avoids.
+    """
+
+    value: Any
+
+
+def _predicate(column: str, value: Any) -> str:
+    operator = "<>" if isinstance(value, NotEqual) else "="
+    return f"{_quote_identifier(column)} {operator} ?"
+
+
+def _predicate_value(value: Any) -> Any:
+    return value.value if isinstance(value, NotEqual) else value
+
+
 def _quote_identifier(name: str) -> str:
     """The one place an identifier reaches SQL.
 
@@ -199,26 +242,37 @@ def _quote_identifier(name: str) -> str:
 
 
 class Repository:
-    """A connection opened as one role, scoped to one tenant and deployment."""
+    """A connection opened as one role, scoped to one tenant and deployment.
+
+    Or, by way of `unscoped`, as one role and **no** tenant — which is legal
+    only against tables the ownership map declares `scope_per_row`. See that
+    constructor.
+    """
 
     def __init__(
         self,
         path: str | Path,
         *,
         role: str,
-        tenant_id: str,
-        deployment_id: str,
+        tenant_id: str | None,
+        deployment_id: str | None,
     ) -> None:
         if role not in ROLES:
             raise OwnershipError(
                 f"{role!r} is not a declared role ({sorted(ROLES)}). A "
                 "repository has to be opened as somebody."
             )
-        if not tenant_id or not deployment_id:
+        # Neither has a default. An unscoped repository is reached by naming
+        # `unscoped()`, never by leaving an argument off — a scope that can go
+        # missing by omission is the cross-tenant write this refusal exists to
+        # prevent, wearing a different hat.
+        unscoped = tenant_id is None and deployment_id is None
+        if not unscoped and (not tenant_id or not deployment_id):
             raise ScopeError(
-                "tenant_id and deployment_id are both required (FR-035). A "
-                "repository with no scope writes rows a scoped query cannot "
-                "find and a cross-tenant query wrongly returns."
+                "tenant_id and deployment_id are both required (FR-035), or "
+                "both absent for a per-row-scoped store (Repository.unscoped). "
+                "A repository with half a scope writes rows a scoped query "
+                "cannot find and a cross-tenant query wrongly returns."
             )
         self.role = role
         self.tenant_id = tenant_id
@@ -253,6 +307,56 @@ class Repository:
             with self._engine_errors("configuring the connection"):
                 self._conn.execute("PRAGMA foreign_keys=ON")
                 self._conn.execute("PRAGMA synchronous=NORMAL")
+
+    @classmethod
+    def unscoped(cls, path: str | Path, *, role: str) -> "Repository":
+        """A repository over tables that carry their own scope on each row.
+
+        **What this is not.** It is not a repository that ignores FR-035. The
+        two columns are still `NOT NULL` on every table this opens and still
+        present on every row; the difference is that the caller supplies them
+        per row and this layer *requires* them rather than filling them in.
+        Every table reached through it must be declared `scope_per_row` in the
+        ownership map, and one that is not raises `ScopeError` — so an
+        unscoped handle cannot reach the ordinary tables at all, which is what
+        keeps this from being a way around the scope on the tables that have
+        one.
+
+        **Why it exists.** The supervisor's `session` table is written by one
+        process serving every tenant, and its load-bearing read resolves an
+        **opaque** capability digest before the tenant is known (FR-050 layer
+        1). There is no scope a connection to it could be opened as, and a
+        tenant predicate on that read is unanswerable rather than merely
+        redundant. See the `session` row in `ownership.py`.
+        """
+        return cls(path, role=role, tenant_id=None, deployment_id=None)
+
+    def _require_matching_scope(self, table: str) -> bool:
+        """Whether `table` carries its own scope, refusing a mismatched handle.
+
+        The refusal runs in both directions on purpose. A scoped handle
+        reaching a per-row table would file every row under the connection's
+        tenant and silently make `resolve` tenant-dependent; an unscoped
+        handle reaching an ordinary table would write rows with no scope at
+        all. Neither has a caller that wants it, so neither is an argument.
+        """
+        per_row = scope_is_per_row(table)
+        if per_row and self.tenant_id is not None:
+            raise ScopeError(
+                f"{table}: this table's scope travels on the row "
+                "(ownership.py declares it `scope_per_row`), so it is reached "
+                "through `Repository.unscoped(...)`. A connection-scoped "
+                "handle would file every row under its own tenant and make a "
+                "read that must not carry a tenant predicate carry one."
+            )
+        if not per_row and self.tenant_id is None:
+            raise ScopeError(
+                f"{table}: an unscoped repository cannot touch it. Its rows "
+                "take tenant_id and deployment_id from the connection "
+                "(FR-035), and this connection has none. Open it with a "
+                "tenant and a deployment."
+            )
+        return per_row
 
     # -- opening -----------------------------------------------------------
 
@@ -423,13 +527,21 @@ class Repository:
         `unique` declares key groups the **store** enforces. A caller that
         guards uniqueness in its own process guards one object in one process:
         a second instance over the same file, or a resumed one after a crash,
-        shares nothing with the first. Every group is indexed **with the scope
+        shares nothing with the first.         Every group is indexed **with the scope
         columns prepended**, because every read on this table already goes
         through the tenant and deployment predicate — an index that ignored
         them would refuse a second tenant's row for colliding with one that
-        tenant cannot see.
+        tenant cannot see. On a `scope_per_row` table the same reasoning
+        inverts and the prefix is dropped: reads there carry no scope
+        predicate, so a scoped index would let two tenants hold one key while
+        the read that has to tell them apart cannot see which is which.
+
+        The scope columns themselves are declared by this layer either way,
+        and a caller that declares them is refused either way. What differs is
+        who *fills them in*, not whether the table has them.
         """
         require_write(table, self.role)
+        per_row = self._require_matching_scope(table)
         for name in columns:
             if name in SCOPE_COLUMNS:
                 raise ScopeError(
@@ -451,10 +563,12 @@ class Repository:
                 f"({_quote_identifier(TENANT_COLUMN)}, {_quote_identifier(DEPLOYMENT_COLUMN)})"
             )
             for group in unique:
-                self._create_unique_index(table, group)
+                self._create_unique_index(table, group, per_row=per_row)
             self._commit_if_outermost()
 
-    def _create_unique_index(self, table: str, group: Sequence[str]) -> None:
+    def _create_unique_index(
+        self, table: str, group: Sequence[str], *, per_row: bool = False
+    ) -> None:
         """One unique index, or a refusal naming the rows that prevent it.
 
         This runs against a table that may already hold rows, so it is the
@@ -469,8 +583,8 @@ class Repository:
             raise RepositoryError(
                 f"{table}: an empty unique group constrains nothing")
         name = f"{table}_unique_" + "_".join(group)
-        columns = ", ".join(
-            _quote_identifier(c) for c in (*SCOPE_COLUMNS, *group))
+        keyed = tuple(group) if per_row else (*SCOPE_COLUMNS, *group)
+        columns = ", ".join(_quote_identifier(c) for c in keyed)
         try:
             self._conn.execute(
                 f"CREATE UNIQUE INDEX IF NOT EXISTS {_quote_identifier(name)} "
@@ -478,7 +592,7 @@ class Repository:
             )
         except sqlite3.IntegrityError as exc:
             self._rollback_if_outermost()
-            keys = ", ".join((*SCOPE_COLUMNS, *group))
+            keys = ", ".join(keyed)
             raise UniquenessError(
                 f"{table}: cannot declare ({keys}) unique because rows "
                 f"already in the table duplicate it ({exc}). The duplicates "
@@ -495,17 +609,31 @@ class Repository:
 
     def insert(self, table: str, row: Mapping[str, Any]) -> None:
         require_write(table, self.role)
-        if any(c in row for c in SCOPE_COLUMNS):
-            raise ScopeError(
-                f"{table}: the caller supplied a scope column. tenant_id and "
-                "deployment_id come from the repository's own scope; letting "
-                "a caller set them makes a cross-tenant write a typo away."
-            )
-        scoped = {
-            TENANT_COLUMN: self.tenant_id,
-            DEPLOYMENT_COLUMN: self.deployment_id,
-            **row,
-        }
+        if self._require_matching_scope(table):
+            missing = [c for c in SCOPE_COLUMNS if not row.get(c)]
+            if missing:
+                raise ScopeError(
+                    f"{table}: {missing} not supplied. This table's scope "
+                    "travels on the row, so FR-035's columns are the caller's "
+                    "to provide and this layer's to require — a row without "
+                    "them is a row no tenant-scoped reader can attribute, "
+                    "which is the same defect the connection scope prevents "
+                    "on every other table."
+                )
+            scoped = dict(row)
+        else:
+            if any(c in row for c in SCOPE_COLUMNS):
+                raise ScopeError(
+                    f"{table}: the caller supplied a scope column. tenant_id "
+                    "and deployment_id come from the repository's own scope; "
+                    "letting a caller set them makes a cross-tenant write a "
+                    "typo away."
+                )
+            scoped = {
+                TENANT_COLUMN: self.tenant_id,
+                DEPLOYMENT_COLUMN: self.deployment_id,
+                **row,
+            }
         columns = ", ".join(_quote_identifier(c) for c in scoped)
         placeholders = ", ".join("?" for _ in scoped)
         sql = f"INSERT INTO {_quote_identifier(table)} ({columns}) VALUES ({placeholders})"
@@ -529,6 +657,7 @@ class Repository:
         self, table: str, *, where: Mapping[str, Any], values: Mapping[str, Any]
     ) -> int:
         require_write(table, self.role)
+        per_row = self._require_matching_scope(table)
         if not where:
             raise RepositoryError(
                 f"{table}: an update with no predicate would rewrite every row "
@@ -537,14 +666,20 @@ class Repository:
         if any(c in values for c in SCOPE_COLUMNS):
             raise ScopeError(f"{table}: a row's scope is not updatable")
         assignments = ", ".join(f"{_quote_identifier(c)} = ?" for c in values)
-        predicate = " AND ".join(f"{_quote_identifier(c)} = ?" for c in where)
+        clauses = [] if per_row else [
+            f"{_quote_identifier(TENANT_COLUMN)} = ?",
+            f"{_quote_identifier(DEPLOYMENT_COLUMN)} = ?",
+        ]
+        scope_params: tuple = () if per_row else (self.tenant_id, self.deployment_id)
+        clauses += [_predicate(column, value) for column, value in where.items()]
         sql = (
             f"UPDATE {_quote_identifier(table)} SET {assignments} "
-            f"WHERE {_quote_identifier(TENANT_COLUMN)} = ? "
-            f"AND {_quote_identifier(DEPLOYMENT_COLUMN)} = ? AND {predicate}"
+            f"WHERE {' AND '.join(clauses)}"
         )
         params = (
-            *values.values(), self.tenant_id, self.deployment_id, *where.values())
+            *values.values(), *scope_params,
+            *(_predicate_value(value) for value in where.values()),
+        )
         with self._lock, self._engine_errors(f"updating {table}"):
             cursor = self._conn.execute(sql, params)
             self._commit_if_outermost()
@@ -562,16 +697,21 @@ class Repository:
         limit: int | None = None,
     ) -> list[dict[str, Any]]:
         require_read(table, self.role)
-        clauses = [
-            f"{_quote_identifier(TENANT_COLUMN)} = ?",
-            f"{_quote_identifier(DEPLOYMENT_COLUMN)} = ?",
-        ]
-        params: list[Any] = [self.tenant_id, self.deployment_id]
+        per_row = self._require_matching_scope(table)
+        clauses: list[str] = []
+        params: list[Any] = []
+        if not per_row:
+            clauses += [
+                f"{_quote_identifier(TENANT_COLUMN)} = ?",
+                f"{_quote_identifier(DEPLOYMENT_COLUMN)} = ?",
+            ]
+            params += [self.tenant_id, self.deployment_id]
         for column, value in (where or {}).items():
-            clauses.append(f"{_quote_identifier(column)} = ?")
-            params.append(value)
-        sql = (
-            f"SELECT * FROM {_quote_identifier(table)} WHERE {' AND '.join(clauses)}")
+            clauses.append(_predicate(column, value))
+            params.append(_predicate_value(value))
+        sql = f"SELECT * FROM {_quote_identifier(table)}"
+        if clauses:
+            sql += f" WHERE {' AND '.join(clauses)}"
         if order_by:
             sql += f" ORDER BY {_quote_identifier(order_by)}"
             sql += " DESC" if descending else " ASC"

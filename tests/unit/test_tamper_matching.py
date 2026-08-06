@@ -59,7 +59,7 @@ sys.path.insert(0, str(REPO / "tools"))
 #:
 #: Changing the proof set is meant to edit this line. That coupling is the
 #: mechanism and not an inconvenience: a silent drop from 66 to 65 is the rot.
-EXPECTED_PROOFS = 182
+EXPECTED_PROOFS = 188
 
 from tamper import (  # noqa: E402
     AMBIGUOUS,

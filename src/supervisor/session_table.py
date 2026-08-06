@@ -3,11 +3,45 @@ else** (T-06's single-writer-per-table ownership map).
 
 Pulled forward from Phase 2's storage tier because FR-050 layer 1 makes the
 proxy resolve an opaque handle against this table on *every* request, so the
-enforcement point cannot be built without it. What is pulled forward is one
-table and its writer; the repository interface of T016, the ownership map of
-T017 and the concurrent-writer probe of T050 are **not** here and are still
-owed. T050 in particular is the probe that collapses the +0-to-+4 band on the
-runtime-core estimate, and nothing in this slice substitutes for it.
+enforcement point cannot be built without it. What was pulled forward was one
+table and its writer, with the repository interface of T016, the ownership map
+of T017 and the concurrent-writer probe of T050 recorded as owed. **All three
+have since landed and this file now sits on all three**: every statement below
+goes through `Repository`, the table is declared in `ownership.py` and opened
+as the role that owns it, and the cold-start race the migration exists to
+remove is exercised by T050's probe.
+
+**What the migration bought, measured rather than argued.** Before it,
+`__init__` ran a schema script whose first statement was the WAL journal-mode
+pragma, so a second process first-opening a brand-new store was refused with
+`SQLITE_BUSY` in 0.163ms — *four orders of magnitude inside* a 5s busy timeout,
+because SQLite bypasses the busy handler on the conversion path deliberately
+and no timeout ever covered it — and the script aborted **before** the table
+was created, leaving a file whose only table was the planted one. Reproduced
+with four processes meeting at a barrier, twelve trials of four opens each:
+**8 of 12 trials produced at least one loser, 17 losers over 48 opens.** The
+race is probabilistic, so that count is the reading of one run and not a
+constant; what does not vary across runs is that it is nowhere near zero.
+`Repository._enter_wal` converges on the end state instead, and the same probe
+run immediately afterwards gives **0 of 12 and 0 of 48**.
+
+All six writes plus construction also leaked raw `sqlite3.OperationalError`,
+both reads surviving; under a planted `EXCLUSIVE` holder the same eight calls
+now give 0 leaks, 6 `StoreWedgedError` and the same 2 reads. That is what lets
+`LeaseRenewer` tell momentary contention from a wedged store instead of dying
+on both. Construction under a *permanently* held lock still raises — it must,
+since there is no end state to converge on — but it raises `StoreBusyError`
+after the convergence window under `RESERVED` and `StoreWedgedError` after the
+whole busy timeout under `EXCLUSIVE`, which are different facts rather than one
+undifferentiated engine error.
+
+**The one thing this table does differently, and it is declared not improvised.**
+`session` is `scope_per_row` in the ownership map. The supervisor is one
+process serving every tenant, and `resolve()` looks a row up by an opaque
+capability digest *before* the tenant is knowable — so there is no scope a
+connection here could be opened as, and FR-035's two columns travel on the row
+with this layer requiring them rather than supplying them. See the `session`
+row in `ownership.py` for the whole argument.
 
 The handle itself is never stored. The column is a SHA-256 of it, so a reader
 of this database — including the proxy, which opens it read-only — holds
@@ -17,13 +51,14 @@ nothing it could replay.
 from __future__ import annotations
 
 import hashlib
-import sqlite3
-import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Mapping
 
 from src.contracts import terminal
+from src.contracts.ownership import ROLE_SUPERVISOR
+from src.contracts.repository import NotEqual, Repository
 
 STATE_STARTING = "STARTING"
 STATE_RUNNING = "RUNNING"
@@ -33,21 +68,27 @@ STATE_TERMINATED = "TERMINATED"
 # rebuilding an interrupted attempt's transcript over them is T052's.
 STATE_INTERRUPTED = "INTERRUPTED"
 
-SCHEMA = """
-PRAGMA journal_mode=WAL;
-CREATE TABLE IF NOT EXISTS session (
-  session_id        TEXT PRIMARY KEY,
-  tenant_id         TEXT NOT NULL,
-  deployment_id     TEXT NOT NULL,
-  state             TEXT NOT NULL,
-  terminal_state    TEXT,
-  capability_sha256 TEXT NOT NULL UNIQUE,
-  lease_expires_at  REAL NOT NULL,
-  created_at        REAL NOT NULL
-);
-CREATE INDEX IF NOT EXISTS session_by_capability
-  ON session(capability_sha256);
-"""
+TABLE = "session"
+
+#: The table, as column names and portable types rather than as SQL. The two
+#: scope columns are **absent on purpose**: `Repository.create_table` declares
+#: them itself and refuses a caller that names them, so that a table cannot
+#: exist without them and cannot exist with two definitions of them.
+COLUMNS = {
+    "session_id": "text primary key",
+    "state": "text not null",
+    "terminal_state": "text",
+    "capability_sha256": "text not null",
+    "lease_expires_at": "real not null",
+    "created_at": "real not null",
+}
+
+#: `capability_sha256` is unique **globally**, not per tenant, and that is the
+#: same fact as `session` being `scope_per_row`. `resolve()` is handed a digest
+#: and nothing else; if two tenants could hold one digest there would be no
+#: predicate able to say which row was meant. The repository drops its usual
+#: scope prefix on a per-row table's unique groups for exactly this reason.
+UNIQUE = [["capability_sha256"]]
 
 
 @dataclass(frozen=True)
@@ -76,55 +117,31 @@ class SessionTable:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        # `check_same_thread=False` with an explicit lock, rather than the
-        # default same-thread guard. The lease renewer runs on its own thread
-        # (FR-050 layer 2) and the default raises `ProgrammingError` there —
-        # which killed the renewer thread *silently*, and the session's lease
-        # then lapsed for a reason nobody could see. Lapsing is the fail-closed
-        # direction, so nothing was unsafe; it was undiagnosable, which is its
-        # own defect. Writing the crash fixture is what surfaced it.
+        # Opened AS the supervisor, which is the role `ownership.py` names as
+        # `session`'s sole writer, so a future caller that opened this from the
+        # runtime is refused before any statement is built rather than after.
         #
-        # This is not a substitute for T050's concurrent-writer probe. One
-        # process with one lock is the single-writer case T-06 assumes.
+        # `unscoped`, because the scope is on the row here — see the module
+        # docstring and the `session` entry in the ownership map. It is not a
+        # way around FR-035: an unscoped repository cannot touch a table that
+        # is not declared `scope_per_row`, and this one requires both columns
+        # on every insert.
         #
-        # The cross-process case **has now been measured** (finding 033), and
-        # this said "still unmeasured" for long enough to be worth correcting
-        # rather than deleting: a stale "unmeasured" tells the next reader
-        # there is nothing to find. What it found, against a planted lock:
-        #
-        # - `executescript` does not soften the WAL conversion's busy-handler
-        #   bypass. `SCHEMA`'s first statement is `PRAGMA journal_mode=WAL`,
-        #   and it is refused in 0.165ms against a held RESERVED lock exactly
-        #   as the bare `execute` form is. The script then aborts before
-        #   `CREATE TABLE`, so the store is left with no schema at all.
-        # - every write here leaks `sqlite3.OperationalError` under a held
-        #   lock — `create`, `mark_running`, `mark_interrupted`,
-        #   `mark_resumed`, `renew`, `terminate`, and this constructor. Both
-        #   reads survive, which is what WAL was chosen for.
-        #
-        # **Neither is repaired here, on purpose.** The conversion race needs
-        # a *brand-new* file: a second opener on one already in WAL succeeds
-        # in 0.28ms even against an EXCLUSIVE lock, and no constructor in the
-        # tree produces the cold-and-concurrent case — the one two-process
-        # site creates the file first. And the engine-exception rule does not
-        # bind this file: obligation 2's own scanner names it and skips it
-        # (`tests/invariants/test_writer_ownership.py`), as "a known
-        # migration". That is the repair. This table should move onto
-        # `Repository`, which already owns the translation and the
-        # convergence loop, and a local copy of both is work the migration
-        # deletes. Finding 033 records what the migration has to reconcile —
-        # `resolve()` deliberately has no tenant predicate, and the schema is
-        # a committed cross-language conformance vector.
-        self._lock = threading.Lock()
-        self._conn = sqlite3.connect(
-            str(self.path), isolation_level=None, check_same_thread=False
-        )
-        self._conn.row_factory = sqlite3.Row
-        self._conn.executescript(SCHEMA)
+        # **What used to be here.** A bare `sqlite3.connect` and an
+        # `executescript` beginning with `PRAGMA journal_mode=WAL`, plus a
+        # `threading.Lock` and `check_same_thread=False` — the latter added
+        # because the lease renewer runs on its own thread (FR-050 layer 2)
+        # and the default same-thread guard killed that thread *silently*, so
+        # the session's lease lapsed for a reason nobody could see. Lapsing is
+        # fail-closed, so nothing was unsafe; it was undiagnosable, which is
+        # its own defect. All of it is `Repository`'s now: the reentrant lock,
+        # the cross-thread connection, the WAL convergence and the error
+        # translation, each with its own guard and its own probe.
+        self._repo = Repository.unscoped(str(self.path), role=ROLE_SUPERVISOR)
+        self._repo.create_table(TABLE, COLUMNS, unique=UNIQUE)
 
     def close(self) -> None:
-        with self._lock:
-            self._conn.close()
+        self._repo.close()
 
     def __enter__(self) -> "SessionTable":
         return self
@@ -132,10 +149,15 @@ class SessionTable:
     def __exit__(self, *_exc: object) -> None:
         self.close()
 
-    def _exec(self, sql: str, params: tuple) -> sqlite3.Cursor:
-        """The one place the connection is touched. Serialized by the lock."""
-        with self._lock:
-            return self._conn.execute(sql, params)
+    def _guarded(self, session_id: str, *, was: str, **values: Any) -> int:
+        """A state-guarded update. Rows changed, so the caller can tell.
+
+        The guard is the whole mechanism, and returning the count is what makes
+        it observable: an update that matched nothing is indistinguishable from
+        one that worked if the caller is handed `None`.
+        """
+        return self._repo.update(
+            TABLE, where={"session_id": session_id, "state": was}, values=values)
 
     def create(
         self,
@@ -148,13 +170,16 @@ class SessionTable:
         now: float | None = None,
     ) -> None:
         created = time.time() if now is None else now
-        self._exec(
-            "INSERT INTO session (session_id, tenant_id, deployment_id, state, "
-            "terminal_state, capability_sha256, lease_expires_at, created_at) "
-            "VALUES (?,?,?,?,NULL,?,?,?)",
-            (session_id, tenant_id, deployment_id, STATE_STARTING,
-             capability_sha256, lease_expires_at, created),
-        )
+        self._repo.insert(TABLE, {
+            "tenant_id": tenant_id,
+            "deployment_id": deployment_id,
+            "session_id": session_id,
+            "state": STATE_STARTING,
+            "terminal_state": None,
+            "capability_sha256": capability_sha256,
+            "lease_expires_at": lease_expires_at,
+            "created_at": created,
+        })
 
     def mark_running(self, session_id: str) -> int:
         """STARTING → RUNNING. Returns rows changed.
@@ -164,10 +189,7 @@ class SessionTable:
         `None`, and the guard is the whole mechanism — so the caller gets the
         count and `SessionStateMachine` refuses on zero.
         """
-        return self._exec(
-            "UPDATE session SET state=? WHERE session_id=? AND state=?",
-            (STATE_RUNNING, session_id, STATE_STARTING),
-        ).rowcount
+        return self._guarded(session_id, was=STATE_STARTING, state=STATE_RUNNING)
 
     def mark_interrupted(self, session_id: str) -> int:
         """RUNNING → INTERRUPTED. Returns rows changed.
@@ -178,10 +200,8 @@ class SessionTable:
         a fresh admission. The state alone is enough to stop the enforcement
         point honouring the handle, because `honoured_at` requires RUNNING.
         """
-        return self._exec(
-            "UPDATE session SET state=? WHERE session_id=? AND state=?",
-            (STATE_INTERRUPTED, session_id, STATE_RUNNING),
-        ).rowcount
+        return self._guarded(
+            session_id, was=STATE_RUNNING, state=STATE_INTERRUPTED)
 
     def mark_resumed(self, session_id: str, lease_expires_at: float) -> int:
         """INTERRUPTED → RUNNING, renewing the lease (FR-007). Rows changed.
@@ -189,11 +209,9 @@ class SessionTable:
         Guarded on INTERRUPTED rather than on "not terminated", so a resume of
         a terminated session changes nothing rather than reviving it.
         """
-        return self._exec(
-            "UPDATE session SET state=?, lease_expires_at=? "
-            "WHERE session_id=? AND state=?",
-            (STATE_RUNNING, lease_expires_at, session_id, STATE_INTERRUPTED),
-        ).rowcount
+        return self._guarded(
+            session_id, was=STATE_INTERRUPTED,
+            state=STATE_RUNNING, lease_expires_at=lease_expires_at)
 
     def renew(self, session_id: str, lease_expires_at: float) -> int:
         """Extend the lease. Only a `RUNNING` session's lease is renewable.
@@ -203,11 +221,8 @@ class SessionTable:
         difference between the lease lapsing and the lease being extended past
         a terminal state.
         """
-        return self._exec(
-            "UPDATE session SET lease_expires_at=? "
-            "WHERE session_id=? AND state=?",
-            (lease_expires_at, session_id, STATE_RUNNING),
-        ).rowcount
+        return self._guarded(
+            session_id, was=STATE_RUNNING, lease_expires_at=lease_expires_at)
 
     def terminate(self, session_id: str, terminal_state: str) -> int:
         """FR-006 — a named terminal state, never a generic error. Rows changed.
@@ -227,27 +242,39 @@ class SessionTable:
         written by different code paths and only one of them was guarded.
         """
         terminal.require(terminal_state)
-        return self._exec(
-            "UPDATE session SET state=?, terminal_state=?, lease_expires_at=0 "
-            "WHERE session_id=? AND state != ?",
-            (STATE_TERMINATED, terminal_state, session_id, STATE_TERMINATED),
-        ).rowcount
+        # `NotEqual` rather than a guard on each non-terminal state: the
+        # complement is a list this table would have to keep in step with the
+        # state machine, and one that drifted would silently permit a second
+        # termination to overwrite the first recorded outcome.
+        return self._repo.update(
+            TABLE,
+            where={"session_id": session_id, "state": NotEqual(STATE_TERMINATED)},
+            values={
+                "state": STATE_TERMINATED,
+                "terminal_state": terminal_state,
+                "lease_expires_at": 0,
+            },
+        )
 
     def get(self, session_id: str) -> SessionRow | None:
-        return _row(self._exec(
-            "SELECT * FROM session WHERE session_id=?", (session_id,)
-        ).fetchone())
+        return _first(self._repo.select(TABLE, where={"session_id": session_id}))
 
     def resolve(self, capability_sha256: str) -> SessionRow | None:
-        return _row(self._exec(
-            "SELECT * FROM session WHERE capability_sha256=?",
-            (capability_sha256,),
-        ).fetchone())
+        """By capability digest, and **without a tenant predicate**.
+
+        Not an omission. FR-050 layer 1 resolves an opaque handle before it
+        knows whose it is, which is what `session` being `scope_per_row` in the
+        ownership map means; `capability_sha256` is unique globally so the
+        answer is still exactly one row or none.
+        """
+        return _first(
+            self._repo.select(TABLE, where={"capability_sha256": capability_sha256}))
 
 
-def _row(row: sqlite3.Row | None) -> SessionRow | None:
-    if row is None:
+def _first(rows: list[Mapping[str, Any]]) -> SessionRow | None:
+    if not rows:
         return None
+    row = rows[0]
     return SessionRow(
         session_id=row["session_id"],
         tenant_id=row["tenant_id"],

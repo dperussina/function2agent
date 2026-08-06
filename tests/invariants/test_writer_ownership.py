@@ -25,7 +25,12 @@ import threading
 import pytest
 
 from src.contracts import ownership
-from src.contracts.repository import Repository, ScopeError
+from src.contracts.repository import (
+    NotEqual,
+    Repository,
+    ScopeError,
+    UniquenessError,
+)
 
 TABLE = "trace_span"  # owned by the runtime
 
@@ -235,6 +240,178 @@ def test_an_update_with_no_predicate_is_refused(tmp_path) -> None:
     repo.close()
 
 
+# ---------------------------------------------------------------------------
+# FR-035 where the scope travels on the row instead of on the connection.
+#
+# One table is declared this way — `session`, because FR-050 layer 1 resolves an
+# opaque digest before the tenant is knowable. The obligation is *inverted*, not
+# waived, and the arms below assert both directions of that inversion. Each is
+# written so it fails for one reason: an unscoped handle that could reach an
+# ordinary table, a scoped handle that could reach this one, a row admitted
+# without the columns, and a unique key that stopped being global. A single arm
+# that only checked "a session row can be written" would pass with any three of
+# those four broken.
+
+SESSION_COLUMNS = {
+    "session_id": "text primary key",
+    "capability_sha256": "text not null",
+    "state": "text not null",
+}
+
+
+def _session_repo(path) -> Repository:
+    repo = Repository.unscoped(path, role=ownership.ROLE_SUPERVISOR)
+    repo.create_table("session", SESSION_COLUMNS,
+                      unique=[["capability_sha256"]])
+    return repo
+
+
+def test_only_the_session_table_carries_its_scope_on_the_row() -> None:
+    """The declaration is a fact about the map, so it is asserted there.
+
+    Stated as a set rather than as "session is per-row" because the claim that
+    matters is the *count*: this is an inversion of FR-035's mechanism granted
+    for one unanswerable read, and a second table acquiring it silently is the
+    way it would become a general escape hatch.
+    """
+    per_row = {row.table for row in ownership.OWNERSHIP if row.scope_per_row}
+    assert per_row == {"session"}, (
+        f"{sorted(per_row)} carry their scope on the row. Only `session` has "
+        f"the reason — an opaque capability digest resolved before the tenant "
+        f"is known. Any other table adopting this is dropping the connection "
+        f"scope, not inverting it"
+    )
+    assert ownership.scope_is_per_row("session")
+    assert not ownership.scope_is_per_row(TABLE)
+
+
+def test_an_unscoped_repository_cannot_reach_an_ordinary_table(tmp_path) -> None:
+    """The half that keeps `unscoped` from being a way around FR-035.
+
+    Without this refusal, any caller wanting to skip the tenant predicate on
+    any table could open `unscoped` and get rows with no scope at all.
+    """
+    repo = Repository.unscoped(tmp_path / "unscoped.sqlite3",
+                               role=ownership.ROLE_RUNTIME)
+    with pytest.raises(ScopeError, match="unscoped repository cannot touch"):
+        repo.create_table(TABLE, {"span_id": "text not null"})
+    repo.close()
+
+
+def test_a_scoped_repository_cannot_reach_the_per_row_table(tmp_path) -> None:
+    """And the other direction, which is the one that fails silently.
+
+    A connection-scoped handle on `session` would *work*: rows would be
+    written, filed under whatever tenant that connection carried, and
+    `resolve` would then answer only for that tenant. FR-050's enforcement
+    point would start denying every capability issued by a differently-scoped
+    supervisor, with no error anywhere to attribute it to.
+    """
+    repo = Repository(tmp_path / "scoped.sqlite3",
+                      role=ownership.ROLE_SUPERVISOR,
+                      tenant_id="t-1", deployment_id="d-1")
+    with pytest.raises(ScopeError, match="scope travels on the row"):
+        repo.create_table("session", SESSION_COLUMNS)
+    repo.close()
+
+
+def test_a_per_row_table_still_requires_both_scope_columns(tmp_path) -> None:
+    """FR-035 unweakened: the caller supplies them and the layer refuses without.
+
+    The written row is read back through the raw connection rather than
+    through `select`, because `select` on this table carries no scope predicate
+    — so asking it would prove the columns are *readable*, not that they hold
+    what the caller passed.
+    """
+    path = tmp_path / "session.sqlite3"
+    repo = _session_repo(path)
+    for incomplete in (
+        {"session_id": "s", "capability_sha256": "a", "state": "STARTING"},
+        {"session_id": "s", "capability_sha256": "a", "state": "STARTING",
+         "tenant_id": "t-1"},
+        {"session_id": "s", "capability_sha256": "a", "state": "STARTING",
+         "deployment_id": "d-1"},
+    ):
+        with pytest.raises(ScopeError, match="not supplied"):
+            repo.insert("session", incomplete)
+
+    repo.insert("session", {
+        "session_id": "s", "capability_sha256": "a", "state": "STARTING",
+        "tenant_id": "t-1", "deployment_id": "d-1",
+    })
+    raw = sqlite3.connect(path)
+    raw.row_factory = sqlite3.Row
+    stored = [dict(r) for r in raw.execute("SELECT * FROM session")]
+    raw.close()
+    assert stored[0]["tenant_id"] == "t-1"
+    assert stored[0]["deployment_id"] == "d-1"
+    repo.close()
+
+
+def test_a_per_row_unique_key_is_global_and_a_read_carries_no_tenant(
+        tmp_path) -> None:
+    """The two halves that only make sense together, asserted together.
+
+    A unique group on an ordinary table is indexed with the scope columns
+    prepended, so two tenants may hold the same key. On this table that would
+    be unsound *because* the read carries no tenant predicate: `resolve` would
+    find two rows for one digest and no predicate able to say which was meant.
+    So the index drops the prefix, and the second half asserts the read it
+    exists for — a row written under one tenant is found by a digest lookup
+    with no tenant anywhere in the call.
+    """
+    path = tmp_path / "global.sqlite3"
+    repo = _session_repo(path)
+    repo.insert("session", {
+        "session_id": "s-1", "capability_sha256": "deadbeef",
+        "state": "RUNNING", "tenant_id": "t-1", "deployment_id": "d-1",
+    })
+    with pytest.raises(UniquenessError):
+        repo.insert("session", {
+            "session_id": "s-2", "capability_sha256": "deadbeef",
+            "state": "RUNNING", "tenant_id": "t-2", "deployment_id": "d-2",
+        })
+
+    found = repo.select("session", where={"capability_sha256": "deadbeef"})
+    assert len(found) == 1 and found[0]["session_id"] == "s-1", (
+        "a digest lookup with no tenant predicate did not find the row a "
+        "differently-scoped writer wrote, so the per-row scope leaked into "
+        "the read FR-050 layer 1 depends on"
+    )
+    repo.close()
+
+
+def test_not_equal_moves_only_the_rows_that_are_not_the_value(tmp_path) -> None:
+    """The one non-equality predicate, and the guard it exists to make possible.
+
+    A second `terminate` has to change **zero** rows so the first recorded
+    outcome survives (FR-006). Asserted as the rowcount *and* as the stored
+    value, because an unguarded update returns 1 and overwrites — and a
+    predicate that matched nothing at all would also return 0 while breaking
+    the first termination.
+    """
+    path = tmp_path / "notequal.sqlite3"
+    repo = _session_repo(path)
+    repo.insert("session", {
+        "session_id": "s-1", "capability_sha256": "a", "state": "RUNNING",
+        "tenant_id": "t-1", "deployment_id": "d-1",
+    })
+    first = repo.update(
+        "session", where={"session_id": "s-1", "state": NotEqual("TERMINATED")},
+        values={"state": "TERMINATED"})
+    assert first == 1, "the guard refused the first termination"
+
+    second = repo.update(
+        "session", where={"session_id": "s-1", "state": NotEqual("TERMINATED")},
+        values={"state": "TERMINATED_AGAIN"})
+    assert second == 0, (
+        "a second termination moved the row, so the recorded outcome is the "
+        "last one written rather than the one that happened"
+    )
+    assert repo.select("session")[0]["state"] == "TERMINATED"
+    repo.close()
+
+
 def test_a_transaction_rolls_back_every_write_in_it(tmp_path) -> None:
     """The property FR-054's ref move depends on.
 
@@ -279,7 +456,13 @@ def test_no_engine_specific_sql_lives_above_the_repository() -> None:
     root = Path(__file__).resolve().parents[2] / "src"
     permitted = {
         root / "contracts" / "repository.py",       # the layer itself
-        root / "supervisor" / "session_table.py",   # predates T016; see below
+        # `supervisor/session_table.py` used to be the second entry here,
+        # carrying the reason `# predates T016; see below`. It is gone because
+        # the migration it deferred has happened: every statement that file
+        # runs now goes through `Repository`, so the clause holds tree-wide and
+        # the exemption has nothing left to suspend. The failure message below
+        # no longer names it, and if it reappears the right response is the
+        # migration rather than a third entry.
         # Reads `sqlite_master` of the *codegraph* database to compute the
         # schema digest T004 pins. That is a foreign artifact this system
         # consumes, not part of its own store, so routing it through the
@@ -297,11 +480,16 @@ def test_no_engine_specific_sql_lives_above_the_repository() -> None:
 
     assert not offenders, (
         "SQL above the repository layer:\n  " + "\n  ".join(offenders) +
-        "\nRoute it through src/contracts/repository.py, or add the file to "
-        "`permitted` with a reason. `session_table.py` is permitted because it "
-        "was built before T016 and is the supervisor's own store; it is a "
-        "known migration, recorded here rather than hidden by widening the "
-        "scan."
+        "\nRoute it through src/contracts/repository.py. Adding a file to "
+        "`permitted` is the last resort and not the first: the one exemption "
+        "this list ever carried for a store of ours — `session_table.py`, "
+        "recorded as a known migration rather than hidden by widening the "
+        "scan — stood for months and was eventually paid off by moving the "
+        "file inside the layer, which is what the entry always said it meant. "
+        "If a table needs something the layer does not offer, the answer is "
+        "usually that the layer is missing it: `session` needed per-row "
+        "scope columns and a non-equality predicate, and both went in below "
+        "this line rather than around it."
     )
 
 

@@ -28,6 +28,19 @@ stop applying with nothing in the tree reporting it. And it makes the shape **ro
 pass arriving at the WAL race, the engine-exception leak or T108's renewer is recorded at `tasks.md`
 T016's note and stops there, rather than re-deriving this finding a fourth time. **Nothing measured
 here is revised, and no figure in this document moves.**
+**✅ Closed 2026-08-06 — the migration this document recommends has been done, and OD-28 is
+discharged.** The expiry condition fired the way it was written to: the owner commissioned a
+supervisor entry point, which is the artifact OD-28 named, and the migration was taken **before** it
+rather than after, so the race was removed instead of being made live and then chased. **Every
+measurement below still reproduces against the pre-migration file and none is revised** — they are
+the *before* half of a before-and-after, and the after half is at `tasks.md` T016. Two numbers are
+worth carrying back here because they are the same instrument re-run: the four-party barrier race
+gave **8 of 12 trials with a loser, 17 losers over 48 opens** before and **0 of 12, 0 of 48** after;
+the eight-call write surface under a planted `EXCLUSIVE` holder leaked raw `sqlite3.OperationalError`
+from **all six writers** before and **none** after. **Section 5's negative result is what the
+migration honoured**: no local patch was written, and the two things `session` needed that the layer
+did not have — per-row scope columns and a non-equality predicate — went in **below** the line rather
+than around it, which is the shape section 5 argued for.
 **Model spend**: **$0.0000.** No model was called and no credential was read. Four local process
 runs totalling about 55 seconds of wall clock, most of it spent deliberately waiting out busy
 timeouts.

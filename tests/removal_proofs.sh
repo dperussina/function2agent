@@ -1105,6 +1105,72 @@ proof "T016 engine translation — sqlite3.OperationalError reaches a caller aga
   "tests/integration/test_store_concurrent_writers.py::test_no_sqlite_exception_escapes_the_write_surface" \
   's = s.replace("        with self._lock, self._engine_errors(f\x22inserting into {table}\x22):", "        with self._lock:")'
 
+# --- T016, the per-row scope the `session` migration required -----------------
+#
+# Six mechanisms, one decision. `session`'s scope columns travel on the row
+# because FR-050 layer 1 resolves an opaque digest before the tenant is known.
+# Each proof below removes exactly one of the six and is scored against the arm
+# that is about it, because they fail in different directions: two of them let a
+# caller off the scope entirely, two let the scope leak into the read that must
+# not carry one, one loses FR-006's second-termination guard, and one silently
+# writes rows nobody can attribute. The whole set is invisible in any test that
+# only writes and reads a session row back.
+
+# The direction that turns `unscoped` into a general escape hatch. Without this
+# refusal, any caller that wanted no tenant predicate on any table could reach
+# for `Repository.unscoped` and get rows with no scope at all — which is the
+# opposite of what the constructor is for.
+proof "T016 per-row scope — an unscoped handle reaches an ordinary table" \
+  src/contracts/repository.py \
+  "tests/invariants/test_writer_ownership.py::test_an_unscoped_repository_cannot_reach_an_ordinary_table" \
+  's = s.replace("        if not per_row and self.tenant_id is None:", "        if False:")'
+
+# The direction that fails silently, which is why it is a separate proof. A
+# connection-scoped handle on `session` writes rows successfully, files them all
+# under its own tenant, and makes `resolve` answer only for that tenant — so the
+# enforcement point starts denying capabilities with nothing anywhere to
+# attribute it to.
+proof "T016 per-row scope — a connection-scoped handle reaches the session table" \
+  src/contracts/repository.py \
+  "tests/invariants/test_writer_ownership.py::test_a_scoped_repository_cannot_reach_the_per_row_table" \
+  's = s.replace("        if per_row and self.tenant_id is not None:", "        if False:")'
+
+# FR-035 is inverted here, not waived, and this line is the whole of the
+# inversion's obligation half: the caller supplies the columns and the layer
+# requires them. Removing it does not fail loudly — the row is refused by
+# SQLite's NOT NULL instead, as a uniqueness-shaped error naming neither column.
+proof "T016 per-row scope — a session row is admitted without its scope columns" \
+  src/contracts/repository.py \
+  "tests/invariants/test_writer_ownership.py::test_a_per_row_table_still_requires_both_scope_columns" \
+  's = s.replace("            missing = [c for c in SCOPE_COLUMNS if not row.get(c)]\n            if missing:", "            missing = []\n            if False:")'
+
+# The unique index. An ordinary table prefixes its unique groups with the scope
+# columns so two tenants may hold one key; on this table that is unsound,
+# because the read that has to tell them apart carries no tenant predicate and
+# would find two rows for one capability digest.
+proof "T016 per-row scope — the capability digest stops being globally unique" \
+  src/contracts/repository.py \
+  "tests/invariants/test_writer_ownership.py::test_a_per_row_unique_key_is_global_and_a_read_carries_no_tenant" \
+  's = s.replace("        keyed = tuple(group) if per_row else (*SCOPE_COLUMNS, *group)", "        keyed = (*SCOPE_COLUMNS, *group)")'
+
+# The read half of the same decision. With the predicate restored, `resolve`
+# filters on a tenant the unscoped connection does not have — so every lookup
+# returns nothing and FR-050 layer 1 denies every request it is handed.
+proof "T016 per-row scope — the tenant predicate returns to the digest lookup" \
+  src/contracts/repository.py \
+  "tests/invariants/test_writer_ownership.py::test_a_per_row_unique_key_is_global_and_a_read_carries_no_tenant" \
+  's = s.replace("        if not per_row:\n            clauses += [", "        if True:\n            clauses += [")'
+
+# FR-006 via the only non-equality predicate this layer offers. Collapsed to
+# equality, `terminate` matches on `state = \x22TERMINATED\x22` instead of on its
+# complement: the first termination changes zero rows and a second one
+# overwrites the recorded outcome. Both halves are wrong and each alone would
+# defeat the guard.
+proof "T016 NotEqual — the termination guard collapses to an equality" \
+  src/contracts/repository.py \
+  "tests/invariants/test_writer_ownership.py::test_not_equal_moves_only_the_rows_that_are_not_the_value" \
+  's = s.replace("    operator = \x22<>\x22 if isinstance(value, NotEqual) else \x22=\x22", "    operator = \x22=\x22")'
+
 # T050. The rendezvous is what makes the probe's children one-writer-per-process
 # rather than hopefully-one-writer-per-process, and removing it is invisible in
 # every arm: `Pool` reuses a worker only sometimes, so the measurements stay
