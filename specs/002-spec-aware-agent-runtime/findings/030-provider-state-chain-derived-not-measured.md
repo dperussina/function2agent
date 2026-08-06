@@ -370,7 +370,11 @@ the failure mode that would spend the ceiling without producing a reading.
 
 ## 7. Owed register entries and one requirement question, **quoted, not made**
 
-Nothing in this section was applied. All three are the owner's.
+~~Nothing in this section was applied.~~ **Superseded in part 2026-08-05: the two register entries were
+approved and landed by a later pass, as recorded in the banners under [§7.1](#71-to-research14-architecture-synthesismd-52--a-new-uncertainty-entry)
+and [§7.2](#72-to-research14-architecture-synthesismd-4--a-contradiction-row). Nothing in
+[§7.3](#73-a-question-about-fr-037-with-candidate-text--and-the-recommendation-is-to-make-no-edit) was
+applied and no requirement was touched.** All three are the owner's.
 
 **The formatting escape, so it does not read as a mistake.** Inside each quoted block the identifier
 is written in a code span and the link path is the one correct **from the destination file**, not from
@@ -383,6 +387,41 @@ destination. Same escape and same reason as
 
 ### 7.1 To [`research/14-architecture-synthesis.md`](../../../research/14-architecture-synthesis.md) §5.2 — a new uncertainty entry
 
+> **LANDED 2026-08-05 as U-52**, in [`14-architecture-synthesis.md`](../../../research/14-architecture-synthesis.md)
+> §5.2, which is where this section said it belonged. **The mark was re-read at landing rather than
+> taken from this document**, and it was still **U-51**, so the number proposed here is the number
+> assigned. **The method is worth recording, because the obvious one is wrong in the dangerous
+> direction:** a backtick-anchored search for `` `U-NN` `` over that file returns **U-49** as its highest
+> hit, because register rows write the identifier **bare** in the first table cell and only *prose
+> citations* wrap it in a code span — so the anchor sees the citations and misses the register. The same
+> search for C-numbers returns nothing at all. What works is a boundary-anchored search with no markup
+> assumption, `rg -oP '(?<![A-Za-z0-9-])U-\d+'`, run over the whole corpus and not only over the
+> register file; it returns U-50 and U-51, which a correct method must.
+>
+> **The §5.2 placement was verified against the section's own text rather than inherited from this
+> argument, and it holds** — with one reason available here that this section did not use. §5's preamble
+> defines blocking as *"do not commit architecture or make a customer promise until resolved"*, and the
+> second limb is as unmet as the first: the unmeasured thing is a prediction about **vendor** behaviour,
+> and no customer promise rests on it. Stronger still, [finding 016](../../001-discovery-validation/findings/016-provider-sdk-roundtrip.md)
+> result 4 measured all four providers **accepting** the full chain live, so the direction the runtime
+> committed to is the measured-accepted one and the open question is only about the condition it does
+> not send.
+>
+> **Four changes were needed to make the quoted row correct in its destination, and they are listed so
+> the next author quoting a row into a register expects them.** ① The identifier is written **bare**,
+> `| U-52 |`, not in a code span — the code span was the escape for sitting in a finding, and every row
+> in §5.2 writes it bare. ② `finding 016` was quoted here as a bare code span with no link; it had never
+> been cited in `14-architecture-synthesis.md` before, so it landed as a real link. ③ *"~100–150k input
+> tokens"* is written **~100,000–150,000**, the form [§6](#6-the-probe-that-would-convert-this-designed-and-not-run)
+> uses, so `numeric-provenance` can find the figure in the document that derived it. ④ The row gained a
+> closing **non-blocking** clause naming why §5.2 and not §5.1, and a sentence saying **T164 is not a
+> route to converting it** — both are house format in §5.2 and both are [§7.4](#74-sc-010-and-t164-need-nothing-and-the-reason-is-worth-stating)'s
+> content rather than new reasoning.
+>
+> **Propagation, which the landing pass owed and this one did not know about:**
+> `specs/001-discovery-validation/VERDICT.md` §SC-004 advances to `U-01…U-52` and gains an eighth
+> refresh entry. `gen_claims.py` classifies that site `MANUAL` and refuses to write it, by design.
+
 **§5.2 and not §5.1.** §5.1's own definition is *"do not commit architecture or make a customer promise
 until resolved"*; the architecture is committed, the error direction is conservative, and
 [§4](#4-why-none-of-this-reopens-the-decision) gives four independent reasons the decision stands. This
@@ -392,6 +431,25 @@ was `U-51` when this was written — **read the mark and add one rather than tak
 > | `U-52` | **NEWLY OPENED 2026-08-05 — the provider layer's request shape rests on vendor documentation alone, and one of its four limbs is contradicted by the only live arm that bears on it.** `src/runtime/context.py::states_for` sends every kept turn's opaque state on the strength of four documentation readings; none has been measured, and no request with a state deliberately withheld has ever been sent to OpenAI, Google or Anthropic from this repository. The sharp form — *three of the four error on a miss, Anthropic degrades quietly* — is a falsifiable prediction that has never been run. **For xAI it has been run in the adjacent condition and it failed**: `finding 016`'s negative control stripped `encrypted_content` from every assistant message on a live `grok-4.5` chain and recorded `provider_errored: false`. | The request shape is the same on all four providers and is the only thing standing between a session and a silently degraded turn on the one provider predicted not to error. Being wrong about **Anthropic** is the worst case and produces no signal: `finding 016` result 7 measured a stripped chain answering correctly. | The 12-arm probe designed in `[finding 030](../specs/002-spec-aware-agent-runtime/findings/030-provider-state-chain-derived-not-measured.md)` §6 — four providers × {full chain, one state dropped, all states dropped}, with Anthropic as the negative control and the full-chain arm as the one-variable baseline. ~100–150k input tokens; the only measurable dollar figure is xAI's, on the order of $0.01–0.03. **Not run; no spend authorised.** | `[finding 030](../specs/002-spec-aware-agent-runtime/findings/030-provider-state-chain-derived-not-measured.md)` |
 
 ### 7.2 To [`research/14-architecture-synthesis.md`](../../../research/14-architecture-synthesis.md) §4 — a contradiction row
+
+> **LANDED 2026-08-05 as C-21**, in [`14-architecture-synthesis.md`](../../../research/14-architecture-synthesis.md)
+> §4, **partially resolved**, which is the disposition this section proposed. **The mark was re-read at
+> landing and was still C-20**, by the boundary-anchored method [§7.1](#71-to-research14-architecture-synthesismd-52--a-new-uncertainty-entry)
+> records; the backtick-anchored search that fails on U-numbers fails *worse* on C-numbers, returning
+> **nothing at all**, because that file never writes a C identifier inside a code span.
+>
+> **Partially resolved is house format in §4 and was checked rather than assumed** — C-10 carries
+> *"Partially discharged 2026-08-02"*, C-16 stays open having been narrowed three times, and C-17 closes
+> on a mechanism while its residue is recorded as untouched. A row that closes one half and names the
+> other as unmeasured is what that section already does.
+>
+> **One change to the quoted row was mandatory rather than stylistic, and it would have been caught by
+> the checker rather than by a reader.** The row as drafted here has **four** cells, and §4 is a
+> **three-column** table — `#`, `Contradiction`, `Resolution` — so `table-integrity` refuses it. The
+> source cell is folded into the resolution as a trailing `**Sources:**` clause, which is what C-14
+> through C-20 all do. The landed row also cites [finding 016](../../001-discovery-validation/findings/016-provider-sdk-roundtrip.md)
+> by name and links `.cursor/skills/experiment-design/SKILL.md` Rule 8 — the rule this document had to
+> correct the commissioning brief about — so the citation lands where the rule actually lives.
 
 §4's subject is *"Where the corpus disagrees"* and two committed artifacts in this repository disagree
 in terms. The high-water mark was `C-20` when this was written.
