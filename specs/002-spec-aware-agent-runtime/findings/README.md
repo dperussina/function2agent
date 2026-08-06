@@ -32,9 +32,36 @@ Three reasons, in the order they bind:
    specifications. There is no field in the citation form where a namespace could go, so a restarted
    sequence would have to be disambiguated by a convention every future author remembers — which is
    the class of safeguard this repository has already recorded as failing.
-3. **A globally unique number is self-disambiguating.** Under this scheme the number *is* the
-   namespace marker: 001–018 are feature 001, 019 and upward are feature 002. A reader who
-   encounters "finding 019" with no surrounding context can tell which feature produced it.
+3. **A globally unique number is self-disambiguating.** Under this scheme the number names exactly
+   one document anywhere in the corpus, so a citation of "finding 019" resolves without a namespace
+   qualifier. ~~Under this scheme the number *is* the namespace marker: 001–018 are feature 001, 019
+   and upward are feature 002. A reader who encounters "finding 019" with no surrounding context can
+   tell which feature produced it.~~
+
+   **Retired 2026-08-05 by owner decision — the uniqueness stands and the feature-partition does
+   not. A number identifies a document; it never identified a feature, and this claim is what said
+   otherwise.** The reason it was retired rather than patched is that it is **unsatisfiable for any
+   measurement of the world taken during a later feature**, which is a standing shape rather than a
+   one-off. The borderline rule below files a measurement by *what it is of*, not by when it was
+   taken; a number is minted from the single corpus-wide sequence at *the moment it is written*. So
+   a provider, library or benchmark measured during feature 002 gets a feature-002-era number and a
+   feature 001 filing, and the partition breaks by construction. The first case is
+   [finding 031](../../001-discovery-validation/findings/031-provider-state-chain-measured.md),
+   which measures four commercial LLM providers and now lives in feature 001's directory. **Do not
+   reinstate the partition to tidy this up**: the only repair that would restore it is renumbering
+   on relocation, and a renumber invalidates every existing citation of the number — the precise
+   harm `findings-numbering` exists to prevent.
+
+   **What still holds, and it is measured rather than argued.** Prefix uniqueness is enforced
+   **corpus-wide, not per directory**. Established on 2026-08-05 by planting
+   `specs/001-discovery-validation/findings/031-PLANT-cross-directory-duplicate.md` against the
+   then-extant `specs/002-spec-aware-agent-runtime/findings/031-provider-state-chain-measured.md`
+   and running `.venv/bin/python tools/check_corpus.py --check findings-numbering
+   --warnings-as-errors`: **2 errors, exit 1**, `findings-duplicate` naming both paths. The plant
+   was deleted and the tree returned to 0 errors. So numbers from one sequence living in two
+   directories does **not** open a duplicate-number hole, and reasons 1 and 2 above are untouched.
+   The consequence for reading the tree: feature 001's directory holds 001–018 **and 031**, and the
+   sentence above about what each feature *issued* describes issuance, not directory contents.
 
 **How a citation disambiguates, and the convention that goes with it.** Cite the number and link the
 file, exactly as feature 001 does — `[finding 019](./019-phase-2-defect-density.md)` from inside this

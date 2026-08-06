@@ -1,10 +1,12 @@
 # Finding 031 — the twelve-arm probe ran, and **two of the four determinations are wrong in the direction that costs tokens rather than correctness**: xAI tolerates a chain with a hole as well as a chain with nothing, OpenAI tolerates both despite the only vendor quote carrying explicit error language, Google is the one provider that rejects a broken chain *by name* — and Anthropic's two 400s are an artifact of the treatment shape, which the negative control is what caught
 
 **Date**: 2026-08-05
-**Feature**: 002. Runs the probe designed in
-[finding 030](./030-provider-state-chain-derived-not-measured.md) §6 and **not run** there, against
+**Feature**: produced during 002; **filed in 001** by the borderline rule, since what it measures is
+four commercial providers rather than anything this repository built (moved 2026-08-05, number
+preserved — [§11.1](#111-this-finding-belongs-in-feature-001-and-now-lives-there)). Runs the probe designed in
+[finding 030](../../002-spec-aware-agent-runtime/findings/030-provider-state-chain-derived-not-measured.md) §6 and **not run** there, against
 the four determinations carried in [`src/runtime/context.py`](../../../src/runtime/context.py)`::states_for`.
-Harness and every artifact: [`../harness/provider-state-chain-conditions/`](../harness/provider-state-chain-conditions/README.md).
+Harness and every artifact: [`specs/002-spec-aware-agent-runtime/harness/provider-state-chain-conditions/`](../../002-spec-aware-agent-runtime/harness/provider-state-chain-conditions/README.md).
 **Reports; decides nothing.** No source, requirement or register was edited.
 **User Story**: US1, by way of **FR-037**. Bears on **SC-010**, on **U-52** and on **C-21**.
 **Owner decision**: **none is minted here.** What this result owes to `U-52`, `C-21` and
@@ -30,9 +32,11 @@ twelve-hex SHA-256 fingerprints were recorded.
 Offline, with no credential and no spend: `python3 selfcheck.py`.
 **Numbering note**: `030` was the high-water mark across `specs/*/findings/`, established by listing
 the whole tree rather than by reading a number out of the brief, and `031` was free at that moment and
-re-checked free immediately before saving. **The namespace choice is contestable and the argument is
-recorded rather than hidden** — see
-[§11.1](#111-this-finding-arguably-belongs-in-feature-001-and-goes-here-because-that-namespace-is-closed).
+re-checked free immediately before saving. **The number is unchanged by the 2026-08-05 move into
+feature 001** — prefix uniqueness is enforced corpus-wide rather than per directory, so a single
+sequence spanning two directories is well-formed. The namespace choice was contested when this was
+filed and is now settled — see
+[§11.1](#111-this-finding-belongs-in-feature-001-and-now-lives-there).
 
 ---
 
@@ -73,7 +77,7 @@ recorded rather than hidden** — see
 
 ## 1. The twelve cells, with what each request actually carried
 
-Machine-readable in [`results/SUMMARY.json`](../harness/provider-state-chain-conditions/results/SUMMARY.json);
+Machine-readable in [`results/SUMMARY.json`](../../002-spec-aware-agent-runtime/harness/provider-state-chain-conditions/results/SUMMARY.json);
 one JSON per arm alongside it. `shape` is this harness's per-request classification of the state
 pattern the provider was sent, in turn order.
 
@@ -203,7 +207,7 @@ the field means*. [Finding 003](../../001-discovery-validation/findings/003-runt
 result 7's actual defect shape is different: an adapter rebuilding the assistant message from role,
 content and tool calls drops **the whole block**, and sends a well-formed request with the state gone.
 
-[`supplementary_whole_block.py`](../harness/provider-state-chain-conditions/supplementary_whole_block.py)
+[`supplementary_whole_block.py`](../../002-spec-aware-agent-runtime/harness/provider-state-chain-conditions/supplementary_whole_block.py)
 sends that request.
 
 | provider | carrier omitted | verdict | hops | answer | in / out |
@@ -264,7 +268,7 @@ edit; `src/runtime/context.py` was not touched.**
 Two providers now measured to tolerate a broken chain is not two providers measured to be undamaged by
 one. The cost of sending the whole chain is input tokens; the cost of not sending it is a rejected
 request on Google and an unmeasured degradation on the other three. The direction the runtime committed
-to is still the conservative one and **[finding 030 §4](./030-provider-state-chain-derived-not-measured.md#4-why-none-of-this-reopens-the-decision)
+to is still the conservative one and **[finding 030 §4](../../002-spec-aware-agent-runtime/findings/030-provider-state-chain-derived-not-measured.md#4-why-none-of-this-reopens-the-decision)
 stands unchanged**.
 
 ## 7. Spend, measured in tokens and in dollars only where a provider supplied them
@@ -296,7 +300,7 @@ came in nearer 4–5k than the projected 8–11k. **The $5.00 ceiling was never 
 dollars anyone can actually name are xAI's one and a half cents.
 
 **Two notes on the ledger file, so its numbers reconcile.**
-[`results/budget.json`](../harness/provider-state-chain-conditions/results/budget.json) reads
+[`results/budget.json`](../../002-spec-aware-agent-runtime/harness/provider-state-chain-conditions/results/budget.json) reads
 **55,373 / 4,075 over 18 arms**, and neither figure is the table above. It covers **14 arms, not 16** —
 the two calibration arms ran before it existed — and its `arms` field counts **invocations**, so it
 reads 18 because four supplementary invocations aborted inside the harness before any provider call
@@ -324,7 +328,7 @@ state deliberately withheld has ever been sent to OpenAI, Google or Anthropic"*,
 
 Suggested resolution clause, for the owner to place in whatever form §5.2 uses for a discharged row:
 
-> **RESOLVED 2026-08-05 by `[finding 031](../specs/002-spec-aware-agent-runtime/findings/031-provider-state-chain-measured.md)`, and the answer is not the one this row expected.** The 12-arm probe ran: four providers × {full chain, one state dropped, all states dropped}, all four full-chain baselines `OK`. **Two providers reject a broken chain and two do not, and only one rejects it because of the state.** Google 400s in both conditions, naming the missing `thought_signature` and the part position — the one determination measured correct. **OpenAI does not error in either condition, nor with the reasoning items omitted outright**, which falsifies the cookbook's *"The API will error if these are not included"* on `gpt-5-mini` under `store=False`. **xAI tolerates the interior hole as well as the total absence**, which closes the narrow claim `C-21` was holding open. **Anthropic 400s on `thinking.signature: Field required`, and that is a malformed-block rejection rather than a state rejection**: a supplementary arm omitting the whole `thinking` block was tolerated and answered correctly. The request shape the runtime sends is unchanged and should be — being wrong in this direction costs input tokens; being wrong in the other costs a rejected request on Google. **The half this does not discharge is Anthropic's quiet degradation**, which stays unmeasured in both directions and needs a task whose answer depends on the withheld reasoning.
+> **RESOLVED 2026-08-05 by `[finding 031](../specs/001-discovery-validation/findings/031-provider-state-chain-measured.md)`, and the answer is not the one this row expected.** The 12-arm probe ran: four providers × {full chain, one state dropped, all states dropped}, all four full-chain baselines `OK`. **Two providers reject a broken chain and two do not, and only one rejects it because of the state.** Google 400s in both conditions, naming the missing `thought_signature` and the part position — the one determination measured correct. **OpenAI does not error in either condition, nor with the reasoning items omitted outright**, which falsifies the cookbook's *"The API will error if these are not included"* on `gpt-5-mini` under `store=False`. **xAI tolerates the interior hole as well as the total absence**, which closes the narrow claim `C-21` was holding open. **Anthropic 400s on `thinking.signature: Field required`, and that is a malformed-block rejection rather than a state rejection**: a supplementary arm omitting the whole `thinking` block was tolerated and answered correctly. The request shape the runtime sends is unchanged and should be — being wrong in this direction costs input tokens; being wrong in the other costs a rejected request on Google. **The half this does not discharge is Anthropic's quiet degradation**, which stays unmeasured in both directions and needs a task whose answer depends on the withheld reasoning.
 
 ### 8.2 `C-21` in [`research/14-architecture-synthesis.md`](../../../research/14-architecture-synthesis.md) §4 — **the residue that kept it open is now measured, and the row can close fully**
 
@@ -337,7 +341,7 @@ Suggested resolution clause, for the owner to place in whatever form §5.2 uses 
 
 **It has one now, and the narrow claim fails too.** Suggested clause:
 
-> **FULLY RESOLVED 2026-08-05 by `[finding 031](../specs/002-spec-aware-agent-runtime/findings/031-provider-state-chain-measured.md)`.** The narrow claim was measured and fails: on a live `grok-4.5` six-turn chain, three requests carried an **interior hole** — state present on turns before and after a turn whose `encrypted_content` was empty — and xAI accepted all three, chained all five hops and answered correctly. The drop-all condition reproduced `finding 016`'s negative control on the same model with the same outcome. **xAI's documented imperative has no enforcement behind it in either condition**, so the docstring's original sentence was wrong in both the broad and the narrow reading, and the correction landed on 2026-08-05 stands rather than being an over-correction.
+> **FULLY RESOLVED 2026-08-05 by `[finding 031](../specs/001-discovery-validation/findings/031-provider-state-chain-measured.md)`.** The narrow claim was measured and fails: on a live `grok-4.5` six-turn chain, three requests carried an **interior hole** — state present on turns before and after a turn whose `encrypted_content` was empty — and xAI accepted all three, chained all five hops and answered correctly. The drop-all condition reproduced `finding 016`'s negative control on the same model with the same outcome. **xAI's documented imperative has no enforcement behind it in either condition**, so the docstring's original sentence was wrong in both the broad and the narrow reading, and the correction landed on 2026-08-05 stands rather than being an over-correction.
 
 ### 8.3 [`src/runtime/context.py`](../../../src/runtime/context.py)`::states_for` — two limbs are now measured and the docstring still calls all four derived
 
@@ -345,7 +349,7 @@ The docstring's paragraph reads *"All four of those readings are vendor document
 is measured. See finding 030, which is about exactly that."* That sentence is now wrong in the same way
 the sentence it replaced was wrong. Suggested replacement, for the owner:
 
-> **All four readings were vendor documentation when this was written and three of them have since been measured, by the 12-arm probe in `[finding 031](../../specs/002-spec-aware-agent-runtime/findings/031-provider-state-chain-measured.md)`. Google's is correct — it 400s, naming the missing part. OpenAI's error language did not reproduce in any condition, including with the reasoning items omitted outright. xAI's imperative carries no enforcement: it accepts both a chain with a hole and a chain with nothing. Anthropic's `not-erroring` half is measured — it accepts a conversation with the thinking blocks removed — while the `degrades quietly` half remains unmeasured in both directions. **None of that is a reason to send less**, and the asymmetry below is why.**
+> **All four readings were vendor documentation when this was written and three of them have since been measured, by the 12-arm probe in `[finding 031](../../specs/001-discovery-validation/findings/031-provider-state-chain-measured.md)`. Google's is correct — it 400s, naming the missing part. OpenAI's error language did not reproduce in any condition, including with the reasoning items omitted outright. xAI's imperative carries no enforcement: it accepts both a chain with a hole and a chain with nothing. Anthropic's `not-erroring` half is measured — it accepts a conversation with the thinking blocks removed — while the `degrades quietly` half remains unmeasured in both directions. **None of that is a reason to send less**, and the asymmetry below is why.**
 
 ### 8.4 What is **not** owed
 
@@ -400,18 +404,45 @@ this corpus are deliberately named alike.
 
 ## 11. Two disclosures about how this was set up
 
-### 11.1 This finding arguably belongs in feature 001, and goes here because that namespace is closed
+### 11.1 This finding belongs in feature 001, and now lives there
 
-[`README.md`](./README.md) gives the borderline rule: *"Ask what the measurement is of. A
+> **Resolved 2026-08-05 by owner decision, and this document moved.** It was filed in feature 002
+> and is now at `specs/001-discovery-validation/findings/031-provider-state-chain-measured.md`, its
+> number preserved. **The section below is kept as written, struck where it is wrong, because what
+> this pass argued before the ruling is the record.**
+>
+> **The ruling did not turn on the ground this section offered, and the ground it offered was not
+> sound.** The section argued *for feature 002* on a **misquotation**: it quoted the closure
+> sentence as *"Feature 001 is closed to new findings."*, stopping mid-sentence. The sentence reads
+> *"Feature 001 is closed to new findings **and its documents are not** … what does not happen is a
+> *new* feature 001 finding **about production work**."* Scoped to production work, it never
+> reached a provider measurement, so **there was no closure-versus-borderline conflict here at
+> all** — the conflict this section reported does not exist and was an artifact of the truncation.
+>
+> **The real conflict was elsewhere, and that is what was decided.** The borderline rule collides
+> with the README's third numbering reason — *"the number *is* the namespace marker: 001–018 are
+> feature 001, 019 and upward are feature 002"* — which a document numbered 031 sitting in feature
+> 001 breaks outright. The owner **retired the marker claim and left the borderline rule intact**,
+> on the ground that the marker claim is unsatisfiable for *any* world-measurement taken during a
+> later feature rather than awkward for this one. See the retirement note in
+> [`README.md`](../../002-spec-aware-agent-runtime/findings/README.md) under *Numbering*.
+>
+> Two of this section's three stated reasons are also answered rather than merely overruled. That
+> finding 030 sits in feature 002 is correct and does **not** carry this document with it — 030
+> measures what this corpus had derived and not measured, which is a fact about this repository's
+> own state, while 031 measures four commercial providers. That the brief directed the harness here
+> is not a filing rule.
+
+~~[`README.md`](../../002-spec-aware-agent-runtime/findings/README.md) gives the borderline rule: *"Ask what the measurement is of. A
 measurement of something outside this repository — a provider, a library, a benchmark, a corpus we did
 not write — belongs in feature 001."* **This is a measurement of four model providers**, so the rule
-points at feature 001. The same document says *"Feature 001 is closed to new findings."*
+points at feature 001. The same document says *"Feature 001 is closed to new findings."*~~
 
-The rules conflict on exactly this document. It is filed in feature 002 because the closure is
+~~The rules conflict on exactly this document. It is filed in feature 002 because the closure is
 absolute where the borderline rule is a heuristic, because finding 030 — the same subject, the
 document that designed this probe — is in feature 002, and because the brief directed the harness
 here. **Recorded rather than resolved**; a reader looking for provider measurements in feature 001 will
-not find this one.
+not find this one.~~
 
 ### 11.2 Calibration, disclosed because it changed two arms
 
@@ -420,8 +451,8 @@ state *is* condition C. Two providers needed a setting change first, both are ke
 
 | provider | default | change | uncalibrated run |
 |---|---|---|---|
-| Anthropic | thinking on turn 1 only | `anthropic-beta: interleaved-thinking-2025-05-14` | [`anthropic-A-enabled-thinking-no-beta.json`](../harness/provider-state-chain-conditions/results/calibration/anthropic-A-enabled-thinking-no-beta.json) |
-| OpenAI | no `encrypted_content` after turn 1 at low effort | `reasoning.effort = "medium"` | [`openai-A-effort-low.json`](../harness/provider-state-chain-conditions/results/calibration/openai-A-effort-low.json) |
+| Anthropic | thinking on turn 1 only | `anthropic-beta: interleaved-thinking-2025-05-14` | [`anthropic-A-enabled-thinking-no-beta.json`](../../002-spec-aware-agent-runtime/harness/provider-state-chain-conditions/results/calibration/anthropic-A-enabled-thinking-no-beta.json) |
+| OpenAI | no `encrypted_content` after turn 1 at low effort | `reasoning.effort = "medium"` | [`openai-A-effort-low.json`](../../002-spec-aware-agent-runtime/harness/provider-state-chain-conditions/results/calibration/openai-A-effort-low.json) |
 
 **Both were decided against condition A and before any B or C arm ran**, which is what makes them
 calibration rather than post-hoc adjustment. Neither changes the treatment; both change only whether

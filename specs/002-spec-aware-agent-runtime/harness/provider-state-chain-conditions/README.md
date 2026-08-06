@@ -1,6 +1,6 @@
 # E18 — what four providers actually do when the opaque-state chain is broken
 
-Produces [finding 031](../../findings/031-provider-state-chain-measured.md).
+Produces [finding 031](../../../001-discovery-validation/findings/031-provider-state-chain-measured.md).
 Runs the probe designed in [finding 030](../../findings/030-provider-state-chain-derived-not-measured.md)
 §6 and not run there.
 
@@ -165,7 +165,7 @@ finding reports.
 
 ## The result, in one table
 
-Full reading in [finding 031](../../findings/031-provider-state-chain-measured.md);
+Full reading in [finding 031](../../../001-discovery-validation/findings/031-provider-state-chain-measured.md);
 machine-readable in [`results/SUMMARY.json`](./results/SUMMARY.json).
 
 | | **A** full chain | **B** drop-one | **C** drop-all |
