@@ -401,6 +401,110 @@ skipped.
 sharing its line with a *struck* one, and a fresh provenance sentence has no
 struck range to trigger it.
 
+### Finding the next free register number — and the two searches that get it wrong
+
+**Read this before minting a `U-` or `C-` entry.** Three attempts to read these
+registers with a `grep` failed in August 2026, and one failed in the direction
+that hands out a **taken** number. The working method is two commands:
+
+```sh
+rg -nP '(?<![A-Za-z0-9-])U-\d+' --glob '!.git' .
+rg -nP '(?<![A-Za-z0-9-])C-\d+' --glob '!.git' .
+```
+
+**Run it corpus-wide, not over the register file**, because a number is often
+claimed in a finding before its row exists — that is the house escape for
+quoting an unminted entry, and a search scoped to the register cannot see it.
+
+**Both failure directions are real and only one of them is loud.**
+
+- **A backtick anchor undercounts, and this is the dangerous one.** Searching
+  for the identifier wrapped in a code span over
+  `research/14-architecture-synthesis.md` returns **`U-49`** as its highest hit
+  when `U-50`, `U-51` and `U-52` are all landed, and the same search for
+  C-numbers returns **nothing at all**. The reason is structural: register rows
+  write the identifier **bare in the first table cell**, and only *prose
+  citations* wrap it in a code span — so the anchor reads the citations and
+  misses the register. In that file the citations happen to stop at `U-48` and
+  `U-49`, and no C identifier is written inside a code span at **any** site.
+  Acting on either reading mints a number that is already taken.
+- **The bare pattern over-counts, via a prefix.** Dropping the lookbehind makes
+  `C-\d+` match the tail of every `SC-` identifier — `SC-001` through `SC-030`,
+  the success criteria — and also of `NC-1` through `NC-7`. The highest hit then
+  reads `C-030`, a zero-padded form that is not even a C identifier's shape.
+  **So the lookbehind is not optional.**
+
+**The lookbehind is load-bearing on C and currently inert on U** — no
+`[A-Za-z]U-\d+` occurrence exists anywhere in the corpus, so the U command
+would work without it today. Write both commands with it anyway: a namespace can
+grow a colliding prefix at any time, and two commands that differ only in the
+letter are the pair a reader copies correctly. This is the same closed-set
+reasoning as
+[Never state a classifier as a complement](#never-state-a-classifier-as-a-complement--enumerate-the-accepting-set),
+one level down.
+
+**Why bare-in-first-cell is the canonical definition site, from the checker
+rather than from the corpus's habits.** `corpuscheck/checks/identifiers.py`
+resolves a definition by taking the first cell of a table row, stripping
+`[*~`_\s]`, and requiring an **exact** match — a cell of prose that merely
+mentions an identifier does not define it. So the checker and the corpus agree
+on where an entry lives, and the backtick form was never going to work. Note the
+stripping: a first cell is a definition site **even when the identifier is
+written in a code span**, so backticking a row heading does not hide it.
+
+**The method is verified by what it found, not by reading its pattern.** It
+returns `U-52` and `C-21`, both landed minutes before it was run, and a correct
+method must return them. That distinction is
+[Reading an instrument is not measuring it](#reading-an-instrument-is-not-measuring-it--plant-the-case-instead)
+applied to a search: a regex that looks right and a regex that finds the known
+high entry are different claims, and the three failures above all looked right.
+
+**One trap in reading the output.** Piping to `sort -u -V` over `rg`'s default
+output sorts by **path** and not by number, so the last line is not the maximum.
+Use `-oNI` — match only, no line numbers, no filenames — before sorting, or read
+the maximum by eye.
+
+#### Why this is documentation and not a check
+
+**A duplicate register row is caught by nothing, and that was measured rather
+than assumed.** A second `| U-52 |` row was planted in the register verbatim.
+The only rule that fired was `catalog-line-count`, on the file being one line
+longer — an incidental signal, and running `gen_claims.py` cleared it: with two
+`U-52` definition rows standing in the register, `check_corpus.py
+--warnings-as-errors` reported **0 errors, 0 warnings** and `gen_claims.py
+--check` reported **0 stale**. The defect this search method exists to prevent is
+entirely unguarded. Duplicates are invisible to the existing machinery *by
+construction*, because `definitions_in` returns a **set** per document and
+`_collect_definitions` unions those sets.
+
+**A guard is constructible, and it was declined on measurement — the same
+disposition as `register-range`'s relaxation and the unconstructible-scoping
+check, and for the same reason.** The candidate rule is the narrowest one
+available and carries no threshold, no window and no markup tolerance: *two
+definition sites for one identifier in one namespace*, reusing the existing
+first-cell rule rather than a second definition of it. Run over the clean
+corpus it fires **12 times, and every one is well-formed**:
+
+- `D-01`, `D-07` and `D-17` are defined in the register and restated in a table
+  in `specs/002-spec-aware-agent-runtime/spec.md` — a legitimate cross-document
+  restatement, and the only class a same-file narrowing would spare;
+- `E1`, `E2`, `E4`, `E5`, `E6`, `E14` and `E15` each appear in two different
+  tables inside `specs/001-discovery-validation/VERDICT.md`;
+- `FR-048` heads two adjacent rows and `FR-049` three, inside one table in
+  `findings/026-pivot-root-check-measured.md`, which is keyed on something else.
+
+**Zero real defects at any narrowing.** Restricting to one file still leaves
+nine. Restricting to *the authoritative register* would work, and it needs an
+artifact that does not exist — a mapping from each namespace to the one document
+and section that owns it — which is the identical objection that declined the
+unconstructible-scoping check: **the thing that would have to exist first is the
+artifact, not the check.** So the house rule holds here too: a rule firing only
+on false positives is worse than a documented residue.
+
+**The residue, stated so it is not mistaken for coverage.** Nothing will notice a
+register that hands out a taken number. The search above is the only guard, it is
+run by a human, and it is one command per namespace.
+
 ## The advisory — `cite_advisor.py`
 
 The gate rule described under [What this cannot catch](#what-this-cannot-catch)
