@@ -264,7 +264,11 @@ one sentence away from being cited as an argument to revert.
 4. **The error direction is conservative, and this is the precedent's own test.** Being wrong about
    *they all need the whole chain* costs input tokens. Being wrong about *only the newest is needed*
    costs a rejected request on two documented providers and, on Anthropic, a silently degraded turn
-   that finding 016 result 7 measured to be **undetectable from the answer**. `plan.md`'s owner ruling
+   of the kind finding 016 result 7 measured **on xAI** to be **undetectable from the answer**.
+   **Provider named 2026-08-05 — a clarification and not a supersession, scoped to result 7 and to
+   nothing else in this bullet: that result's negative control is a single arm, xAI's `grok-4.5`, so
+   no Anthropic measurement is reported here and none ever was. The argument is unchanged, and what
+   it rests on is that the answer detects nothing.** `plan.md`'s owner ruling
    on the managed-container verdict turns on exactly this: *"the error direction here is
    conservative — a wrong derivation **excludes** a surface the product could have served, rather than
    promising one it cannot."* Same shape, same direction.
@@ -639,8 +643,10 @@ and the provider whose documentation least supports it.
 than safer.** The intuition the premise rested on runs the other way: *Anthropic is the lenient one, so
 it is the safe one to be approximately right about.* The opposite holds. A wrong prediction about
 OpenAI or Google surfaces as a 400 on the first session. A wrong prediction about Anthropic surfaces as
-nothing — and finding 016 result 7 measured that the answer is no help, because a chain with the field
-stripped entirely *"still chained and still answered 149.99."*
+nothing — and finding 016 result 7 measured **on xAI** that the answer is no help, because a chain with
+the field stripped entirely *"still chained and still answered 149.99."* **Provider named 2026-08-05 —
+a clarification and not a supersession: that result's negative control is a single arm, xAI's
+`grok-4.5`. The sentence's force is unchanged, and it is precisely that the answer detects nothing.**
 
 ## 11. What this does **not** establish
 
