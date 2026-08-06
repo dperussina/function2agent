@@ -1,0 +1,30 @@
+
+E18 — twelve cells: four providers x {A full, B one held, C all held}
+
+provider   cond  verdict                 errored  shape at end   states  turns  answer
+--------------------------------------------------------------------------------------
+anthropic  A     OK                      False    full           6       6      True
+anthropic  B     ERRORED                 True     trailing-gap   2       2      False
+anthropic  C     ERRORED                 True     all-absent     1       1      False
+openai     A     OK                      False    full           6       6      True
+openai     B     TOLERATED               False    trailing-gap   2       6      True
+openai     C     TOLERATED               False    all-absent     1       6      True
+google     A     OK                      False    full           5       6      True
+google     B     ERRORED                 True     trailing-gap   2       2      False
+google     C     ERRORED                 True     all-absent     1       1      False
+xai        A     OK                      False    full           6       6      True
+xai        B     TOLERATED               False    interior-hole  6       6      True
+xai        C     TOLERATED               False    all-absent     5       6      True
+
+controls (row A): {'anthropic': 'OK', 'openai': 'OK', 'google': 'OK', 'xai': 'OK'}
+all controls OK: True
+errored under B: ['anthropic', 'google']
+errored under C: ['anthropic', 'google']
+tolerated under B: ['openai', 'xai']
+tolerated under C: ['openai', 'xai']
+untestable: none
+
+tokens: 44824 in, 3326 out
+provider-reported cost: 0.014082 USD from ['xai']
+no cost figure from: ['anthropic', 'google', 'openai'] (tokens only; null is not zero)
+

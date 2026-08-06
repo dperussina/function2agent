@@ -1,0 +1,44 @@
+{
+  "provider": "google",
+  "condition": "C",
+  "sdk": "google-genai",
+  "sdk_version": "2.16.0",
+  "model": "gemini-3-flash-preview",
+  "credential_var": "GEMINI_API_KEY_2",
+  "credential_fp": "e12e5a55cce2",
+  "opaque_field": "Part.thought_signature",
+  "ok": true,
+  "provider_errored": true,
+  "error_status": 400,
+  "error_kind": "capability",
+  "error": "ClientError 400: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Function call is missing a thought_signature in functionCall parts. This is required for tools to work correctly, and missing thought_signature may lead to degraded model performance. Additional data, function call `default_api:lookup_customer` , position 2. Please refer to https://ai.google.dev/gemini-api/docs/thought-signatures for more details.', 'status': 'INVALID_ARGUMENT'}}",
+  "last_request_shape": "all-absent",
+  "request_shapes": [
+    "no-state-yet",
+    "all-absent"
+  ],
+  "state_turns": 1,
+  "state_turn_indices": [
+    0
+  ],
+  "treatment_applied": true,
+  "withheld_ordinal": null,
+  "verdict": "ERRORED",
+  "turns": 1,
+  "tool_calls": [
+    "lookup_customer"
+  ],
+  "hops_linked": 0,
+  "chained": false,
+  "answer_correct": false,
+  "final_text": "",
+  "digests_emitted": [
+    "00143b89251c4fe5"
+  ],
+  "digests_reinjected": [],
+  "input_tokens": 490,
+  "output_tokens": 162,
+  "cost_usd_reported_by_provider": null,
+  "elapsed_s": 1.4588899612426758,
+  "notes": []
+}

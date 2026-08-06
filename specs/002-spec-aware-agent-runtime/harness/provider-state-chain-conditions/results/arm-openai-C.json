@@ -1,0 +1,52 @@
+{
+  "provider": "openai",
+  "condition": "C",
+  "sdk": "openai",
+  "sdk_version": "2.53.0",
+  "model": "gpt-5-mini",
+  "credential_var": "OPENAI_API_KEY",
+  "credential_fp": "c8e89239cdd7",
+  "opaque_field": "reasoning.encrypted_content",
+  "ok": true,
+  "provider_errored": false,
+  "error_status": null,
+  "error_kind": null,
+  "error": null,
+  "last_request_shape": "all-absent",
+  "request_shapes": [
+    "no-state-yet",
+    "all-absent",
+    "all-absent",
+    "all-absent",
+    "all-absent",
+    "all-absent"
+  ],
+  "state_turns": 1,
+  "state_turn_indices": [
+    0
+  ],
+  "treatment_applied": true,
+  "withheld_ordinal": null,
+  "verdict": "TOLERATED",
+  "turns": 6,
+  "tool_calls": [
+    "lookup_customer",
+    "list_orders",
+    "get_order_lines",
+    "get_line_price",
+    "apply_tax"
+  ],
+  "hops_linked": 4,
+  "chained": true,
+  "answer_correct": true,
+  "final_text": "149.99",
+  "digests_emitted": [
+    "61731c7b9312f780"
+  ],
+  "digests_reinjected": [],
+  "input_tokens": 2610,
+  "output_tokens": 167,
+  "cost_usd_reported_by_provider": null,
+  "elapsed_s": 5.879692077636719,
+  "notes": []
+}

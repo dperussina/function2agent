@@ -1,0 +1,52 @@
+{
+  "provider": "anthropic",
+  "condition": "D-whole-carrier-omitted",
+  "sdk": "anthropic",
+  "sdk_version": "0.120.2",
+  "model": "claude-sonnet-4-5-20250929",
+  "credential_var": "ANTHROPIC_API_KEY",
+  "credential_fp": "b4bcb5a4b7d7",
+  "opaque_field": "the whole thinking block",
+  "ok": true,
+  "provider_errored": false,
+  "error_status": null,
+  "error_kind": null,
+  "error": null,
+  "last_request_shape": "no-state-yet",
+  "request_shapes": [
+    "all-absent",
+    "no-state-yet",
+    "no-state-yet",
+    "no-state-yet",
+    "no-state-yet",
+    "no-state-yet"
+  ],
+  "state_turns": 1,
+  "state_turn_indices": [
+    0
+  ],
+  "treatment_applied": true,
+  "withheld_ordinal": null,
+  "verdict": "TOLERATED",
+  "turns": 6,
+  "tool_calls": [
+    "lookup_customer",
+    "list_orders",
+    "get_order_lines",
+    "get_line_price",
+    "apply_tax"
+  ],
+  "hops_linked": 4,
+  "chained": true,
+  "answer_correct": true,
+  "final_text": "The final total, tax included, for Dana Whitfield's most recent order is **149.99**.",
+  "digests_emitted": [],
+  "digests_reinjected": [],
+  "input_tokens": 7939,
+  "output_tokens": 545,
+  "cost_usd_reported_by_provider": null,
+  "elapsed_s": 12.191850185394287,
+  "notes": [
+    "SUPPLEMENTARY \u2014 not one of the twelve cells. The whole carrier is omitted, not just the opaque field."
+  ]
+}

@@ -1,0 +1,48 @@
+E18 selfcheck — no model is called, nothing is spent
+
+1. the persistence boundary actually removes the value
+  ok    the persisted body carries no signature
+  ok    the original body is untouched
+  ok    rebuild(carry=False) writes nothing
+  ok    rebuild(carry=True) restores it verbatim
+
+2. condition A carries every state and never produces a gap
+  ok    six turns
+  ok    chained
+  ok    a state on every turn
+  ok    no shape other than full or no-state-yet
+  ok    treatment not applied, verdict OK
+
+3. condition B produces a trailing gap and then an interior hole
+  ok    a trailing gap was sent
+  ok    an interior hole was sent
+  ok    B re-injected exactly four values fewer than A
+  ok    treatment applied, verdict TOLERATED on a provider that does not care
+  ok    the withheld ordinal is recorded
+
+4. condition C carries nothing at all
+  ok    nothing was ever re-injected
+  ok    every request after the first is all-absent
+  ok    treatment applied
+
+5. a provider that emits no state makes B and C UNTESTABLE, not passes
+  ok    condition B over a silent provider is UNTESTABLE
+  ok    condition B says so in a note
+  ok    condition C over a silent provider is UNTESTABLE
+  ok    condition C says so in a note
+
+6. an error is scored as ERRORED under B/C and CONTROL-FAILED under A
+  ok    B errored at the interior hole
+  ok    the status is recorded
+  ok    A erroring is CONTROL-FAILED and not OK
+
+7. a provider that errors before the gap is reached is not scored ERRORED
+  ok    no gap was ever sent, so the arm is UNTESTABLE-NOT-APPLIED
+
+8. a provider that emits state on one turn cannot be given a hole
+  ok    condition B over a one-state provider is UNTESTABLE-ONE-STATE-ONLY
+  ok    and it says which turns carried state
+  ok    and it says why in a note
+  ok    condition C over the same provider is still testable
+
+all checks passed

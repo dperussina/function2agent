@@ -1,0 +1,51 @@
+{
+  "provider": "anthropic",
+  "condition": "B",
+  "sdk": "anthropic",
+  "sdk_version": "0.120.2",
+  "model": "claude-sonnet-4-5-20250929",
+  "credential_var": "ANTHROPIC_API_KEY",
+  "credential_fp": "b4bcb5a4b7d7",
+  "opaque_field": "thinking.signature",
+  "ok": true,
+  "provider_errored": true,
+  "error_status": 400,
+  "error_kind": "capability",
+  "error": "BadRequestError 400: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'messages.3.content.0.thinking.signature: Field required'}, 'request_id': 'req_011CdkfMGL4o2XETCUep4Wte'}",
+  "last_request_shape": "trailing-gap",
+  "request_shapes": [
+    "no-state-yet",
+    "full",
+    "trailing-gap"
+  ],
+  "state_turns": 2,
+  "state_turn_indices": [
+    0,
+    1
+  ],
+  "treatment_applied": true,
+  "withheld_ordinal": 1,
+  "verdict": "ERRORED",
+  "turns": 2,
+  "tool_calls": [
+    "lookup_customer",
+    "list_orders"
+  ],
+  "hops_linked": 1,
+  "chained": false,
+  "answer_correct": false,
+  "final_text": "",
+  "digests_emitted": [
+    "cd8bb5fc77518784",
+    "aec1eb954f9371df"
+  ],
+  "digests_reinjected": [
+    "cd8bb5fc77518784",
+    "cd8bb5fc77518784"
+  ],
+  "input_tokens": 2693,
+  "output_tokens": 321,
+  "cost_usd_reported_by_provider": null,
+  "elapsed_s": 6.057894945144653,
+  "notes": []
+}

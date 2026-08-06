@@ -1,0 +1,60 @@
+{
+  "provider": "xai",
+  "condition": "C",
+  "sdk": "xai-sdk",
+  "sdk_version": "1.17.0",
+  "model": "grok-4.5",
+  "credential_var": "XAI_API_KEY",
+  "credential_fp": "8dd831344d70",
+  "opaque_field": "message.encrypted_content",
+  "ok": true,
+  "provider_errored": false,
+  "error_status": null,
+  "error_kind": null,
+  "error": null,
+  "last_request_shape": "all-absent",
+  "request_shapes": [
+    "no-state-yet",
+    "all-absent",
+    "all-absent",
+    "all-absent",
+    "all-absent",
+    "all-absent"
+  ],
+  "state_turns": 5,
+  "state_turn_indices": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "treatment_applied": true,
+  "withheld_ordinal": null,
+  "verdict": "TOLERATED",
+  "turns": 6,
+  "tool_calls": [
+    "lookup_customer",
+    "list_orders",
+    "get_order_lines",
+    "get_line_price",
+    "apply_tax"
+  ],
+  "hops_linked": 4,
+  "chained": true,
+  "answer_correct": true,
+  "final_text": "149.99",
+  "digests_emitted": [
+    "d5a1d2042f35df2e",
+    "9f2156d9641c6b1d",
+    "426cfd19fd8c1b28",
+    "6afd9499b114d6ab",
+    "8edf2f6d3c1ba1d9"
+  ],
+  "digests_reinjected": [],
+  "input_tokens": 4919,
+  "output_tokens": 178,
+  "cost_usd_reported_by_provider": 0.0045956,
+  "elapsed_s": 7.716481924057007,
+  "notes": []
+}
