@@ -668,6 +668,19 @@ class AgentLoop:
                 # the trace alone, and a price is not reproducible without the
                 # row it came from.
                 "model": response.model,
+                # **And where the rate came from, on the same argument.** The
+                # paragraph above says a price is not reproducible without the
+                # row it came from. A rate an operator declared under OD-27 has
+                # no row in this repository at all, so a span recording only
+                # `(provider, model)` describes a figure a later reader will
+                # try to check against `costs.PRICES` and fail to find —
+                # concluding the table moved rather than that the rate was
+                # never in it. This field is what makes those two readings
+                # different, and it is here rather than only in a startup log
+                # because a claim about a record that lives in another file is
+                # the family `tools/README.md` collects and the log is gone
+                # with the process that wrote it.
+                "spend_provenance": response.spend_provenance,
                 "provider_state_digest": state_digest(response.provider_state),
                 "tool_calls": len(response.tool_calls),
                 "input_tokens": response.input_tokens,

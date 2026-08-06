@@ -36,6 +36,7 @@ from src.runtime.loop import AgentLoop, LoopError, ModelResponse, TurnRecord
 from src.runtime.dispatch import ToolCall
 from src.runtime.providers.adapter import model_response
 from src.runtime.providers.base import ParsedTurn
+from src.runtime.providers import costs
 from src.runtime.providers.costs import PROVENANCE_OPERATOR
 from src.runtime.turn import UnpricedTurnError
 from src.runtime.result_bound import ResultBound, RetentionStore
@@ -579,6 +580,49 @@ def test_the_model_call_span_records_the_model_the_price_was_computed_at(
     # The rate is `(provider, model, date)` and the span carries the first two,
     # so the figure beside them is recomputable rather than merely recorded.
     assert payload["cost"]["spend_usd"] == pytest.approx(12.0)
+    h.close()
+
+
+def test_the_span_says_whether_the_rate_was_published_or_declared(
+    tmp_path,
+) -> None:
+    """OD-27 on the trace, and the argument is the arm above's continued.
+
+    That arm carries `model` because a price is not reproducible without the
+    row it came from. A rate an operator declared has **no row in this
+    repository**, so a span naming only `(provider, model)` sends a later
+    reader to `costs.PRICES` to check a figure that was never in it — and the
+    conclusion they reach is that the table moved, not that the rate was never
+    there. Both provenances are run here, because a span hardcoding either one
+    satisfies the other half alone.
+    """
+    declared = costs.OperatorPriceBook([costs.OperatorPrice(
+        provider="openai", model="gpt-5-mini", display_name="GPT-5 mini",
+        tiers=(costs.Rate(0.25, 2.00),
+               costs.Rate(0.50, 4.00, min_input_tokens=128_000)),
+        declared_by="platform-eng@example.invalid",
+        declaration_ref="contracts/openai-2026-q3.md",
+        declared_on="2026-08-01",
+        scope="standard synchronous tier, uncached input, text",
+    )])
+
+    h = Harness(tmp_path, ceilings=_ceilings(spend_usd=1_000.0, tokens=10 ** 9))
+    h.machine.start(SESSION, at=1.0)
+    h.loop(_model(
+        # Asks for a tool, so the loop takes a second turn and the assertion
+        # below compares two spans rather than describing one.
+        _priced("t"),
+        model_response(
+            ParsedTurn(provider="openai", text="", provider_state=b"state",
+                       input_tokens=1_000_000, output_tokens=0, tool_calls=()),
+            model="gpt-5-mini", as_of=dt.date(2026, 8, 5),
+            operator_prices=declared),
+    ), lambda c: "r").run("p")
+
+    spans = h.repo.select("trace_span", where={"kind": "model_call"})
+    provenances = [json.loads(s["payload"])["detail"]["spend_provenance"]
+                   for s in spans]
+    assert provenances == [costs.PROVENANCE_VENDOR, costs.PROVENANCE_OPERATOR]
     h.close()
 
 
