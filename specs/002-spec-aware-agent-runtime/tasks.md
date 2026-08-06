@@ -169,6 +169,49 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 - [X] T034 [P] Contract test: every FR-043-marked value appears marked on every external surface that emits it, in `tests/contract/test_unvalidated_marking.py`
 - [X] T035 A `Secret` type with **no serializer**, so a credential cannot be logged by a code path that forgets to redact — redaction structural rather than a filter, in `src/contracts/secret.py` (FR-036)
 
+> **T029's line says "environment injection at process start", and the Python runtime has no process
+> start. Measured and recorded 2026-08-06; nothing here is re-sized.** The schema landed, the
+> fail-loud path landed, the reporting landed, and the four tasks above are correctly marked done —
+> what is absent is the caller. `config.load()`, `SUPERVISOR_KEYS` and `RUNTIME_KEYS` are referenced
+> **only from tests**. `Config` is constructed at exactly one site in all of `src/`
+> (`config.py:315`, inside `load()` itself), and exactly one module in `src/` imports the module at
+> all — `src/runtime/session_store.py:44`, which imports the `Config` *type* to annotate
+> `Ceilings.from_config` and never calls `load()`. The only `__main__` blocks in Python `src/` are
+> two operator utilities, both marked `# pragma: no cover`, neither of which reads configuration;
+> there is no `[project.scripts]`, no `console_scripts` and no `entry_points` anywhere in the
+> packaging.
+>
+> **What is unreachable is larger than one key, which is why this is recorded against the section
+> rather than against a task.** Twelve key declarations carry a `no_default_reason` under **four**
+> separate authorities, each specifying the same treatment — required configuration, no default,
+> startup fails loudly: `_NO_DEFAULT_BOUND` (FR-049, **Q-10**, four sandbox bounds),
+> `_NO_DEFAULT_CEILING` (FR-005, the four ceilings), `_NO_DEFAULT_RESULT_BOUND` (FR-058, three
+> keys) and `_NO_DEFAULT_OPERATOR_PRICES` ([**OD-27**](../001-discovery-validation/plan.md), one).
+> `_report()` already assembles *"N required value(s) unset:"* and quotes each key's reason back to
+> the operator — the comment at `config.py:63` says "quoted back to the operator at startup" — and
+> that mechanism has never run outside a test, for any of the four. OD-27's preflight
+> `require_priceable` is the same shape one layer out: `costs.py:1062` calls it "OD-27's startup
+> gate", and it has no caller in `src/` either. **The pricing seam is not a pricing problem.** It is
+> this one, observed through the newest of the four authorities.
+>
+> **The pattern is built and proven — on the other side of the language boundary.** The enforcement
+> point is a real process: `src/proxy/main.go:359` calls `LoadConfig(os.Getenv)` and refuses with
+> `startup refused: %v` before it binds anything. So the Go component does exactly what
+> `contracts/configuration.md` describes and the Python components have no assembly point at which
+> to do it. A census run with Python-shaped patterns misses this, and reads the tree as having no
+> entry point at all rather than one.
+>
+> **No task in this file creates that assembly point, and the absence is the record.** T159's four
+> images and T160's compose bundle imply a process per component without naming what each runs;
+> **T171** — *exercise the fail-loud startup path end to end through the shipped bundle* —
+> presupposes the path rather than building it, and is where the gap will be discovered if it is not
+> closed first. **This note deliberately does not size the work or add a task line**, on the same
+> ground as the FR-058 seam above: the pass that measured a gap is the wrong pass to price closing
+> it, and a task number minted here would carry an estimate nobody derived. What a defensible
+> closure would name, stated so the omission is checkable: which components are processes, what each
+> one loads (`SUPERVISOR_KEYS`, `RUNTIME_KEYS`, or both), and where `require_priceable` runs relative
+> to `load()` — none of which this document currently answers.
+
 ### Tracing, from the first shipped capability
 
 - [X] T036 Span writer for the seven span kinds — `model_call`, `tool_call`, `egress_decision`, `filesystem_decision`, `state_transition`, `verification`, `drift_check` — carrying inputs, outputs, timing, cost, and the artifact versions in force, in `src/runtime/trace.py` (FR-030, FR-031, Principle VI)
@@ -916,6 +959,7 @@ and the credential planes sit here.
 - [ ] T169 [US4] Operator-boundary check: every component runs inside the operator's boundary and no target data or credential is required to leave it, in `tests/integration/test_operator_boundary.py` (FR-032)
 - [ ] T170 [P] [US4] Cassette-backed provider tests over the core path, in `tests/conformance/` (constitution Principle VII, added because the specification does not capture it for v1)
 - [ ] T171 [US4] Exercise the fail-loud startup path end to end through the shipped bundle, in `tests/integration/test_bundle_failloud.py` (FR-033)
+  - **This task presupposes a startup the Python components do not have, measured 2026-08-06 and recorded at [the configuration section](#configuration-and-failing-closed).** `config.load()` has no caller in `src/`, and neither does OD-27's `require_priceable` preflight; twelve no-default keys under four authorities, and the unset-value reporting already written for them, are unreachable for want of an assembly point that no task in this file creates. An implementer starting here will find there is no end-to-end path to exercise before there is one to write the test against
 - [ ] T172 [P] [US4] Assert every supported-platform surface states **Linux only with no degraded mode**, in `tests/contract/test_platform_statement.py` (**OD-17**, FR-053, SC-027 — a degraded mode is a sandbox missing one of Principle IV bullet 1's terms)
 
 **Checkpoint**: the product is installable and portable across providers inside an operator's own
