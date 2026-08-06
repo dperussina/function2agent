@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ **twenty-six** owner decisions
-(OD-01 through OD-26, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ **twenty-seven** owner decisions
+(OD-01 through OD-27, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -44,8 +44,12 @@ its build in the same act**, which is why it says so in a banner rather than in 
 2026-08-05 with OD-26**, which is different in kind again: it is the first entry here that adjudicates
 **between two artifacts in this repository** rather than settling a design question, naming one of
 them authoritative and the other derived, and whose principal output is therefore a mechanical check
-rather than a requirement.)*
-~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ **The last seventeen
+rather than a requirement. **Extended 2026-08-06 with OD-27**, which is different in kind a third
+way: it is the first entry here that **re-opens a question a task had recorded as closed by
+construction** — `tasks.md`'s T210 — and it does so because the thing that closed the question was
+the design, and the design landing is what made the closure cost a provider. Its principal output is
+a *second provenance* rather than a requirement or a check.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ **The last eighteen
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -73,7 +77,11 @@ deliberately below where the token saving is large, settling U-50's token limb b
 the experiment on both limbs**, and **OD-26 settles which of two divergent artifacts holds FR-006's
 closed terminal-state taxonomy — `src/contracts/terminal.py` does, `data-model.md` §2.1 is a derived
 view of it — and strikes `terminated.denied_operation`, a state no requirement wants because a refusal
-is a disposition the loop continues past.**
+is a disposition the loop continues past**, and **OD-27 admits an operator-declared rate for a model
+no vendor page prices, as a second provenance carried on the record rather than a second row in the
+table, while refusing a single rate for a card that prices in two context columns and publishes no
+boundary — the refusal being the limb the decision turns on, because one number there would be the
+invented boundary wearing the operator's name.**
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -3077,6 +3085,152 @@ question this closes and whose §1 census is now the check's specification.
 [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) **T067** keeps `no_progress` and **loses
 `denied_operation`**, struck in place with a dated note, because a task still owing a member this
 decision struck would be a live instruction to reintroduce it.
+
+### OD-27 — an operator may declare a rate for a model no vendor page here prices; it is a second provenance rather than a second row, and a context-tiered card with no published boundary is refused a single rate
+
+**Decided 2026-08-06**, answering a question
+[`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) **T210** had recorded as *closed by
+construction* eight days earlier: **may a price enter `src/runtime/providers/costs.py` from anywhere
+but a vendor's page?** T210's determination — *"Operator-supplied prices are not admitted by T062's
+design and were not added"* — was **correct about the design and is now overtaken by a consequence of
+the design landing.** It is struck in place there rather than deleted, because a task still stating
+that the path does not exist would be a live instruction to remove it.
+
+**What forced it, and the ordering matters.** T062 recorded OpenAI as unpriced on 2026-08-05 and
+nothing broke, because the table was wired to nothing. **T210 wired it** the same day. From that
+commit an OpenAI session fails closed on spend and **cannot run at all** — which is T063 working
+exactly as specified, and is also a product with a provider it cannot serve. The decision is between
+serving that provider on an operator's own accountability and not serving it; it is **not** between
+being careful and being careless, and it must not be read as a relaxation of T063.
+
+**The decision, in four limbs. Each is a separate commitment and three of them are refusals.**
+
+**① A declaration is admitted, and it is a second *provenance* rather than a second row in the
+table.** `OperatorPrice` is its own type beside `PriceEntry`, sharing the band arithmetic and nothing
+else. **It is deliberately not a flag on the existing type.** A discriminant field is distinguishable
+only to a caller that remembers to read it, and the caller that forgets is the one this exists to
+catch. Two types are distinguishable at every call site, and `price_usd` returns `PricedSpend` — the
+figure *and* its provenance as one value, with no `__float__` — so the number cannot be recorded
+without the provenance by an author who wrote nothing down. **What stands where a vendor entry's
+`source` and `retrieved` stand is `declared_by`, `declaration_ref` and `declared_on`**: *who says so*
+replacing *which page says so*, all three required, and deliberately not shaped like a URL. A field
+holding an internal wiki link would make the two provenances look alike in exactly the field that is
+supposed to tell them apart.
+
+**② A provider whose published card prices in two context columns with no stated boundary is refused
+a single rate.** This is the limb the decision turns on and it is the one that costs something.
+`costs.UNPRICED["openai"]` records the reasoning and this entry does not soften it: picking either
+column requires inventing the boundary; the cheap column under-charges; and **under-charging is the
+direction that makes a ceiling fail to fire**, which is the failure the whole spend-ceiling job exists
+to remove. **Admitting one number here would recreate that defect with the operator's name on it, and
+that is worse than the present refusal because it looks authorised.** So a declaration for such a
+provider must supply what the vendor withheld — both columns and the prompt-token threshold between
+them — and `CONTEXT_TIERED_WITHOUT_THRESHOLD` is the enumerated list that makes the rule executable
+rather than advisory. Two *identical* bands are refused with it, because one column read twice and a
+card genuinely quoting the same figure twice are indistinguishable here and the first produces exactly
+the under-charge this limb exists to stop. **A genuinely flat contract rate is therefore refused, and
+that is the intended outcome rather than a gap**: a discrepancy between an operator's card and their
+vendor's is one to settle with the vendor, not one for this table to resolve by picking a reading.
+Refusing costs a startup failure naming the remedy; admitting costs a ceiling that does not fire,
+discovered from a bill.
+
+**③ The other two recorded absences land in two different states, and both are stated.** The register
+is explicit here because a reader who finds two of three answered will assume the third was
+overlooked, so `costs.OPERATOR_REACH` answers all three and a module-load invariant refuses to let
+`UNPRICED` grow a fourth key without one.
+
+- **Anthropic's aliases stay refused, and are enumerated in `REFUSED_ADDRESSES` so the refusal
+  executes rather than being described.** The absence there is **the address and not the number**, and
+  no rate repairs an address: the vendor's own page calls an alias *"a convenience pointer that
+  resolves to a dated model ID"*, so a declared rate becomes the rate for whatever it resolves to
+  next, with no event this table could observe. Nothing is blocked by the refusal — the dated
+  identifier is priced already and is what the request is actually made against.
+- **xAI's `cost_in_usd_ticks` scale is out of scope by construction, which is neither reachable nor
+  refused**, and the distinction is worth the word. That absence is a missing **unit scale**; this
+  path declares USD per million tokens. There is nothing an operator could type that would engage it,
+  so there is nothing to refuse, and xAI's per-token rates are sourced already. **A tick scale is owed
+  a source, not a declaration.**
+
+**④ Absence fails at startup, and a declared zero is a declaration rather than an absence.**
+`MODEL_PRICES_OPERATOR` is required configuration with **no default**, and the literal `none` is a
+value — so *"nobody was asked"* and *"the operator considered it and declares nothing"* are different
+states. `require_priceable` is the preflight: it refuses at startup for a model neither the table nor
+the book prices, rather than after the money for the first call has been spent. It is also the **only**
+thing that catches a declaration written against the wrong address — an operator whose contract prices
+*"GPT-5 mini"* and who declares that string as the identifier has built a well-formed book matching no
+request this runtime will make, which is the *unpriced while looking configured* state, the worst of
+the three. And the line it returns names the rate, which matters most for a declared **zero**: a rate
+that disables the spend dimension is a thing to read before a session runs, not to infer afterwards
+from a total that never moved.
+
+> #### Where the operator-versus-vendor distinction surfaces, and why not only in the startup log
+>
+> The obvious place to put this is the startup line, and the startup line **is** written — limb ④.
+> It is not sufficient, on a ground this corpus has already recorded twice. **A log is gone with the
+> process that wrote it**, and the reader who needs the distinction is the one holding a total months
+> later and asking whether it can be checked. That reader is exactly the *claim about the corpus that
+> lives in a different file from the thing it describes* family [`tools/README.md`](../../tools/README.md)
+> collects, arriving in telemetry instead of in markdown.
+>
+> So the distinction is carried **on the record**, at all three places a spend figure durably lands:
+> `ModelResponse.spend_provenance`, present-or-absent **together** with `spend_usd`; FR-038's
+> `model_call` span; and the journal's model-outcome payload, at **schema revision 3**.
+>
+> **The argument is `b2d124f`'s own, one field over.** That commit carries `model` on the span
+> because *a price is not reproducible without the row it came from*. A rate an operator declared has
+> **no row in this repository at all**, so a record naming only `(provider, model)` sends a later
+> reader to `costs.PRICES` to check a figure that was never in it — and they will conclude the table
+> moved rather than that the rate was never there. The two readings are only distinguishable if the
+> record says which. A sourced figure and a declared one that look identical is the `0.0` defect
+> T210 closed, wearing a different field.
+>
+> **Revision 2 payloads are read as vendor rather than as unknown, and that is a fact rather than a
+> guess.** Revision 2 predates this decision, so `PROVENANCE_VENDOR` was the only provenance a figure
+> in one could have had. Revision 1 stays unpriced with its spend `None`, unchanged.
+
+**Why this is the third instance of one pattern and not a loophole in the rule against invented
+defaults.** The rule forbids values **this specification invented**, and has never forbidden values an
+operator declared. **FR-058** is the precedent in shape — required configuration, no default, loud
+startup failure on absence, and a configuration outside what the requirement permits **refused rather
+than clamped** — and limb ② is that last clause exactly: a single rate for a context-tiered card is
+refused, not silently doubled into two bands. **`ReservationPolicy`** refuses an unset spend or token
+figure on the same reasoning. What is added here is a third instance, which is what makes it
+consistent rather than an exception argued for one provider.
+
+**What this decision does not license.**
+- **Not** a declaration for a model this table already prices. That session already runs, so nothing
+  is unblocked, and what is risked is a sourced rate silently displaced by an unsourced one — the
+  ambiguity `validate_schedule` already refuses between two vendor rates, arriving from the other
+  side. A negotiated rate for a *listed* model is a different question and is **not** decided here.
+- **Not** a weakening of T063. A model neither priced nor declared still refuses, and the refusal is
+  now reached at startup as well as at the call.
+- **Not** a claim that an operator's figure is as good as a vendor's. It is a claim that an
+  accountable declaration is better than a session that cannot run, **provided the two can be told
+  apart**, which is what limb ① and the record fields buy.
+- **Not** progress on **U-30**. [`research/14`](../../research/14-architecture-synthesis.md) §5.1
+  records the in-process budget channel as untrusted, and a declared rate on an untrusted channel is
+  a declared rate on an untrusted channel. This moves **who is accountable for the number**, not
+  whether the channel carrying it can be trusted.
+
+**Authorises** `OperatorPrice`, `OperatorPriceBook`, `PricedSpend`, `CONTEXT_TIERED_WITHOUT_THRESHOLD`,
+`REFUSED_ADDRESSES`, `OPERATOR_REACH` and `require_priceable` in
+[`src/runtime/providers/costs.py`](../../src/runtime/providers/costs.py); the
+`MODEL_PRICES_OPERATOR` runtime key in [`src/contracts/config.py`](../../src/contracts/config.py),
+required with no default; `ModelResponse.spend_provenance` in
+[`src/runtime/turn.py`](../../src/runtime/turn.py) and its present-or-absent-together rule; and the
+model-outcome journal schema's advance to **revision 3** in
+[`src/runtime/resume.py`](../../src/runtime/resume.py), with revision 2 read as vendor-provenance.
+
+**Propagated to** [`src/runtime/providers/adapter.py`](../../src/runtime/providers/adapter.py), which
+carries the provenance from `price_usd` onto the response rather than flattening it;
+[`src/runtime/loop.py`](../../src/runtime/loop.py)'s `model_call` span; and
+[`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) **T210**, whose closing paragraph is **struck
+in place with a dated note** — it recorded the path as closed by construction and a task still saying
+so would be a live instruction to remove what this decision authorises. **The preflight is wired to
+no startup path in `src/` yet, and that is stated rather than left to be found**: nothing in `src/`
+constructs a `ModelResponse` outside `adapter.py` and `resume.py` either, for the same reason — T210's
+seam has no caller in the product yet. `require_priceable` is that seam's startup half and lands in
+the same state. Wiring both is one task and it is not this decision's.
 
 ## Open items this plan does not resolve
 
