@@ -1,0 +1,904 @@
+{
+  "baseline": {
+    "go_not_passing": 0,
+    "go_outcomes": 223,
+    "python_not_passing": 0,
+    "python_outcomes": 980
+  },
+  "environment": {
+    "euid": 501,
+    "go": "go version go1.24.3 darwin/arm64",
+    "kernel": "25.2.0",
+    "machine": "arm64",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "privileged": false,
+    "pytest": "pytest 8.3.4",
+    "python": "3.12.11",
+    "system": "Darwin"
+  },
+  "instrument": "tests/removal_proofs.sh",
+  "measured_at": "2026-08-05T21:59:46-0600",
+  "proofs": [
+    {
+      "outcome": "skipped",
+      "reason": "test-skipped-in-baseline",
+      "reason_text": "the test did not run in this environment (privilege or platform), so the mechanism was NOT exercised here",
+      "target_file": "src/supervisor/mounts.py",
+      "target_test": "tests/integration/test_mount_namespace.py::test_an_undeclared_location_is_absent_not_denied",
+      "title": "FR-048 mount namespace \u2014 pivot_root removed"
+    },
+    {
+      "outcome": "skipped",
+      "reason": "test-skipped-in-baseline",
+      "reason_text": "the test did not run in this environment (privilege or platform), so the mechanism was NOT exercised here",
+      "target_file": "src/supervisor/mounts.py",
+      "target_test": "tests/integration/test_mount_namespace.py::test_a_read_only_declaration_is_actually_read_only",
+      "title": "FR-048 read-only bind \u2014 the MS_REMOUNT pass removed"
+    },
+    {
+      "outcome": "skipped",
+      "reason": "test-skipped-in-baseline",
+      "reason_text": "the test did not run in this environment (privilege or platform), so the mechanism was NOT exercised here",
+      "target_file": "src/supervisor/mounts.py",
+      "target_test": "tests/integration/test_mount_authority.py::test_the_root_listing_is_unchanged_by_a_write_attempt",
+      "title": "FR-048 session root \u2014 the read-only seal removed"
+    },
+    {
+      "outcome": "skipped",
+      "reason": "test-skipped-in-baseline",
+      "reason_text": "the test did not run in this environment (privilege or platform), so the mechanism was NOT exercised here",
+      "target_file": "src/supervisor/mounts.py",
+      "target_test": "tests/integration/test_mount_authority.py::test_a_submount_inside_a_read_only_location_refuses_a_write",
+      "title": "FR-048 read-only bind \u2014 the remount made non-recursive"
+    },
+    {
+      "outcome": "skipped",
+      "reason": "test-skipped-in-baseline",
+      "reason_text": "the test did not run in this environment (privilege or platform), so the mechanism was NOT exercised here",
+      "target_file": "src/supervisor/bounds.py",
+      "target_test": "tests/batteries/test_bounds_exhaustion.py::test_process_bound_exhaustion_names_its_terminal_state",
+      "title": "FR-049 pids.max \u2014 the bound not written"
+    },
+    {
+      "outcome": "skipped",
+      "reason": "test-skipped-in-baseline",
+      "reason_text": "the test did not run in this environment (privilege or platform), so the mechanism was NOT exercised here",
+      "target_file": "src/supervisor/cgroup.py",
+      "target_test": "tests/batteries/test_bounds_exhaustion.py::test_the_workload_is_in_the_cgroup_from_its_first_instruction",
+      "title": "FR-049 attach ordering \u2014 spawn barrier removed"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/session_table.py",
+      "target_test": "tests/integration/test_lease_revocation.py::test_an_unrenewed_lease_lapses",
+      "title": "FR-050 lease \u2014 honoured_at ignores expiry"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/capability.py",
+      "target_test": "tests/integration/test_lease_revocation.py::test_the_handle_carries_no_claim_and_no_expiry",
+      "title": "FR-050 opaque handle \u2014 a structured claim instead"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/secret.py",
+      "target_test": "tests/invariants/test_secret_has_no_serializer.py",
+      "title": "FR-036 Secret \u2014 a __str__ that discloses"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/invariants/test_rule_id_present.py::test_a_deny_without_a_rule_id_cannot_be_constructed",
+      "title": "FR-011 rule id \u2014 the deny/rule_id check removed"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/result.py",
+      "target_test": "tests/invariants/test_result_constructor.py",
+      "title": "FR-025 result \u2014 verification given a default"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/terminal.py",
+      "target_test": "tests/invariants/test_terminal_taxonomy.py::test_membership_is_closed_not_a_prefix_match",
+      "title": "FR-006 taxonomy \u2014 closed membership becomes a prefix match"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/config.py",
+      "target_test": "tests/invariants/test_no_default_bounds.py",
+      "title": "Q-10 no-default bounds \u2014 a default added"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/session_table.py",
+      "target_test": "tests/unit/test_session_conformance.py::test_the_digest_convention_has_not_moved",
+      "title": "conformance \u2014 the supervisor's digest convention changed"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/capability.go",
+      "target_test": "TestDigestConventionMatchesTheSupervisor",
+      "title": "conformance \u2014 the proxy digests the decoded bytes instead"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/session.go",
+      "target_test": "TestSupervisorWrittenSessionTableIsReadable",
+      "title": "conformance \u2014 a column name drifts apart"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/capability.go",
+      "target_test": "TestTerminatedSessionWithLiveLeaseIsDenied",
+      "title": "conformance \u2014 stage 1 checks only the lease, not the state"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/unit/test_path_provenance.py::test_a_record_cannot_be_built_without_stating_its_path_provenance",
+      "title": "SC-022 path marking \u2014 a default provenance added"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/unit/test_path_provenance.py::test_everything_v1_emits_is_marked_unverified",
+      "title": "SC-022 path marking \u2014 the supervisor read declared authoritative"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/unit/test_path_provenance.py::test_the_provenance_reaches_the_serialized_record",
+      "title": "SC-022 path marking \u2014 the caveat dropped from the serialized record"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/addresses.go",
+      "target_test": "TestTheDeclaredRFC1918OriginIsReachable",
+      "title": "FR-017 exemption \u2014 the declared RFC1918 origin stops being reachable"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/addresses.go",
+      "target_test": "TestTheDeclaredLoopbackOriginIsReachable",
+      "title": "FR-017 exemption \u2014 the declared loopback origin stops being reachable"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/addresses.go",
+      "target_test": "TestADifferentRFC1918AddressIsStillDenied|TestTheExemptionIsAnAddressNotAPrefix",
+      "title": "FR-017 containment \u2014 the exemption widened to a prefix"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/addresses.go",
+      "target_test": "TestADifferentLoopbackAddressIsStillDenied",
+      "title": "FR-017 containment \u2014 the loopback exemption widened to a prefix"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/addresses.go",
+      "target_test": "TestOneDeclaredOriginExemptsExactlyOneAddress",
+      "title": "FR-017 containment \u2014 the exemption widened to its whole class"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/addresses.go",
+      "target_test": "TestExemptibleClassesIsExactlyPrivateAndLoopback|TestTheMetadataServiceCannotBeExemptedByDeclaringIt",
+      "title": "FR-017 containment \u2014 link-local becomes exemptible"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/proxy/addresses.go",
+      "target_test": "TestTheMetadataServiceCannotBeExemptedByDeclaringIt",
+      "title": "FR-017 ordering \u2014 the exemption consulted before the class is decided"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/canonical.py",
+      "target_test": "tests/contract/test_canonical_determinism.py",
+      "title": "FR-055 canonical order \u2014 key sorting removed"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/envelope.py",
+      "target_test": "tests/contract/test_canonical_determinism.py::test_changing_a_volatile_value_does_not_move_the_address",
+      "title": "FR-055 envelope \u2014 volatile values left in the hashed payload"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/envelope.py",
+      "target_test": "tests/contract/test_canonical_determinism.py::test_the_volatility_scanner_catches_an_undeclared_volatile_value",
+      "title": "FR-055 volatility scan \u2014 the detector stops detecting"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/schemas.py",
+      "target_test": "tests/contract/test_schema_versions.py",
+      "title": "T015 schema gate \u2014 a version moves backwards unnoticed"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/schemas.py",
+      "target_test": "tests/contract/test_schema_versions.py",
+      "title": "T015 schema gate \u2014 a required field removed without a MAJOR bump"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/migrations/__init__.py",
+      "target_test": "tests/contract/test_migrations.py",
+      "title": "T014 migration \u2014 a stale document passes through unmigrated"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/ownership.py",
+      "target_test": "tests/invariants/test_writer_ownership.py",
+      "title": "T017 ownership \u2014 a non-owner may write"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/repository.py",
+      "target_test": "tests/invariants/test_writer_ownership.py",
+      "title": "T016 scope columns \u2014 the caller supplies its own tenant"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/analysis/artifact_store.py",
+      "target_test": "tests/contract/test_rollback.py::test_the_object_store_refuses_to_overwrite_an_address",
+      "title": "T019 object store \u2014 an address may be overwritten"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/analysis/rollback.py",
+      "target_test": "tests/contract/test_rollback.py::test_an_unattributed_restoration_is_refused",
+      "title": "T020 rollback \u2014 the restoration record stops naming an operator"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/config.py",
+      "target_test": "tests/contract/test_configuration_failloud.py",
+      "title": "T032 fail-closed config \u2014 startup proceeds with values missing"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/unvalidated.py",
+      "target_test": "tests/contract/test_unvalidated_marking.py",
+      "title": "T033 unvalidated marking \u2014 the marker dropped from the rendering"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/secret.py",
+      "target_test": "tests/invariants/test_secret_has_no_serializer.py::test_the_marker_names_the_key_it_stands_for",
+      "title": "FR-036 marker \u2014 the key name dropped, leaving an undiagnosable trace"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace.py",
+      "target_test": "tests/contract/test_trace_spans.py",
+      "title": "T037 rule id \u2014 a decision span may omit its rule"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/transition.py",
+      "target_test": "tests/unit/test_state_transition.py",
+      "title": "Principle VI \u2014 a state_transition span may omit its predicate inputs"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/bounds.py",
+      "target_test": "tests/unit/test_state_transition.py",
+      "title": "Principle VI \u2014 bounds.check stops recording the inputs it did not match"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_kernel_floor.py::test_the_kill_probe_reads_a_child_cgroup_and_not_the_root",
+      "title": "FR-049 preflight \u2014 the cgroup.kill probe reads the root cgroup"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_namespace_probe.py::test_presence_and_the_sysctl_are_not_evidence_the_mechanism_works",
+      "title": "T206 preflight \u2014 the namespaces check goes back to presence and a sysctl"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_namespace_probe.py::test_both_arms_refused_is_attributed_to_the_runtime_seccomp_profile",
+      "title": "T206 preflight \u2014 the unshare(0) discriminator is assumed rather than attempted"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_run_checks_asks_about_pivot_root_after_it_asks_about_unshare",
+      "title": "T207 preflight \u2014 pivot_root is not in the check set at all"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_ebusy_is_permitted_because_the_call_reached_the_kernel",
+      "title": "T207 preflight \u2014 EBUSY is scored as a refusal instead of as reaching the kernel"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_eperm_without_the_capability_is_not_attributed_to_seccomp",
+      "title": "T207 preflight \u2014 an EPERM is blamed on seccomp without reading the capability"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_einval_with_no_filter_installed_reached_the_kernel",
+      "title": "T208 preflight \u2014 only EBUSY is resolved, so EINVAL reads as a refusal"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_einval_with_a_filter_installed_or_unreadable_stays_unresolved",
+      "title": "T208 preflight \u2014 the seccomp-mode gate is dropped from the resolved class"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_einval_under_a_filter_is_not_described_as_an_unrecognised_errno",
+      "title": "T208 preflight \u2014 a withheld post-authority errno is reported as unrecognised"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_a_forged_constant_errno_is_not_resolved_by_the_pair",
+      "title": "T209 preflight \u2014 a forged constant errno is resolved without the pair"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_an_authority_errno_on_the_second_call_also_blocks_resolution",
+      "title": "T209 preflight \u2014 the authority guard is dropped, so a differing pair always resolves"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_the_pair_resolves_without_needing_the_seccomp_mode",
+      "title": "T209 preflight \u2014 the second invocation is ignored, so only Seccomp 0 resolves"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_the_absent_path_probe_is_a_path_that_cannot_exist",
+      "title": "T209 preflight \u2014 the second invocation names a path that can exist"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_pivot_root_probe.py::test_eacces_is_never_read_as_reaching_the_kernel",
+      "title": "T208 preflight \u2014 EACCES is admitted to the class that reads as permitted"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace.py",
+      "target_test": "tests/contract/test_trace_spans.py::test_two_writers_over_one_repository_cannot_share_a_position",
+      "title": "FR-038 ordering \u2014 the span position has no unique index"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace.py",
+      "target_test": "tests/contract/test_trace_spans.py::test_a_resumed_writer_does_not_reissue_an_ordinal",
+      "title": "FR-038 ordering \u2014 a resumed writer restarts its ordinals at zero"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace.py",
+      "target_test": "tests/contract/test_trace_redaction.py::test_a_secret_cannot_be_placed_in_a_span_at_all",
+      "title": "FR-036 trace \u2014 a Secret may reach a span"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace.py",
+      "target_test": "tests/contract/test_trace_spans.py::test_a_secret_nested_in_any_carrier_field_is_refused",
+      "title": "FR-036 trace \u2014 the Secret scan covers only detail again"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace.py",
+      "target_test": "tests/contract/test_trace_spans.py::test_a_secret_nested_in_any_carrier_field_is_refused",
+      "title": "FR-036 trace \u2014 the Secret scan stops at a nested dataclass"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace_budget.py",
+      "target_test": "tests/contract/test_budget_journal.py",
+      "title": "T038 journal location \u2014 a ledger inside the session root is accepted"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace_budget.py",
+      "target_test": "tests/contract/test_budget_journal.py::test_the_journal_constructor_enforces_the_location",
+      "title": "T038 journal location \u2014 the constructor stops running the check"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/unit/test_fs_write_mode.py::test_an_open_for_writing_at_a_readonly_location_is_denied",
+      "title": "FS-002 \u2014 an open for writing is classified by syscall name alone"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/unit/test_fs_write_mode.py::test_the_modifying_flags_are_writes_even_without_o_wronly",
+      "title": "FS-002 \u2014 a truncating open counts as a read"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/unit/test_fs_write_mode.py::test_the_audit_record_names_the_declared_mode_it_violated",
+      "title": "FS-002 \u2014 a write to a declared location records the wrong mode"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/fs_decisions.py",
+      "target_test": "tests/unit/test_fs_write_mode.py::test_a_flagless_open_is_not_assumed_to_be_a_read",
+      "title": "FS-006 \u2014 an open with no flag word is assumed to be a read"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/seccomp.py",
+      "target_test": "tests/unit/test_fs_write_mode.py::test_every_open_syscall_has_a_flags_argument_index",
+      "title": "FR-048 \u2014 the listener stops reading the open flag word"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/seccomp.py",
+      "target_test": "tests/unit/test_watch_set_wiring.py::test_the_listener_asks_the_guard_before_reading_any_notification",
+      "title": "FR-048 watch-set guard \u2014 the listener stops consulting it"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace_budget.py",
+      "target_test": "tests/contract/test_budget_journal.py::test_the_ledger_survives_a_kill_with_no_flush",
+      "title": "T038 accrual \u2014 the ledger is written once instead of as it accrues"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_kernel_floor.py::test_a_kernel_below_the_floor_fails_the_check",
+      "title": "OD-17 kernel floor \u2014 an old kernel passes the check"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_kernel_floor.py::test_an_unparseable_kernel_fails_the_check",
+      "title": "OD-17 kernel floor \u2014 an unparseable release is assumed new enough"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/preflight.py",
+      "target_test": "tests/unit/test_kernel_floor.py::test_the_floor_is_marked_as_derived_and_not_tested",
+      "title": "OD-17 floor marking \u2014 the derived-not-tested caveat dropped"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/cgroup.py",
+      "target_test": "tests/unit/test_kernel_floor.py::test_kill_all_refuses_rather_than_degrading",
+      "title": "FR-049 kill_all \u2014 the racy per-pid fallback restored"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "tests/invariants/test_sandbox_reachability.py",
+      "target_test": "tests/invariants/test_sandbox_reachability.py::test_a_package_marker_does_not_count_as_coverage",
+      "title": "INV-003 vacuity \u2014 a package marker counts as coverage again"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "tests/invariants/test_sandbox_reachability.py",
+      "target_test": "tests/invariants/test_sandbox_reachability.py::test_every_declared_root_exists",
+      "title": "INV-003 root check \u2014 a moved root stops being noticed"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/dispatch.py",
+      "target_test": "tests/invariants/test_fanout_ordering.py::test_recording_follows_declared_index_order_not_completion_order",
+      "title": "T-08 declared order \u2014 the journal records in completion order"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/dispatch.py",
+      "target_test": "tests/invariants/test_fanout_ordering.py::test_recording_follows_declared_index_order_not_completion_order",
+      "title": "T-08 declared order \u2014 the returned results follow completion order"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/state_merge.py",
+      "target_test": "tests/invariants/test_fanout_ordering.py::test_an_undeclared_shared_key_is_refused_rather_than_defaulted",
+      "title": "T-08 no default rule \u2014 an undeclared shared key falls back to last-write-wins"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/state_merge.py",
+      "target_test": "tests/invariants/test_fanout_ordering.py::test_every_declared_merge_rule_either_combines_or_refuses",
+      "title": "T-08 no lost update \u2014 single_writer picks a winner instead of refusing"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/contracts/repository.py",
+      "target_test": "tests/integration/test_store_concurrent_writers.py::test_a_refused_insert_does_not_wedge_another_connection",
+      "title": "T050 lock release \u2014 a refused insert keeps its transaction open"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/session_state.py",
+      "target_test": "tests/unit/test_session_store.py::test_a_session_cannot_be_started_twice",
+      "title": "T049 guarded transition \u2014 a transition that matched nothing reports success"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/supervisor/session_table.py",
+      "target_test": "tests/integration/test_lease_revocation.py::test_terminate_requires_a_named_state",
+      "title": "FR-006 named terminal \u2014 the writer accepts any non-empty string again"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/session_store.py",
+      "target_test": "tests/unit/test_session_store.py::test_a_ceiling_reached_exactly_is_reached",
+      "title": "FR-005 ceiling reached \u2014 the comparison permits one over the declared number"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/result_bound.py",
+      "target_test": "tests/unit/test_result_bound.py::test_the_byte_proxy_never_uses_an_average_divisor",
+      "title": "FR-058 byte proxy \u2014 an average bytes-per-token divisor stands in for the floor"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/result_bound.py",
+      "target_test": "tests/unit/test_result_bound.py::test_a_bound_above_one_twentieth_of_the_window_is_refused_not_clamped",
+      "title": "FR-058 ceiling \u2014 a bound above one twentieth is clamped instead of refused"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/result_bound.py",
+      "target_test": "tests/unit/test_result_bound.py::test_the_bounded_result_discloses_its_own_bounding",
+      "title": "FR-058 disclosure \u2014 the notice is dropped from the result the model reads"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/trace.py",
+      "target_test": "tests/unit/test_result_bound.py::test_a_tool_call_span_without_the_seven_fields_is_refused",
+      "title": "FR-058 trace fields \u2014 written only where the bound bit"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/result_bound.py",
+      "target_test": "tests/unit/test_result_bound.py::test_retention_does_not_outlive_the_session",
+      "title": "FR-058 retention \u2014 the withheld bytes outlive the session"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/result_bound.py",
+      "target_test": "tests/unit/test_result_bound.py::test_the_retention_location_carries_its_own_declared_bound",
+      "title": "FR-058 retention bound \u2014 the location accepts bytes past its declared bound"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_loop.py::test_an_abandoned_turns_index_is_never_handed_back_out",
+      "title": "T041 turn index \u2014 the loop numbers turns from this attempt rather than the journal"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_loop.py::test_every_step_is_journalled_before_it_happens",
+      "title": "T051 write-ahead \u2014 the intent is committed after the effect instead of before"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/journal.py",
+      "target_test": "tests/contract/test_turn_journal.py::test_the_same_outcome_cannot_be_committed_twice",
+      "title": "T051 no repeated outcome \u2014 a step's outcome can be recorded twice"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/resume.py",
+      "target_test": "tests/unit/test_loop.py::test_a_recorded_tool_result_is_not_re_executed_on_resume",
+      "title": "T052 step granularity \u2014 a recorded tool result is re-executed on resume"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_loop.py::test_a_completed_inner_turn_is_not_re_executed",
+      "title": "T052 completed turns \u2014 a resumed attempt re-executes the turns it already ran"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_loop.py::test_the_reservation_counts_the_call_in_flight",
+      "title": "T053 reserve before the call \u2014 the spend is only counted once it returns"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/ledger.py",
+      "target_test": "tests/contract/test_budget_ledger.py::test_an_unreconciled_reservation_keeps_counting",
+      "title": "T053 outstanding reservations \u2014 the totals ignore the call in flight"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/integration/test_resume_sigkill.py::test_a_mid_step_crash_re_executes_no_recorded_step",
+      "title": "T054 resumed intent \u2014 the retry path re-intends a step that already has one"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_loop.py::test_the_elapsed_time_a_turn_took_is_accrued_to_the_ledger",
+      "title": "T064 measured call time \u2014 the duration of the model call reconciles as zero"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_loop.py::test_the_wall_clock_ceiling_stops_a_session_that_ran_too_long",
+      "title": "T064 the turn tail \u2014 the interval after the call is measured from its end"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/batteries/test_ceilings_under_resume.py::test_the_permitted_turn_count_is_a_real_bound",
+      "title": "T064 resumed turns \u2014 a turn finished after a crash accrues no wall clock"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_loop.py::test_a_ceiling_is_not_restarted_by_a_second_loop_over_the_same_session",
+      "title": "T064 one dimension only \u2014 the elapsed-time row counts a turn of its own"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/ledger.py",
+      "target_test": "tests/contract/test_budget_ledger.py::test_every_estimated_figure_is_refused_when_it_is_omitted",
+      "title": "T064 no invented estimate \u2014 an unstated wall-clock reservation defaults to zero"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/resume.py",
+      "target_test": "tests/conformance/test_provider_state_resume.py::test_the_state_a_killed_process_recorded_is_injected_by_the_next_one",
+      "title": "T056 state across resume \u2014 a resumed turn is handed no provider state"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/conformance/test_provider_state_resume.py::test_a_half_finished_turns_state_comes_off_disk_and_not_from_the_provider",
+      "title": "T056 state on disk \u2014 a committed model outcome stores no provider state"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/journal.py",
+      "target_test": "tests/conformance/test_provider_state_resume.py::test_no_state_and_empty_state_stay_distinguishable_across_the_boundary",
+      "title": "T056 absent is not empty \u2014 no state and empty state are stored the same"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/conformance/test_provider_state_resume.py::test_the_opaque_bytes_are_never_readable_on_the_trace_or_in_the_payload",
+      "title": "T056 digest not bytes \u2014 the opaque state is written to the trace readably"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/context.py",
+      "target_test": "tests/unit/test_loop.py::test_provider_state_is_reinjected_verbatim",
+      "title": "T041 opaque state \u2014 the provider state is not carried into the next turn"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/context.py",
+      "target_test": "tests/conformance/test_provider_state_roundtrip.py::test_the_opaque_field_survives_the_chain_byte_identically",
+      "title": "T041 opaque state \u2014 only the newest turn's state is carried forward"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/context.py",
+      "target_test": "tests/unit/test_context.py::test_a_prompt_that_alone_exceeds_the_budget_is_refused_not_trimmed",
+      "title": "T042 prompt refusal \u2014 an over-budget prompt is trimmed instead of refused"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/runner.py",
+      "target_test": "tests/unit/test_runner.py::test_a_fault_in_the_loop_still_stands_the_session_down",
+      "title": "T046 teardown \u2014 the session is stood down only on the paths that returned"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/runner.py",
+      "target_test": "tests/unit/test_cancellation.py::test_a_cancelled_session_cannot_be_attached_to",
+      "title": "T047 cancellation \u2014 a cancelled run is interrupted, so attach resumes it"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/runner.py",
+      "target_test": "tests/unit/test_cancellation.py::test_a_cancelled_run_names_operator_terminated_as_its_terminal_state",
+      "title": "T047 cancellation \u2014 the terminal state teardown recorded is not reported"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/runner.py",
+      "target_test": "tests/unit/test_runner.py::test_attach_resumes_an_interrupted_session_and_keeps_its_ceilings",
+      "title": "T046 attach \u2014 the resume edge is not taken and the loop runs unauthorised"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/state.py",
+      "target_test": "tests/unit/test_provider_state.py::test_a_payload_containing_a_nul_survives_the_round_trip",
+      "title": "T059 opaque framing \u2014 a trailing NUL is stripped off a payload as padding"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/state.py",
+      "target_test": "tests/unit/test_provider_state.py::test_a_text_carrier_comes_back_as_text_and_a_binary_one_as_bytes",
+      "title": "T059 carrier type \u2014 a text field is re-injected as bytes"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/state.py",
+      "target_test": "tests/unit/test_provider_state.py::test_one_providers_state_cannot_be_unpacked_by_another",
+      "title": "T059 provider keying \u2014 one provider's opaque state unpacks for another"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/state.py",
+      "target_test": "tests/unit/test_provider_state.py::test_the_payload_is_not_in_the_repr_or_the_str",
+      "title": "T059 repr \u2014 the opaque payload is disclosed by its own repr"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/state.py",
+      "target_test": "tests/conformance/test_provider_state_roundtrip.py::test_the_opaque_field_survives_the_chain_byte_identically",
+      "title": "T061 re-injection \u2014 the opaque state is counted as written and written nowhere"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/state.py",
+      "target_test": "tests/unit/test_provider_state.py::test_a_turn_that_emitted_nothing_keeps_its_slot_and_gets_no_write",
+      "title": "T061 re-injection \u2014 every state is written onto the newest assistant entry"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/state.py",
+      "target_test": "tests/unit/test_provider_state.py::test_a_chain_that_does_not_line_up_with_the_conversation_is_refused",
+      "title": "T061 re-injection \u2014 a chain that does not line up is zipped short instead of refused"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "tests/conformance/test_provider_state_roundtrip.py",
+      "target_test": "tests/conformance/test_provider_state_roundtrip.py::test_the_vacuity_guard_refuses_a_cassette_that_never_carries_state",
+      "title": "T061 vacuity guard \u2014 a conditional over an empty population reports a pass"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/schema.py",
+      "target_test": "tests/unit/test_provider_schema.py::test_arguments_reach_the_tool_as_a_mapping_whatever_the_wire_said",
+      "title": "T057 argument codec \u2014 OpenAI's JSON-string arguments are forwarded unparsed"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/schema.py",
+      "target_test": "tests/unit/test_provider_schema.py::test_two_google_calls_to_one_name_are_refused_rather_than_paired",
+      "title": "T057 Google ambiguity \u2014 two calls to one tool name are paired by position"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/wire_anthropic.py",
+      "target_test": "tests/unit/test_provider_schema.py::test_the_anthropic_request_shape_branches_on_the_model_and_not_the_vendor",
+      "title": "T058 per-model branch \u2014 one request shape is sent to every Anthropic model"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "tests/conformance/cassettes/harness.py",
+      "target_test": "tests/unit/test_cassette_harness.py::test_a_conversation_of_the_wrong_length_is_refused",
+      "title": "T060 replay precondition \u2014 a request with a turn missing is answered anyway"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "tests/conformance/cassettes/harness.py",
+      "target_test": "tests/unit/test_cassette_harness.py::test_a_player_that_served_some_turns_reports_the_rest",
+      "title": "T060 exhaustion \u2014 a run that played one of six turns reports no news"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/costs.py",
+      "target_test": "tests/unit/test_provider_costs.py::test_a_family_prefix_is_not_priced_as_one_of_its_members",
+      "title": "T063 fail-closed lookup \u2014 a family prefix is priced as one of its members"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/costs.py",
+      "target_test": "tests/unit/test_provider_costs.py::test_an_entry_whose_source_is_prose_rather_than_an_address_is_refused",
+      "title": "T062 sourced entries \u2014 a citation nobody can open is accepted"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/costs.py",
+      "target_test": "tests/unit/test_provider_costs.py::test_a_date_no_entry_covers_fails_closed_rather_than_picking_the_nearest",
+      "title": "T063 date window \u2014 a date no entry covers is priced from the nearest one"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/costs.py",
+      "target_test": "tests/unit/test_provider_costs.py::test_the_xai_prompt_length_tier_switches_at_the_stated_threshold",
+      "title": "T062 prompt-length bands \u2014 every request is priced at the lowest band"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/costs.py",
+      "target_test": "tests/unit/test_provider_costs.py::test_a_float_token_count_is_refused_rather_than_divided",
+      "title": "T062 unit gate \u2014 a non-integer token count is priced instead of refused"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/providers/costs.py",
+      "target_test": "tests/unit/test_provider_costs.py::test_the_reservation_is_derived_at_the_dearer_of_the_two_rates",
+      "title": "T064 reservation figure \u2014 the spend reservation is derived at the cheaper rate"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/budget_backstop.py",
+      "target_test": "tests/unit/test_budget_backstop.py::test_the_backstop_imports_nothing_from_the_cost_table",
+      "title": "T065 independence \u2014 the backstop is made downstream of the cost table"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/budget_backstop.py",
+      "target_test": "tests/unit/test_budget_backstop.py::test_the_maximum_cannot_be_raised",
+      "title": "T065 unraisable maximum \u2014 the backstop can be widened by its caller"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/budget_backstop.py",
+      "target_test": "tests/unit/test_budget_backstop.py::test_tool_calls_are_not_counted",
+      "title": "T065 metric \u2014 tool steps are counted as model calls"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/budget_backstop.py",
+      "target_test": "tests/unit/test_budget_backstop.py::test_it_fires_at_the_maximum_not_one_past_it",
+      "title": "T065 boundary \u2014 the backstop permits one call past its maximum"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_budget_backstop.py::test_the_loop_is_stopped_by_the_backstop_with_every_ceiling_out_of_reach",
+      "title": "T065 wiring \u2014 the backstop is built by the loop and never consulted"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "src/runtime/loop.py",
+      "target_test": "tests/unit/test_budget_backstop.py::test_the_default_loop_carries_a_backstop_nobody_had_to_pass",
+      "title": "T065 default \u2014 a loop constructed without a backstop gets none"
+    },
+    {
+      "outcome": "proved",
+      "target_file": "tests/conftest.py",
+      "target_test": "tests/unit/test_conftest_basetemp.py::test_a_live_process_directory_survives_another_runs_configure",
+      "title": "e4ef6e6 basetemp reaping \u2014 a live process's directory is reaped too"
+    }
+  ],
+  "skipped_titles": [
+    "FR-048 mount namespace \u2014 pivot_root removed",
+    "FR-048 read-only bind \u2014 the MS_REMOUNT pass removed",
+    "FR-048 session root \u2014 the read-only seal removed",
+    "FR-048 read-only bind \u2014 the remount made non-recursive",
+    "FR-049 pids.max \u2014 the bound not written",
+    "FR-049 attach ordering \u2014 spawn barrier removed"
+  ],
+  "status": "complete",
+  "totals": {
+    "entries_recorded": 141,
+    "proved": 135,
+    "skipped": 6,
+    "unproven": 0
+  },
+  "unproven_titles": [],
+  "what_this_is_a_property_of": [
+    "Kernel 25.2.0 on Darwin/arm64. Four arms \u2014 pivot_root, MS_REMOUNT, pids.max and cgroup attach ordering \u2014 are attempted only where their tests run, so a total taken on Darwin and a total taken on Linux are the same instrument over two different populations and must not be compared.",
+    "An UNPRIVILEGED run (euid 501). The kernel-mechanism arms need root; any skip below may be privilege rather than platform.",
+    "A Go toolchain was present, so the cross-language conformance and FR-017 arms were attempted.",
+    "The baseline is the whole suite run untampered in this same tree, with this same interpreter and these same privileges. Each proof is attempted only if its own test RAN and PASSED there, so a proof whose test was skipped is recorded as skipped and never as proved.",
+    "6 arm(s) were NOT exercised in this environment. The proved count is a statement about the arms that ran, not about the mechanism set as a whole."
+  ]
+}
