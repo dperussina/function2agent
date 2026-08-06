@@ -1033,6 +1033,55 @@ stops a loop, the tampered test has no failure mode left. Ask it of every arm wh
 something unbounded, and give the test its own bound — one that cannot be mistaken for the mechanism
 under proof.
 
+### An outer bound inside an inner bound's window does not make the failure faster, it makes it anonymous
+
+**On 2026-08-06 (`acdf5f7`) every job in `.github/workflows/ci.yml` was given a `timeout-minutes`
+for the first time. All but one took its value from the job's own observed duration or from a stated
+floor. The `removal proofs` job could take neither, and the reason inverts the intuition that a
+tighter fallback is a safer one.**
+
+The cap above is the primary bound: `tools/proof_timeout.py` at `REMOVAL_PROOF_TIMEOUT`, 300s by
+default, read at that default by both `tests/removal_proofs.sh` and `tools/proof_attribution.py`. Its
+entire product is a *written* verdict — the arm is scored `timed-out`, named in the summary line, and
+carried into the JSON record. **That record is written from exactly two places in the harness: the
+baseline abort, and the line after the last proof.** The per-arm lines accumulate in a `mktemp -d`
+that an `EXIT` trap removes, deliberately — the harness's own comment says they live there "so an
+interrupted run cannot leave a partial file behind that looks like a result". So a harness killed
+part-way through leaves no record at all, and not just for the arm that hung: for every arm in the
+run.
+
+A job that exceeds `timeout-minutes` is **cancelled**, not failed
+([GitHub's workflow-syntax reference](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idtimeout-minutes)),
+and the runner signals the running step's process tree. The `if: always()` steps that publish the
+totals, run the attribution and upload the artifact are **not** skipped — GitHub's
+[workflow-cancellation reference](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-cancellation)
+says the server re-evaluates the unfinished steps' conditions, `always()` evaluates true, and they
+continue into a five-minute forcible-termination window. They run and there is nothing to render.
+The renderer exits non-zero on a missing record, which is correct and useless: it reports the
+absence, not the arm.
+
+**The comment committed at `acdf5f7` states this one step too strongly** — it says the `if: always()`
+steps "do not run". Per the reference above they do. The bound it justifies is unaffected, because
+what those steps need does not exist by the time they run, but the mechanism as written in
+`.github/workflows/ci.yml` is wrong and is still there.
+
+So the bound is a **sum, not a multiple**, and the arithmetic is the part a future editor would
+otherwise re-derive or casually tighten: 318s observed maximum, from the 40-run table in that file's
+own header, plus 300s for one arm reaching the cap in the harness, plus 300s for the same arm
+reaching it again in `proof_attribution.py`, is 918s — 15.3 minutes, rounded up to 20. That leaves
+882s of hang budget over the observed maximum, two full cap firings and change. Three simultaneously
+hanging arms exceed it, and that is the deliberate stopping point: at three the cap is not containing
+the problem, so losing the record is no longer the worse outcome.
+
+**The rule generalises past CI: when an inner mechanism's whole output is a record it writes at the
+end, an outer bound set inside the window the inner one needs converts an informative failure into a
+silent one.** They move together — raising `REMOVAL_PROOF_TIMEOUT` without raising the job bound
+trades the cap's diagnostic for a cancelled job. And the corollary for the other jobs is worth one
+sentence, because it is the honest half of the same pass: their 5 minutes is a **floor**, stated as
+one rather than dressed up as a derivation, since the jobs it covers finish in under a minute every
+time and a value scaled off that work would be measuring PyPI rather than the job. It still fires on
+a hang, and it is 72x tighter than GitHub's 360-minute default.
+
 ## Roles: who is authoritative
 
 `config.json` sorts every file into one of four roles, and the roles decide which
