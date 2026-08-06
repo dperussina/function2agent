@@ -259,7 +259,12 @@ def test_a_transaction_rolls_back_every_write_in_it(tmp_path) -> None:
 
 
 def test_no_engine_specific_sql_lives_above_the_repository() -> None:
-    """T016's third obligation, scanned rather than trusted.
+    """T016's **second** obligation, scanned rather than trusted.
+
+    Numbered as the module docstring numbers it. This said "third" and there
+    is no third reading of that list — the drift is small and it is the same
+    drift that let a paraphrase in T050's probe restate obligation 2 as a rule
+    about exceptions, which it is not.
 
     T-06 records that v1's store has no observed substrate. Keeping SQL below
     one layer is what makes replacing that substrate a change to one file

@@ -1012,6 +1012,47 @@ proof "T050 lock release — a refused insert keeps its transaction open" \
   "tests/integration/test_store_concurrent_writers.py::test_a_refused_insert_does_not_wedge_another_connection" \
   's = s.replace("                self._rollback_if_outermost()\n                raise UniquenessError(f\x22{table}: {exc}\x22)", "                raise UniquenessError(f\x22{table}: {exc}\x22)")'
 
+# T050/T016. The convergence loop is the whole repair for the first-open race.
+# Removing it restores the reported defect exactly — the loser raises instead of
+# noticing that the winner already did the work — and it is invisible in every
+# multi-process arm, because the race only occurs on about two thirds of runs
+# and no party count makes it certain. Only the planted arm catches this
+# every time.
+proof "T016 WAL convergence — a loser of the first-open race raises again" \
+  src/contracts/repository.py \
+  "tests/integration/test_store_concurrent_writers.py::test_a_first_open_that_loses_the_wal_race_converges_instead_of_raising" \
+  's = s.replace("                if self._read_journal_mode() == \x22wal\x22:\n                    self.wal_entry = WAL_ENTRY_PEER\n                    return", "                if False:\n                    return")'
+
+# T016. The forced read is one line and reads like a redundant query somebody
+# could tidy away. Without it `PRAGMA journal_mode` answers from the pager's
+# own cache and never looks at the file, so the convergence loop above spins
+# until its window expires and then reports a busy store that is in fact
+# already in WAL. Measured at 3.7 million consecutive stale reads over five
+# seconds, so this is not a narrow window.
+proof "T016 journal mode re-read — the pager's stale cache is trusted" \
+  src/contracts/repository.py \
+  "tests/integration/test_store_concurrent_writers.py::test_a_first_open_that_loses_the_wal_race_converges_instead_of_raising" \
+  's = s.replace("        self._conn.execute(\x22SELECT count(*) FROM sqlite_master\x22).fetchone()\n", "")'
+
+# T016. The busy/wedged split is what stops the convergence wait from masking a
+# held write lock — the defect this same probe found the first time. Collapsing
+# it leaves every arm green except the one that plants a real lock: the store
+# still refuses, it just refuses with the wrong word, and "retrying is
+# reasonable" is the wrong word about a lock nobody is going to release.
+proof "T016 wedged/busy split — a held lock reports as momentary contention" \
+  src/contracts/repository.py \
+  "tests/integration/test_store_concurrent_writers.py::test_a_wedged_store_is_not_reported_as_transient" \
+  's = s.replace("            if refused_in >= BUSY_TIMEOUT_S * _EXHAUSTED_FRACTION:", "            if False:")'
+
+# T016. The translation itself, on the ordinary write surface rather than at
+# construction. Every single-connection test passes with this gone, because an
+# uncontended write never raises at all — which is exactly how the leak
+# survived on five methods until a cross-process probe went looking.
+proof "T016 engine translation — sqlite3.OperationalError reaches a caller again" \
+  src/contracts/repository.py \
+  "tests/integration/test_store_concurrent_writers.py::test_no_sqlite_exception_escapes_the_write_surface" \
+  's = s.replace("        with self._lock, self._engine_errors(f\x22inserting into {table}\x22):", "        with self._lock:")'
+
 # T050. The rendezvous is what makes the probe's children one-writer-per-process
 # rather than hopefully-one-writer-per-process, and removing it is invisible in
 # every arm: `Pool` reuses a worker only sometimes, so the measurements stay

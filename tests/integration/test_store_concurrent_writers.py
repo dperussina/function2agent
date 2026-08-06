@@ -45,6 +45,26 @@ lost rows, corrupted rows, a wedged database, and rows that are simply *missing*
 without an error — do not occur at this concurrency on SQLite in WAL mode. The
 band is collapsed by a measurement, and the measurement is here rather than
 described.
+
+**What it has cost and what it has returned.** This probe has now found two
+defects that single-process testing could not reach, both in the storage layer,
+both having survived the ordinary suite:
+
+1. `Repository.insert` left an implicit transaction open on `IntegrityError`,
+   holding a write lock and wedging every other connection for the busy
+   timeout. Invisible to a single connection, because the refusal raises
+   `UniquenessError` either way and the damage lands elsewhere.
+2. `Repository.__init__` let `sqlite3.OperationalError` escape when several
+   processes converted a brand-new store to WAL at once — and the same leak was
+   then found on four more methods. Invisible to a single connection, because
+   an uncontended write never raises at all.
+
+Two is recorded here rather than turned into a rate, and the number is not the
+useful part. The shape is: both defects are in error paths that only exist when
+a *second* connection does something, so no amount of coverage on one
+connection reaches them. Any subsystem whose tests hold one handle to a shared
+resource has the same blind spot, and this file is the only instrument in the
+tree pointed at it.
 """
 
 from __future__ import annotations
@@ -54,12 +74,22 @@ import os
 import sqlite3
 import sys
 import threading
+import time
 from pathlib import Path
 
 import pytest
 
 from src.contracts import ownership
-from src.contracts.repository import Repository, UniquenessError
+from src.contracts.repository import (
+    BUSY_TIMEOUT_S,
+    CONVERGENCE_WINDOW_S,
+    WAL_ENTRY_PEER,
+    Repository,
+    StoreBusyError,
+    StoreUnavailableError,
+    StoreWedgedError,
+    UniquenessError,
+)
 
 TABLE = "trace_span"          # runtime-owned
 CEILING_TABLE = "session_ceiling"
@@ -76,6 +106,14 @@ _CONTEXT = mp.get_context("spawn")
 # loaded machine are never mistaken for a degraded pool, and short enough that a
 # genuinely unmeetable rendezvous is not a hang. Nothing correct waits this long.
 _RENDEZVOUS_TIMEOUT_S = 30.0
+
+# How long the planted holder keeps its lock after the opener has been let go.
+# Two margins have to hold at once and this sits four orders of magnitude
+# inside both: the opener reaches its pragma microseconds after the barrier, so
+# the lock is certainly still held; and this is well inside
+# `CONVERGENCE_WINDOW_S`, so the conversion is certainly seen. Missing either
+# is reported as `wal_entry == "self"`, never as a flake.
+_HOLD_THE_LOCK_S = 0.1
 
 # Set once per child by the pool initializer. A synchronization primitive cannot
 # be pickled through the task queue, but it can be inherited through the worker
@@ -388,8 +426,16 @@ def test_a_refused_insert_does_not_wedge_another_connection(tmp_path) -> None:
     the rollback in `Repository.insert`, one refused uniqueness insert left its
     connection holding a write lock, and the next write from *any other*
     connection blocked for SQLite's busy timeout and then raised
-    `sqlite3.OperationalError: database is locked` — an engine-specific
-    exception the repository layer's second obligation says no caller sees.
+    `sqlite3.OperationalError: database is locked`.
+
+    That exception is now `StoreWedgedError`. This docstring used to call it
+    "an engine-specific exception the repository layer's second obligation says
+    no caller sees", which the obligation does not say: obligation 2 is about
+    SQL and its check is a source scanner. The rule about exceptions is real
+    but *derived* from the obligation's reason, and it is now written down in
+    `repository.py` rather than surviving only as a paraphrase here. The
+    paraphrase was load-bearing and wrong at the same time, which is how it
+    would have sent the next reader to edit the wrong contract.
 
     The arm asserts the *unrelated* write succeeds. Asserting only that the
     refusal raises `UniquenessError` was true the whole time and is what let the
@@ -563,3 +609,363 @@ def _meet_siblings_only(path: str, label: str, repo_root: str,
     sys.path.insert(0, repo_root)
     _open_and_meet_siblings(path, label, timeout).close()
     return os.getpid()
+
+
+# ---------------------------------------------------------------------------
+# The *first* open, which is a different race from every arm above.
+#
+# Every arm above creates the store before the children run — one of them says
+# so in a comment, so that what it exercises is the rendezvous "and not the
+# first writer's race to put a brand-new file into WAL mode". That race was
+# left alone as out of scope, and it is a real defect: measured here at 21 of
+# 120 concurrent first opens raising `sqlite3.OperationalError` straight out of
+# `Repository.__init__`, and 0 of 120 once the file is already in WAL.
+#
+# **Why these plants do not use the pool.** Adding processes does not make the
+# race certain: measured at 24/40 trials with three, 28/40 with eight — it
+# plateaus around two thirds and never approaches one. So an arm that opened a
+# store from N processes and asserted "a loser occurred" would fail about a
+# third of the time while nothing was wrong, which is the unsound shape the
+# rendezvous was built to replace. Worse, an arm that asserted only "nobody
+# raised" would pass a third of the time *without the race happening at all*,
+# which is the degradation this file exists to refuse.
+#
+# So the loser is **constructed instead of raced for**. A second connection
+# holds the lock that the conversion needs, which makes losing certain rather
+# than likely, and each plant asserts which path was actually taken. A plant
+# that failed to induce its condition fails loudly rather than passing on the
+# strength of not having tried.
+
+
+def _hold(path: str, level: str) -> sqlite3.Connection:
+    """A second connection holding a real lock on `path`.
+
+    SQLite arbitrates between two connections in one process exactly as it does
+    between two processes, so a thread is enough here and a subprocess would
+    only add spawn latency to a test whose subject is a lock.
+
+    `IMMEDIATE` takes RESERVED, which is what the WAL conversion is refused by
+    without waiting; `EXCLUSIVE` also blocks the shared lock underneath it,
+    which is what makes the busy handler run to exhaustion. The two produce the
+    two different classifications, so both are needed.
+
+    `check_same_thread=False` because one plant releases this lock from the
+    thread standing in for the winner. Without it the release raises
+    `ProgrammingError` in that thread, the store is never converted, and the
+    plant fails looking exactly like the defect it is testing the repair for.
+    """
+    conn = sqlite3.connect(path, timeout=BUSY_TIMEOUT_S, isolation_level=None,
+                           check_same_thread=False)
+    conn.execute(f"BEGIN {level}")
+    return conn
+
+
+def _new_rollback_mode_store(path: str) -> None:
+    """A store that exists, has never been in WAL, and is not locked.
+
+    A file that does not exist at all cannot be locked by the holder, and a
+    file already in WAL never runs the conversion — `PRAGMA journal_mode=WAL`
+    is a no-op when the mode already matches, which is exactly why the warm
+    case never failed. So the plants need this third state, which is what a
+    brand-new store looks like in the instant before the first opener converts
+    it.
+    """
+    conn = sqlite3.connect(path)
+    conn.execute("CREATE TABLE IF NOT EXISTS _seed (x)")
+    conn.commit()
+    conn.close()
+
+
+def test_a_first_open_that_loses_the_wal_race_converges_instead_of_raising(
+    tmp_path,
+) -> None:
+    """The defect, planted so that losing is certain rather than likely.
+
+    A holder takes RESERVED on a brand-new store, so the opener's
+    `PRAGMA journal_mode=WAL` **cannot** succeed: SQLite refuses the promotion
+    outright rather than waiting, because the conversion runs inside a read
+    transaction and the busy handler is bypassed on that path. The holder then
+    does what the winner of the real race does — releases and converts — and
+    the opener has to notice.
+
+    The assertion that makes this a measurement rather than a hope is
+    `wal_entry`. Asserting only that the open succeeded would pass on a run
+    where the opener simply won, which is the failure this file's rendezvous
+    was written to eliminate. `peer` is reachable by exactly one path.
+    """
+    path = str(tmp_path / "firstopen.sqlite3")
+    _new_rollback_mode_store(path)
+    holder = _hold(path, "IMMEDIATE")
+
+    started = threading.Barrier(2)
+    failures: list[str] = []
+
+    def release_after_the_open_has_failed() -> None:
+        started.wait(timeout=_RENDEZVOUS_TIMEOUT_S)
+        # Long enough that the opener's pragma has certainly run and been
+        # refused — it runs microseconds after the barrier — and far inside the
+        # opener's convergence window, so the conversion is seen. Both margins
+        # are four orders of magnitude, and missing either shows up as
+        # `wal_entry == "self"` below rather than as a flake.
+        time.sleep(_HOLD_THE_LOCK_S)
+        try:
+            holder.execute("ROLLBACK")
+            holder.execute("PRAGMA journal_mode=WAL")
+        except BaseException as exc:  # noqa: BLE001
+            failures.append(f"{type(exc).__name__}: {exc}")
+
+    winner = threading.Thread(target=release_after_the_open_has_failed)
+    winner.start()
+    try:
+        started.wait(timeout=_RENDEZVOUS_TIMEOUT_S)
+        loser = _repo(path)
+    finally:
+        winner.join(timeout=_RENDEZVOUS_TIMEOUT_S)
+        holder.close()
+
+    assert failures == [], f"the plant's own winner failed: {failures}"
+    assert loser.wal_entry == WAL_ENTRY_PEER, (
+        f"the opener reported {loser.wal_entry!r}, so it won the conversion "
+        "rather than losing it and this run measured nothing. The holder's "
+        "RESERVED lock should have made winning impossible; either it was "
+        "released early or the opener never attempted the pragma."
+    )
+    assert loser.journal_mode() == "wal", (
+        "the opener returned a store that is not in WAL mode. Proceeding "
+        "against a store this layer did not finish configuring is worse than "
+        "the exception it replaced."
+    )
+    loser.close()
+
+
+def test_a_wedged_store_is_not_reported_as_transient(tmp_path) -> None:
+    """The control that keeps the repair above from swallowing the last defect.
+
+    A retry loop cannot tell a sibling one millisecond from finishing from a
+    lock held by a crashed process, because both refuse the pragma the same
+    way. This plants the second — a lock nobody is going to convert — and
+    requires it to read differently from the first.
+
+    The lock is `EXCLUSIVE`, so even the shared lock underneath the conversion
+    is blocked and SQLite's busy handler *is* consulted and runs to exhaustion.
+    That is the evidence the classification rests on: not a guess about the
+    holder's health, but the observation that a lock outlasted the entire busy
+    timeout. Every write this layer performs is a single statement, so nothing
+    healthy does that — and the previous defect found here, a connection left
+    holding a write lock by a failed insert, is precisely a thing that does.
+
+    Run against the shipped `BUSY_TIMEOUT_S` rather than a shortened one, so
+    what is measured is the configuration that ships.
+    """
+    path = str(tmp_path / "wedged.sqlite3")
+    _new_rollback_mode_store(path)
+    holder = _hold(path, "EXCLUSIVE")
+    try:
+        began = time.monotonic()
+        with pytest.raises(StoreWedgedError) as caught:
+            _repo(path)
+        waited = time.monotonic() - began
+    finally:
+        holder.execute("ROLLBACK")
+        holder.close()
+
+    assert not isinstance(caught.value, StoreBusyError), (
+        "a held lock was reported as momentary contention. An operator reading "
+        "'retrying is reasonable' about a wedged store retries forever."
+    )
+    assert waited >= BUSY_TIMEOUT_S * 0.5, (
+        f"the refusal came back in {waited:.3f}s, well inside the "
+        f"{BUSY_TIMEOUT_S}s busy timeout, so the busy handler did not run to "
+        "exhaustion and 'wedged' is not what was measured."
+    )
+
+
+def test_a_momentarily_contended_store_is_not_reported_as_wedged(tmp_path) -> None:
+    """The other half of the same distinction, and the one that needs the state.
+
+    Here the holder takes `RESERVED` and never converts. The opener's pragma is
+    refused *immediately* — the busy handler is bypassed, exactly as in the
+    benign race — so timing alone cannot separate this from the arm two above.
+    What separates them is that the store never converges: nobody is putting it
+    into WAL, so the window expires and the opener says so.
+
+    This is why the repair waits on the **end state** rather than on the lock.
+    A retry loop here would have spent a lock-sized budget and then reported
+    the same thing, only slower and with nothing learned.
+    """
+    path = str(tmp_path / "busy.sqlite3")
+    _new_rollback_mode_store(path)
+    holder = _hold(path, "IMMEDIATE")
+    try:
+        began = time.monotonic()
+        with pytest.raises(StoreBusyError) as caught:
+            _repo(path)
+        waited = time.monotonic() - began
+    finally:
+        holder.execute("ROLLBACK")
+        holder.close()
+
+    assert not isinstance(caught.value, StoreWedgedError)
+    assert CONVERGENCE_WINDOW_S <= waited < BUSY_TIMEOUT_S * 0.5, (
+        f"the opener waited {waited:.3f}s. Below "
+        f"{CONVERGENCE_WINDOW_S}s it did not give the store the window it "
+        f"documents; at or above {BUSY_TIMEOUT_S * 0.5}s it waited out a lock "
+        "instead, which is the retry loop this repair exists not to be."
+    )
+
+
+def test_no_sqlite_exception_escapes_the_write_surface(tmp_path, monkeypatch) -> None:
+    """Construction was where it was measured; it was never only there.
+
+    The module docstring's second obligation is about SQL, and the exception
+    rule is derived from its reason — a caller that writes
+    `except sqlite3.OperationalError` is coupled to SQLite exactly as a caller
+    holding SQL is. Derived or not, it was being broken on five methods, and a
+    plant that covered only `__init__` would leave four of them to be found
+    again later.
+
+    `select` is included and is expected to *succeed*: WAL readers do not block
+    on a writer, which is the property WAL was chosen for. It is asserted
+    rather than assumed, because a `select` that started raising here would
+    mean the store had lost that property.
+
+    The busy timeout is shortened for this arm alone. The arm above measures
+    the shipped value once; repeating a five-second wait per method would buy
+    nothing but a slower suite, and the classification boundary scales with the
+    constant rather than being pinned to it.
+    """
+    monkeypatch.setattr("src.contracts.repository.BUSY_TIMEOUT_S", 1.0)
+
+    path = str(tmp_path / "surface.sqlite3")
+    owner = _repo(path)
+    owner.create_table(TABLE, {"span_id": "text not null", "kind": "text not null"},
+                       unique=[["span_id"]])
+    owner.insert(TABLE, {"span_id": "seed", "kind": "tool_call"})
+    owner.close()
+
+    victim = _repo(path)
+    holder = _hold(path, "EXCLUSIVE")
+    leaked: list[str] = []
+    succeeded: list[str] = []
+
+    def attempt(name: str, call) -> None:
+        try:
+            call()
+            succeeded.append(name)
+        except sqlite3.Error as exc:
+            leaked.append(f"{name}: {type(exc).__name__}: {exc}")
+        except StoreUnavailableError:
+            pass
+
+    attempt("select", lambda: victim.select(TABLE))
+    attempt("insert", lambda: victim.insert(
+        TABLE, {"span_id": "b", "kind": "tool_call"}))
+    attempt("update", lambda: victim.update(
+        TABLE, where={"span_id": "seed"}, values={"kind": "other"}))
+    attempt("create_table", lambda: victim.create_table(
+        "drift_signal", {"signal_id": "text not null"}))
+
+    try:
+        holder.execute("ROLLBACK")
+    finally:
+        holder.close()
+        victim.close()
+
+    assert leaked == [], (
+        "an engine exception reached a caller from the ordinary surface:\n  "
+        + "\n  ".join(leaked) +
+        "\nA caller catching `sqlite3.OperationalError` is a caller that has "
+        "to be edited when the substrate moves, which is the thing the second "
+        "obligation's own reason rules out."
+    )
+    assert succeeded == ["select"], (
+        f"{succeeded} completed against an exclusively locked store. A read is "
+        "expected to succeed — that is what WAL was chosen for — and a write "
+        "is not."
+    )
+
+
+def test_the_plants_above_would_notice_the_translation_being_removed(
+    tmp_path, monkeypatch
+) -> None:
+    """The control. A guard asserted only by argument is this repo's own rot.
+
+    `_engine_errors` is what the four `attempt` calls above pass through. This
+    checks the check: with a real held lock, the *untranslated* call underneath
+    raises the engine exception the arm above requires never to be seen. If
+    this stops raising, the arm above is passing because nothing contended,
+    not because anything was translated.
+    """
+    monkeypatch.setattr("src.contracts.repository.BUSY_TIMEOUT_S", 1.0)
+
+    path = str(tmp_path / "control.sqlite3")
+    owner = _repo(path)
+    owner.create_table(TABLE, {"span_id": "text not null", "kind": "text not null"})
+    owner.close()
+
+    victim = _repo(path)
+    holder = _hold(path, "EXCLUSIVE")
+    try:
+        with pytest.raises(sqlite3.OperationalError):
+            # Deliberately below the translation, which is the only way to show
+            # that the translation is what the arm above is observing.
+            victim._conn.execute(                      # noqa: SLF001
+                'INSERT INTO "trace_span" ("tenant_id", "deployment_id", '
+                '"span_id", "kind") VALUES (?, ?, ?, ?)',
+                ("t-1", "d-1", "z", "tool_call"))
+    finally:
+        holder.execute("ROLLBACK")
+        holder.close()
+        victim.close()
+
+
+def test_several_processes_opening_a_brand_new_store_all_get_one(tmp_path) -> None:
+    """The end-to-end shape, kept as a regression rather than as the plant.
+
+    This is the configuration the defect was reported from: several processes
+    opening a store that does not exist yet. It is *not* the plant, because the
+    race it needs occurs on about two thirds of runs and no party count makes
+    it certain — so it can only assert the safety property, and it says nothing
+    on the third of runs where the processes happened not to collide.
+
+    It is kept because it is the only arm that exercises the real
+    configuration, and because a store whose first open is per-process
+    unreliable is the thing an operator actually meets.
+    """
+    path = str(tmp_path / "cold.sqlite3")
+    root = _repo_root()
+    results = _run(_open_a_brand_new_store,
+                   [(path, f"p{n}", root) for n in range(WRITERS)])
+
+    _assert_one_process_each([pid for pid, _, _, _ in results], WRITERS)
+
+    raised = [detail for _, outcome, detail, _ in results if outcome == "raised"]
+    assert raised == [], (
+        "opening a brand-new store from several processes at once failed:\n  "
+        + "\n  ".join(raised)
+    )
+    modes = {mode for _, _, mode, _ in results}
+    assert modes == {"wal"}, (
+        f"{modes} — an opener returned a store in a journal mode this layer "
+        "does not run against, which is worse than the refusal it replaced."
+    )
+
+
+def _open_a_brand_new_store(path: str, label: str, repo_root: str) -> tuple:
+    """Child entry point for the *first-open* race.
+
+    The rendezvous is before the open rather than after it. Every other child
+    here takes its store first and then meets its siblings, because what those
+    arms race is the writes; what this one races is the open, so the barrier
+    has to be on the other side of it.
+    """
+    sys.path.insert(0, repo_root)
+    _BARRIER.wait(timeout=_RENDEZVOUS_TIMEOUT_S)
+    try:
+        repo = _repo(path)
+    except BaseException as exc:  # noqa: BLE001 — the arm's whole subject
+        return (os.getpid(), "raised", f"{type(exc).__name__}: {exc}", "")
+    try:
+        return (os.getpid(), "opened", repo.journal_mode(), repo.wal_entry)
+    finally:
+        repo.close()
