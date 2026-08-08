@@ -615,13 +615,28 @@ def test_the_positive_control_is_caught_naming_the_path(
     Without this, "zero violations" above and "the instrument is not wired"
     are the same output.
 
-    **The catch is written to `results/`, not printed.** Capture is off in this
-    repository, and `removal_proofs.sh` reads a test's baseline verdict off the
-    same line as its node id — a test that writes to stdout while running puts
-    `PASSED` on a later line, `baseline_py` finds no verdict, and every proof
-    aimed at that test is scored `SKIPPED` and never attempted. Measured on
-    2026-08-08: this test printed, and its own removal proof was skipped for
-    the whole run.
+    **The catch is written to `results/`, not printed.** `removal_proofs.sh`
+    reads a test's baseline verdict off the same line as its node id, so a write
+    that reaches the real file descriptor 1 while the test runs puts the verdict
+    on a later line and `baseline_py` finds none. This test printed and its own
+    removal proof was lost for a whole run, measured 2026-08-08.
+
+    **Corrected 2026-08-08, [finding 034]. This docstring previously opened
+    "Capture is off in this repository", and that is false — measured, not
+    argued: there is no `addopts` and no `-s` in `pyproject.toml`, no capture
+    handling in `tests/conftest.py`, and an ordinary `print` in a scratch test
+    leaves its `-v` line intact.** The correction matters in both directions.
+    Printing is not by itself the hazard, so the next author does not have to
+    treat every `print` in the suite as a broken proof; and the hazard is wider
+    than printing, because the harness's fault was a classifier that returned
+    `SKIPPED` for *any* baseline line it could not read a verdict off — one
+    outcome shared with the legitimate skips, where a lost arm is invisible.
+    That is repaired: an unreadable line is now its own outcome with its own
+    counter, and it fails the run. Writing to `results/` is still right here,
+    for the independent reason that Rule 8's second reading has to be an
+    artifact rather than a line in a scrollback.
+
+    [finding 034]: ../../specs/002-spec-aware-agent-runtime/findings/034-removal-proof-skip-collapse-and-toolchain-degradation.md
     """
     caught = violations(positive_control["outcomes"], declared_only())
     record_evidence("t115-positive-control", {
