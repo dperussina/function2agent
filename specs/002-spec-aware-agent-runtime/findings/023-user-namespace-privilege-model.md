@@ -148,7 +148,23 @@ caught after the fact"*. That is exactly what happened, and the after-the-fact c
 > honest statement is that the multi-line uid map needs a capable writer, and that on Ubuntu 24.04
 > the LSM makes the *incapable* case fail earlier and harder than this document measured.
 >
-> ### 4. What is still not measured
+> > #### ✅ THE ONE QUESTION IS ANSWERED 2026-08-08 AS OD-29 — "yes", and it retires **both** mechanisms at once
+> >
+> > **This section's central claim is what made the answer a single act, and it held.** *Does the
+> > supervisor hold capabilities in the initial user namespace?* is answered **yes** at
+> > [`plan.md`](../../001-discovery-validation/plan.md)'s **OD-29**: the supervisor **may** hold
+> > `CAP_SETUID` and `CAP_SETGID`, and it writes the map **directly** rather than through a helper.
+> > Because no posture binds exactly one of A and B, that one answer disposes of both — **two
+> > mechanisms, one remedy, one decision**, as this section put it. Nothing here is corrected.
+> >
+> > **The side effect this section measured is recorded by OD-29 as a cost rather than a solution.**
+> > Holding capabilities disables A, so the resulting namespace is **not** AppArmor-confined. That is a
+> > real widening accepted deliberately, and an entry claiming A had been *satisfied* would be claiming
+> > a property the posture gives up.
+> >
+> > **What the answer does not do is start the build.** OD-29 retires OD-24's *replacement* second
+> > ground; OD-24's ground ① is untouched, is sufficient alone, and retires only on a requirement. **The
+> > 13–20 day build stays deferred.**
 >
 > - **Whether A can be satisfied without capabilities**, by a `newuidmap` setuid helper — the third
 >   option in this document's [decision](#where-the-decision-is-recorded-and-why-this-pass-did-not-write-it).
@@ -554,6 +570,15 @@ repository currently states — then the fallback is the plain `setuid(65534)` d
 with no namespace, which closes both authority gaps and needs nothing. It gives up per-session uid
 isolation and gives up the mount-tree control the namespace provides. That is a real loss, and it is
 the price of the unprivileged-supervisor constraint, not of the namespace.
+
+> **Dated note, 2026-08-08 — a document now states the constraint, and it states it the other way.**
+> [`plan.md`](../../001-discovery-validation/plan.md)'s **OD-29** records that the supervisor **may**
+> hold `CAP_SETUID` and `CAP_SETGID` in the initial user namespace, so the antecedent above is one the
+> owner has decided against: the product is willing to require the two-bit grant. **The paragraph is
+> left as written**, because it is what makes the fallback legible and OD-29 keeps the fallback rather
+> than deleting it — it remains the named route for an operator who will not make the grant, at exactly
+> the price this paragraph states. What is no longer accurate is the *implication* that nothing in the
+> corpus has an opinion; the opinion now exists and is "yes".
 
 ## Where the decision is recorded, and why this pass did not write it
 

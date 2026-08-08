@@ -296,6 +296,36 @@ Four items. **None is taken here.**
    model closes out. **This pass takes no position on which**, because it is a statement about what
    the product may require of an operator and nothing measured here bears on it.
 
+> #### ✅ ANSWERED 2026-08-08 — all four items are disposed of, and item 4 went the way this section describes as **yes**
+>
+> **This section is preserved exactly as it was written**, including its refusal to take a position,
+> because the value of a finding that framed a question is that the framing can be checked against the
+> answer. All four items are now closed at
+> [`plan.md`](../../001-discovery-validation/plan.md), three of them by **OD-29** and one earlier:
+>
+> 1. **Done, and earlier than this note.** §7's divergence is repaired: OD-24 carries ②b's *"not ours
+>    to choose"* inference struck at the register, not only at the derived copy.
+> 2. **Done.** Ground ② is not left as-is. Its inference limb is recorded as **falsified** and its
+>    operative limb as **discharged**, and OD-29 restates the distinction rather than collapsing it —
+>    which §1's ruling table is the authority for.
+> 3. **Done.** OD-29 records the `newuidmap` narrowing, including the inversion in the terms §4 states
+>    it: the helper is the **highest**-authority route of the three, and a remedy naming it must name
+>    `CAP_SYS_ADMIN` with it.
+> 4. **Answered "yes".** The supervisor **may** hold `CAP_SETUID`+`CAP_SETGID` in the initial user
+>    namespace, and OD-29 additionally **selects the direct write** over the helper — which is this
+>    document's §5 route 1, promoted from *measured working* to *chosen*.
+>
+> **The consequence §6 predicted is the consequence that landed, and it is worth checking in those
+> terms.** The replacement ground is retired; **ground ① is untouched and is now the sole reason the
+> build waits**; and the deferral is therefore a pure value-for-effort judgement on a 13–20 day build
+> rather than a wait on an open question. **The deferral did not lift.** §6's other prediction also
+> holds: nothing was probed to get here, and the three probes it names as wasted work were not run.
+>
+> **Nothing in this document is corrected by the answer.** Every arm, every source read and every
+> ruling in §1 stands as measured, and §3's host caveat stands with them — **nothing here is evidence
+> about `newuidmap` under an enforcing AppArmor profile**, which OD-29 repeats as an explicit
+> non-licence rather than letting the selection imply it.
+
 ## 9. What this changes downstream, stated for documents this pass may not edit
 
 **No file outside this one was written.** [`tasks.md`](../tasks.md) and `src/runtime/` are held by a

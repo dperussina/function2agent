@@ -584,9 +584,31 @@ finding 023's open `CAP_SETUID` question replaces the second.
 
 **Two items in this section were not applied by this propagation, and neither is this pass's to
 edit**: finding 023's own reproduction section and its FR-050 label, which belong to that document
-and are being carried there; and the owner decision this document reserved a number for, which is untaken and
-whose reservation is corrected to `OD-26` in the header above. **No register entry was created**, and
+and are being carried there; and the owner decision this document reserved a number for, ~~which is untaken and
+whose reservation is corrected to `OD-26` in the header above~~ **which was taken 2026-08-08 as
+`OD-29`**. **No register entry was created**, and
 no condition applied here was written as though one had been.
+
+> #### ✅ TAKEN 2026-08-08 AS OD-29 — and the reservation this sentence carried had rotted a **third** time
+>
+> **The decision is taken.** [`plan.md`](../../001-discovery-validation/plan.md)'s **OD-29** records
+> that the supervisor **may** hold `CAP_SETUID` and `CAP_SETGID` in the initial user namespace, and
+> that the map is written directly rather than through a `newuidmap` helper. **This document's
+> propagation is what pointed at it**, and the sentence above now says so.
+>
+> **The reservation was stale again, in the same dangerous direction, and this is its third failure.**
+> `OD-26` was taken 2026-08-05 by the terminal-state taxonomy decision — an entry with nothing to do
+> with this document's subject — so the struck clause named a taken number *for the wrong decision*,
+> which is precisely the collision a reservation exists to prevent. **The header's own correction
+> already replaced the value with the rule** — *the next free number is the register's high-water mark
+> plus one, read from the register and not from here* — and this sentence was the one place the
+> discarded value survived. **It is left visible rather than deleted**: three rots of one value is the
+> evidence for the rule, and deleting the third would leave the rule looking over-argued.
+>
+> **Nothing measured in this document moves.** OD-29 consumes finding 028's arms and this document's
+> eight-surface census as evidence; it contradicts neither. **`CAP_SETUID` is no longer "recorded as
+> still open"** at OD-24's note, which is the state the paragraph above the negative-controls table
+> describes — that statement is a true dated record of 2026-08-04 and is left as written.
 
 - **`plan.md`'s Target Platform** names the three kernel facilities and the 5.14 floor. Neither
   moves. What it does not say, and what the evidence says it should, is that **the facilities being

@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ **twenty-eight** owner decisions
-(OD-01 through OD-28, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ **twenty-nine** owner decisions
+(OD-01 through OD-29, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -58,8 +58,15 @@ measurement, on OD-24's own re-examination showing that the ground which fails q
 satisfied without anybody noticing. **✅ Discharged the same day it was taken** — the named artifact
 was commissioned within hours and the migration was done ahead of it, which makes it the first entry
 here whose expiry condition fired, and the first evidence that writing the condition as an artifact
-rather than as a measurement was the right form.)*
-~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ **The last nineteen
+rather than as a measurement was the right form. **Extended 2026-08-08 with OD-29**, which is
+different in kind a fifth way: it is the first entry here whose entire content is an **answer to a
+question another entry left open**, and the first to be *triggered* by a predecessor rather than
+prompted by a measurement or an artifact — OD-24 named the condition, this entry meets it, and
+nothing was probed to get here. It is also the first entry that **retires one of a predecessor's
+grounds while explicitly leaving that predecessor's deferral standing**, which is the distinction it
+spends a banner on, because the natural misreading of an answered question is that the thing it
+gated may now proceed.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ **The last twenty
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -97,7 +104,13 @@ re-litigating them, while naming the artifact that expires the first ground — 
 opening the session store, at which instant the WAL first-open race is live and nothing in the tree
 will notice. That artifact was commissioned the same day and the migration was done ahead of it, so
 OD-28 is ✅ discharged 2026-08-06 by the named condition being met rather than by anyone re-reading
-the entry — which is the property it was written for.**
+the entry — which is the property it was written for**, and **OD-29 answers the single question
+OD-24's re-examination left to an owner: the supervisor **may** hold `CAP_SETUID` and `CAP_SETGID` in
+the initial user namespace, and writes the uid map directly rather than through a `newuidmap` helper
+that needs `CAP_SYS_ADMIN` and is therefore the highest-authority of the three routes rather than the
+lowest. Because no posture binds only one of the two constraints, one answer retires both — and it
+retires OD-24's *replacement second ground* only. **Ground ① is untouched and the 13–20 day build is
+still deferred**, which is the reading the entry exists to protect.**
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -2857,6 +2870,30 @@ repository, which is why it is a fallback rather than the decision.
 > > replacement ground retires when the capability question above is settled either way. **No further
 > > probing of this kind will move the deferral**, which is the useful part.
 > >
+> > > #### ⚠️ THE REPLACEMENT GROUND IS RETIRED 2026-08-08 BY **OD-29**, AND THE DEFERRAL STILL STANDS ON GROUND ①
+> > >
+> > > **The capability question is answered "yes".** **OD-29**, the last entry in this register,
+> > > records that the supervisor **may** hold `CAP_SETUID` and `CAP_SETGID` in the initial user
+> > > namespace. Because no posture binds exactly one of the two constraints, that single answer
+> > > retires **both** limbs of the replacement ground at once — which is what the paragraph above
+> > > predicted and is the reason it was written as one question.
+> > >
+> > > **Ground ① is untouched, is sufficient alone, and is now the *only* thing holding this deferral.**
+> > > It retires on a **requirement** — sessions unable to signal or `ptrace` one another, or distinct
+> > > on-disk ownership — and no capability grant is one. **Nothing in this corpus asks for that today,
+> > > so the 13–20 engineer-day build remains deferred.** What changed is the *character* of the wait:
+> > > it is now a pure value-for-effort judgement rather than a wait on an open question. **That is not
+> > > a licence to start**, and OD-29 spends a banner saying so.
+> > >
+> > > **One thing OD-29 narrows inside the deferred work, without scheduling it.** The 3–4 day row this
+> > > entry sizes as *"the uid/gid map plumbing and the `CAP_SETUID` decision"* had a design choice
+> > > among three routes at its centre. That choice is made: the map is written **directly**, by the
+> > > namespace's own creator. **This entry's offer of a `newuidmap` helper as the delegation option is
+> > > corrected there rather than here** — measured, it needs `CAP_SYS_ADMIN` in the bounding set where
+> > > the direct write needs only `CAP_SETUID`+`CAP_SETGID`, making it the **highest**-authority route
+> > > of the three rather than the lowest. The wording above that offers it as though it asked less of
+> > > the supervisor is wrong on that point and OD-29 holds the correction. **Nothing is re-sized.**
+> >
 > > **This correction was owed and was missed once.** Finding 024's propagation note records it as having
 > > corrected "`plan.md`'s OD-24 note", and its relative link resolves to **feature 002's plan**, not to
 > > this document — which holds the entry. The falsified inference therefore stood live in the register
@@ -3446,6 +3483,238 @@ document, its recommendation is confirmed rather than contradicted, and a findin
 problem should say where the problem was subsequently ruled on. **T159's note is left as it stands**:
 it already carries the condition and a pointer to T016, and the naming this entry adds belongs at the
 anchor rather than duplicated at the pointer.
+
+### OD-29 — the supervisor **may** hold `CAP_SETUID` and `CAP_SETGID` in the initial user namespace, and writes the uid map **directly** rather than delegating to a `newuidmap` helper; this retires OD-24's replacement second ground and leaves ground ① as the sole reason the build waits
+
+**Decided 2026-08-08**, answering the one question
+[finding 028](../002-spec-aware-agent-runtime/findings/028-od24-deferral-re-examination.md) §8 item 4
+put to an owner and explicitly declined to answer: **may the supervisor hold capabilities in the
+initial user namespace?** The answer is **yes**, and the two capabilities are named exactly:
+`CAP_SETUID` and `CAP_SETGID`, held long enough to write the multi-line uid map and no longer.
+
+**This is a decision and not a measurement, which is the whole reason it needed an owner.** Nothing
+about a host answers it. It is a statement about what the product is willing to require of an
+operator who runs the bundle, and finding 028 §6 says so in terms — *"no host reading answers it."*
+**The evidence is in and no further probing of this kind is warranted.** That finding names three
+plausible next probes and records each as wasted work: a ninth deployment surface (it adds width to a
+reading already settled across eight), the `newuidmap` route under an enforcing AppArmor profile (it
+cannot make route 2 lower-authority than route 1, because `map_write()`'s gate is upstream of any
+LSM), and the **T205** boot matrix (it prices the 5.14 floor, and this model adds no facility above
+it). **A pass that arrives here and reaches for a fourth probe should stop**: the thing that was
+missing was authority, not data.
+
+> #### ⚠️ THIS IS ONE DECISION AND NOT TWO, AND A PLAN MAY NOT BOOK PARTIAL PROGRESS ON IT
+>
+> **Two constraints, mechanically — and no posture binds exactly one, so "yes" retires both in a
+> single act.** The AppArmor LSM restriction and the `CAP_SETUID` requirement are genuinely distinct
+> subsystems: different errnos, refusing different things, and only the capability constraint exists
+> on a host carrying no AppArmor at all. **The count is not in dispute and is not what collapsed.**
+> What collapsed is their independence, measured on the `ubuntu-latest` runner by
+> [finding 023](../002-spec-aware-agent-runtime/findings/023-user-namespace-privilege-model.md)'s
+> 2026-08-05 extension, in both directions:
+>
+> - **At `CapEff=0` the LSM refuses even the *self*-map**, so the distinct map that `CAP_SETUID`
+>   guards is never reached. The capability constraint is unreachable from below.
+> - **Holding capabilities in the initial namespace *disables* the LSM as a side effect**, because
+>   Ubuntu's hook only transitions a process that lacks `CAP_SYS_ADMIN` there. The LSM constraint is
+>   unreachable from above.
+>
+> **So there is no posture from which a plan can satisfy one and report progress on the other**, and
+> the incoherent plan both this register and feature 002's plan already name — *"we hold `CAP_SETUID`,
+> the LSM is a separate work item"* — has no state of the world it describes. **OD-24's own correction
+> was amended on exactly this point**, and this entry is the decision that correction identified as
+> the trigger. It is recorded as **one** decision rather than two so that nothing downstream can tick
+> half of it.
+>
+> **The LSM's disappearance is a cost this decision accepts, not a benefit it obtains, and the
+> difference is worth the sentence.** Ubuntu's hook confines the *result* of an unprivileged
+> `unshare` — the process comes out labelled `unprivileged_userns (enforce)`. A supervisor holding two
+> capability bits is outside that hook, so the namespace it creates is **not** AppArmor-confined.
+> That is a real widening, it is the mechanical price of the answer being "yes", and an entry that
+> presented it as the LSM constraint being *solved* would be claiming a security property this
+> decision gives up.
+
+**The decision, in three limbs. The second is a selection among measured routes and the third is a
+refusal.**
+
+**① The supervisor holds `CAP_SETUID` and `CAP_SETGID` in the initial user namespace.** This is what
+the product may require of a self-hosted operator, and it is a two-bit grant rather than a posture:
+not root, not `--privileged`, and specifically **not** `CAP_SYS_ADMIN`. It is the grant finding 028
+measured at arm 5 — `Uid 0`, `CapEff 00000000000000c0`, exactly `CAP_SETGID`+`CAP_SETUID` — writing
+`0 100000 1` / `1 100001 65535` and reading it back from the kernel as `multi-line-distinct`.
+**OD-24's wording already permitted this**; what was missing was an owner willing to require it, and
+that is what is supplied here rather than a new model.
+
+**② The map is written *directly*, by the namespace's own creator. The `newuidmap` route is
+available and is not selected.** OD-24 offers delegation to a setuid helper as though it were the
+lighter option. It is the heavier one, measured, and limb ③ states why. Route 1 is now established as
+the **least-authority** route that delivers a useful namespace, so the 3–4 day row OD-24 sizes as
+*"the uid/gid map plumbing and the `CAP_SETUID` decision"* is no longer a choice among three routes —
+**this entry settles the design half of that row, and only the design half.**
+
+**③ A supervisor holding *nothing* in the initial user namespace and still entering a useful
+namespace is refused, because it does not exist.** After finding 028's arm 1 it has no measured route
+on any host in this corpus. The honest alternative was never a zero-authority namespace; it was the
+**fallback** — the plain `setuid(65534)` drop with no namespace — and that is what a "no" here would
+have selected. This decision declines the fallback, and the fallback is not deleted: it remains
+OD-24's named route for an operator who cannot make the grant, closing both of
+[finding 021](../002-spec-aware-agent-runtime/findings/021-openat2-audit-gap-and-two-authority-gaps.md)'s
+authority gaps and giving up per-session kernel uid isolation and the mount-tree control.
+
+> #### ⚠️ THE COUNTER-INTUITIVE INVERSION, STATED BECAUSE AN IMPLEMENTER WILL GET IT BACKWARDS
+>
+> **`newuidmap` needs `CAP_SYS_ADMIN` in the bounding set. A direct map write needs only
+> `CAP_SETUID`+`CAP_SETGID`.** So "delegate to a setuid helper" is the **highest**-authority of
+> OD-24's three routes rather than the lowest, and it is named in that entry for a least-authority
+> reason that is measurably backwards.
+>
+> **Measured as a one-bit delta, checked arithmetically rather than by eye**, on
+> `6.12.76-linuxkit`/`aarch64` with no LSM present, so the capability limb is isolated:
+>
+> | Posture (read from `/proc/self/status` inside the arm, before any `unshare`) | Route | Result |
+> |---|---|---|
+> | `CapBnd 0` (`--cap-drop=ALL`) | setuid helper | **`EACCES`** — the helper is denied even the *open* |
+> | `CapBnd 00000000a80425fb` — Docker's default 14: `CAP_SETUID` present, `CAP_SYS_ADMIN` absent | setuid helper | **`EPERM`** on the write |
+> | `CapBnd 00000000a82425fb` — the same set plus **exactly** `CAP_SYS_ADMIN` | setuid helper | **`ok`** |
+> | `CapEff 00000000000000c0` — exactly `CAP_SETGID`+`CAP_SETUID` | **direct write** | **`ok`** |
+>
+> `0xa82425fb − 0xa80425fb = 0x200000 = 1 << 21 = CAP_SYS_ADMIN`, and nothing else about those two
+> arms differs, so the attribution is single-variable.
+>
+> **Why, named to the kernel line, and predicted from source before the arm was run.** `map_write()`
+> demands `CAP_SYS_ADMIN` over the **target** namespace, judged against the credentials at *open*
+> time (`kernel/user_namespace.c:976`, v6.12, with `ret = -EPERM` set at 968). A namespace's creator
+> satisfies that **for free and without holding the bit**, because the owner of a user namespace —
+> judged **by euid** — holds every capability in it (`security/commoncap.c:92`, v6.12). The only bit
+> the creator still needs is the `CAP_SETUID` that `new_idmap_permitted()` demands for a map naming
+> ids other than its own.
+>
+> **A setuid helper forfeits that shortcut by the very act that makes it privileged**: becoming euid 0
+> makes the owner comparison false, so the shortcut misses and the helper must satisfy the
+> `CAP_SYS_ADMIN` gate on its own merits. **The helper buys exactly one real thing** — the supervisor
+> *process* can run at `CapEff=0` — **and it costs a bounding set carrying `CAP_SYS_ADMIN`, reachable
+> by every setuid binary in the image.** Two narrow bits in one process is a better least-authority
+> position than that, which is why limb ② selects the direct write. The helper survives as a route for
+> a deployment that must hold the supervisor process at `CapEff=0` for some independent reason, and
+> **it is not a compromise between routes 1 and 3.**
+
+> #### ⚠️ THIS DOES **NOT** LIFT OD-24'S DEFERRAL, AND THE GROUND IT RETIRES IS NOT GROUND ①
+>
+> **What expires is OD-24's *replacement second ground*. Ground ① is untouched and is sufficient
+> alone, so the deferral survives this decision.** Getting this backwards is the single most likely
+> misreading of this entry, so it is stated as a banner rather than a clause. OD-24's own correction
+> sets the triggers and they are not interchangeable: **ground ① retires when a requirement asks for
+> something mount flags cannot give and per-session kernel uid isolation can** — sessions unable to
+> signal or `ptrace` one another, or distinct on-disk ownership — and **nothing in this corpus asks
+> that today.** That is a *specification* event and no capability grant is one. What this entry
+> settles is the other trigger: *the replacement ground retires when the capability question is
+> settled either way.* It is now settled.
+>
+> **The history of the ground this replaced must not be flattened, because it failed by two routes
+> that are different in kind.** OD-24 stated two grounds and said the entry "must state both because
+> either alone would be weaker". Ground ②'s **inference limb** — *"Docker's default profile blocking
+> `unshare` is not ours to choose"* — was **falsified** by
+> [finding 024](../002-spec-aware-agent-runtime/findings/024-deployment-surface-permission-census.md),
+> which ran the whole mount sequence at uid 1000 under `--cap-drop=ALL` on a profile that is Docker's
+> *own* default with a widening: the operator does choose, and the bundle we author is where the
+> choosing happens. Its **operative limb** — *"the schedule waits on the wider reading"* — was
+> **discharged**, not falsified: it was a sequencing clause that waited on information, the
+> information arrived from both directions, and it was collected and spent with nothing about it
+> wrong. **The measured half of ② stands throughout** — the default profile does block the call. A
+> falsified premise and a spent one are not the same kind of failure, and an entry that recorded ② as
+> simply "gone" would erase the distinction OD-24's correction exists to make.
+>
+> **So the accounting after this entry is:** ①  live and sufficient; ②a stands as measured; ②b
+> falsified; ②'s operative limb discharged; the replacement ground **retired here**. **The 13–20
+> engineer-day build therefore waits on a pure value-for-effort judgement on ground ① alone**, which
+> is a materially different posture from waiting on an open question — and it is *still waiting*.
+> **Nothing here schedules work, mints a task, or re-sizes anything.**
+
+**Why the fallback is declined rather than merely not chosen.** Because what the namespace buys over
+the plain drop is real and is stated honestly: **per-session kernel uid isolation instead of the
+host's shared `nobody`**, plus the mount-tree control. It is *not* a gap closure — the repairs in
+[`src/supervisor/mounts.py`](../../src/supervisor/mounts.py) close finding 021's two authority gaps
+by mount flag and mount flags are indifferent to privilege — and this entry does not resurrect that
+claim in order to justify a grant. The grant is justified by the isolation alone, and the isolation
+alone is not enough to schedule the build, which is exactly why ground ① survives a decision that
+answers the capability question in the affirmative.
+
+**What this decision does not license.**
+- **Not** a lifting of OD-24's deferral, and **not** a licence to start the 13–20 day build. Ground ①
+  is untouched, is sufficient alone, and retires on a requirement rather than on a grant. An
+  implementer who reads "yes" as "build it" has inverted the banner above.
+- **Not** `CAP_SYS_ADMIN`, and **not** root, `--privileged`, or "whatever the operator finds
+  convenient". The grant is **exactly two bits**. `CAP_SYS_ADMIN` is measured as necessary for the
+  helper route and is **not** authorised by this entry; finding 024 records in its own terms that
+  `--cap-add=SYS_ADMIN` also un-gates `bpf`, `ptrace`, `perf_event_open`, `init_module`,
+  `finit_module`, `delete_module` and `open_by_handle_at` in the same stroke, **and still does not
+  make `pivot_root` work.**
+- **Not** a licence for the `newuidmap` route on a least-authority argument. That argument is
+  measurably backwards. The route stays available for an independent reason and any remedy naming it
+  **must name `CAP_SYS_ADMIN` in the same breath**, or it prescribes a configuration that does not
+  work.
+- **Not** a claim about `newuidmap` under an enforcing AppArmor profile. Finding 023 §4's note that
+  the helper is itself AppArmor-profiled on Ubuntu is untouched by anything measured here and stays
+  open. Every arm behind limb ② ran on a host with **no LSM at all**, which is the right instrument
+  for the capability question and the wrong one for that one.
+- **Not** a change to the **workload's** privilege model, which is the half of OD-24 that always
+  mattered. The workload is still root inside its user namespace and unprivileged outside it, still
+  mapped to a dedicated per-session kernel uid range that is not the supervisor's, still in a pid
+  namespace of its own with the workload forked after the unshare, and still drops to a second mapped
+  uid once the mount tree is built. **`CLONE_NEWPID` remains mandatory** and the `setuid` drop remains
+  retained.
+- **Not** a relaxation of finding 021's closure or of the landed mount repairs. Every one of them
+  survives this decision and none was ever conditional on it.
+- **Not** a kernel-floor change. The floor stays **Linux 5.14**, still bound by `cgroup.kill`, still
+  **DERIVED and NOT TESTED**.
+- **Not** a claim that FR-049 now *requires* a capable supervisor. FR-049 constrains where enforcement
+  sits, not what authority the enforcer holds, and OD-24's observation that an operator delegating a
+  cgroup subtree by unit file satisfies it with a supervisor holding no capability at all is still
+  true of FR-049. What this entry removes is the *map* obstacle, which was always the binding one.
+
+> #### ⚠️ THE SUPERVISOR IS NO LONGER ZERO-AUTHORITY, AND ARGUMENTS RESTING ON THAT NEED RE-CHECKING
+>
+> **This is the entry's one instruction to future passes.** Any argument anywhere in this corpus that
+> rests on the premise *"the supervisor holds nothing"* is now resting on a premise the owner has
+> retired, and it needs re-checking on arrival rather than inheriting. **The sites that state it as a
+> measured impossibility are correct and stay**: finding 023's readings of what an *unprivileged*
+> writer can and cannot do are the evidence for this decision, not casualties of it, and the same
+> goes for OD-24's *"the map, not the cgroup, is what makes an unprivileged supervisor unbuildable"*.
+> **What must be re-checked is any argument that treats zero authority as the supervisor's settled
+> posture and reasons forward from it.** A propagation pass audited for this at the time of writing
+> and found none live; that audit is a dated reading rather than a guarantee, which is why the
+> instruction is recorded here instead of being declared discharged.
+
+**Authorises no code, no task and no requirement text, and says so rather than leaving it to be
+discovered.** There is nothing to authorise: the mechanism this decision selects is not built, and
+**OD-24's deferral is what governs whether it gets built** — a question this entry deliberately does
+not touch. What it authorises is a **statement to an operator**: the bundle may require `CAP_SETUID`
+and `CAP_SETGID`, and a deployment that refuses them gets the plain-drop fallback rather than a
+degraded namespace. **No requirement text changes and none should.** FR-048, FR-049 and FR-050 state
+properties; this decision narrows the mechanism they would be delivered by, which is the same
+division of labour OD-24 records.
+
+**Propagated to** **OD-24**
+above, whose replacement second ground is annotated as **retired by this entry** with ground ① left
+explicitly standing — the annotation lands **at the register** rather than only at a derived copy,
+which is the failure that entry's own re-examination caught and which would otherwise have recurred
+here with the documents swapped; [feature 002's `plan.md`](../002-spec-aware-agent-runtime/plan.md)
+at the privilege-model note, whose live sentence that *"whether the supervisor may hold `CAP_SETUID`
+is open"* is now false and is struck in place, and at the **Inherited decisions** bound; and
+[finding 024](../002-spec-aware-agent-runtime/findings/024-deployment-surface-permission-census.md)'s
+propagation section, which recorded this decision as **untaken** and carried a stale reservation of
+`OD-26` for it — a number taken on 2026-08-05 by an unrelated decision, and the second time that one
+sentence rotted. **Findings 021, 023 and 028 are annotated where they name the question and are not
+otherwise touched**: they are authority documents whose measurements this decision consumes rather
+than contradicts, and a finding that framed a question should say where it was answered.
+**[`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) is held by a concurrent pass and was not
+edited**; what **T206**'s owed `uid_map` preflight arm gains from this entry is reported to the owner
+rather than applied, and the two conditions that arm already carries — that it cannot be a boolean,
+and that any remedy naming `newuidmap` must name `CAP_SYS_ADMIN` — are confirmed by this decision
+rather than changed by it. **No removal proof is warranted and none is added**: this entry is a
+record, it authorises no mechanism, and a proof asserting that deleting prose breaks a test would be
+the vacuous kind [finding 032](../002-spec-aware-agent-runtime/findings/032-removal-proof-signal-fabrication.md)
+exists to keep out of this corpus.
 
 ## Open items this plan does not resolve
 

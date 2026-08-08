@@ -8,7 +8,7 @@ criteria** *(recounted 2026-08-04 against the document; the struck figures were 
 FR-058 was added)*, five user stories, four deviation records)
 
 **Constitution**: ~~v1.2.0~~ **v1.3.0** *(amended 2026-08-03 by **OD-22**; Principle VI restated over a
-tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ ~~**OD-21**~~ ~~**OD-25**~~ **OD-28**
+tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ ~~**OD-21**~~ ~~**OD-25**~~ ~~**OD-28**~~ **OD-29**
 *(extended 2026-08-03 after the owner reviewed this gate — see the banner under Summary — and
 extended again the same day: **OD-18** through **OD-21** were taken at the specification's clarify
 session and recorded retroactively, and this plan already relies on two of them, at FR-002's
@@ -29,7 +29,15 @@ carries what this plan leans on. Recording them by *not* advancing would make th
 things at once — extent up to OD-21 and inheritance after it — which is the reading the sentence
 above exists to foreclose. **What this plan leans on is unchanged by all three**: OD-26 moves a
 diagram this plan does not restate, OD-27 touches no line here, and OD-28 schedules no work and moves
-no requirement text.)*
+no requirement text. **Advanced to OD-29 on 2026-08-08, and this one is different from the previous
+three in the one way that matters to this line: it is the first advance since OD-25 that *does* move
+something this plan leans on.** OD-29 answers the capability question the Target Platform note below
+has carried as open since 2026-08-04, so that note is struck and re-stated rather than merely
+annotated. It is not *inherited* either — it was taken against this feature's own findings 023, 024
+and 028 — so the gradient's endpoint holds and what changes is only that the parenthetical now has
+something to report. **OD-29 still schedules no work**: it retires one of OD-24's two grounds and
+OD-24's deferral stands on the other, so the Target Platform line's 13–20 day build is exactly as
+deferred as it was.)*
 ([feature 001 plan](../001-discovery-validation/plan.md)) | **Evidence base**:
 [feature 001 verdict](../001-discovery-validation/VERDICT.md)
 
@@ -170,8 +178,13 @@ full and which no restatement may be weaker than.
 > **The deferral is undisturbed by that correction, and it matters which of its two grounds carried
 > it.** The first ground — the landed repairs close finding 021's gaps under every privilege model —
 > is untouched. What replaces the second is a *different* reason to wait rather than an absence of
-> one: [finding 023](./findings/023-user-namespace-privilege-model.md)'s question of whether the
-> supervisor may hold `CAP_SETUID` is open, and a runtime that permits `unshare` does not answer it.
+> one: ~~[finding 023](./findings/023-user-namespace-privilege-model.md)'s question of whether the
+> supervisor may hold `CAP_SETUID` is open, and a runtime that permits `unshare` does not answer it.~~
+> **Answered 2026-08-08 as [OD-29](../001-discovery-validation/plan.md) — the supervisor *may* hold
+> `CAP_SETUID` and `CAP_SETGID`, so that replacement ground is retired. The clause about the runtime
+> stands: a surface permitting `unshare` never answered it, and what answered it was an owner rather
+> than a measurement. **OD-24's deferral survives on its first ground alone** and the build is still
+> not scheduled — see the note below.**
 > ~~**The two constraints are independent and both must hold.** A permissive deployment surface plus a
 > supervisor that cannot write a multi-line uid map produces the self-mapped namespace finding 023
 > measured the hazards of, which is worse than not entering one.~~
@@ -243,6 +256,29 @@ full and which no restatement may be weaker than.
 > > binary in the image. **The three routes are now two and a reordering**, and the least-authority
 > > route that delivers the namespace is the supervisor holding `CAP_SETUID`+`CAP_SETGID` directly.
 > > A supervisor holding **nothing** in the initial user namespace has no measured route at all.
+>
+> > #### ✅ ANSWERED 2026-08-08 AS OD-29 — the supervisor may hold the two capabilities and writes the map directly; **the deferral does not move**
+> >
+> > **The question this note has carried as open since 2026-08-04 is decided.**
+> > [`plan.md`](../001-discovery-validation/plan.md)'s **OD-29** records that the supervisor **may**
+> > hold `CAP_SETUID` and `CAP_SETGID` in the initial user namespace — a two-bit grant, explicitly not
+> > root, not `--privileged` and **not `CAP_SYS_ADMIN`** — and that the map is written **directly** by
+> > the namespace's creator rather than delegated to a `newuidmap` helper. The narrowing recorded
+> > immediately above is what selected the route; the owner supplied the authority to require it.
+> >
+> > **Because no posture binds exactly one of the two constraints, one answer retires both.** Holding
+> > the two bits puts the supervisor outside Ubuntu's AppArmor hook as a side effect, which OD-29
+> > records as a **cost it accepts** rather than a constraint it solves: the resulting namespace is not
+> > AppArmor-confined, and that is a real widening rather than a bonus.
+> >
+> > **What does *not* change, and it is the thing most likely to be read wrong.** **OD-24's deferral
+> > stands.** What OD-29 retires is OD-24's *replacement second ground*; its **ground ① is untouched
+> > and sufficient alone** — the landed `MS_RDONLY` and recursive read-only remount repairs close
+> > finding 021's gaps under every privilege model, so the namespace's remaining margin is per-session
+> > kernel uid isolation rather than a gap closure. Ground ① retires on a **requirement** asking for
+> > something mount flags cannot deliver, and nothing in this corpus asks that today. **So the 13–20
+> > day build is still deferred**, now on a pure value-for-effort judgement rather than on an open
+> > question. **No requirement text changes and nothing is scheduled or re-sized.**
 
 > **Extended 2026-08-04 — the three facilities being present in the kernel does not make them
 > reachable from the runtime the operator runs, and the bundle is where the difference is closed.**
