@@ -50,6 +50,8 @@ Present, with the requirement each discharges:
 | The invariant set | Principle II | `tests/invariants/` |
 | Egress pipeline, seven stages | FR-008–FR-019 | `src/proxy/*_test.go` |
 | Cross-language capability boundary | FR-014, FR-050 | `tests/fixtures/session_conformance.{py,json,sqlite3}` |
+| Reference application, seeded state and known-correct answers | FR-053, T116 | `tests/fixtures/reference-app/` |
+| Sandbox image FR-021 properties | FR-021, T096 | `deploy/images/sandbox.Dockerfile`, `tests/invariants/test_sandbox_image.py` |
 
 `session_conformance.sqlite3` is the one committed **binary** fixture, and it is committed on
 purpose: it is a session table written by the supervisor's own writer and read by the enforcement
@@ -68,7 +70,7 @@ Owed, and named here so the absence is visible rather than inferred:
 
 | Fixture | Requirement | Why it is not here yet |
 | --- | --- | --- |
-| Reference-application overhead | **Q-09**, T101 | The reference application does not exist. `tests/batteries/test_seccomp_overhead.py` measures three proxy workloads and records that it does **not** discharge this. |
+| Reference-application overhead | **Q-09**, T101 | ~~The reference application does not exist.~~ **It does now (T116, `tests/fixtures/reference-app/`).** What is still owed is the *measurement*: `tests/batteries/test_seccomp_overhead.py` measures three proxy workloads and records that it does **not** discharge this. T101 also asks for a shell-heavy arm, which the reference application is not — it is an HTTP surface. |
 | Concurrent-writer probe | T-06, T050 | Finding 006 did not test its session service under concurrent writers, and T-06's narrowing records that v1's store has **no** observed substrate. One process with one lock is not that measurement. |
 | Framing-ambiguity corpus | **Q-01** | The named failure Q-01 buys a second language to prevent. `src/proxy/framing_test.go` covers the cases we thought of; a corpus is a different artefact. |
 | Drift-scheduler egress path | FR-046, OD-12 | The scheduler does not exist. When it does, its re-fetch must traverse the same enforcement point or FR-014 is true of the sandbox and false of the system. |
