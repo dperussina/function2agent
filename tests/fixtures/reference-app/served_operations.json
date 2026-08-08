@@ -1,0 +1,48 @@
+{
+  "captured_at": "2026-08-08T00:00:00Z",
+  "deployment_id": "d-reference-app",
+  "operations": [
+    {
+      "effect_tier": "read_only",
+      "method": "GET",
+      "operation_id": "health",
+      "path_template": "/health",
+      "rule_id": "REFAPP-OP-001",
+      "summary": "Liveness and the seed version the deployment is serving."
+    },
+    {
+      "effect_tier": "read_only",
+      "method": "GET",
+      "operation_id": "list_parts",
+      "path_template": "/parts",
+      "rule_id": "REFAPP-OP-002",
+      "summary": "Every part, each carrying its opaque attestation."
+    },
+    {
+      "effect_tier": "read_only",
+      "method": "GET",
+      "operation_id": "get_part",
+      "path_template": "/parts/{part_id}",
+      "rule_id": "REFAPP-OP-003",
+      "summary": "One part by identifier."
+    },
+    {
+      "effect_tier": "read_only",
+      "method": "GET",
+      "operation_id": "list_shipments",
+      "path_template": "/shipments",
+      "rule_id": "REFAPP-OP-004",
+      "summary": "Shipments, optionally filtered by part_id."
+    },
+    {
+      "effect_tier": "write",
+      "method": "POST",
+      "operation_id": "cancel_shipment",
+      "path_template": "/shipments/{shipment_id}/cancel",
+      "rule_id": "REFAPP-OP-005",
+      "summary": "Cancel a shipment. The one operation that is not read-only, and the reason T114's zero-writes-reach-the-target assertion has a subject."
+    }
+  ],
+  "schema_version": "1.0.0",
+  "source_url": "file://tests/fixtures/reference-app/served_operations.json"
+}

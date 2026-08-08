@@ -1,0 +1,19 @@
+{
+  "application_code_lines": 442,
+  "application_definitions": 32,
+  "application_files": 3,
+  "application_lines": 606,
+  "application_sources": [
+    "__init__.py",
+    "app.py",
+    "seed.py"
+  ],
+  "codegraph_edges": null,
+  "codegraph_nodes": null,
+  "codegraph_note": "not measured. codegraph is invoked by T119, which does not exist, so no node or edge count for this application has ever been taken. U-21 records the scale claim as untested; nothing here extrapolates one figure into the other.",
+  "measured_by": "tests/fixtures/reference-app/size.py",
+  "questions": 4,
+  "seeded_parts": 11,
+  "seeded_shipments": 44,
+  "served_operations": 5
+}

@@ -1,0 +1,131 @@
+{
+  "deployment_id": "d-reference-app",
+  "questions": [
+    {
+      "answer": 21549,
+      "answer_kind": "integer_cents",
+      "evidence": [
+        {
+          "id": "P-0007",
+          "kind": "part"
+        }
+      ],
+      "evidence_digest": "fb3eaf72fa0cc0fcd5be054f0e2b4c6bdc5fd78fc071f2adbab25c8def629ed6",
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/parts/P-0007"
+        }
+      ],
+      "prompt": "What is the total value in cents of on-hand stock for part P-0007?",
+      "question_id": "Q-001"
+    },
+    {
+      "answer": 14,
+      "answer_kind": "integer_units",
+      "evidence": [
+        {
+          "id": "S-0027",
+          "kind": "shipment"
+        }
+      ],
+      "evidence_digest": "ed259e72598f889ed3f03c990b5be6adf576a7c93de9f5103f8223f62f8ccfd7",
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/shipments?part_id=P-0003"
+        }
+      ],
+      "prompt": "How many units of part P-0003 are on shipments whose status is in_transit?",
+      "question_id": "Q-002"
+    },
+    {
+      "answer": "P-0011",
+      "answer_kind": "part_id",
+      "evidence": [
+        {
+          "id": "P-0001",
+          "kind": "part"
+        },
+        {
+          "id": "P-0002",
+          "kind": "part"
+        },
+        {
+          "id": "P-0003",
+          "kind": "part"
+        },
+        {
+          "id": "P-0004",
+          "kind": "part"
+        },
+        {
+          "id": "P-0005",
+          "kind": "part"
+        },
+        {
+          "id": "P-0006",
+          "kind": "part"
+        },
+        {
+          "id": "P-0007",
+          "kind": "part"
+        },
+        {
+          "id": "P-0008",
+          "kind": "part"
+        },
+        {
+          "id": "P-0009",
+          "kind": "part"
+        },
+        {
+          "id": "P-0010",
+          "kind": "part"
+        },
+        {
+          "id": "P-0011",
+          "kind": "part"
+        }
+      ],
+      "evidence_digest": "4771d3db61cac4e94ab9c83a77a2976ff0a7fe10ce6ce28c295e5373ee108310",
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/parts"
+        }
+      ],
+      "prompt": "Which part has the greatest on-hand value?",
+      "question_id": "Q-003"
+    },
+    {
+      "answer": 25,
+      "answer_kind": "integer_units",
+      "evidence": [
+        {
+          "id": "S-0003",
+          "kind": "shipment"
+        },
+        {
+          "id": "S-0025",
+          "kind": "shipment"
+        },
+        {
+          "id": "S-0036",
+          "kind": "shipment"
+        }
+      ],
+      "evidence_digest": "6dfc6d078ea4c120ec9273840108da3bf4dc69b98d83623e822842099fdc611f",
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/shipments?part_id=P-0011"
+        }
+      ],
+      "prompt": "What is the total quantity of part P-0011 across shipments whose status is in_transit or delivered?",
+      "question_id": "Q-004"
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed_version": "2026.08.08-1"
+}

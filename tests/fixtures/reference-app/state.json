@@ -1,0 +1,395 @@
+{
+  "deployment_id": "d-reference-app",
+  "parts": [
+    {
+      "attestation": "efbba5589fe31a5e3d920abff43a9777dcdd3f1e2851f1046b5315d9e54bfa7f",
+      "name": "synthetic part 01",
+      "on_hand": 10,
+      "part_id": "P-0001",
+      "unit_price_cents": 1137
+    },
+    {
+      "attestation": "8cdd3e32ebde27429d8bef933d191ed45a6efb9c154394478ce2634a51e25f99",
+      "name": "synthetic part 02",
+      "on_hand": 17,
+      "part_id": "P-0002",
+      "unit_price_cents": 1274
+    },
+    {
+      "attestation": "aff8d0fe5558fe3860606fdd827a3c0adcb9fc33b6d768142baae6bf29404b2b",
+      "name": "synthetic part 03",
+      "on_hand": 24,
+      "part_id": "P-0003",
+      "unit_price_cents": 1411
+    },
+    {
+      "attestation": "e26c86377002cf9aeae7d732e3d0503d311bb2b795ebdc24acd1552afa2e6a22",
+      "name": "synthetic part 04",
+      "on_hand": 31,
+      "part_id": "P-0004",
+      "unit_price_cents": 1548
+    },
+    {
+      "attestation": "ee07f798a2fe9049acc145ddf661e5548fbe0be48eabae0debcb683ceb886132",
+      "name": "synthetic part 05",
+      "on_hand": 38,
+      "part_id": "P-0005",
+      "unit_price_cents": 1685
+    },
+    {
+      "attestation": "be3a68f2c91d7214cf24555629a16c619e53b67b2cea8f31dc8c4a5acb8367d2",
+      "name": "synthetic part 06",
+      "on_hand": 4,
+      "part_id": "P-0006",
+      "unit_price_cents": 1822
+    },
+    {
+      "attestation": "47653c557058b77c68031e94a257f64e09a01c83df783ef3c0e429eb3ed5262b",
+      "name": "synthetic part 07",
+      "on_hand": 11,
+      "part_id": "P-0007",
+      "unit_price_cents": 1959
+    },
+    {
+      "attestation": "77e5f473c223484239a040277bbdb91b504a3779efa1e9487d50558738dc052e",
+      "name": "synthetic part 08",
+      "on_hand": 18,
+      "part_id": "P-0008",
+      "unit_price_cents": 2096
+    },
+    {
+      "attestation": "7ca786e172199ad7b1174e6a096794e2cc07a971584331af44932d630a862330",
+      "name": "synthetic part 09",
+      "on_hand": 25,
+      "part_id": "P-0009",
+      "unit_price_cents": 2233
+    },
+    {
+      "attestation": "aea3449af983b8e8eede5a0a1aed3a8a6d285410a597a705552edf61a180480c",
+      "name": "synthetic part 10",
+      "on_hand": 32,
+      "part_id": "P-0010",
+      "unit_price_cents": 2370
+    },
+    {
+      "attestation": "92c2a1a63307efd786178548b6bd5e60b4e857937f0cabbedc26f9bc63d0a777",
+      "name": "synthetic part 11",
+      "on_hand": 39,
+      "part_id": "P-0011",
+      "unit_price_cents": 2507
+    }
+  ],
+  "schema_version": "1.0.0",
+  "seed_epoch": "2026-08-08",
+  "seed_version": "2026.08.08-1",
+  "shipments": [
+    {
+      "attestation": "27d7286f741a6e13b52af102c08e4fc95d3d365f05d430ddc3871dad0f298f44",
+      "part_id": "P-0008",
+      "quantity": 4,
+      "shipment_id": "S-0001",
+      "status": "delivered"
+    },
+    {
+      "attestation": "b11f797d4d3941b6a0a71d54a98ba4fb2c00c70411688f406a311176f49b0ba4",
+      "part_id": "P-0004",
+      "quantity": 7,
+      "shipment_id": "S-0002",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "273cafe92e7332513fa44431d9ce8c935ef528fc8ceafc74ab9f214bb7e92958",
+      "part_id": "P-0011",
+      "quantity": 10,
+      "shipment_id": "S-0003",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "45643ad109e6082bdb63b9a64806e69cc9079311c1820ec796f94c622216b8e2",
+      "part_id": "P-0007",
+      "quantity": 13,
+      "shipment_id": "S-0004",
+      "status": "delivered"
+    },
+    {
+      "attestation": "e1ba3df21cf2eda06de304ebf0c698623e811f9875a85141d22da5f5e33afb00",
+      "part_id": "P-0003",
+      "quantity": 16,
+      "shipment_id": "S-0005",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "bf9f0df36af2cd26e31534b6f440d561f31f68f8573c2dcc3ba541a1d04a8d7f",
+      "part_id": "P-0010",
+      "quantity": 2,
+      "shipment_id": "S-0006",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "00206d64cd3315e4c108ca92c640a5a6a7d1ae96d0e91b3746eff64da478fb31",
+      "part_id": "P-0006",
+      "quantity": 5,
+      "shipment_id": "S-0007",
+      "status": "delivered"
+    },
+    {
+      "attestation": "92ea813fe2b3e39f6106894018374beb2b7fc1ce3c77230f0f31c0df4a947f6e",
+      "part_id": "P-0002",
+      "quantity": 8,
+      "shipment_id": "S-0008",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "3812922106dcda87fc13724530b32a4de345d6cbc91587bf560da01fe099ee4f",
+      "part_id": "P-0009",
+      "quantity": 11,
+      "shipment_id": "S-0009",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "7908c62da3988901450c0360b41175e04513af7b1f45a6d4bce39cc2b8200846",
+      "part_id": "P-0005",
+      "quantity": 14,
+      "shipment_id": "S-0010",
+      "status": "delivered"
+    },
+    {
+      "attestation": "1621df565df7b4381d94f2eb665dcad6aa89ab731aa1f808a5afad48d345c47d",
+      "part_id": "P-0001",
+      "quantity": 17,
+      "shipment_id": "S-0011",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "3f345adc8e149d111430a3a872a68d831a8a226e5a03c1f8b407dfea94e62000",
+      "part_id": "P-0008",
+      "quantity": 3,
+      "shipment_id": "S-0012",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "74c6ea59d2425f599cdad05854068823faf2dbbdb148e566990773b9cd7001ab",
+      "part_id": "P-0004",
+      "quantity": 6,
+      "shipment_id": "S-0013",
+      "status": "delivered"
+    },
+    {
+      "attestation": "4d58bb4ac8ad2c25d6f83e98a2818ea13040d29f75a59fe26e058ff9568a0297",
+      "part_id": "P-0011",
+      "quantity": 9,
+      "shipment_id": "S-0014",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "68ced662c7c10ed68fbb63685dc3d5514fc705eaa29339a57e1c6a4156541e3c",
+      "part_id": "P-0007",
+      "quantity": 12,
+      "shipment_id": "S-0015",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "8439d4c2b0281d9072af3af8f535289636dc3b92f867adf7c1b099627f15788a",
+      "part_id": "P-0003",
+      "quantity": 15,
+      "shipment_id": "S-0016",
+      "status": "delivered"
+    },
+    {
+      "attestation": "a1431a08dd6d418cc9d43df2e5887fe622c7f1b95c282a13fcf486f588473ea4",
+      "part_id": "P-0010",
+      "quantity": 1,
+      "shipment_id": "S-0017",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "f05ecfea2750e663211dc380900a62c977edebdb8d4f519e3cd190b3145ba5d0",
+      "part_id": "P-0006",
+      "quantity": 4,
+      "shipment_id": "S-0018",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "cf3176b76bec2a8d6e11f103f92ff297a91d63861ad55ea5eea060449953a0f4",
+      "part_id": "P-0002",
+      "quantity": 7,
+      "shipment_id": "S-0019",
+      "status": "delivered"
+    },
+    {
+      "attestation": "39a6c84c105244b714fd36146537d6075c676fae4c53cf962d4c1152e8fb0d9e",
+      "part_id": "P-0009",
+      "quantity": 10,
+      "shipment_id": "S-0020",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "3489f8a30f2d8b78355cec9b24ea1775e63a8de87594194e5b9b779bae313837",
+      "part_id": "P-0005",
+      "quantity": 13,
+      "shipment_id": "S-0021",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "7387813c7ed9f7e66fef58af0dadbb608415e81eb146742b49eaf431d1c04883",
+      "part_id": "P-0001",
+      "quantity": 16,
+      "shipment_id": "S-0022",
+      "status": "delivered"
+    },
+    {
+      "attestation": "9ff1db1739656e3cb0c2e415957c04e324b3a7db00af9623e38958c4b2946434",
+      "part_id": "P-0008",
+      "quantity": 2,
+      "shipment_id": "S-0023",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "59cea9a186c347751a27fafe218476243e58a8ed12935aa4e1f2787e8a9edc25",
+      "part_id": "P-0004",
+      "quantity": 5,
+      "shipment_id": "S-0024",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "fe3702cb55eb14cd52caa0bf4f5c4b3fefdbe6239d832f6dd68e54ef909e55e1",
+      "part_id": "P-0011",
+      "quantity": 8,
+      "shipment_id": "S-0025",
+      "status": "delivered"
+    },
+    {
+      "attestation": "28b818a7a9bca76b06e99f61c74897bf7ff055e1ba78b788dd757448eda0f4be",
+      "part_id": "P-0007",
+      "quantity": 11,
+      "shipment_id": "S-0026",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "149438b2bacb84efd13a031a2c7452738600cae6e226c65e921e0468cfe3e475",
+      "part_id": "P-0003",
+      "quantity": 14,
+      "shipment_id": "S-0027",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "1802983e4210be68c0fb409baaaef1b8e19c6e527a01978c62e3ea8b7af6205d",
+      "part_id": "P-0010",
+      "quantity": 17,
+      "shipment_id": "S-0028",
+      "status": "delivered"
+    },
+    {
+      "attestation": "f861e71433b5afd847841ea6e7d5cd6f5d4b186ecd048c493125ff486402ae3b",
+      "part_id": "P-0006",
+      "quantity": 3,
+      "shipment_id": "S-0029",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "a3fd46ad534704d0b66e51a07a4d5f957f7bf92e33d43890baed663ea87557ca",
+      "part_id": "P-0002",
+      "quantity": 6,
+      "shipment_id": "S-0030",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "d191eb3670367c3a3632da188cd97689b0f185fb164a3f58f9f4b1cdea68b9e5",
+      "part_id": "P-0009",
+      "quantity": 9,
+      "shipment_id": "S-0031",
+      "status": "delivered"
+    },
+    {
+      "attestation": "3fadf026b0b838b10a00407aa608103de5e5f7343efa8e6c35986a66dd7817c4",
+      "part_id": "P-0005",
+      "quantity": 12,
+      "shipment_id": "S-0032",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "2f7676495a8b95e77a727f42debb2a9c4945baf07fe675481191492d7fffb93a",
+      "part_id": "P-0001",
+      "quantity": 15,
+      "shipment_id": "S-0033",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "016887db9df7283a18606eab67d4c5f2e194143dc92b6a3ba28800891f4ab04e",
+      "part_id": "P-0008",
+      "quantity": 1,
+      "shipment_id": "S-0034",
+      "status": "delivered"
+    },
+    {
+      "attestation": "bf53c0da6479684c230f6dfc520f7eaeace0ec0c490ffec21a13deb145d44499",
+      "part_id": "P-0004",
+      "quantity": 4,
+      "shipment_id": "S-0035",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "6675d3777cab56101a38fe2fae65e39783156d02103a1d3a4ce645232a587618",
+      "part_id": "P-0011",
+      "quantity": 7,
+      "shipment_id": "S-0036",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "538efcd1abace19baf3bd4fed1b6f244df846974e52bb71ca4f01c792ec5e474",
+      "part_id": "P-0007",
+      "quantity": 10,
+      "shipment_id": "S-0037",
+      "status": "delivered"
+    },
+    {
+      "attestation": "8451b385e763733972db3d09f84c3b7ed27a0f8678b6aa776747e551db43b7ec",
+      "part_id": "P-0003",
+      "quantity": 13,
+      "shipment_id": "S-0038",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "df8c963b219064f2288718c712f1e8abd6d8e69547459a121de33cd7f0a24c8f",
+      "part_id": "P-0010",
+      "quantity": 16,
+      "shipment_id": "S-0039",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "215fe02afb309cf28daf1d8ef81d2085e689572edb99be993467fe358890221a",
+      "part_id": "P-0006",
+      "quantity": 2,
+      "shipment_id": "S-0040",
+      "status": "delivered"
+    },
+    {
+      "attestation": "da810ece41e3ea12d622f10f54c4393cd5cf52665895ac5e72cde560da098dbf",
+      "part_id": "P-0002",
+      "quantity": 5,
+      "shipment_id": "S-0041",
+      "status": "cancelled"
+    },
+    {
+      "attestation": "93d5ea9a47fd62e13f9aaeda0c452986fb41a496698b4d92baa2d1bfd2bf762a",
+      "part_id": "P-0009",
+      "quantity": 8,
+      "shipment_id": "S-0042",
+      "status": "in_transit"
+    },
+    {
+      "attestation": "b1ba4a3289d1823372cef78b0bbf7a7cc6b5c52bac141c2b4d4036eb788a8cb0",
+      "part_id": "P-0005",
+      "quantity": 11,
+      "shipment_id": "S-0043",
+      "status": "delivered"
+    },
+    {
+      "attestation": "016ba07563cec3bceefbba952631445bffdb0a588d7fe025260234901e23c2bd",
+      "part_id": "P-0001",
+      "quantity": 14,
+      "shipment_id": "S-0044",
+      "status": "cancelled"
+    }
+  ]
+}
