@@ -443,6 +443,76 @@ proof "FR-048 read-only bind — the remount made non-recursive" \
   "tests/integration/test_mount_authority.py::test_a_submount_inside_a_read_only_location_refuses_a_write" \
   's = s.replace("    for point in mount_points_under(dest):", "    for point in [dest]:")'
 
+# --- T115, the adversarial filesystem battery (SC-022) -----------------------
+#
+# This battery asserts a NEGATIVE — zero reads and zero writes succeed outside
+# the declared set — which is Rule 8's shape exactly: the positive result is a
+# failure to succeed, and every way the instrument can break produces it. The
+# four arms below are therefore two different questions and not four instances
+# of one.
+#
+# The first two remove a MECHANISM and require the battery to notice. They are
+# the same two mount repairs finding 021 forced, probed here by a workload
+# rather than by a hand-written write: OD-24's ground ① claims those repairs
+# close both authority gaps under every privilege model, and until this battery
+# existed that claim had no arm behind it.
+#
+# The second two remove the BATTERY'S OWN INSTRUMENT — the prober's arm loop
+# and the detector — and require its controls to notice. A battery whose
+# mechanism proofs pass while its prober attempts nothing reports zero
+# violations for the wrong reason, and no mechanism proof can tell the two
+# apart.
+proof "T115 battery — the session root seal removed, so the adversary writes into the root" \
+  src/supervisor/mounts.py \
+  "tests/batteries/test_adversarial_filesystem.py::test_no_adversarial_write_succeeds_outside_the_declared_set" \
+  's = s.replace("    _seal_root()", "    pass")'
+
+proof "T115 battery — the read-only remount removed, so a declared ro location takes a write" \
+  src/supervisor/mounts.py \
+  "tests/batteries/test_adversarial_filesystem.py::test_no_adversarial_write_succeeds_outside_the_declared_set" \
+  's = s.replace("        _remount_tree(dest, _flags_for(loc))", "        pass")'
+
+proof "T115 instrument — the arm table is never attempted, so zero violations is free" \
+  tests/batteries/test_adversarial_filesystem.py \
+  "tests/batteries/test_adversarial_filesystem.py::test_every_arm_actually_ran" \
+  's = s.replace("    for arm in ARMS:", "    for arm in ARMS[:0]:")'
+
+proof "T115 instrument — the detector stops resolving, so a real violation is not caught" \
+  tests/batteries/test_adversarial_filesystem.py \
+  "tests/batteries/test_adversarial_filesystem.py::test_the_positive_control_is_caught_naming_the_path" \
+  's = s.replace("    found = []", "    return []\n    found = []")'
+
+# --- T114, the adversarial egress battery (SC-002, SC-003) -------------------
+#
+# Same shape as T115's block and for the same reason: the battery asserts a
+# NEGATIVE, so every way it can break reads green.
+#
+# The enforcement point is a Go binary the harness does not rebuild, so a
+# mechanism proof cannot tamper `src/proxy/*.go` — the running binary would not
+# change and the proof would read UNPROVEN for a reason that says nothing about
+# the mechanism. The first arm therefore tampers the POLICY the battery
+# derives, which is the enforcement point's only input and the thing an
+# operator actually gets wrong: move every path template and the published
+# surface stops resolving, so the workload is refused. The second removes the
+# network namespace, which is the mechanism behind SC-003's zero rather than a
+# property of the host. The third removes the battery's own arm loop, because a
+# battery whose policy proof passes while it attempts nothing reports zero for
+# the wrong reason.
+proof "T114 battery — every path template moved, so the published surface stops resolving" \
+  tests/batteries/test_adversarial_egress.py \
+  "tests/batteries/test_adversarial_egress.py::test_the_allowed_arms_reached_the_target" \
+  's = s.replace("\x22path_template\x22: op[\x22path_template\x22],", "\x22path_template\x22: \x22/moved\x22 + op[\x22path_template\x22],")'
+
+proof "T114 battery — the network namespace removed, so the self-composed dial lands" \
+  tests/batteries/test_adversarial_egress.py \
+  "tests/batteries/test_adversarial_egress.py::test_a_self_composed_connection_reaches_nothing" \
+  's = s.replace("escape_target[1])], isolate=True)", "escape_target[1])], isolate=False)")'
+
+proof "T114 instrument — the arm table is never attempted, so zero violations is free" \
+  tests/batteries/test_adversarial_egress.py \
+  "tests/batteries/test_adversarial_egress.py::test_every_arm_actually_ran" \
+  's = s.replace("        for arm in ARMS", "        for arm in ARMS[:0]")'
+
 proof "FR-049 pids.max — the bound not written" \
   src/supervisor/bounds.py \
   "tests/batteries/test_bounds_exhaustion.py::test_process_bound_exhaustion_names_its_terminal_state" \
