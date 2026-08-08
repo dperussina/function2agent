@@ -1068,26 +1068,37 @@ short way and points here. `acdf5f7`'s own commit message still carries the stro
 cannot be corrected in place; this paragraph is the record that it is wrong.
 
 So the bound is a **sum, not a multiple**, and the arithmetic is the part a future editor would
-otherwise re-derive or casually tighten: 318s observed maximum, from the 40-run table in that file's
+otherwise re-derive or casually tighten: the observed maximum from the 40-run table in that file's
 own header, plus 300s for one arm reaching the cap in the harness, plus 300s for the same arm
-reaching it again in `proof_attribution.py`, is 918s — 15.3 minutes, rounded up to 20. That leaves
-882s of hang budget over the observed maximum, two full cap firings and change. Three simultaneously
-hanging arms exceed it, and that is the deliberate stopping point: at three the cap is not containing
-the problem, so losing the record is no longer the worse outcome.
+reaching it again in `proof_attribution.py`. At `acdf5f7` that read 318 + 300 + 300 = 918s, 15.3
+minutes, rounded up to 20, leaving 882s of hang budget — two full cap firings and change. Three
+simultaneously hanging arms exceed it, and that is the deliberate stopping point: at three the cap is
+not containing the problem, so losing the record is no longer the worse outcome.
 
-**The observed maximum has since moved, and 318 is left standing anyway — it is what this derivation
-read, not a live gauge.** The first run under the new bound, `31105229783` at `acdf5f7`, took **330s**
-(13:17:34Z to 13:23:04Z). It postdates the 40-run sample, so substituting it into the table would
-leave the maximum disagreeing with the min, median and p90 beside it, and substituting it into the sum
-above would silently rewrite a derivation nobody performed. Re-running the sum on it instead:
-330 + 300 + 300 = 930s, 15.5 minutes, still inside 20, leaving 870s of hang budget — still two full cap
-firings and change, so **the bound holds and nothing moves**. The likely cause of the +12s is that
-`acdf5f7` also put `proof_attribution.py`'s 147 arms under `proof_timeout.py`, one subprocess each,
-which none of the 40 sampled runs carried; that is a reading of the diff and not a measurement. The
-handling follows [`gen_claims.py`](#generated-claims--gen_claimspy)'s rule for a figure with a narrative
-half: a number sitting inside a derivation is not a site to overwrite, because advancing the digits
-without advancing the sentence around them turns detectable staleness into undetectable inconsistency.
-If a later sample shows the trend continuing, re-derive the whole table rather than advance one cell.
+**The table was re-derived whole on 2026-08-08 and the sum now reads 540 + 300 + 300 = 1140s, 19
+minutes. The bound stays at 20 and nothing moves.** 1140 is inside 1200, so the method returns a
+floor below the value already set; nothing has fired, and widening a bound that has not fired spends
+the only thing it is for. What did change is the margin: 660s of hang budget rather than 882s, 2.2
+cap firings rather than 2.9. The window excluded from that sample, and the rule that excluded it, are
+stated in `ci.yml`'s header — 11 runs whose footprint intersects GitHub's 2026-08-06/07 Actions
+incident, by a rule that never looks at a duration.
+
+**The `+12s` guess recorded here at `acdf5f7` is now a measurement, and it was low.** Each run's
+`removal-proofs.latest.json` carries `totals.entries_recorded`; regressed against job duration over 49
+successful runs spanning 64–202 arms, the cost is **1.68s per arm** (R² 0.80). But that slope is not
+constant across the range — restricted to runs above 129 arms it is **~3.0s per arm**, and above 147
+arms 3.85 — because each arm re-runs a selection out of a suite that is itself growing. Quoting the
+average alone would understate the next arm, so the local figure is the one to plan with.
+
+**That converts the instruction this paragraph used to carry into a threshold.** The sum reaches
+1200s when a run reaches 600s, which from 540s at 202 arms and ~3.0s per arm is **≈222 arms** — about
+20 away, in a repository whose arm count went 64 → 202 in four days. So the trigger is no longer "if a
+later sample shows the trend continuing", which had no number in it and depended on someone noticing a
+slow run: **when `totals.entries_recorded` reaches 222, this bound stops being derivable and the table
+must be re-derived.** The handling of the figures themselves still follows
+[`gen_claims.py`](#generated-claims--gen_claimspy)'s rule for a number with a narrative half — the
+sentences around them were advanced with the digits, because advancing the digits alone turns
+detectable staleness into undetectable inconsistency.
 
 **The rule generalises past CI: when an inner mechanism's whole output is a record it writes at the
 end, an outer bound set inside the window the inner one needs converts an informative failure into a

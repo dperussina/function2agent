@@ -72,22 +72,57 @@
 # window" is the full treatment and carries the references.
 #
 # **Derived from this workflow's own history rather than picked.** Job
-# durations over the 40 most recent runs — 200 observations, 191 success and 9
-# failure — taken as `completed_at - started_at` from
-# `gh api repos/{owner}/{repo}/actions/runs/<id>/jobs`, on 2026-08-06:
+# durations over the 40 most recent runs — 200 observations — taken as
+# `completed_at - started_at` from
+# `gh api repos/{owner}/{repo}/actions/runs/<id>/jobs`. Re-derived whole on
+# 2026-08-08 (34 success, 6 failure), and this is the table the bounds below
+# are read against:
 #
 #     job              n    min    med    p90    max     set
-#     removal proofs  40    183  263.5    302    318    20m
-#     pytest          40     10   90.5    100    107    10m
-#     corpus gates    40     28   39.0     42     44     5m
-#     go test         40     19   25.0     28     29     5m
-#     invariants      40      7   11.0     13     18     5m
+#     removal proofs  40    234  271.5    330    540    20m
+#     pytest          40     10   94.5    102    146    10m
+#     corpus gates    40     26   40.0     43     44     5m
+#     go test         40     19   25.0     28     30     5m
+#     invariants      40      7   11.0     15     26     5m
 #
-# **That is a closed sample, not a running maximum.** It is the 40 runs that
-# existed when the bounds were set, and a later observation does not belong in
-# it — folding one in would leave the max disagreeing with the min, median and
-# p90 beside it. One has been taken since; it is recorded beside the derivation
-# it bears on, in the `removal-proofs` job below.
+# The 2026-08-06 derivation it replaces (191 success, 9 failure), kept because
+# the movement is the finding and one table cannot show it:
+#
+#     job              n    min    med    p90    max
+#     removal proofs  40    183  263.5    302    318
+#     pytest          40     10   90.5    100    107
+#     corpus gates    40     28   39.0     42     44
+#     go test         40     19   25.0     28     29
+#     invariants      40      7   11.0     13     18
+#
+# Only `removal proofs` moved materially, 318 → 540, and its driver is now
+# **measured rather than read off the diff** — see that job below, which also
+# carries the arm count at which the bound stops being derivable. `pytest`
+# 107 → 146 and `invariants` 18 → 26 are the same growth reaching the jobs
+# that run the suite once; both stay far inside a bound that was a floor to
+# begin with. `corpus gates` and `go test` did not move.
+#
+# **One incident window is excluded, by a rule that never looks at a
+# duration.** GitHub had a critical Actions incident from 2026-08-06T15:22:49Z
+# to roughly 2026-08-07T12:09Z. A run is excluded iff `[run_started_at,
+# max(job.completed_at)]` intersects that interval — **11 runs, 55 job
+# observations**, blind to conclusion and to how long anything took. That is
+# deliberately mechanical: the alternative is deciding run by run which
+# durations were GitHub's, which is the judgement a sample is supposed to
+# replace. It removes seven jobs cancelled at 901–902s where runner-allocation
+# wait counted against the bound rather than work — `invariants`, an 8-to-26
+# second job, is three of them.
+#
+# **The rule is not free and not purely conservative, which is the price of
+# its being mechanical.** It also drops six runs that look clean, including a
+# 586s `removal proofs` observation *higher* than the retained max. Three of
+# that run's five jobs were cancelled at ~902s, so 586 is not a reading of
+# this repository either — but the rule did not know that, and must not.
+#
+# **That is a closed sample, not a running maximum.** It is the 40 eligible
+# runs that existed when it was taken, and a later observation does not belong
+# in it — folding one in would leave the max disagreeing with the min, median
+# and p90 beside it.
 #
 # **5 minutes is a floor, and it is stated as one rather than dressed up as a
 # derivation.** Three jobs finish in under a minute every time; for those the
@@ -497,10 +532,10 @@ jobs:
     name: removal proofs (do the tests catch removal)
     runs-on: ubuntu-latest
     # **Derived, not scaled — this is the one job where the per-arm cap sets
-    # the floor.** 318s observed max, plus 300s for one arm reaching
+    # the floor.** 540s observed max, plus 300s for one arm reaching
     # `REMOVAL_PROOF_TIMEOUT` in the harness below, plus 300s for the same arm
-    # reaching the same cap again in `tools/proof_attribution.py`, is 918s =
-    # 15.3 minutes. That is the longest a run can legitimately take *and still
+    # reaching the same cap again in `tools/proof_attribution.py`, is 1140s =
+    # 19 minutes. That is the longest a run can legitimately take *and still
     # leave the record its `if: always()` steps exist to publish*. The harness
     # writes that record from exactly two places — the baseline abort, and the
     # line after the last proof — out of a `mktemp -d` an `EXIT` trap removes,
@@ -509,25 +544,46 @@ jobs:
     # the same bound by a better route; `tools/README.md` § "An outer bound
     # inside an inner bound's window" has it in full.
     #
-    # 20 minutes rounds 918s up and leaves 882s of hang budget over that
-    # observed max — two full cap firings and change. Three simultaneously
-    # hanging arms exceed it, and that is the right place to give up: at three
-    # the cap is not containing the problem and the fallback is supposed to
-    # fire.
+    # 20 minutes leaves 660s of hang budget over that observed max — 2.2 cap
+    # firings, where the 2026-08-06 derivation had 882s and 2.9. Three
+    # simultaneously hanging arms still exceed it, and that is the right place
+    # to give up: at three the cap is not containing the problem and the
+    # fallback is supposed to fire.
     #
-    # **Re-checked against the first run under this bound, and 318 stands as
-    # written because it is what the derivation above read.** Run 31105229783
-    # (`acdf5f7`) took **330s** — 13:17:34Z to 13:23:04Z. It postdates the
-    # 40-run sample in this file's header, so it is recorded here rather than
-    # substituted into either the table or the sum. Re-running the sum on it:
-    # 330 + 300 + 300 = 930s = 15.5 minutes, still inside 20, leaving 870s of
-    # hang budget — still two full cap firings and change. **The bound holds
-    # unchanged and no value here moves.** The likely cause of the +12s is that
-    # `acdf5f7` also put `tools/proof_attribution.py`'s 147 arms under
-    # `proof_timeout.py`, one subprocess each, which none of the 40 sampled
-    # runs carried — **that is a reading of the diff, not a measurement.** If a
-    # later sample shows the trend continuing, re-derive the whole table by the
-    # command in the header rather than advancing this one figure.
+    # **The trend did continue and the whole table was re-derived, which is
+    # what the previous note here asked for. The bound still does not move.**
+    # 1140s is inside 1200s, so the file's own method returns a floor below the
+    # value already set, and nothing has fired — 0 failures, 0 cap firings in
+    # every record pulled. Widening on that evidence is the "raised to quiet a
+    # flake" move the header forbids, and it is not free: hang budget is the
+    # thing a wider bound spends.
+    #
+    # **The driver is arm count, and it is now measured rather than read off
+    # the diff.** Every run's `removal-proofs.latest.json` artifact carries
+    # `totals.entries_recorded`, and `proof-attribution.txt` carries one
+    # `claims` line per arm; the two agree exactly, so the job runs the tamper
+    # set twice and one regressor covers both passes. Over 49 successful
+    # eligible runs spanning 64–202 arms:
+    #
+    #     duration = 96s + 1.68s/arm     R² = 0.80, resid sd 27s
+    #
+    # **But 1.68 is an average over a range where the slope is not constant,
+    # and quoting it alone would understate the next arm.** Restricting to the
+    # top of the range steepens it monotonically — 1.96 s/arm above 98 arms,
+    # 2.71 above 120, **2.98 above 129**, 3.85 above 147. Each arm re-runs a
+    # selection out of a suite that is itself growing (507 → 1194 outcomes over
+    # the same runs), so arms and suite size are collinear and a fit on both
+    # returns a *negative* per-outcome coefficient — an artifact, not a
+    # finding. The honest figure is the local one: **~3.0s per arm at present
+    # arm counts.**
+    #
+    # **What that buys is a threshold instead of a vigil.** The floor above is
+    # `observed_max + 600`, so it reaches 1200s when a run reaches 600s, which
+    # at 202 arms / 540s and ~3.0s per arm is **≈222 arms**. That is ~20 arms
+    # away, and the sample grew 64 → 202 in four days. So: **when
+    # `totals.entries_recorded` reaches 222, this bound stops being derivable
+    # and must be re-derived — not when someone notices a slow run.** The note
+    # this replaces had no number in it and depended on exactly that noticing.
     #
     # Raising `REMOVAL_PROOF_TIMEOUT` without raising this trades the cap's
     # diagnostic for a cancelled job. They move together.
