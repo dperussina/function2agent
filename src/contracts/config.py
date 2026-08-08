@@ -225,6 +225,24 @@ RUNTIME_KEYS: tuple[Key, ...] = (
     # Q-10's rather than FR-047's. OD-27 limb ④ is what states this key is
     # required with no default; FR-058 is what OD-27 calls "the precedent in
     # shape", and it governs bounding a tool result, not pricing a model.
+    # FR-037 — *"selected by configuration"*. Required with no default and
+    # **no `no_default_reason`**, which is the distinction the field exists to
+    # carry rather than an omission: the twelve keys that have one are keys an
+    # authority ruled out a default *for*, having considered one. These two are
+    # in `F2A_TENANT_ID`'s class — there is no universal value to have ruled
+    # out. Without them `require_priceable` cannot be asked its question, and
+    # `MODEL_CONTEXT_WINDOW_TOKENS` is a window belonging to a model nothing
+    # names; OD-27's whole gate is *is the model in force priced*, and "in
+    # force" has to be a thing an operator wrote down. Provider selection
+    # proper is T163's; this is the address the startup gate is asked about.
+    Key("MODEL_PROVIDER", Kind.STR, "FR-037",
+        "which of the four SC-010 providers the runtime calls. Checked "
+        "against `providers.base.PROVIDERS` at startup, so a typo is a "
+        "startup failure rather than a first-turn one"),
+    Key("MODEL_ID", Kind.STR, "FR-037",
+        "the API identifier requests are made against — the string that "
+        "reaches the vendor, and the address `require_priceable` and "
+        "`costs.PRICES` are both keyed on"),
     Key("MODEL_PRICES_OPERATOR", Kind.STR, "OD-27",
         "the operator's own declared rates, for models no vendor page in "
         "`costs.PRICES` prices. A path to a declaration file, or the literal "
