@@ -83,6 +83,11 @@ SRC=$(pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cp -r "$SRC/src" "$SRC/tests" "$SRC/tools" "$SRC/pyproject.toml" "$WORK/" 2>/dev/null
+# `deploy/` and the lock file joined the copy under T096: the sandbox image's
+# FR-021 properties are checked statically by tests/invariants/test_sandbox_image.py,
+# which reads deploy/images/sandbox.Dockerfile. Without them here the baseline
+# below fails for a missing file and the harness correctly refuses to report.
+cp -r "$SRC/deploy" "$SRC/requirements.lock" "$WORK/" 2>/dev/null
 # The Go arms need the fixtures at the relative path the tests use
 # (src/proxy/../../tests/fixtures), which the copy above already satisfies.
 cd "$WORK" || exit 1
@@ -1063,7 +1068,7 @@ proof "FR-049 kill_all — the racy per-pid fallback restored" \
 proof "INV-003 vacuity — a package marker counts as coverage again" \
   tests/invariants/test_sandbox_reachability.py \
   "tests/invariants/test_sandbox_reachability.py::test_a_package_marker_does_not_count_as_coverage" \
-  's = s.replace("    return [p for p in _sandbox_sources() if p.name != \x22__init__.py\x22]", "    return _sandbox_sources()")'
+  's = s.replace("    return [\n        p\n        for p in _sandbox_sources()\n        if p.name != \x22__init__.py\x22 and p.name not in NOT_SANDBOX_RESIDENT\n    ]", "    return _sandbox_sources()")'
 
 proof "INV-003 root check — a moved root stops being noticed" \
   tests/invariants/test_sandbox_reachability.py \
@@ -2260,6 +2265,145 @@ proof "e4ef6e6 basetemp reaping — a live process's directory is reaped too" \
   tests/conftest.py \
   "tests/unit/test_conftest_basetemp.py::test_a_live_process_directory_survives_another_runs_configure" \
   's = s.replace("        try:\n            os.kill(int(name), 0)\n        except ProcessLookupError:\n            shutil.rmtree(os.path.join(root, name), ignore_errors=True)\n        except PermissionError:\n            continue  # Alive and owned by someone else.", "        shutil.rmtree(os.path.join(root, name), ignore_errors=True)")'
+
+# ---------------------------------------------------------------------------
+# T096 — the sandbox image's FR-021 properties.
+#
+# The brief that added these asked whether a Dockerfile can be put under
+# removal proof meaningfully. It can, but only because `src/sandbox/image_policy.py`
+# exists: a Dockerfile with nothing reading it has no test to fail, and an arm
+# over one would be asserting that a file's bytes are its bytes. The arms below
+# split accordingly — one over the artifact, five over the checker that gives
+# the artifact a failure mode.
+#
+# None of them is an egress control. FR-021 and the egress policy are one
+# control (research.md §T-11); what these prove load-bearing is the *shipping*
+# clause — that the image was built with its dependencies resolved and ships no
+# way to resolve another.
+
+# The artifact arm. `--require-hashes` is what makes an unpinned addition to the
+# lock file a build failure instead of a silent fetch of whatever the index is
+# serving today, and it is one word in one line of a file nothing else reads.
+proof "T096 sandbox image — the build resolves without pinning the hashes" \
+  deploy/images/sandbox.Dockerfile \
+  "tests/invariants/test_sandbox_image.py::test_the_committed_sandbox_image_has_no_findings" \
+  's = s.replace("pip install --no-cache-dir --require-hashes --prefix=/opt/deps", "pip install --no-cache-dir --prefix=/opt/deps")'
+
+# Ordering, which is the whole of this rule. Without it a Dockerfile satisfies
+# SBX-IMG-002 by carrying the teardown anywhere in the stage and reinstalling
+# below it — both strings present, the manager shipped.
+proof "T096 image policy — a teardown counts wherever it sits" \
+  src/sandbox/image_policy.py \
+  "tests/invariants/test_sandbox_image.py::test_removing_before_installing_is_still_a_finding" \
+  's = s.replace("        torn_down = removed_at.get(name)\n        if torn_down is None or torn_down < line:", "        torn_down = removed_at.get(name)\n        if torn_down is None:")'
+
+# The stage narrowing. Removing it does not weaken the checker — it makes it
+# over-broad, and forbids the builder stage from configuring the index it is
+# there to resolve from. An over-broad rule gets suppressed, and a suppressed
+# rule checks nothing.
+proof "T096 image policy — an index URL is a finding in every stage" \
+  src/sandbox/image_policy.py \
+  "tests/invariants/test_sandbox_image.py::test_an_index_url_in_the_builder_stage_is_not_a_finding" \
+  's = s.replace("        if inst.verb in (\x22ENV\x22, \x22ARG\x22) and in_shipped:", "        if inst.verb in (\x22ENV\x22, \x22ARG\x22):")'
+
+# Continuation joining. Every rule is a regex over an instruction body, so a
+# violation split across a line continuation is invisible without this — and a
+# multi-line `RUN` is the normal shape for the exact block being checked.
+proof "T096 image policy — a continued line is two instructions" \
+  src/sandbox/image_policy.py \
+  "tests/invariants/test_sandbox_image.py::test_a_continuation_is_one_instruction" \
+  's = s.replace("            buffer.append(line[:-1])\n            continue", "            pass")'
+
+# Which stage ships. Reading the first FROM instead of the last inverts every
+# stage-scoped rule at once: the builder gets audited and the image that ships
+# does not.
+proof "T096 image policy — the first stage is treated as the one that ships" \
+  src/sandbox/image_policy.py \
+  "tests/invariants/test_sandbox_image.py::test_the_final_stage_is_the_last_from" \
+  's = s.replace("    return stages[-1]", "    return stages[0]")'
+
+# SBX-IMG-006 is the rule that keeps the *other* mechanism alive. CI builds no
+# images, so the build-time assertion runs only on a laptop; this is what stops
+# it being deleted as redundant with the static checker, and the two are not
+# redundant — a package manager arriving from a base image change alters no
+# line here and is invisible to a static reading.
+proof "T096 image policy — an image that never checks itself is accepted" \
+  src/sandbox/image_policy.py \
+  "tests/invariants/test_sandbox_image.py::test_a_missing_build_time_assertion_is_found" \
+  's = s.replace("    resolved_from_lock = False\n    asserts_at_build_time = False", "    resolved_from_lock = False\n    asserts_at_build_time = True")'
+
+# ---------------------------------------------------------------------------
+# T116 — the reference application, and the half of a known-correct answer that
+# answer-checking cannot see.
+#
+# The first arm is the one this fixture exists for. It removes nothing from any
+# answer: every question is still answered correctly under it, and every
+# assertion about answers still passes. What it removes is the opaque field the
+# answers do not depend on — which is finding 016's blindness reproduced on
+# purpose, so that the assertion which catches it is on the record as the one
+# doing the work.
+
+proof "T116 reference app — a served part omits its attestation" \
+  tests/fixtures/reference-app/app.py \
+  "tests/unit/test_reference_app.py::test_the_served_surface_reproduces_every_evidence_digest" \
+  's = s.replace("        for row in self.state[\x22parts\x22]:\n            if row[\x22part_id\x22] == part_id:\n                return dict(row)", "        for row in self.state[\x22parts\x22]:\n            if row[\x22part_id\x22] == part_id:\n                return {k: v for k, v in row.items() if k != \x22attestation\x22}")'
+
+# The key is what makes an attestation unforgeable from the served surface. A
+# plain digest of the same identity is still independent of every business
+# field, so the lossy oracle still fails against it and that arm stays green —
+# which is why the named test here is the key one and not that one.
+proof "T116 reference app — the attestation is a digest rather than a MAC" \
+  tests/fixtures/reference-app/seed.py \
+  "tests/unit/test_reference_app.py::test_a_different_key_moves_every_attestation_and_no_visible_field" \
+  's = s.replace("    return hmac.new(key, dumps(identity), hashlib.sha256).hexdigest()", "    return hashlib.sha256(dumps(identity)).hexdigest()")'
+
+# The coprimality of the part count and the status cycle, which is load-bearing
+# arithmetic and reads as an arbitrary constant. Twelve parts is the number the
+# first draft used, and it degenerates a filtered question to an empty evidence
+# set while every answer and digest assertion goes on passing.
+proof "T116 reference app — the part count shares a factor with the status cycle" \
+  tests/fixtures/reference-app/seed.py \
+  "tests/unit/test_reference_app.py::test_no_question_has_an_empty_evidence_set" \
+  's = s.replace("PART_COUNT = 11", "PART_COUNT = 12")'
+
+# Deny by default at the fixture's own door. T114 asserts that nothing which
+# failed to resolve read-only reaches the target; a target that answered an
+# operation its published specification does not describe could not exercise
+# that, because there would be nothing for the enforcement point to be right
+# about.
+proof "T116 reference app — an unpublished operation resolves to something" \
+  tests/fixtures/reference-app/app.py \
+  "tests/unit/test_reference_app.py::test_an_unpublished_operation_is_refused_by_rule" \
+  's = s.replace("        raise OperationError(\n            404,\n            \x22REFAPP-001\x22,\n            \x22the published specification describes no such operation\x22,\n        )", "        return self._health(query)")'
+
+# The private copy. T180 drives a copy of the workload against an untouched
+# control; sharing the document makes the write arm mutate the control and the
+# diff come back empty — a battery reporting no unauthorized effect because its
+# baseline moved with it.
+proof "T116 reference app — the application holds the caller's state by reference" \
+  tests/fixtures/reference-app/app.py \
+  "tests/unit/test_reference_app.py::test_two_applications_built_from_one_state_do_not_share_it" \
+  's = s.replace("        self.state = json.loads(json.dumps(state))  # a private copy, always", "        self.state = state")'
+
+# The fixture origin refuses the wildcards for the same reason
+# `src/runtime/serving.py` does. A listening surface created by an omission is
+# the shape, and a fixture beside the adversarial batteries is a bad place for
+# it.
+proof "T116 reference app — the fixture origin binds every interface" \
+  tests/fixtures/reference-app/app.py \
+  "tests/unit/test_reference_app.py::test_the_origin_refuses_to_bind_every_interface" \
+  's = s.replace("    if not host or host in (\x220.0.0.0\x22, \x22::\x22, \x22*\x22):", "    if False:")'
+
+# T203 reports this size wherever SC-001 appears, so the list of figures the
+# README is required to state is the only thing standing between a stale
+# denominator and a silent one. One name dropped from it is one figure the
+# README may state wrongly forever, and the check that walks the list would
+# never mention it — which is why the check compares the list against the
+# measurement rather than only iterating it.
+proof "T116 stated size — a measured figure drops off the list the README must state" \
+  tests/fixtures/reference-app/size.py \
+  "tests/unit/test_reference_app.py::test_the_readme_states_the_size_that_was_measured" \
+  's = s.replace("STATED_IN_README = (\n    \x22application_files\x22,", "STATED_IN_README = (\n    # removed\n")'
 
 echo
 _verdict="$PASS proved, $FAIL unproven"
