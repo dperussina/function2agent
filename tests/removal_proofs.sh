@@ -2135,6 +2135,108 @@ proof "T070 absent result — a running session serves an empty record with a 20
   's = s.replace("    if view.result is None:\n        raise SurfaceError(RULE_RESULT_ABSENT)", "    if view.result is None:\n        return {\x22session_id\x22: view.session_id, \x22payload\x22: None}")'
 
 # ---------------------------------------------------------------------------
+# T029 — the process entry points, and the human channel they construct.
+#
+# Every arm below is a mechanism that did not exist at `f8c844c` and could not
+# have, because the assembly point it belongs to did not: `config.load` was
+# referenced only from tests, `Config` was constructed only by its own module's
+# factory, and `require_priceable` was called from nowhere. The reporting
+# machinery for four authorities was built and unreachable. These arms are the
+# reachability, put under the same counterfactual as everything above it.
+
+# The vehicle, and the only arm here whose fault is a *crash* rather than an
+# assertion. Measured either side rather than argued: with the loop replaced by
+# a buffered write, the plant aborts 12 of 12 with
+# `Fatal Python error: _enter_buffered_busy`; with it in place, 0 of 12. The
+# tamper is the plausible edit — `sys.stderr.write` is what anyone writing this
+# module from scratch reaches for first, and it is correct on the main thread.
+proof "T029 operator channel — the write is buffered again" \
+  src/contracts/operator_log.py \
+  "tests/unit/test_operator_log.py::test_an_unbuffered_write_from_a_daemon_thread_does_not" \
+  's = s.replace("        payload = (body + \x22\\n\x22).encode(\x22utf-8\x22, errors=\x22replace\x22)\n        while payload:\n            payload = payload[os.write(self._fd, payload):]", "        import sys as _sys\n        _sys.stderr.write(body + \x22\\n\x22)\n        _sys.stderr.flush()")'
+
+# The per-line framing, which is separable from the vehicle. There is no arm
+# for the short-write resumption beside it and that is deliberate: one was
+# written, came back UNPROVEN, and the reason is recorded in `say`'s docstring
+# — fd 2 is blocking, so the kernel never returns short and the loop cannot be
+# made load-bearing by any test in this suite. It is kept and not claimed.
+proof "T029 operator channel — only the first line of a report is identified" \
+  src/contracts/operator_log.py \
+  "tests/unit/test_operator_log.py::test_every_line_of_a_multi_line_report_is_prefixed" \
+  's = s.replace("        body = \x22\\n\x22.join(prefix + line for line in message.split(\x22\\n\x22))", "        body = prefix + message")'
+
+# The wiring. `src/supervisor/lease.py` does not import the channel and is not
+# handed one — the renewer's `raise` reaches a human only because the entry
+# point replaced `threading.excepthook` before any thread started. Removing the
+# one call is what puts the renewer back where its note said it was.
+proof "T029 thread hook — the supervisor starts without adopting it" \
+  src/supervisor/main.py \
+  "tests/contract/test_startup_entry_points.py::test_an_entry_point_adopts_the_thread_hook_before_anything_starts" \
+  's = s.replace("    log.adopt_thread_exceptions()", "    pass")'
+
+proof "T029 thread hook — the runtime starts without adopting it" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_an_entry_point_adopts_the_thread_hook_before_anything_starts" \
+  's = s.replace("    log.adopt_thread_exceptions()", "    pass")'
+
+# OD-27's gate at its **call site**, which is a different mechanism from the
+# gate itself. `costs.py`'s own arm above proves `require_priceable` refuses;
+# this proves something asks it. The tamper is the shape the tree was actually
+# in — a preflight that exists and is never called.
+proof "T029 spend preflight — the runtime starts without asking whether the model is priced" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_an_unpriced_model_refuses_startup" \
+  's = s.replace("        rate_line = require_priceable(", "        rate_line = \x22unchecked\x22 or require_priceable(")'
+
+# The gathering, on both entry points. It is a deliberate deviation from
+# `src/proxy/main.go`, which stops at the first `Fatalf`, and the tamper is
+# therefore the Go shape restored rather than a mangling — which is exactly why
+# it needs an arm: it would read as a correction in review.
+proof "T029 gathered refusals — the runtime reports the price failure and drops the bound one" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_the_runtime_gathers_the_price_and_bound_refusals" \
+  's = s.replace("    except (CostTableError, ProviderError, ValueError) as exc:\n        refusals.append(f\x22the model in force is not priceable (OD-27): {exc}\x22)", "    except (CostTableError, ProviderError, ValueError) as exc:\n        log.refuse(f\x22the model in force is not priceable (OD-27): {exc}\x22)")'
+
+# The one that matters most off Linux: `preflight()` fails on macOS by design,
+# so a first-refusal-wins order means the twelve-key configuration report — the
+# thing this whole seam exists to make reachable — can never be seen on a
+# development host.
+proof "T029 gathered refusals — the supervisor stops at the platform check" \
+  src/supervisor/main.py \
+  "tests/contract/test_startup_entry_points.py::test_the_supervisor_gathers_the_platform_and_configuration_refusals" \
+  's = s.replace("    except PreflightError as exc:\n        refusals.append(str(exc))", "    except PreflightError as exc:\n        log.refuse(str(exc))")'
+
+# OD-28 ground ①. The tamper reports the same path and does not open it, which
+# is the edit somebody makes on the view that opening a store to print its name
+# is wasteful — and it leaves the ground exactly where it was while the
+# readiness line reads as though it had moved.
+proof "T029 session store — the supervisor names the store without opening it" \
+  src/supervisor/main.py \
+  "tests/contract/test_startup_entry_points.py::test_the_supervisor_opens_the_session_store" \
+  's = s.replace("    with SessionTable(session_db) as sessions:\n        log.say(_ready(config, sessions.path))", "    log.say(_ready(config, session_db))")'
+
+# OD-27's *nobody was asked* / *the operator declares nothing* distinction, one
+# layer below the key that exists to hold it open. The tamper is the lenient
+# reading, and it is the one a contributor reaches for on the first support
+# ticket about a missing file.
+proof "T029 price declaration — a path that resolves to nothing declares nothing" \
+  src/runtime/providers/operator_prices.py \
+  "tests/unit/test_operator_prices.py::test_a_missing_file_is_not_the_literal" \
+  's = s.replace("    except OSError as exc:\n        raise OperatorPriceError(", "    except OSError as exc:\n        return NO_OPERATOR_PRICES\n    if False:\n        raise OperatorPriceError(")'
+
+# The conversion, which is what is left after the enumeration came out. An
+# earlier arm here removed a permitted-field set and reported UNPROVEN, because
+# the dataclass constructor already refuses an unexpected keyword and its
+# message contains the field name the assertion was matching on — the blind
+# arm this harness exists to catch. What is load-bearing is turning that
+# `TypeError` into a refusal: without it a typo in a rate card leaves the
+# startup gate on an unhandled traceback rather than on an operator report.
+proof "T029 price declaration — a malformed declaration escapes as a TypeError" \
+  src/runtime/providers/operator_prices.py \
+  "tests/unit/test_operator_prices.py::test_an_unrecognised_field_is_refused" \
+  's = s.replace("    try:\n        return OperatorPrice(\n            tiers=tuple(_rate(where, i, band) for i, band in enumerate(tiers)),\n            **fields,\n        )\n    except TypeError as exc:\n        raise OperatorPriceError(f\x22{where}: {exc}\x22) from None", "    return OperatorPrice(\n        tiers=tuple(_rate(where, i, band) for i, band in enumerate(tiers)),\n        **fields,\n    )")'
+
+# ---------------------------------------------------------------------------
 # The suite's own harness.
 #
 # `tests/conftest.py` is not a mechanism the specification names, and it is under
