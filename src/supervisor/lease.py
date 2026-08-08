@@ -150,17 +150,40 @@ class LeaseRenewer:
         failing.
 
         **The raise is kept and is no longer an interim.** It is the terminal
-        branch, reached only where retrying cannot help, and it is still the
-        only channel library code has: a traceback is a poor operator
-        interface, and the durable answer remains a logger injected from an
-        entry point on `src/proxy/main.go`'s pattern. **Nothing here is a
-        logging facility and none of it should grow into one.** Its known
-        limit is unchanged and is not a reason to swallow: the report rides
-        `threading.excepthook` to a buffered stderr, so a raise coinciding
-        with the main thread's exit is truncated, lost, or aborts the process
-        — 41 of 87 clean, 14 truncated, 32 silent, 4 aborted when the exit is
-        swept across the raise instant. Swallowing loses the report in *every*
-        case rather than in a sub-millisecond one.
+        branch, reached only where retrying cannot help, and the raise is
+        still the only channel library code has. **Nothing here is a logging
+        facility and none of it should grow into one** — and note that nothing
+        below changed a line of this file.
+
+        **The vehicle the raise was waiting for now exists, and it was built
+        at the delivery end rather than here.** The durable answer this note
+        named — *a logger injected from an entry point on
+        `src/proxy/main.go`'s pattern* — is `src/contracts/operator_log.py`,
+        and `OperatorLog.adopt_thread_exceptions()` replaces
+        `threading.excepthook` with one that writes through a single
+        unbuffered `os.write`. The entry points install it before any thread
+        starts. That is why this class neither imports it nor is passed it: a
+        renewer that had to be handed a logger would only cover renewers, and
+        the hook covers every thread the process starts, including the ones
+        nobody enumerated.
+
+        **What that changed, measured on both hooks.** The worst of the three
+        failure modes is gone. The sweep recorded above — 41 of 87 clean, 14
+        truncated, 32 silent, 4 aborted, with the main thread's exit swept
+        across the raise instant — was re-run against a design that forces
+        the overlap rather than sweeping for it, a daemon thread raising in a
+        tight loop while the main thread exits 20 ms later: the stock hook
+        aborts the process with `_enter_buffered_busy` and SIGABRT in **7 of
+        120** trials, and this hook in **0 of 120**. Truncation goes with it,
+        because a single `os.write` is not a buffer that can be torn in half.
+
+        **What it did not change, disclosed rather than quietly dropped.**
+        The silent case survives and belongs to neither hook: where the
+        daemon thread is not scheduled at all before finalization completes,
+        there is nothing to deliver. Swept in 0.5 ms steps, both hooks are
+        silent in 20 of 20 trials at 0 ms and clean from 0.5 ms onward. So the
+        remaining limit is a scheduling gap common to both, and swallowing
+        would still lose the report in *every* case rather than in that one.
 
         `stopped_because` is set before raising rather than dropped. Nothing in
         `src/` reads it, but its documented `None` means *running, or stopped
