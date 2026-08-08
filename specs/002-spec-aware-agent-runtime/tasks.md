@@ -21,10 +21,15 @@ stories), [`plan.md`](./plan.md) (Constitution Check, deviation records, Complex
 **Inherited decisions**: **OD-01** onward, in
 [feature 001's plan](../001-discovery-validation/plan.md)
 
-**Total tasks**: ~~204~~ ~~205~~ **206**, in nine phases *(T205 added 2026-08-03 — the kernel boot
+**Total tasks**: ~~204~~ ~~205~~ ~~206~~ **210**, in nine phases *(T205 added 2026-08-03 — the kernel boot
 matrix that would turn the derived 5.14 floor into a tested one, and **deferred by owner decision the
 same day**; it is counted here because it is recorded work, not because it is scheduled. **T206 added
-2026-08-04** — the preflight's real-`unshare` pair, ~~which is neither deferred nor done~~ **done the same day**)* · **Estimate**: derived for
+2026-08-04** — the preflight's real-`unshare` pair, ~~which is neither deferred nor done~~ **done the same day**.
+**T211 added 2026-08-08** — the Python process entry points, done the same day; see
+[Configuration, and failing closed](#configuration-and-failing-closed). The figure was **stale at
+206 before that**: T207, T208 and T210 were each minted mid-flight without it being carried forward,
+so 210 is a recount of the declared identifiers rather than 206 plus one — **209 declared, T209
+never allocated, T211 the highest**)* · **Estimate**: derived for
 [the nine capabilities U-48 opened](#the-re-derived-estimate-for-u-48s-nine-capabilities), **not**
 derived for anything else, and the reason is stated there rather than left as an omission.
 
@@ -172,9 +177,18 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 - [X] T033 [P] Marking machinery for every configured value with no measurement behind it — `STALENESS_CEILING`, `DRIFT_CHECK_INTERVAL`, `CAPABILITY_LEASE_INTERVAL` — in `src/contracts/unvalidated.py` (FR-043)
 - [X] T034 [P] Contract test: every FR-043-marked value appears marked on every external surface that emits it, in `tests/contract/test_unvalidated_marking.py`
 - [X] T035 A `Secret` type with **no serializer**, so a credential cannot be logged by a code path that forgets to redact — redaction structural rather than a filter, in `src/contracts/secret.py` (FR-036)
+- [X] T211 **The Python process entry points**, in `src/supervisor/main.py` and `src/runtime/main.py`, with the entry-point-scoped human channel they construct in `src/contracts/operator_log.py` and OD-27's declaration reader in `src/runtime/providers/operator_prices.py` — the assembly point T029's line presupposes and the section note below spent sixty lines establishing was absent (FR-033, FR-049/**Q-10**, FR-005, FR-058, **OD-27**, **OD-28** ground ①)
+  - **Minted 2026-08-08, and the decision to mint is recorded rather than assumed.** Three prior passes deliberately minted nothing, on the stated ground that *"the pass that measured a gap is the wrong pass to price closing it"*. **That ground expired when the work was done**: there is no estimate to derive, because the cost is the diff. What replaces the argument against is the argument the note itself makes — the map from requirement to artifact is this file, and four modules answering to four authorities with no line naming them is the same hole the note describes, one level up. **T210 is the precedent in form**: it was minted mid-flight with the words *"the paragraph above names a gap no task owned"*, and this is that sentence again.
+  - **It answers the three questions the note left open as the test of a defensible closure.** *Which components are processes*: the supervisor and the runtime, one each, plus the Go enforcement point that already had one. *What each loads*: `SUPERVISOR_KEYS` and `RUNTIME_KEYS` respectively, and neither loads both — the four FR-005 ceilings are shared `Key` objects, not a second declaration, so the process that enforces a ceiling and the process that reports it cannot disagree about what it is. *Where `require_priceable` runs relative to `load()`*: immediately after, in the same gathered pass as the FR-058 bound, before anything that could spend; it cannot run earlier because the model it is asked about comes out of configuration, and it must not run later because *later* is after the first call has been paid for.
+  - **Two keys were added to `RUNTIME_KEYS` and neither carries a `no_default_reason`.** `MODEL_PROVIDER` and `MODEL_ID` (FR-037, *"selected by configuration"*) are in `F2A_TENANT_ID`'s class: required, no default, and **no reason field**, because the field marks a default an authority considered and ruled out, and there is no universal value here to have ruled out. Without them OD-27's gate has no question to ask. **The twelve reason-carrying keys are still twelve** and a contract test asserts the number.
+  - **Nothing is re-estimated.** No phase figure is touched and this task carries none, on the ground the note gives and this section's own precedent.
+  - **What it deliberately does not build**, so the next pass does not read the omission as an oversight: no logging framework — `OperatorLog` has two verbs, no levels, no handlers and no configuration, and says so in its own module; no session workload, no admission and no serve loop, so both entry points end in a readiness report and say in terms that an exit 0 is not a running daemon; and no widening of FR-038's closed span set, which is refused by `SpanError` and stays refused.
 
 > **T029's line says "environment injection at process start", and the Python runtime has no process
-> start. Measured and recorded 2026-08-06; nothing here is re-sized.** The schema landed, the
+> start. Measured and recorded 2026-08-06; ~~nothing here is re-sized~~ closed 2026-08-08 by T211
+> above, which is still not a re-sizing. The paragraphs below are left standing as the measurement
+> that produced it — struck where the tree has moved under them, and not deleted, because the
+> reasoning is what licensed the shape T211 took.** The schema landed, the
 > fail-loud path landed, the reporting landed, and the four tasks above are correctly marked done —
 > what is absent is the caller. `config.load()`, `SUPERVISOR_KEYS` and `RUNTIME_KEYS` are referenced
 > **only from tests**. `Config` is constructed at exactly one site in all of `src/`
@@ -205,16 +219,21 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 > to do it. A census run with Python-shaped patterns misses this, and reads the tree as having no
 > entry point at all rather than one.
 >
-> **No task in this file creates that assembly point, and the absence is the record.** T159's four
-> images and T160's compose bundle imply a process per component without naming what each runs;
-> **T171** — *exercise the fail-loud startup path end to end through the shipped bundle* —
-> presupposes the path rather than building it, and is where the gap will be discovered if it is not
-> closed first. **This note deliberately does not size the work or add a task line**, on the same
-> ground as the FR-058 seam above: the pass that measured a gap is the wrong pass to price closing
-> it, and a task number minted here would carry an estimate nobody derived. What a defensible
+> ~~**No task in this file creates that assembly point, and the absence is the record.**~~ **T211
+> does, added 2026-08-08.** T159's four images and T160's compose bundle imply a process per
+> component without naming what each runs; **T171** — *exercise the fail-loud startup path end to end
+> through the shipped bundle* — presupposes the path rather than building it, ~~and is where the gap
+> will be discovered if it is not closed first~~ **and now has one to exercise: the bundle half is
+> still owed, and what it is owed against is `python -m src.supervisor.main` and
+> `python -m src.runtime.main`**. ~~**This note deliberately does not size the work or add a task
+> line**~~, on the same ground as the FR-058 seam above: the pass that measured a gap is the wrong
+> pass to price closing it, and a task number minted here would carry an estimate nobody derived.
+> **That ground held for exactly as long as the work was unbuilt** — T211 is minted with no estimate
+> attached, because the pass that does the work does not have to predict it. What a defensible
 > closure would name, stated so the omission is checkable: which components are processes, what each
 > one loads (`SUPERVISOR_KEYS`, `RUNTIME_KEYS`, or both), and where `require_priceable` runs relative
-> to `load()` — none of which this document currently answers.
+> to `load()` — ~~none of which this document currently answers~~ **all three answered on T211's own
+> line, which is the checkable form the sentence was written to invite**.
 >
 > ---
 >
@@ -231,6 +250,15 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 > eight of `SUPERVISOR_KEYS`' `no_default_reason` strings quoted verbatim. **So the fail-loud
 > configuration path is not waiting on a logging facility. It is waiting on the assembly point
 > recorded above, and nothing else.**
+>
+> **Confirmed by building it, 2026-08-08.** `python -m src.runtime.main` with an empty environment
+> emits the *"13 required value(s) unset"* report and exits 1, and `python -m src.supervisor.main`
+> emits the platform refusal and the *"12 required value(s) unset"* report together. The prediction
+> held: what T211 adds beyond the bare `__main__` this paragraph measured is **not** a logging
+> facility but three things the excepthook cannot do — it gathers refusals that cost nothing to
+> discover rather than stopping at the first (which is what makes the configuration report visible
+> at all on a macOS host, where `preflight()` refuses first by design), it reports on success as
+> well as on failure, and it gives a **daemon** thread a write that cannot abort the process.
 >
 > **The Go side is not the counter-example it looks like, and reading it as one inverts the
 > conclusion.** Its human channel is **one file**: `main.go` is the only non-test file that imports
@@ -269,16 +297,25 @@ T-12); without T022's invariants file, constitution Principle II's second paragr
 > sits.~~ **Corrected 2026-08-06: the third site is no longer the odd one out.** The attribute itself
 > is still neither raised nor printed, but `_loop` now **re-raises** the exception it records, so the
 > condition reaches stderr through `threading.excepthook` exactly as the other two reach it through
-> the default one — **881 bytes**, measured. It is taken as an **interim** and not as the design, and
-> the entry point is still what the durable answer waits on; the ruling, the three routes it does not
-> take and the finalization window in which even the traceback is lost are all recorded against
-> **T108** under *the execution environment*. **Nothing here is re-sized and no task is added**, on
-> this section's own ground above.
+> the default one — **881 bytes**, measured. ~~It is taken as an **interim** and not as the design,
+> and the entry point is still what the durable answer waits on~~ — **the durable answer arrived
+> 2026-08-08 with T211, and it arrived at the delivery end rather than in `lease.py`**, which is not
+> modified and does not import the channel: `OperatorLog.adopt_thread_exceptions()` replaces
+> `threading.excepthook` with one unbuffered `os.write`, and the entry points install it before any
+> thread starts, so it covers threads nobody enumerated. **The finalization window narrowed and did
+> not close, which is the part to read.** Under a design that *forces* the overlap rather than
+> sweeping for it, the stock hook aborts the process with `_enter_buffered_busy` in **7 of 120**
+> trials and the adopted one in **0 of 120**; a direct buffered write from the daemon thread aborts
+> in **38 of 40** and the unbuffered write in **0 of 40**. What survives is the silent case, and it
+> belongs to neither hook — swept in 0.5 ms steps, both are silent in 20 of 20 trials at 0 ms and
+> clean from 0.5 ms onward, because a thread that was never scheduled has nothing to deliver. The
+> ruling and the three routes it does not take remain recorded against **T108** under *the execution
+> environment*. **Nothing here is re-sized**, on this section's own ground above.
 
 ### Tracing, from the first shipped capability
 
 - [X] T036 Span writer for the seven span kinds — `model_call`, `tool_call`, `egress_decision`, `filesystem_decision`, `state_transition`, `verification`, `drift_check` — carrying inputs, outputs, timing, cost, and the artifact versions in force, in `src/runtime/trace.py` (FR-030, FR-031, Principle VI)
-  - **This is the machine-readable output channel, it is built, and it is closed — so it is not the place a component reports an operator-facing condition.** Verified 2026-08-06 by attempting it: `lease_renewal`, `supervisor_error` and `operator_message` are each refused by `SpanError`, `model_call` is accepted, and `state_transition` refuses without a `StateTransition` carrying a deciding rule. Reaching the check at all requires a tenant, a deployment id and a **content-addressed** artifact version, which is the point — a span is built for reproducible attribution, not for a message to a human. A reader arriving here to record a supervisor-thread failure should read **T108**'s correction and [the configuration section](#configuration-and-failing-closed) first: the channel that is missing is the human-facing one, and it is missing because the entry point that would construct it is.
+  - **This is the machine-readable output channel, it is built, and it is closed — so it is not the place a component reports an operator-facing condition.** Verified 2026-08-06 by attempting it: `lease_renewal`, `supervisor_error` and `operator_message` are each refused by `SpanError`, `model_call` is accepted, and `state_transition` refuses without a `StateTransition` carrying a deciding rule. Reaching the check at all requires a tenant, a deployment id and a **content-addressed** artifact version, which is the point — a span is built for reproducible attribution, not for a message to a human. A reader arriving here to record a supervisor-thread failure should read **T108**'s correction and [the configuration section](#configuration-and-failing-closed) first: the channel that is missing is the human-facing one, and it is missing because the entry point that would construct it is. **Built 2026-08-08 as part of T211 — `src/contracts/operator_log.py`, constructed by an entry point and handed downward. The span set is untouched and stays closed**; the two channels answer different questions and the new one is not a route to widening this one.
 - [X] T037 Required `rule_id` on `egress_decision` and `filesystem_decision` spans, enforced by T023's suite (FR-011, FR-048)
 - [X] T038 Budget spans written **as consumption accrues** and journalled outside the container, so a cgroup kill loses no accounting, in `src/runtime/trace_budget.py` (FR-049, **U-30**)
   - The append-per-increment property and the survives-without-a-flush property are both tested. "Outside the container" is enforced as a resolved-path check against the session root and tested against relative-path evasion, but it has **not** been exercised against a live session whose mount namespace is up — that arm belongs with the integration battery, not here.
@@ -625,6 +662,14 @@ of the nine is named below with the tasks that own it, and the estimate follows 
 > session needs a process that loads configuration, builds the runtime and registers a view, and
 > that process is the seam. Building one here would have wired the startup preflight and retired
 > OD-28's deferral ground in the same commit, on this pass's own authority.
+>
+> **Half of that landed 2026-08-08 as T211, and the half that did not is this one.** The entry
+> points load configuration, run the startup gates and — on the supervisor side — open the session
+> store, which retires OD-28's ground ①. **They do not build a runtime or register a view**, because
+> `build_server` needs a `Registry` of live sessions and there is no admission path to fill one:
+> `src/runtime/main.py` reports readiness and exits, saying in terms that an exit 0 is not a running
+> runtime. So *an operator cannot serve a session* is still true and is now the smaller statement —
+> what it waits on is Phase 4's admission and lifecycle, not an assembly point.
 >
 > **The redaction tests rebuild from the wire, never from the objects.** Both `parse_frames` go
 > through `json.loads` on the response body, because the by-reference blindness that hit
@@ -1060,7 +1105,8 @@ pointed at live data inside the operator's own trust boundary.
   - **⚠️ THE DURABLE REPAIR, TAKEN 2026-08-06 — the interim's blocking reason expired with T016's migration, and the re-raise is *kept* as the terminal branch rather than retired.** Two of the four blocked routes were blocked *by* that migration being undone, and both fell with it: *`continue` retries forever* and *`SessionTable` cannot raise `ff202ae`'s three error types from outside the repository layer*. `_loop` now tolerates `StoreBusyError` and stops on everything else. **The bound is derived, not minted** — which is what separates it from *bound the retries*, the option this entry refused for adding an unmeasured number: `TOLERATED_CONSECUTIVE_BUSY = int(LEASE_TTL_MULTIPLE) - 1`, because the lease is granted for that many intervals and tolerating one more would let a renewal succeed **after its own lease had lapsed**, reviving authority FR-050 says is already gone. It is a safety property of the lease, and it carries no number of its own.
   - **Why `continue` is bounded here, measured rather than argued — this is the limb the earlier refusal turned on.** *Retries forever* would be right if a permanently held lock produced an endless stream of `StoreBusyError`. It does not, and the reason is a property of the store rather than of this loop: `StoreBusyError` means SQLite refused **without waiting**, which it does only where waiting could deadlock, whereas an ordinary statement gets the busy handler — so a lock that is never released **exhausts** it and reads as `StoreWedgedError`. Planted at both lock levels with the timeout in force, five consecutive renewals against a permanently held lock returned `StoreWedgedError` **5 of 5 at each level**, every one having waited out the whole timeout. **A permanently held lock cannot reach the tolerant branch from this call site.** The derived bound holds anyway and is asserted against a planted source that cannot occur.
   - **Counterfactual on the real class, one planted momentary failure on renewal 2 of 12.** Re-raise-everything (the interim): **1 of 12**, thread dead, lease **0.501 s in the past**. This loop: **10 of 12**, thread alive, lease **+0.046 s**, `stopped_because` `None`. Control with nothing planted: **12 of 12**. A planted `StoreWedgedError` still gives 1 of 12 and a dead thread, which is the split working rather than the repair failing.
-  - **The re-raise is kept and is no longer an interim; its removal proof and its interim comment stay with it.** It is now the *terminal* branch — reached where retrying cannot help — and the arm that proves it (`test_a_failed_renewal_is_not_silent`) plants a raw `sqlite3.OperationalError`, which after the migration is not a store error at all and so can only reach that branch. Its proof's tamper is unchanged and still targets it uniquely. **What is retired is the word *interim*, not the mechanism**: the durable operator interface is still a logger injected from an entry point on Go's pattern, still blocked on the same seam, and the finalization window recorded above is unchanged and is still not an argument for the swallow.
+  - **The re-raise is kept and is no longer an interim; its removal proof and its interim comment stay with it.** It is now the *terminal* branch — reached where retrying cannot help — and the arm that proves it (`test_a_failed_renewal_is_not_silent`) plants a raw `sqlite3.OperationalError`, which after the migration is not a store error at all and so can only reach that branch. Its proof's tamper is unchanged and still targets it uniquely. **What is retired is the word *interim*, not the mechanism**: ~~the durable operator interface is still a logger injected from an entry point on Go's pattern, still blocked on the same seam, and the finalization window recorded above is unchanged~~ and is still not an argument for the swallow.
+  - **⚠️ The vehicle arrived 2026-08-08 with T211, and it arrived somewhere this bullet did not predict — `lease.py` is not modified and does not import it.** Every route considered above assumed the renewer would be *handed* a logger. The one built is installed at the **delivery end**: `OperatorLog.adopt_thread_exceptions()` replaces `threading.excepthook` with a hook that writes through a single unbuffered `os.write`, and the entry points call it before any thread starts, so one installation covers every thread the process will ever have — including the ones no constructor here is passed. **That is why the renewer's `raise` needed no change to acquire an operator interface.** The finalization window narrowed by measurement rather than by argument, on a design that forces the overlap instead of sweeping for it: the stock hook aborts the process in **7 of 120** trials and the adopted one in **0 of 120**; a direct buffered write from a daemon thread aborts in **38 of 40** and the unbuffered write in **0 of 40**. **The abort and the truncation are gone; the silent case is not, and it belongs to neither hook** — swept in 0.5 ms steps both are silent in 20 of 20 at 0 ms and clean from 0.5 ms onward, because a thread that was never scheduled has nothing to deliver. So the 87-trial sweep above is superseded on three of its four outcomes and stands on the fourth. **Nothing is re-estimated**, on [T041](#phase-3-foundational-b--the-runtime-core-od-15-left-unowned-u-48)'s ground.
   - **Four proofs, because the branch is four mechanisms that fail in four directions.** Collapse to re-raise-everything, tolerate without bound, widen the split from `StoreBusyError` to its base `StoreUnavailableError`, and drop the consecutive-counter reset — each fails a different arm, and the arms assert **attempt counts** rather than words in a message. `EXPECTED_PROOFS` moves **182 → 192** with the six T016 per-row-scope proofs, read off the guard's own transition message and updated in the same commit.
 - [X] T109 [US1] Per-session listener whose socket the supervisor holds open by its own file descriptor inside the session's network namespace, so the kernel performs the revocation when the supervisor dies, in `src/supervisor/listener.py` (FR-050 layer 3)
 - [X] T110 [US1] Fresh container and fresh scratch volume per session, both keyed by session id, with a resumed session reattaching **its own** scratch because FR-007 makes it the same session, in `src/supervisor/session_env.py` (FR-050's not-inherited clause)
@@ -1191,7 +1237,8 @@ and the credential planes sit here.
 - [ ] T169 [US4] Operator-boundary check: every component runs inside the operator's boundary and no target data or credential is required to leave it, in `tests/integration/test_operator_boundary.py` (FR-032)
 - [ ] T170 [P] [US4] Cassette-backed provider tests over the core path, in `tests/conformance/` (constitution Principle VII, added because the specification does not capture it for v1)
 - [ ] T171 [US4] Exercise the fail-loud startup path end to end through the shipped bundle, in `tests/integration/test_bundle_failloud.py` (FR-033)
-  - **This task presupposes a startup the Python components do not have, measured 2026-08-06 and recorded at [the configuration section](#configuration-and-failing-closed).** `config.load()` has no caller in `src/`, and neither does OD-27's `require_priceable` preflight; twelve no-default keys under four authorities, and the unset-value reporting already written for them, are unreachable for want of an assembly point that no task in this file creates. An implementer starting here will find there is no end-to-end path to exercise before there is one to write the test against
+  - ~~**This task presupposes a startup the Python components do not have, measured 2026-08-06 and recorded at [the configuration section](#configuration-and-failing-closed).**~~ **Unblocked 2026-08-08 by T211**, which built it. `config.load()` ~~has no caller in `src/`, and neither does OD-27's `require_priceable` preflight~~ **is called by `src/supervisor/main.py` and `src/runtime/main.py`, and `require_priceable` by the second of the two**; the twelve no-default keys under four authorities are reachable and their reason text is asserted by content in `tests/contract/test_startup_entry_points.py`
+  - **What is still owed here is the half this task actually names, and it is narrower than it was.** T211 exercises the path **in-process**; this exercises it **through the shipped bundle**, which is a different claim — that the images T159 builds run these modules, with the environment T160's compose file supplies, and refuse in a container the same way they refuse on a developer's host. The commands to write it against are `python -m src.supervisor.main` and `python -m src.runtime.main`, and the assertion to carry across is the content one: an exit status alone cannot tell an unset ceiling from a missing interpreter, and a container makes the second more likely rather than less
 - [ ] T172 [P] [US4] Assert every supported-platform surface states **Linux only with no degraded mode**, in `tests/contract/test_platform_statement.py` (**OD-17**, FR-053, SC-027 — a degraded mode is a sandbox missing one of Principle IV bullet 1's terms)
 
 **Checkpoint**: the product is installable and portable across providers inside an operator's own

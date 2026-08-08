@@ -15,6 +15,35 @@ carries a configuration file, and no secret is present in the container's enviro
 state (FR-050). This is the distinction the design turns on: FR-033's injection targets the runtime,
 not the environment a shell runs in.
 
+### The three processes, named — added 2026-08-08 with T211
+
+*"Process start"* went unqualified for as long as the Python components had no process to start at,
+and the schema was reachable only from tests. The three are now:
+
+| Process | Command | Schema it resolves |
+|---|---|---|
+| supervisor | `python -m src.supervisor.main` | `SUPERVISOR_KEYS` |
+| runtime | `python -m src.runtime.main` | `RUNTIME_KEYS` |
+| enforcement point | the `f2a-proxy` binary, `src/proxy/main.go` | its own `LoadConfig(os.Getenv)` |
+
+**Neither Python process resolves both schemas, and the four FR-005 ceilings that appear in both are
+one set of shared `Key` objects rather than two declarations.** Two declarations of one ceiling
+eventually disagree, and the disagreement would be between the process that enforces it and the
+process that reports it.
+
+**Two startup gates run after resolution and before anything is opened or bound**, both on the
+runtime: OD-27's `require_priceable`, so a deployment configured against an unpriced model refuses
+rather than discovering the absence from its first bill; and FR-058's per-result bound, refused
+above one twentieth of the context window. They are **gathered**, not sequenced — an operator whose
+model is unpriced *and* whose bound is over the ceiling learns both at once. That is a deliberate
+departure from the enforcement point, which stops at its first refusal.
+
+**Failure is reported on a human-facing channel, which is neither the trace nor a logging
+framework.** `src/contracts/operator_log.py` is constructed by the entry point and handed downward,
+on `src/proxy/main.go`'s pattern; FR-038's span set is closed and is not a route for an operator
+message. Exit status is `1` for every refusal, because an operator scripting a restart needs
+*refused* to be one thing and the reason belongs in the report.
+
 ## Required, with no default
 
 Startup **fails with a named reason** when any of these is unset. There is no permissive mode.
@@ -66,6 +95,12 @@ credential cannot be logged by a code path that forgets to redact it.
 ## Tests owed
 
 - Each required key unset in turn: startup fails, names the key, and starts nothing.
+  - Owed against `load()` by `tests/contract/test_configuration_failloud.py`, and against the
+    entry points by `tests/contract/test_startup_entry_points.py`. **The second is not a duplicate
+    of the first**: one proves the loader refuses, the other proves something calls it, and the
+    tree spent four authorities' worth of reporting machinery being unreachable on the difference.
+  - **Asserted by content in both.** A case that observes only a non-zero exit cannot tell an unset
+    ceiling from an import error, so each names the key and quotes its `no_default_reason` back.
 - Malformed values for each key: same.
 - A grep-and-shape assertion over a completed session's traces and artifacts: **no credential-shaped
   value present**.

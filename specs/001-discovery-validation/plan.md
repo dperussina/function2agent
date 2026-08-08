@@ -3283,6 +3283,23 @@ the same state. Wiring both is one task and it is not this decision's.
 > re-litigated — is spent along with the deferral it routed, and the general rule it protected is
 > unchanged and now holds tree-wide. **Nothing is re-sized here and no task is minted**, which this
 > entry required of anyone touching it and remains true of closing it.
+>
+> ---
+>
+> **✅ CONFIRMED 2026-08-08 BY THE ARTIFACT ARRIVING — the entry point exists, it opens the store,
+> and the prediction held.** The discharge above was written against an entry point that had not
+> been built; `src/supervisor/main.py` is now that process (**T211**), and it constructs a
+> `SessionTable` against `$F2A_STATE_DIR/sessions.db` on every successful startup. **Re-measured
+> through the entry point rather than inherited from the migration's own figures**, because the
+> claim being checked is about this artifact and the earlier measurement was about `SessionTable`:
+> four supervisor entry points meeting a barrier on one cold state directory, twelve trials of four
+> cold first-opens — **0 losers over 48 opens**, and the `session` table present in all twelve. That
+> reproduces the post-migration reading (0 of 12) against the pre-migration one (8 of 12 trials with
+> a loser, 17 losers over 48). **This entry stays discharged and is not reopened**; the paragraph
+> exists because a condition satisfied *in advance of* the event it names should be seen to hold when
+> the event arrives, and an entry that was never re-read after its trigger fired would be OD-24's
+> failure in the one direction this record was built to foreclose. **Nothing is re-sized and the
+> minted task carries no estimate.**
 
 **Decided 2026-08-06**, answering the one question
 [finding 033](../002-spec-aware-agent-runtime/findings/033-session-table-wal-race-unreachable-and-owed-to-migration.md)
