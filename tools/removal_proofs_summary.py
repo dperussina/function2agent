@@ -71,12 +71,30 @@ REASONS = {
         "would prove nothing"
     ),
     "test-skipped-in-baseline": (
-        "the test did not run in this environment (privilege or platform), so "
-        "the mechanism was NOT exercised here"
+        "pytest skipped this proof's test in this run's baseline, so the "
+        "mechanism was NOT exercised here. The harness prints pytest's own "
+        "recorded reason beside the arm; it does not name a cause of its own, "
+        "because the text that used to stand here — 'privilege or platform' — "
+        "was a diagnosis nothing had established and was measured wrong"
     ),
     "no-go-toolchain": (
         "no Go toolchain on PATH, so this cross-language arm was NOT exercised "
-        "here"
+        "here. RETIRED as an outcome on 2026-08-08: a missing toolchain aborts "
+        "the run instead of skipping its arms. Kept so that records written "
+        "before that date still read"
+    ),
+    "baseline-verdict-unreadable": (
+        "this proof's test appears in the baseline with no outcome on its line, "
+        "so the harness could not establish that it passed untampered and did "
+        "NOT attempt the arm. `pytest -v` writes the verdict on the node id's "
+        "own line and any write reaching the real stdout splits the two. Never "
+        "scored as skipped: a skip says the environment declined the test, and "
+        "nothing declined this one"
+    ),
+    "go-arm-past-the-toolchain-abort": (
+        "a Go arm reached the scorer with no toolchain present, which the "
+        "baseline's abort exists to prevent; its declaration is not matched by "
+        "the count that guards it. Refused rather than scored either way"
     ),
     "tamper-matched-nothing": (
         "the tamper matched nothing; the source moved under this proof"
@@ -156,7 +174,13 @@ def _environment(have_go: bool) -> dict:
     return env
 
 
-def _caveats(env: dict, have_go: bool, skipped: int, probed_go: bool = True) -> list[str]:
+def _caveats(
+    env: dict,
+    have_go: bool,
+    skipped: int,
+    probed_go: bool = True,
+    unreadable: int = 0,
+) -> list[str]:
     out = [
         "Kernel {kernel} on {system}/{machine}. Four arms — pivot_root, "
         "MS_REMOUNT, pids.max and cgroup attach ordering — are attempted only "
@@ -183,9 +207,10 @@ def _caveats(env: dict, have_go: bool, skipped: int, probed_go: bool = True) -> 
             "A Go toolchain was present, so the cross-language conformance and "
             "FR-017 arms were attempted."
             if have_go
-            else "NO Go toolchain was present, so every cross-language "
-            "conformance and FR-017 arm was SKIPPED and this total is not "
-            "comparable with one taken where Go was installed."
+            else "NO Go toolchain was present. Since 2026-08-08 that aborts the "
+            "run rather than skipping its arms, so a COMPLETE record should "
+            "never carry this sentence; if one does, the Go arms went missing "
+            "from a total that was reported anyway."
         )
     out.append(
         "The baseline is the whole suite run untampered in this same tree, "
@@ -198,6 +223,14 @@ def _caveats(env: dict, have_go: bool, skipped: int, probed_go: bool = True) -> 
             "{} arm(s) were NOT exercised in this environment. The proved count "
             "is a statement about the arms that ran, not about the mechanism "
             "set as a whole.".format(skipped)
+        )
+    if unreadable:
+        out.append(
+            "{} arm(s) name a test whose baseline line carries NO verdict, so "
+            "the harness could not establish that it passed untampered and did "
+            "not attempt the arm. These are counted apart from the skips on "
+            "purpose: a skip is an arm the environment declined, and nothing "
+            "declined these. This run is not green.".format(unreadable)
         )
     return out
 
@@ -254,7 +287,13 @@ def write(out_path: str) -> int:
         unproven = _int_or_none("F2A_FAIL") or 0
         skipped = _int_or_none("F2A_SKIP") or 0
         timed_out = _int_or_none("F2A_TIMEOUT") or 0
-        if proved + unproven + skipped + timed_out != len(proofs):
+        # Its own total, not folded into `unproven` or `skipped`. An arm whose
+        # baseline verdict could not be read was never attempted, so `unproven`
+        # would overstate it; and it is not an arm the environment declined, so
+        # `skipped` would hide it in the one bucket where a lost arm is invisible.
+        # Same reasoning as `timed_out`, which finding 032 settled.
+        unreadable = _int_or_none("F2A_UNREADABLE") or 0
+        if proved + unproven + skipped + timed_out + unreadable != len(proofs):
             doc["status"] = "inconsistent"
         doc["baseline"] = {
             "python_outcomes": _int_or_none("F2A_PY_TOTAL"),
@@ -267,6 +306,7 @@ def write(out_path: str) -> int:
             "unproven": unproven,
             "skipped": skipped,
             "timed_out": timed_out,
+            "unreadable": unreadable,
             "entries_recorded": len(proofs),
         }
         doc["skipped_titles"] = [p["title"] for p in proofs if p["outcome"] == "skipped"]
@@ -276,8 +316,13 @@ def write(out_path: str) -> int:
         doc["timed_out_titles"] = [
             p["title"] for p in proofs if p["outcome"] == "timed-out"
         ]
+        doc["unreadable_titles"] = [
+            p["title"] for p in proofs if p["outcome"] == "unreadable"
+        ]
         doc["proofs"] = proofs
-        doc["what_this_is_a_property_of"] = _caveats(env, have_go, skipped)
+        doc["what_this_is_a_property_of"] = _caveats(
+            env, have_go, skipped, unreadable=unreadable
+        )
 
     body = json.dumps(doc, indent=2, sort_keys=True) + "\n"
     with open(out_path, "w", encoding="utf-8") as handle:
@@ -365,13 +410,25 @@ def render(in_path: str) -> int:
     # to render. A missing key means the run predates the cap, not that it had
     # none — see the timed-out section below, which says so.
     timed_out = totals.get("timed_out", 0)
+    # Same reasoning as `timed_out` above: absent from every record written before
+    # 2026-08-08, and a missing key means the run predates the outcome rather than
+    # that it had none.
+    unreadable = totals.get("unreadable", 0)
 
     print("## Removal proofs\n")
-    print("| proved | unproven | **skipped** | **timed out** | entries |")
-    print("|---:|---:|---:|---:|---:|")
     print(
-        "| {} | {} | **{}** | **{}** | {} |\n".format(
-            proved, unproven, skipped, timed_out, totals.get("entries_recorded")
+        "| proved | unproven | **skipped** | **timed out** | "
+        "**baseline unreadable** | entries |"
+    )
+    print("|---:|---:|---:|---:|---:|---:|")
+    print(
+        "| {} | {} | **{}** | **{}** | **{}** | {} |\n".format(
+            proved,
+            unproven,
+            skipped,
+            timed_out,
+            unreadable,
+            totals.get("entries_recorded"),
         )
     )
     print("Measured on {}.\n".format(ident))
@@ -394,6 +451,21 @@ def render(in_path: str) -> int:
         print()
     else:
         print("Every declared arm was exercised in this environment.\n")
+
+    if unreadable:
+        print(
+            "### {} arm(s) name a test with NO baseline verdict\n\n"
+            "These were never attempted, and they are **not** skips. `pytest -v` "
+            "writes a test's verdict on the same line as its node id, so anything "
+            "the test writes to the real stdout while it runs pushes the verdict "
+            "onto the next line and the harness can no longer read it. A skip "
+            "says the environment declined the test; nothing declined "
+            "these.\n".format(unreadable)
+        )
+        for proof in doc.get("proofs", []):
+            if proof["outcome"] == "unreadable":
+                print("- **{}** — {}".format(proof["title"], proof.get("reason_text")))
+        print()
 
     if timed_out:
         print(

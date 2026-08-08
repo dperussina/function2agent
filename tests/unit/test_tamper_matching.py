@@ -37,6 +37,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -59,7 +60,7 @@ sys.path.insert(0, str(REPO / "tools"))
 #:
 #: Changing the proof set is meant to edit this line. That coupling is the
 #: mechanism and not an inconvenience: a silent drop from 66 to 65 is the rot.
-EXPECTED_PROOFS = 222
+EXPECTED_PROOFS = 231
 
 from tamper import (  # noqa: E402
     AMBIGUOUS,
@@ -312,10 +313,37 @@ _TAMPERED = (
 
 
 def _import_and_ask(package: pathlib.Path) -> str:
+    """Import `guarded` in a child that is *required* to cache bytecode.
+
+    The child's bytecode policy is set here rather than inherited, because the
+    dev and sandbox images both ship `PYTHONDONTWRITEBYTECODE=1`
+    (`deploy/images/dev.Dockerfile`, `deploy/images/sandbox.Dockerfile`) and an
+    inheriting child writes no `.pyc` at all — so the arm below could not plant
+    the collision it is named for, and failed inside the container as shipped.
+
+    **Why this is forced rather than skipped, and rather than fixed in the
+    image.** The arm does not exist to detect the hazard in the environment it
+    happens to be run in; it exists so that `drop_bytecode` in
+    `tests/removal_proofs.sh` cannot be deleted as tidying. That is a property of
+    CPython, and it has to be checkable wherever the suite runs — most of all in
+    the container, because the container is the documented environment for the
+    harness the mitigation belongs to, and whoever deletes the `rm` may never run
+    the suite anywhere else. A skip keyed on `PYTHONDONTWRITEBYTECODE` would put
+    the blind spot exactly there.
+
+    Unsetting the variable in the image was the other candidate and is worse in
+    two ways. The tree is bind-mounted, so the container would start writing
+    `.pyc` files into it; and it would make the collision *live* in the harness's
+    own run environment in order to make a test about the collision pass, which
+    is backwards. Forcing it for one child in `tmp_path` leaves the image's
+    property intact and writes nothing outside the temporary directory.
+    """
+    env = dict(os.environ)
+    env.pop("PYTHONDONTWRITEBYTECODE", None)
     return subprocess.run(
         [sys.executable, "-c",
          "import guarded; print(guarded.reachable(True, 'tenant'))"],
-        cwd=str(package), capture_output=True, text=True, check=True,
+        cwd=str(package), capture_output=True, text=True, check=True, env=env,
     ).stdout.strip()
 
 
@@ -340,7 +368,9 @@ def test_a_tampered_module_of_the_same_size_is_read_from_a_stale_pyc(tmp_path):
     source.write_text(_GUARDED)
     assert _import_and_ask(package) == "False", "the guard is not being read"
     assert (package / "__pycache__").is_dir(), (
-        "no bytecode was cached, so this arm cannot be about stale bytecode"
+        "no bytecode was cached, so this arm cannot be about stale bytecode. "
+        "_import_and_ask clears PYTHONDONTWRITEBYTECODE for the child precisely "
+        "so that this holds inside the images, which set it"
     )
 
     stamp = source.stat().st_mtime
@@ -362,6 +392,39 @@ def test_a_tampered_module_of_the_same_size_is_read_from_a_stale_pyc(tmp_path):
         "dropping the cached bytecode did not make the tampered source take "
         "effect, so removing __pycache__ is not the mitigation"
     )
+
+
+def test_the_stale_pyc_arm_plants_its_hazard_where_the_images_disable_bytecode():
+    """The arm above must not go quiet in the environment the harness runs in.
+
+    Both images set `PYTHONDONTWRITEBYTECODE=1`, so a child that inherits the
+    environment writes no `.pyc` and the collision cannot be planted — the arm
+    above failed inside the container as shipped, on a tree whose suite was
+    otherwise green. This asserts the *forcing* rather than the outcome: the
+    variable is set here deliberately, so the assertion fails on any host once
+    `_import_and_ask` stops clearing it, and not only on the hosts that happen to
+    set it.
+
+    Skipping the arm when the variable is set was the obvious repair and is the
+    wrong one. It would put the blind spot precisely in the container, which is
+    the documented environment for `tests/removal_proofs.sh` — the instrument the
+    mitigation belongs to — so the one person who could delete the `rm` without
+    being told is the one who only ever runs the suite there.
+    """
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("PYTHONDONTWRITEBYTECODE", "1")
+        with tempfile.TemporaryDirectory() as raw:
+            package = pathlib.Path(raw) / "pkg"
+            package.mkdir()
+            (package / "guarded.py").write_text(_GUARDED)
+            assert _import_and_ask(package) == "False", "the guard is not read"
+            assert (package / "__pycache__").is_dir(), (
+                "PYTHONDONTWRITEBYTECODE was set and reached the child, so no "
+                "bytecode was cached and the arm above cannot plant the stale-pyc "
+                "collision it is named for. It would pass on a host that does not "
+                "set the variable and fail inside both images, which is the "
+                "opposite of where the check is needed."
+            )
 
 
 def test_the_harness_drops_cached_bytecode_around_every_tamper():

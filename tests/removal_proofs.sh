@@ -80,6 +80,10 @@
 set -uo pipefail
 
 SRC=$(pwd)
+# This file's own path, resolved before the `cd` below. It is read once, to count
+# the Go arms it declares — see the toolchain check under the baseline for why
+# that count and not a fixed expectation about the environment.
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cp -r "$SRC/src" "$SRC/tests" "$SRC/tools" "$SRC/pyproject.toml" "$WORK/" 2>/dev/null
@@ -101,7 +105,10 @@ BASELINE_GO="$WORK/.baseline-go.txt"
 # (macOS ships none) and why a timed-out arm gets its own outcome below.
 #
 # 300s is chosen against a measurement, not a feeling: the whole untampered
-# suite is 980 outcomes in ~10s on the machine this was set on, and a proof runs
+# suite is ~1300 outcomes in a couple of minutes. Both readings 2026-08-08, and
+# both platforms are named because the SKIP half of any such figure is a property
+# of the platform and not of the suite: privileged on Linux 6.12.76-linuxkit in
+# the dev image, and unprivileged on macOS 26.2. A proof runs
 # **one** test. The slowest arms are the kernel-mechanism ones and they are
 # seconds. So this is two orders of magnitude above any arm that is working, and
 # an arm that reaches it is not slow — it is not coming back. Raise it with
@@ -128,6 +135,12 @@ SKIP=0
 # it into either existing bucket loses the one fact worth keeping. It carries
 # the same weight as FAIL in the exit status at the foot of this file.
 TIMEOUT=0
+# Counted apart from SKIP for the reason `TIMEOUT` is counted apart from FAIL. A
+# baseline line the harness cannot read a verdict off is not an arm the
+# environment declined to run; it is an arm the harness lost track of, and the
+# bucket it used to land in — `skipped` — is the one bucket where losing it is
+# invisible. See `baseline_py` and `report_unrunnable`.
+UNREADABLE=0
 HAVE_GO=0
 
 # The proof currently running. `_record` reads them so the call sites stay one
@@ -154,6 +167,7 @@ _write_summary () {
   F2A_ABORT_REASON="${2:-}" \
   F2A_RECORDS="$RECORDS" \
   F2A_PASS="$PASS" F2A_FAIL="$FAIL" F2A_SKIP="$SKIP" F2A_TIMEOUT="$TIMEOUT" \
+  F2A_UNREADABLE="$UNREADABLE" \
   F2A_PY_TOTAL="${_py_total:-}" F2A_PY_FAILED="${_py_failed:-}" \
   F2A_GO_TOTAL="${_go_total:-}" F2A_GO_FAILED="${_go_failed:-}" \
   F2A_HAVE_GO="$HAVE_GO" \
@@ -172,7 +186,21 @@ echo
 # ---------------------------------------------------------------------------
 # The baseline. Nothing below is attempted until this says the suite runs.
 
-python3 -m pytest tests -v --tb=no -p no:cacheprovider >"$BASELINE_PY" 2>&1
+# `-rs` is load-bearing and not a nicety. Without it the baseline records THAT a
+# test was skipped and not WHY, and the harness used to fill the gap with a guess
+# — every skipped arm was printed "(privilege or platform)" whether or not
+# anybody had established that. Measured on 2026-08-08: run through a login shell
+# that drops the Go toolchain off PATH, two T114 arms were skipped because the
+# enforcement point could not be built, and the harness reported both of them as
+# privilege or platform. pytest had the real reason and the harness discarded it.
+#
+# The `-rs` block is keyed by the file and line the skip was raised at, not by
+# node id, so `baseline_skip_reason` attributes by file. That is weaker than
+# per-test and it is a reading rather than an invention, which is the whole
+# difference. Its lines begin at column zero with `SKIPPED [n] `, so they are
+# matched by nothing that reads this file: `_py_total` requires a space before
+# the verdict, and `baseline_py`'s two patterns are anchored on a node id.
+python3 -m pytest tests -v -rs --tb=no -p no:cacheprovider >"$BASELINE_PY" 2>&1
 if ! grep -qE ' (PASSED|FAILED|SKIPPED|ERROR|XFAIL|XPASS)' "$BASELINE_PY"; then
   echo "  CANNOT RUN — pytest produced no test outcomes at all in this environment."
   echo
@@ -191,7 +219,69 @@ fi
 _py_total=$(grep -cE ' (PASSED|FAILED|SKIPPED|ERROR|XFAIL|XPASS)' "$BASELINE_PY")
 _py_failed=$(grep -cE ' (FAILED|ERROR)' "$BASELINE_PY")
 
+# ---------------------------------------------------------------------------
+# The Go toolchain, and why its absence aborts rather than skipping.
+#
+# `0caf257` — "Stop the removal-proof harness from scoring an environment as a
+# result" — settled this for the Python side: an environment that cannot run the
+# suite gets a refusal to report a number, not a clean sweep. The Go side did not
+# get the same ruling and degraded quietly instead, and the asymmetry was
+# measured rather than reasoned.
+#
+# On 2026-08-08, on one tree at `821ef70`, in one image, differing only in the
+# shell the harness was invoked through:
+#
+#     bash -c  'bash tests/removal_proofs.sh'   ->  222 proved, 0 unproven      exit 0
+#     bash -lc 'bash tests/removal_proofs.sh'   ->  210 proved, 0 unproven,
+#                                                   12 skipped                  exit 0
+#
+# `go` lives at `/usr/local/go/bin/go` in the dev image and `bash -l` sources
+# `/etc/profile`, which rebuilds PATH without it. So HOW THE HARNESS IS INVOKED
+# decided whether twelve proofs ran, and both runs were green. CI already carries
+# a hand-written workaround for the same hazard from a different direction —
+# `sudo -E env "PATH=$PATH"` in `.github/workflows/ci.yml`, because plain `sudo`
+# resets PATH too — which is the second known route into this state and the
+# reason a guard belongs here rather than in each invocation.
+#
+# The condition is "this file declares Go arms and there is no toolchain", not
+# "Go is missing". A tree with no Go arms needs no Go, and pinning the
+# requirement to the declarations means deleting the arms removes the
+# requirement instead of leaving a check that fails for nothing.
+#
+# Stated as a function with three enumerated answers rather than inline, so the
+# decision can be driven directly — `tests/unit/test_removal_proof_scoring.py`
+# calls it with `go` on and off PATH and with the arm count at zero. An inline
+# `if` could only have been checked by reading it, and this repository's whole
+# position is that reading an instrument is not measuring it.
+#
+# go_toolchain_verdict <declared_go_arms> -> OK | ABORT | NO-GO-ARMS
+go_toolchain_verdict () {
+  if command -v go >/dev/null 2>&1; then echo OK; return; fi
+  if [ "$1" -gt 0 ]; then echo ABORT; return; fi
+  echo NO-GO-ARMS
+}
+
+_go_arms=$(grep -cE '^go_proof "' "$SELF")
 HAVE_GO=0
+if [ "$(go_toolchain_verdict "$_go_arms")" = ABORT ]; then
+  echo "  CANNOT RUN — no Go toolchain on PATH, and ${_go_arms} proofs need one."
+  echo
+  echo "    PATH=$PATH"
+  echo
+  echo "  Those ${_go_arms} arms cover the cross-language capability boundary, which is"
+  echo "  the one place in this repository where two implementations agree only"
+  echo "  because two people wrote the same thing twice. Running the other arms and"
+  echo "  reporting them as a clean sweep is how a degraded run stays green: the"
+  echo "  count moves and the exit status does not."
+  echo
+  echo "  A missing toolchain is an environment, not a result. Install Go, or invoke"
+  echo "  the harness through a shell that keeps it on PATH — note that a LOGIN shell"
+  echo "  (bash -l) and sudo without -E both rebuild PATH and are how this is usually"
+  echo "  reached. In the dev image go is at /usr/local/go/bin/go."
+  _write_summary aborted \
+    "no Go toolchain on PATH while ${_go_arms} proofs declare Go tests, so those arms would have been recorded skipped and the run would have reported a clean sweep over a population ${_go_arms} arms smaller than the one it declares"
+  exit 2
+fi
 if command -v go >/dev/null 2>&1; then
   HAVE_GO=1
   # `-count=1`, for the same reason the pytest baseline above carries
@@ -208,19 +298,62 @@ if command -v go >/dev/null 2>&1; then
   _go_failed=$(grep -cE '^ *--- FAIL: ' "$BASELINE_GO")
   echo "  baseline   ${_py_total} python outcomes (${_py_failed} not passing), ${_go_total} go outcomes (${_go_failed} not passing)"
 else
+  # Reachable only when this file declares no Go arms at all; the check above
+  # aborts otherwise. Named that way rather than "no Go toolchain", because the
+  # two are different facts and only one of them is a reason to carry on.
   : >"$BASELINE_GO"
-  echo "  baseline   ${_py_total} python outcomes (${_py_failed} not passing), no Go toolchain"
+  echo "  baseline   ${_py_total} python outcomes (${_py_failed} not passing), no Go arms declared"
 fi
 echo
 
 # _escape turns a pytest node id into something grep -E will match literally.
 _escape () { printf '%s' "$1" | sed 's/[][\.*^$(){}?+|\/]/\\&/g'; }
 
-# baseline_py: PASSED | SKIPPED | FAILED | ABSENT, for a node id or a file.
+# baseline_py: PASSED | SKIPPED | FAILED | ABSENT | UNREADABLE, for a node id or
+# a file.
 #
 # ABSENT is the one that had no detection at all before. A renamed test makes
 # `pytest` exit 4, the harness read any non-zero exit as the mechanism being
 # load-bearing, and the proof reported `proved` while running nothing.
+#
+# ---------------------------------------------------------------------------
+# UNREADABLE, AND WHY IT IS A SEPARATE OUTCOME RATHER THAN A BETTER SKIP
+#
+# This function used to end `echo SKIPPED` with no test in front of it — a
+# classifier stated as a complement, which is the defect
+# `specs/002-spec-aware-agent-runtime/findings/032-removal-proof-signal-fabrication.md`
+# established for `proof()`'s exit statuses and which was still standing here,
+# twenty lines above it, in the same file. The accepting set for `SKIPPED` was
+# "not absent, not failed, not passed", so every way a baseline line can fail to
+# carry a verdict landed in it.
+#
+# There is at least one such way and it is reachable with capture ON. `pytest -v`
+# writes the node id, runs the test, then writes the verdict on the SAME line —
+# so anything that reaches the real file descriptor 1 while the test runs pushes
+# the verdict onto a line of its own. Planted and measured on 2026-08-08:
+#
+#   def test_positive(capfd):
+#       with capfd.disabled():
+#           print("output that reaches the terminal mid-line")
+#
+#   test_r1_plant.py::test_r1_positive_prints_past_capture output that reaches …
+#   PASSED            [ 66%]
+#
+# `baseline_py` returned SKIPPED for that passing test. `capfd.disabled()` is one
+# route; `-s` and `PYTEST_ADDOPTS=-s` are others, and none of them is visible to
+# a reader of the harness output.
+#
+# **Why this is worse than the hang in finding 032, and the reason for the fourth
+# outcome.** A fabricated `proved` stood out as anomalous. A fabricated `skipped`
+# does not: `skipped` is a LEGITIMATE outcome that occurs 2-13 times in every
+# unprivileged or non-Linux run, so a lost proof hides inside a population of
+# correctly-skipped ones and nothing in the output tells them apart. The two
+# states DO differ in the baseline text — a legitimately skipped test has a line
+# carrying ` SKIPPED`, a lost one has a line carrying no verdict at all — and the
+# fall-through was the only thing throwing that difference away.
+#
+# So `SKIPPED` now requires pytest to have said so, and the residue gets its own
+# name, its own counter and FAIL's weight in the exit status.
 baseline_py () {
   local sel esc out
   sel="$1"
@@ -232,7 +365,31 @@ baseline_py () {
   if [ -z "$out" ]; then echo ABSENT; return; fi
   if echo "$out" | grep -qE ' (FAILED|ERROR)'; then echo FAILED; return; fi
   if echo "$out" | grep -qE ' PASSED'; then echo PASSED; return; fi
-  echo SKIPPED
+  # Enumerated, never a fall-through. XFAIL and XPASS are named here because
+  # neither is a usable baseline — a proof needs a test that PASSED untampered —
+  # and because leaving them out would make them UNREADABLE, which would be a
+  # true statement about the harness and a misleading one about the test.
+  #
+  # A file-level selector legitimately matches lines with no verdict on them:
+  # `-rs` aside, the warnings summary repeats node ids on bare lines. That is why
+  # the question is "did ANY matched line carry a verdict", asked in precedence
+  # order above, and not "did every matched line carry one".
+  if echo "$out" | grep -qE ' (SKIPPED|XFAIL|XPASS)'; then echo SKIPPED; return; fi
+  echo UNREADABLE
+}
+
+# baseline_skip_reason: the reason PYTEST recorded, or empty.
+#
+# The `-rs` block is keyed by the file and line the skip was raised at, so this
+# attributes by the target's BASENAME — unique across the 69 test files as of
+# 2026-08-08, and the reason an empty result is reported as "none recorded"
+# rather than filled in. The harness's previous text asserted a cause; this one
+# quotes one or says it has none.
+baseline_skip_reason () {
+  local base
+  base=$(basename "${1%%::*}")
+  grep -E "^SKIPPED \[[0-9]+\] .*$(_escape "$base"):[0-9]+: " "$BASELINE_PY" \
+    | sed -E 's/^SKIPPED \[[0-9]+\] [^ ]*: //' | sort -u | head -2 | tr '\n' ' '
 }
 
 # baseline_go: the same question for a `-run` alternation. Every named test must
@@ -266,9 +423,38 @@ report_unrunnable () {
       _record unproven test-already-failing
       FAIL=$((FAIL+1)); return 0 ;;
     SKIPPED)
-      echo "  SKIPPED   $name — the test did not run here (privilege or platform)"
+      # The reason pytest gave, never a reason the harness inferred. The text
+      # that used to stand here — "(privilege or platform)" — was a diagnosis
+      # nothing had established, and on 2026-08-08 it was measured wrong: two
+      # T114 arms lost to a missing Go toolchain were both reported as privilege
+      # or platform while pytest's own reason said "install a Go toolchain".
+      local why
+      why=$(baseline_skip_reason "$test")
+      echo "  SKIPPED   $name"
+      echo "            pytest skipped $test in this run's baseline."
+      if [ -n "$why" ]; then
+        echo "            Its reason: $why"
+      else
+        echo "            It recorded no reason this harness could attribute, which is"
+        echo "            itself worth reading: a skip with no reason is a skip nobody"
+        echo "            can check. The mechanism was NOT exercised here."
+      fi
       _record skipped test-skipped-in-baseline
       SKIP=$((SKIP+1)); return 0 ;;
+    UNREADABLE)
+      # Neither of the two things it superficially resembles, on exactly
+      # `report_timeout`'s reasoning. Not `skipped`, because a skip means the
+      # environment declined to run the test and the skip count is read as the
+      # population this run did not cover — and here the test may well have
+      # passed. Not `proved` or `unproven`, because no tamper was applied.
+      echo "  NO VERDICT $name"
+      echo "            $test appears in the baseline with NO outcome on its line."
+      echo "            pytest -v writes the verdict on the same line as the node id, so"
+      echo "            anything the test writes to the real stdout splits them. This arm"
+      echo "            was NOT attempted, and it is not scored as skipped: a skip is an"
+      echo "            arm the environment declined, and nobody declined this one."
+      _record unreadable baseline-verdict-unreadable
+      UNREADABLE=$((UNREADABLE+1)); return 0 ;;
   esac
   return 1
 }
@@ -649,10 +835,19 @@ proof "OD-27 operator prices — a default added beside its own no-default reaso
 go_proof () {
   local name="$1" file="$2" test="$3" python_edit="$4"
   _P_NAME="$name"; _P_FILE="$file"; _P_TEST="$test"; _P_DRIFTED=no
+  # Unreachable by design: the toolchain check under the baseline aborts when this
+  # file declares Go arms and no `go` is on PATH. It is kept, and turned from a
+  # skip into a refusal, because the count that check reads is `^go_proof "` and
+  # a declaration this function still receives without matching that anchor — an
+  # indented one, which is the exact rot `tools/check_tampers.py` was written
+  # against — would arrive here. Scoring that as a skip is how twelve arms went
+  # missing from a green run in the first place.
   if [ "$HAVE_GO" -eq 0 ]; then
-    echo "  SKIPPED   $name — no Go toolchain on PATH"
-    _record skipped no-go-toolchain
-    SKIP=$((SKIP+1))
+    echo "  CANNOT RUN $name — no Go toolchain, and the abort above did not fire."
+    echo "            This arm's declaration is not matched by the count that guards"
+    echo "            it. Refusing to score it either way."
+    _record unreadable go-arm-past-the-toolchain-abort
+    UNREADABLE=$((UNREADABLE+1))
     return
   fi
   local verdict
@@ -2475,13 +2670,93 @@ proof "T116 stated size — a measured figure drops off the list the README must
   "tests/unit/test_reference_app.py::test_the_readme_states_the_size_that_was_measured" \
   's = s.replace("STATED_IN_README = (\n    \x22application_files\x22,", "STATED_IN_README = (\n    # removed\n")'
 
+# --- The harness's own scorer, and the record it writes ----------------------
+#
+# These nine arms tamper `tests/removal_proofs.sh` and
+# `tools/removal_proofs_summary.py` — this instrument and its record. That is a
+# new target for this file and it is safe for the reason the header gives: every
+# tamper lands on the COPY under `mktemp -d`, and the copy is read by the tests
+# below rather than executed, so the running script is never the tampered one.
+#
+# They exist because the scorer is where every silent failure this instrument has
+# had so far has lived, and until now nothing tested it. `finding 032` repaired
+# `proof()`'s exit-status classifier and shipped no test with the repair; the
+# defect these arms cover was the same mistake twenty lines above it in the same
+# file, and it survived that pass untouched.
+
+proof "harness scorer — the SKIPPED fall-through restored, so a passing test reads as skipped" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_a_passing_test_whose_verdict_moved_to_the_next_line_is_not_scored_skipped" \
+  's = s.replace("  if echo \x22$out\x22 | grep -qE " + chr(39) + " (SKIPPED|XFAIL|XPASS)" + chr(39) + "; then echo SKIPPED; return; fi\n  echo UNREADABLE", "  echo SKIPPED")'
+
+proof "harness scorer — an unreadable baseline counted as a skip, where a lost arm is invisible" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_an_unreadable_baseline_is_counted_apart_from_the_skips" \
+  's = s.replace("      _record unreadable baseline-verdict-unreadable\n      UNREADABLE=$((UNREADABLE+1)); return 0 ;;", "      _record unreadable baseline-verdict-unreadable\n      SKIP=$((SKIP+1)); return 0 ;;")'
+
+proof "harness scorer — the skip reason is invented again instead of read off the baseline" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_the_skip_reason_reported_is_the_one_pytest_recorded" \
+  's = s.replace("      why=$(baseline_skip_reason \x22$test\x22)", "      why=\x22\x22")'
+
+proof "harness scorer — the baseline stops asking pytest why it skipped anything" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_the_baseline_asks_pytest_for_the_reasons_it_will_later_quote" \
+  's = s.replace("python3 -m pytest tests -v -" + "rs --tb=no", "python3 -m pytest tests -v --tb=no")'
+
+proof "harness scorer — a missing Go toolchain goes back to being a skip, not an abort" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_a_missing_toolchain_aborts_when_go_arms_are_declared" \
+  's = s.replace("  if [ \x22$1\x22 -gt 0 ]; then echo ABORT; return; fi\n", "")'
+
+proof "harness scorer — the unreadable count dropped from the exit status" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_an_unreadable_baseline_carries_weight_in_the_exit_status" \
+  's = s.replace("[ \x22$FAIL\x22 -eq 0 ] && [ \x22$TIMEOUT\x22 -eq 0 ] && [ \x22$UNREADABLE\x22 -eq 0 ]", "[ \x22$FAIL\x22 -eq 0 ] && [ \x22$TIMEOUT\x22 -eq 0 ]")'
+
+proof "harness record — the unreadable total dropped, so the lost arm is not in the record" \
+  tools/removal_proofs_summary.py \
+  "tests/unit/test_removal_proof_scoring.py::test_the_record_counts_an_unreadable_arm_in_a_total_of_its_own" \
+  's = s.replace("            \x22unreadable\x22: unreadable,\n", "")'
+
+# The other direction of the same record. Dropping the term from the sum does not
+# lose the number, it makes the record call itself `inconsistent` — which spends
+# the one signal that means "no figure here can be trusted" on a run that
+# reconciles perfectly well.
+proof "harness record — the unreadable count left out of the reconciliation sum" \
+  tools/removal_proofs_summary.py \
+  "tests/unit/test_removal_proof_scoring.py::test_the_record_counts_an_unreadable_arm_in_a_total_of_its_own" \
+  's = s.replace("if proved + unproven + skipped + timed_out + unreadable != len(proofs):", "if proved + unproven + skipped + timed_out != len(proofs):")'
+
+# The bytecode arm's own condition. Not a scorer arm, but the same shape: the
+# check went quiet in exactly the environment its subject runs in.
+proof "stale bytecode — the arm inherits the image's PYTHONDONTWRITEBYTECODE and plants nothing" \
+  tests/unit/test_tamper_matching.py \
+  "tests/unit/test_tamper_matching.py::test_the_stale_pyc_arm_plants_its_hazard_where_the_images_disable_bytecode" \
+  's = s.replace("    env.pop(\x22PYTHONDONTWRITEBYTECODE\x22, None)", "    pass")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
 # Named unconditionally when non-zero and never folded into the others, because
 # the whole point of the outcome is that it is visible from the summary line.
 [ "$TIMEOUT" -gt 0 ] && _verdict="$_verdict, $TIMEOUT TIMED OUT"
+# Named here for the same reason TIMED OUT is, and against the same failure: one
+# line about a lost arm, 222 lines down inside a collapsed CI details block, is
+# the quiet form of having no outcome at all. The summary line is the only part
+# of this output anybody reliably reads.
+[ "$UNREADABLE" -gt 0 ] && _verdict="$_verdict, $UNREADABLE BASELINE UNREADABLE"
 echo "$_verdict"
+if [ "$UNREADABLE" -gt 0 ]; then
+  echo
+  echo "  $UNREADABLE arm(s) name a test whose baseline line carries no verdict, so they"
+  echo "  were never attempted. This run is NOT green, and it is NOT a skip: a skip"
+  echo "  says the environment declined the test, and nothing declined these."
+  echo "  Find what the test writes to stdout while it runs and stop it writing —"
+  echo "  \`pytest -v\` puts the verdict on the node id's own line, and a write that"
+  echo "  reaches the real file descriptor 1 pushes it onto the next line. Do not"
+  echo "  reach for \`-s\` or PYTEST_ADDOPTS to read this output; they cause it."
+fi
 if [ "$TIMEOUT" -gt 0 ]; then
   echo
   echo "  $TIMEOUT arm(s) did not return within ${PROOF_TIMEOUT}s and were not measured."
@@ -2492,4 +2767,4 @@ fi
 # describe arms that actually ran. It reports; it decides nothing — the line
 # below is still the only thing that carries the exit status.
 _write_summary complete
-[ "$FAIL" -eq 0 ] && [ "$TIMEOUT" -eq 0 ]
+[ "$FAIL" -eq 0 ] && [ "$TIMEOUT" -eq 0 ] && [ "$UNREADABLE" -eq 0 ]
