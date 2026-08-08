@@ -363,6 +363,17 @@ nonexistent *file* — and the harness run:
 Both scored **unproven**, and the harness exited non-zero. Restoring the file and re-running returns
 `92 proved, 0 unproven, 6 skipped`.
 
+> **Amendment, 2026-08-08, [finding 034](./034-removal-proof-skip-collapse-and-toolchain-degradation.md).**
+> **The two totals above do not name the platform they were taken on, and the skip half of them is a
+> property of the platform rather than of the proof set.** The six skipped arms are the
+> kernel-mechanism ones; they are attempted where a Linux kernel and root are available and skipped
+> everywhere else, so `6 skipped` and `0 skipped` are the same instrument over two different
+> populations. Measured on 2026-08-08 at `821ef70`, which is not this document's tree: the same
+> harness reads **0 skipped** in a privileged Linux container and **13 skipped** unprivileged on
+> macOS. This note names the ambiguity and **does not resolve it** — this pass did not re-run
+> `027`'s tree, and the platform those two figures were taken on is not recoverable from the
+> document. The rest of §5 is unaffected: it is about whether the guards fire, which they did.
+
 **Three independent guards catch it, and each was checked separately rather than assumed from the
 first one's success.**
 
