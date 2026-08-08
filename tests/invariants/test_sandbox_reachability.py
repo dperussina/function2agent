@@ -60,6 +60,22 @@ def _sandbox_sources() -> list[Path]:
     return found
 
 
+#: Files under a declared root that are *about* the sandbox rather than
+#: resident in it. They are still scanned — a literal destination in one would
+#: still be a finding and the scan is free — but they do not count as coverage,
+#: because INV-003's subject is code that runs inside the sandbox and can
+#: therefore reach a second destination at run time.
+#:
+#: Added 2026-08-08 under T096. `image_policy.py` reads
+#: `deploy/images/sandbox.Dockerfile` at build and test time and never executes
+#: in a sandbox. Without this entry its arrival flipped the vacuity report from
+#: "scans nothing" to "covered" — INV-003 would have started reading as a live
+#: reachability check on the strength of a Dockerfile linter, which is the same
+#: failure the `__init__.py` exclusion below already exists to prevent, one
+#: level up.
+NOT_SANDBOX_RESIDENT = frozenset({"image_policy.py"})
+
+
 def _sandbox_modules() -> list[Path]:
     """The files that count as *coverage*, which package markers do not.
 
@@ -68,7 +84,11 @@ def _sandbox_modules() -> list[Path]:
     cannot contain a destination, which is a worse failure than the vacuity it
     was meant to disclose.
     """
-    return [p for p in _sandbox_sources() if p.name != "__init__.py"]
+    return [
+        p
+        for p in _sandbox_sources()
+        if p.name != "__init__.py" and p.name not in NOT_SANDBOX_RESIDENT
+    ]
 
 
 def literal_destinations(paths: list[Path]) -> list[str]:
@@ -113,6 +133,34 @@ def test_a_package_marker_does_not_count_as_coverage() -> None:
     assert not set(markers) & set(_sandbox_modules())
 
 
+def test_every_non_resident_exclusion_names_a_file_that_exists() -> None:
+    """A stale exclusion is a hole nobody can see.
+
+    If `image_policy.py` is renamed or deleted the entry stops excluding
+    anything and starts silently permitting a *future* file of that name to be
+    dropped from coverage. Either way the list must name real files.
+    """
+    scanned = {p.name for p in _sandbox_sources()}
+    stale = sorted(NOT_SANDBOX_RESIDENT - scanned)
+    assert not stale, (
+        f"{stale} is excluded from INV-003's coverage count and no longer "
+        "exists under any declared root. Remove the entry, or fix the root."
+    )
+
+
+def test_a_non_resident_module_is_still_scanned() -> None:
+    """Excluded from coverage is not excluded from the scan.
+
+    The exclusion is about what the vacuity report may claim, not about which
+    files may contain a destination. A build-time module that named a package
+    index would still be worth hearing about.
+    """
+    excluded = [p for p in _sandbox_sources() if p.name in NOT_SANDBOX_RESIDENT]
+    assert excluded, "the exclusion covers nothing, so this guard is vacuous"
+    assert set(excluded) <= set(_sandbox_sources())
+    assert literal_destinations(excluded) == []
+
+
 def test_the_scanner_permits_the_enforcement_point(tmp_path: Path) -> None:
     permitted = tmp_path / "client.py"
     permitted.write_text('BASE = "http://enforcement-point:8080"\n')
@@ -154,6 +202,12 @@ def test_the_scan_reports_whether_it_covered_anything(record_property) -> None:
     the terminal summary rather than as one skip line among many. When the
     first sandbox-side module lands the summary stops printing and the
     invariant starts carrying weight.
+
+    **Still vacuous after T096.** `src/sandbox/` is no longer empty, but what
+    landed in it is a build-time Dockerfile policy checker, which cannot reach
+    anything at run time because it does not run at run time. See
+    `NOT_SANDBOX_RESIDENT`. The first module that actually executes inside the
+    sandbox is what turns this off.
     """
     sources = _sandbox_modules()
     record_property("inv003_modules_scanned", len(sources))
@@ -162,9 +216,12 @@ def test_the_scan_reports_whether_it_covered_anything(record_property) -> None:
 
         conftest.note_vacuous_invariant(
             "INV-003",
-            "no sandbox-side module exists, so the static arm scans nothing. "
-            "The topological arm (one route, no NET_ADMIN, no raw sockets) is "
-            "what carries FR-014 until then.",
+            "no module that runs inside the sandbox exists, so the static arm "
+            "scans nothing that could reach a destination. src/sandbox/ holds "
+            "a build-time Dockerfile policy checker (T096), which is about "
+            "the sandbox rather than resident in it. The topological arm (one "
+            "route, no NET_ADMIN, no raw sockets) is what carries FR-014 "
+            "until then.",
         )
         pytest.skip("vacuous: see the terminal summary")
     assert sources

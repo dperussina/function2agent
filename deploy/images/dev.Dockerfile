@@ -28,16 +28,35 @@ RUN apt-get update \
       util-linux procps strace ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# Go, for the enforcement point (Q-01). Pinned by version and checksum: an
-# unpinned toolchain download is dependency resolution at build time wearing a
-# different name, and FR-021 does not distinguish.
+# Go, for the enforcement point (Q-01).
+#
+# **Corrected 2026-08-08 under T096.** This block's comment said "pinned by
+# version and checksum" and the block verified no checksum. The version was
+# pinned and the bytes were whatever the download served, which is an unpinned
+# toolchain download — dependency resolution at build time wearing a different
+# name, and FR-021 does not distinguish. `src/sandbox/image_policy.py` reads
+# this file and reports it as SBX-IMG-005.
+#
+# `GO_SHA256` has **no default**, so a build without one fails here and says
+# so. A default would have to be a checksum for one version and one
+# architecture, invented rather than observed, and an invented default that
+# happens to match nothing is worse than the omission it replaces: it reads as
+# verification and passes only where nobody looks.
 ARG GO_VERSION=1.24.3
 ARG TARGETARCH=arm64
+ARG GO_SHA256
 RUN set -eux; \
+    if [ -z "${GO_SHA256:-}" ]; then \
+      echo "GO_SHA256 is required: pass the checksum published for"; \
+      echo "go${GO_VERSION}.linux-${TARGETARCH}.tar.gz at https://go.dev/dl/"; \
+      echo "  docker build --build-arg GO_SHA256=<sha256> ..."; \
+      exit 1; \
+    fi; \
     url="https://go.dev/dl/go${GO_VERSION}.linux-${TARGETARCH}.tar.gz"; \
     curl -fsSL "$url" -o /tmp/go.tgz 2>/dev/null || \
       (apt-get update && apt-get install -y --no-install-recommends curl \
        && rm -rf /var/lib/apt/lists/* && curl -fsSL "$url" -o /tmp/go.tgz); \
+    echo "${GO_SHA256}  /tmp/go.tgz" | sha256sum -c -; \
     tar -C /usr/local -xzf /tmp/go.tgz; \
     rm /tmp/go.tgz
 ENV PATH="/usr/local/go/bin:${PATH}" \
