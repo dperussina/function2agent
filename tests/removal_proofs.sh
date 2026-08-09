@@ -2531,6 +2531,68 @@ proof "e4ef6e6 basetemp reaping — a live process's directory is reaped too" \
   "tests/unit/test_conftest_basetemp.py::test_a_live_process_directory_survives_another_runs_configure" \
   's = s.replace("        try:\n            os.kill(int(name), 0)\n        except ProcessLookupError:\n            shutil.rmtree(os.path.join(root, name), ignore_errors=True)\n        except PermissionError:\n            continue  # Alive and owned by someone else.", "        shutil.rmtree(os.path.join(root, name), ignore_errors=True)")'
 
+# The child processes a run leaves behind — the same shape as the basetemp arm
+# above and found the same way. Three supervisors spawned by
+# `test_lease_revocation.py`'s crash arm outlived their runs by four days,
+# renewing a lease five times a second against a `basetemp` whose pytest
+# process had exited. The arm had no `try/finally`, so any failure between the
+# spawn and the kill leaked one — and the basetemp defect e4ef6e6 repaired is
+# exactly such a failure, which is how the three were made.
+#
+# Nothing in the suite was looking, which is the part these arms are mostly
+# about. A leaked process produces no report, and the run that leaks one is
+# usually red for the failure that caused the leak, so the survivor is the one
+# thing on the screen that nobody attributes to anything.
+
+# Where the child is killed, and therefore when. Removing this leaves the
+# session-scoped sweep below as the only reaper, and a child leaked by the
+# third test then spins alongside the remaining twelve hundred.
+proof "orphaned crash children — a failed arm leaves its supervisor running" \
+  tests/integration/test_lease_revocation.py \
+  "tests/integration/test_lease_revocation.py::test_the_crash_arms_child_does_not_outlive_a_failing_test" \
+  's = s.replace("    finally:\n        if child.poll() is None:  # pragma: no cover — only on an assert above\n            child.kill()\n\n    # Nothing ran on the way down.", "    finally:\n        pass\n\n    # Nothing ran on the way down.")'
+
+# The sweep's own call site. Every other arm here calls the sweep directly, so
+# all of them stay green with this deleted — the mechanism intact, never
+# invoked, and invisible. That is the shape the rest of this file exists for.
+proof "leaked-child sweep — the summary never runs it" \
+  tests/conftest.py \
+  "tests/unit/test_conftest_child_reaping.py::test_a_run_that_leaks_a_child_kills_it_and_says_so" \
+  's = s.replace("    leaked = _reap_leaked_children()", "    leaked = []")'
+
+# Killing, as distinct from reporting. A report that names a process and leaves
+# it running has described the leak rather than ended it.
+proof "leaked-child sweep — the report is made and nothing is killed" \
+  tests/conftest.py \
+  "tests/unit/test_conftest_child_reaping.py::test_the_reaper_kills_what_it_reports" \
+  's = s.replace("        try:\n            os.kill(pid, signal.SIGKILL)\n        except OSError:\n            continue  # Exited between the listing and the signal.", "        pass")'
+
+# The zombie narrowing, which is what keeps the report worth reading. An exited
+# child nobody waited on is still parented to pytest and the suite makes them
+# routinely; counting those as leaks fires the banner on nearly every run.
+proof "leaked-child sweep — an unreaped exited child counts as a leak" \
+  tests/conftest.py \
+  "tests/unit/test_conftest_child_reaping.py::test_a_finished_child_nobody_waited_on_is_not_a_leak" \
+  's = s.replace("if parent != mine or pid in exempt or fields[2].startswith(\x22Z\x22):", "if parent != mine or pid in exempt:")'
+
+# The exemption for children the standard library owns. `multiprocessing`'s
+# resource tracker is a direct child of any process that has used a spawn
+# context and is meant to outlive every test; the concurrent-writer probe
+# starts one on every run. Sweeping it is not cleanup.
+proof "leaked-child sweep — the multiprocessing resource tracker is killed" \
+  tests/conftest.py \
+  "tests/unit/test_conftest_child_reaping.py::test_the_multiprocessing_resource_tracker_is_never_reaped" \
+  's = s.replace("        if isinstance(pid, int):\n            pids.add(pid)", "        pass")'
+
+# Finding 034's shape, refused rather than met again. An unavailable `ps` and a
+# run that leaked nothing produce the same empty list and opposite facts, and
+# reporting the second as the first is an instrument scoring a clean sweep over
+# a measurement it never took.
+proof "leaked-child sweep — a sweep that could not run reads as a clean one" \
+  tests/conftest.py \
+  "tests/unit/test_conftest_child_reaping.py::test_a_sweep_that_could_not_run_is_reported_and_not_scored_as_clean" \
+  's = s.replace("        _children_unchecked = f\x22ps did not run: {type(exc).__name__}: {exc}\x22\n        return []", "        return []")'
+
 # ---------------------------------------------------------------------------
 # T096 — the sandbox image's FR-021 properties.
 #

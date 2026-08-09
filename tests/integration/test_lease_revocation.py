@@ -496,21 +496,32 @@ def test_a_sigkilled_supervisor_lets_the_lease_lapse(tmp_path, killer) -> None:
             repo=repo, db=str(db), session="s-crash", interval=INTERVAL)],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
     )
-    assert child.stdout is not None
-    assert child.stdout.readline().strip() == "READY"
+    # The child never exits on its own — that is the point of it — so the kill
+    # below is the only thing that ends it, and every assertion between here and
+    # there is a way of not reaching the kill. Three of these outlived their run
+    # by four days, renewing every 200ms against a basetemp whose pytest process
+    # had long exited. `finally` is the sibling idiom: `test_resume_sigkill.py`,
+    # `test_ceilings_under_resume.py` and `test_provider_state_resume.py` all
+    # spawn the same shape and all wrap it.
+    try:
+        assert child.stdout is not None
+        assert child.stdout.readline().strip() == "READY"
 
-    # Renewal is live: the lease keeps moving forward.
-    time.sleep(INTERVAL * 2)
-    with SessionTable(db) as table:
-        before = table.resolve(capability.digest)
-    assert before is not None and before.honoured_at(time.time()), (
-        "the lease was not being renewed before the kill, so the arm proves "
-        "nothing about the kill"
-    )
-    assert before.state == STATE_RUNNING
+        # Renewal is live: the lease keeps moving forward.
+        time.sleep(INTERVAL * 2)
+        with SessionTable(db) as table:
+            before = table.resolve(capability.digest)
+        assert before is not None and before.honoured_at(time.time()), (
+            "the lease was not being renewed before the kill, so the arm proves "
+            "nothing about the kill"
+        )
+        assert before.state == STATE_RUNNING
 
-    killer(child.pid)
-    assert child.wait(timeout=10) == -signal.SIGKILL
+        killer(child.pid)
+        assert child.wait(timeout=10) == -signal.SIGKILL
+    finally:
+        if child.poll() is None:  # pragma: no cover — only on an assert above
+            child.kill()
 
     # Nothing ran on the way down. The state is untouched — still RUNNING —
     # and the lease is the only thing standing between the handle and the
@@ -591,15 +602,23 @@ def test_a_sigkilled_holder_closes_the_listener_instantly(tmp_path, killer) -> N
             repo=repo, session="s-listener", directory=str(directory))],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
     )
-    assert child.stdout is not None
-    ready = child.stdout.readline().split()
-    assert ready[0] == "READY"
-    socket_path = ready[1]
+    # Same shape and the same reason as the arm above: `_HOLDER` is a
+    # `while True`, so anything that stops this test short of the kill leaves it
+    # running. This one holds an `AF_UNIX` socket rather than a lease, so a
+    # survivor keeps a path bound that a later run's `is_reachable` would find.
+    try:
+        assert child.stdout is not None
+        ready = child.stdout.readline().split()
+        assert ready[0] == "READY"
+        socket_path = ready[1]
 
-    assert is_reachable(socket_path), "the listener never came up"
+        assert is_reachable(socket_path), "the listener never came up"
 
-    killer(child.pid)
-    assert child.wait(timeout=10) == -signal.SIGKILL
+        killer(child.pid)
+        assert child.wait(timeout=10) == -signal.SIGKILL
+    finally:
+        if child.poll() is None:  # pragma: no cover — only on an assert above
+            child.kill()
 
     # No wait, no poll, no grace period. The descriptor closed with the
     # process, so the very next connection is refused.
@@ -610,6 +629,135 @@ def test_a_sigkilled_holder_closes_the_listener_instantly(tmp_path, killer) -> N
         "the socket file was removed, which means a cleanup path ran — the "
         "arm is then testing unlink, not the descriptor closing"
     )
+
+
+# --- the children these arms spawn, and a failure on the way to the kill ---
+#
+# The two arms above spawn a process that never exits on its own. Both now wrap
+# the spawn in `try/finally`, and this is what makes that wrapping a mechanism
+# rather than a habit: it drives the committed arm to fail *where it actually
+# failed* and asks whether the child was gone by the time the test finished.
+#
+# "By the time the test finished" is the whole assertion. `tests/conftest.py`
+# also sweeps unowned children, but it does so at session scope — so a run
+# whose third test leaked a supervisor would still be clean at the end, having
+# spent twelve hundred tests alongside a process writing to a store five times
+# a second. `pytest_runtest_logfinish` is the earliest hook that fires after
+# the test's own `finally`, which is exactly the boundary the wrapping moves.
+
+#: What the crash arm's child looks like in `ps`. Its own argv, not a name this
+#: file chose: nothing else in the tree constructs `LeaseTerms` in a subprocess.
+_CRASH_CHILD_MARKER = "LeaseTerms('s-crash'"
+
+_LEAK_OBSERVER = textwrap.dedent(
+    '''
+    """Fail the arm where its predecessor failed, then look for the child."""
+    import subprocess
+
+    MARKER = {marker!r}
+    VERDICT = {verdict!r}
+
+
+    def pytest_configure(config):
+        # The historical failure reproduced at its own line. A concurrent run
+        # had deleted this run's basetemp, so the row read back after the
+        # spawn was simply not there and the arm stopped at
+        # `assert before is not None` — between the spawn and the kill.
+        from src.supervisor.session_table import SessionTable
+        SessionTable.resolve = lambda self, digest: None
+
+
+    def pytest_runtest_logfinish(nodeid, location):
+        listing = subprocess.run(["ps", "-eo", "state=,command="],
+                                 capture_output=True, text=True).stdout
+        alive = []
+        for line in listing.splitlines():
+            fields = line.split(maxsplit=1)
+            # A killed child is a zombie until its parent reaps it, and a
+            # zombie is not a process that is still renewing anything.
+            if len(fields) == 2 and not fields[0].startswith("Z"):
+                if MARKER in fields[1]:
+                    alive.append(fields[1])
+        with open(VERDICT, "w") as handle:
+            handle.write("ALIVE" if alive else "DEAD")
+    '''
+)
+
+
+def _kill_children_matching(marker: str) -> list[str]:
+    """Kill every live process whose command line contains `marker`."""
+    listing = subprocess.run(["ps", "-eo", "pid=,state=,command="],
+                             capture_output=True, text=True).stdout
+    killed = []
+    for line in listing.splitlines():
+        fields = line.split(maxsplit=2)
+        if len(fields) < 3 or fields[1].startswith("Z"):
+            continue
+        if marker not in fields[2]:
+            continue
+        killed.append(fields[2])
+        try:
+            os.kill(int(fields[0]), signal.SIGKILL)
+        except (OSError, ValueError):
+            pass
+    return killed
+
+
+def test_the_crash_arms_child_does_not_outlive_a_failing_test(tmp_path) -> None:
+    """The leak, planted rather than argued, and observed at the test boundary.
+
+    Measured against this file without the `finally`: the arm fails, pytest
+    reports one failure, and a supervisor renewing `s-crash` every 200ms is
+    still running — reparented to init, holding its `sessions.db` open, and
+    outliving the pytest process that started it by however long nobody looks.
+    Three were found four days after the runs that made them.
+
+    The nested run is the only vantage point from which this is observable. A
+    check inside the arm itself would be asserting about a child the arm has
+    just killed; what has to be shown is that the child is gone *after a run of
+    the arm that did not reach the kill*, and there is no way to have both that
+    failure and an assertion about it in one process.
+    """
+    root = Path(__file__).resolve().parents[2]
+    plugin_dir = tmp_path / "plugin"
+    plugin_dir.mkdir()
+    verdict = tmp_path / "verdict.txt"
+    (plugin_dir / "leakobserver.py").write_text(
+        _LEAK_OBSERVER.format(marker=_CRASH_CHILD_MARKER, verdict=str(verdict)))
+
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = os.pathsep.join([str(plugin_dir), str(root)])
+
+    try:
+        inner = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", "-p", "leakobserver",
+             "--basetemp", str(tmp_path / "basetemp"),
+             f"{Path(__file__).resolve()}::"
+             "test_a_sigkilled_supervisor_lets_the_lease_lapse"],
+            capture_output=True, text=True, timeout=180,
+            cwd=str(root), env=environment,
+        )
+
+        assert inner.returncode != 0, (
+            "the planted arm passed, so this run never reached the window "
+            f"between the spawn and the kill and proves nothing:\n"
+            f"{inner.stdout[-2000:]}"
+        )
+        assert verdict.exists(), (
+            "the observer never wrote a verdict, so the nested run did not "
+            f"reach a test boundary:\n{inner.stdout[-2000:]}\n{inner.stderr[-2000:]}"
+        )
+        assert verdict.read_text() == "DEAD", (
+            "the crash arm's supervisor was still running when the test that "
+            "spawned it finished. It renews a lease every 200ms and never "
+            "exits on its own, so nothing that happens later in this run — or "
+            "in any run — will end it."
+        )
+    finally:
+        # Unconditional and silent. On the tampered run the child *is* alive,
+        # and an assertion here would replace the one above — which names what
+        # went wrong — with one that only says it happened.
+        _kill_children_matching(_CRASH_CHILD_MARKER)
 
 
 # --- SC-024: the replay fixture, both arms --------------------------------

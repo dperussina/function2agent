@@ -18,6 +18,17 @@ kernel-mechanism skips and one vacuous invariant. A warning that a green run is
 not evidence is worthless if the run that most needs it is the run that suppresses
 it, so the count is derived from `terminalreporter.stats` and is independent of
 how the skip was raised.
+
+**And a run also reports the child processes it left behind.** Several suites
+spawn a child that never exits on its own — `while True: time.sleep(...)` — and
+kill it from outside, because that is the only way to test a crash. Four of the
+five files that do this wrap the spawn in `try/finally`; one did not, and any
+failure between the spawn and the kill leaked a supervisor that went on renewing
+a lease five times a second. Three of them were found four days later, still
+running. Nothing in the suite was looking, which is why they lasted four days
+rather than four seconds: the run that leaks one is usually red for the failure
+that caused the leak, and the leaked process is not part of any report. The
+sweep below is that report, and it kills what it names.
 """
 
 from __future__ import annotations
@@ -25,8 +36,11 @@ from __future__ import annotations
 import ctypes
 import os
 import shutil
+import signal
+import subprocess
 import sys
 import tempfile
+import time
 
 import pytest
 
@@ -106,6 +120,139 @@ def _reap_abandoned_basetemps(root: str) -> None:
             shutil.rmtree(os.path.join(root, name), ignore_errors=True)
         except PermissionError:
             continue  # Alive and owned by someone else.
+
+
+# --- the child processes a run left behind -------------------------------
+#
+# Why this is at session scope and not per test. Per test it would cost a `ps`
+# for each of ~1300 outcomes to catch a fault that has occurred three times in
+# a week, and — worse — it would be wrong: several fixtures legitimately hold a
+# child across the tests that share them, so a per-test sweep would either kill
+# a module-scoped enforcement point or need a list of exemptions that goes stale
+# silently. At session scope there is no such case. Every fixture has been
+# finalized by the time `pytest_terminal_summary` runs, so a process still
+# parented to this one is a process nobody owns.
+#
+# **This is the backstop and not the repair.** It fires at the end of the run,
+# so a child leaked by the third test spins alongside the remaining twelve
+# hundred. The spawn sites keep their own `try/finally`, which kills the child
+# where it was leaked; this catches the site that forgets, which is the one
+# failure that has actually happened.
+
+#: Why the sweep did not run, when it could not. `None` means it ran.
+_children_unchecked: str | None = None
+
+
+def _stdlib_helper_pids() -> set[int]:
+    """Pids of long-lived children the standard library starts and owns.
+
+    Asked of the modules that started them rather than matched against a
+    command line. `multiprocessing`'s resource tracker is a direct child of any
+    process that has used a spawn context, and it lives until that process
+    exits *by design* — killing it is not cleanup, it is breaking a running
+    interpreter. An argv match would also be wrong in the other direction: a
+    test whose own command line mentions the tracker would be exempted.
+    """
+    pids: set[int] = set()
+    for module_name, owner_attr, pid_attr in (
+        ("multiprocessing.resource_tracker", "_resource_tracker", "_pid"),
+        ("multiprocessing.forkserver", "_forkserver", "_forkserver_pid"),
+    ):
+        module = sys.modules.get(module_name)
+        pid = getattr(getattr(module, owner_attr, None), pid_attr, None)
+        if isinstance(pid, int):
+            pids.add(pid)
+    return pids
+
+
+def _surviving_children() -> list[tuple[int, str]]:
+    """Live direct children of this process, and what each is running.
+
+    **A sweep that cannot run says so rather than returning nothing.** An empty
+    list and an unavailable `ps` are the same value and opposite facts, and
+    reporting the second as the first is finding 034's shape exactly — an
+    instrument scoring a clean sweep over a measurement it never took. The
+    reason is recorded in `_children_unchecked` and printed.
+
+    Zombies are excluded: a `Popen` whose child has exited but has not been
+    waited on is still parented here and is not a leak. The probe excludes
+    *itself* by pid rather than by pattern, because `ps` appears in its own
+    output as a child of this process.
+    """
+    global _children_unchecked
+    try:
+        probe = subprocess.Popen(
+            ["ps", "-eo", "pid=,ppid=,state=,command="],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        out, err = probe.communicate(timeout=30)
+    except (OSError, subprocess.SubprocessError) as exc:
+        _children_unchecked = f"ps did not run: {type(exc).__name__}: {exc}"
+        return []
+    if probe.returncode != 0:
+        _children_unchecked = f"ps exited {probe.returncode}: {err.strip()}"
+        return []
+
+    mine = os.getpid()
+    exempt = _stdlib_helper_pids() | {probe.pid}
+    found: list[tuple[int, str]] = []
+    for line in out.splitlines():
+        fields = line.split(maxsplit=3)
+        if len(fields) < 4:
+            continue
+        try:
+            pid, parent = int(fields[0]), int(fields[1])
+        except ValueError:
+            continue
+        # `state` is `Z` on Linux and `Z`-prefixed on macOS ("Z+", "Zs").
+        if parent != mine or pid in exempt or fields[2].startswith("Z"):
+            continue
+        found.append((pid, fields[3]))
+    return found
+
+
+def _abridge(command: str, budget: int = 200) -> str:
+    """Shorten a command line without losing the half that identifies it.
+
+    Truncating the tail loses the wrong half. The interpreter path alone is 121
+    characters on a Homebrew macOS python, so a cap much under that shows a
+    reader nothing but where python lives — and by the time the report is read
+    the process is dead, so the command line is the only clue left about which
+    test spawned it.
+    """
+    if len(command) <= budget:
+        return command
+    keep = (budget - 5) // 2
+    return f"{command[:keep]} ... {command[-keep:]}"
+
+
+def _reap_leaked_children() -> list[tuple[int, str]]:
+    """Kill every unowned child and return what was killed.
+
+    `SIGKILL` rather than `SIGTERM`: these are, by construction, processes that
+    outlived the test that started them, and the ones this has caught are crash
+    probes whose whole purpose is to have no shutdown path. Waiting politely for
+    one to handle a signal it was written to ignore would only make the end of
+    the run slower.
+    """
+    leaked = _surviving_children()
+    for pid, _ in leaked:
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            continue  # Exited between the listing and the signal.
+    for pid, _ in leaked:
+        # Bounded, so a process that cannot be reaped delays the summary rather
+        # than replacing it with a hang.
+        for _ in range(100):
+            try:
+                if os.waitpid(pid, os.WNOHANG)[0] == pid:
+                    break
+            except ChildProcessError:
+                break  # Already reaped by `subprocess`.
+            except OSError:
+                break
+            time.sleep(0.01)
+    return leaked
 
 
 def note_vacuous_invariant(invariant_id: str, reason: str) -> None:
@@ -204,4 +351,30 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
         terminalreporter.write_line(
             "  A vacuous invariant is true and carries no weight. It is listed "
             "here so a green\n  run is not mistaken for coverage of it."
+        )
+
+    # Last, and side-effecting on purpose. Both halves live in this one hook
+    # rather than splitting the kill into `pytest_sessionfinish`, because the
+    # terminal reporter calls this hook *from* its own `sessionfinish` and the
+    # order between two implementations of that hook is not something this file
+    # should be depending on. By here every fixture is finalized.
+    leaked = _reap_leaked_children()
+    if leaked or _children_unchecked:
+        terminalreporter.write_sep("=", "child processes this run left behind")
+    for pid, command in leaked:
+        terminalreporter.write_line(f"  killed {pid}: {_abridge(command)}")
+    if leaked:
+        terminalreporter.write_line(
+            f"  {len(leaked)} process(es) outlived the test that started them "
+            "and have been killed.\n"
+            "  This is a defect in the test that spawned them, not in the "
+            "process: a child left\n"
+            "  running holds its store open and goes on writing long after the "
+            "run that made it."
+        )
+    if _children_unchecked:
+        terminalreporter.write_line(
+            f"  NOT CHECKED — {_children_unchecked}\n"
+            "  No child was swept, so this run is not evidence that it leaked "
+            "none."
         )
