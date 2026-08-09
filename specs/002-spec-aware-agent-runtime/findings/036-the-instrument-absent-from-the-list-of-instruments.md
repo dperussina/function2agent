@@ -49,6 +49,12 @@ under `specs/001-discovery-validation/findings/`.
 > | [`31273151364`](https://github.com/dperussina/function2agent/actions/runs/31273151364) | `abca043` | failure | `invariants` only; other four green |
 > | [`31275273663`](https://github.com/dperussina/function2agent/actions/runs/31275273663) | `821ef70` | failure | `invariants` only; other four green |
 > | [`31323555590`](https://github.com/dperussina/function2agent/actions/runs/31323555590) | `6cdd4a5` | failure | `invariants` only; other four green |
+> | [`31325764987`](https://github.com/dperussina/function2agent/actions/runs/31325764987) | `6beb9ae` | failure | `invariants` only; other four green |
+>
+> The last of those was still in flight when this investigation opened and is
+> recorded after it completed, so the sequence is unbroken from `7349e31` to the
+> commit this document is written against. **Four consecutive red runs, one job
+> each, the same one.**
 >
 > The job log for `31273151364` carries the exact text the local runner prints, and nothing else:
 > `Reconciliation failed: - tests/invariants/test_sandbox_image.py is not named by any invariant.`
