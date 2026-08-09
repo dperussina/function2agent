@@ -21,8 +21,8 @@
 # supposed to depend on it, and reports UNPROVEN for any test that still passes.
 
 schema_version: "1.0.0"
-version: "1.3.0"
-updated: "2026-08-04"
+version: "1.4.0"
+updated: "2026-08-09"
 
 invariants:
   - id: INV-001
@@ -176,5 +176,46 @@ invariants:
       MergePolicy.rule_for fall back to a last-write-wins rule, or make
       single_writer pick a winner instead of refusing. The last reproduces
       finding 006's silent lost update exactly.
+    runtime: milliseconds
+    model_in_loop: false
+
+  # Added 2026-08-09. T096 built this invariant's test and all six of its
+  # removal-proof arms and did not write the entry, so from 7349e31 onwards
+  # reconciliation failed and the CI job that runs it was red — abca043,
+  # 821ef70 and 6cdd4a5 all failed here and only here. The entry is what was
+  # missing; the mechanism was already whole.
+  - id: INV-011
+    discharges: FR-021
+    statement: >
+      The image the sandbox runs from ships with every dependency already
+      resolved and hashed against the lock file, and ships no way to resolve
+      another: no package manager, no index URL, no credential-shaped
+      variable, no build secret, no fetch, and no entrypoint of its own. It
+      also asserts those properties on itself at build time.
+
+      **This is a static reading of the committed Dockerfile and is
+      deliberately not an egress claim.** FR-021 and the egress policy are one
+      control (research.md §T-11); nothing here denies anything, and one test
+      exists specifically to fail if a future edit makes this reading open a
+      socket. Two things it cannot see, stated so the entry is not read as
+      more than it is: a package manager arriving from a base image change,
+      which alters no line of the file, and whatever the built image actually
+      contains. The Dockerfile's own build-time RUN block covers the first and
+      runs only where somebody builds an image — CI builds none, which is why
+      this static arm is the whole of FR-021's shipping clause in CI, and why
+      test_the_image_asserts_its_own_properties_at_build_time exists to stop
+      the other arm being deleted as redundant.
+
+      Every prohibition here is paired with a synthetic Dockerfile that
+      violates it, because a scanner that finds nothing and a scanner looking
+      in the wrong place are the same green run.
+    test: tests/invariants/test_sandbox_image.py
+    removal_proof: >
+      Six, all in tests/removal_proofs.sh and all landed with T096 — drop
+      --require-hashes from deploy/images/sandbox.Dockerfile; or in
+      src/sandbox/image_policy.py make the teardown-ordering test
+      order-blind, drop the shipped-stage narrowing from the index-URL rule,
+      stop joining line continuations, read the first FROM as the stage that
+      ships, or start every scan with asserts_at_build_time already true.
     runtime: milliseconds
     model_in_loop: false
