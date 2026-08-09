@@ -1,0 +1,7 @@
+{
+  "state": "absent",
+  "admitted": false,
+  "rule_id": "ADM-002",
+  "operation_ids": [],
+  "exercises": "The origin answered and said there is nothing at the configured location. This is FR-044's `absent`: the target is up, it is willing to talk, and it publishes no specification. It is the state OD-18 narrows v1's population with, and the Edge Cases section's `The target publishes no served-operation specification` is exactly this response."
+}

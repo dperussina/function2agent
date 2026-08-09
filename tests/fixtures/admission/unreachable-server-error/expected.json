@@ -1,0 +1,7 @@
+{
+  "state": "unreachable",
+  "admitted": false,
+  "rule_id": "ADM-006",
+  "operation_ids": [],
+  "exercises": "A gateway answering on the origin's behalf while the origin does not. Status-bearing, so it is not the transport-failure case, and still `unreachable` because the question was not answered by anything that knows what the deployment serves. It carries an HTML body: a classifier that reached the parse would call it `unparseable` and tell the operator to change the shape of a specification this response says nothing about, so the ordering — reachability before the parse — is what this case scores."
+}

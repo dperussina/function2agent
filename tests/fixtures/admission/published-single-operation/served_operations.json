@@ -1,0 +1,16 @@
+{
+  "captured_at": "2026-08-09T00:00:00Z",
+  "deployment_id": "d-single-operation",
+  "operations": [
+    {
+      "effect_tier": "read_only",
+      "method": "GET",
+      "operation_id": "only_operation",
+      "path_template": "/status",
+      "rule_id": "ADMFIX-OP-001",
+      "summary": "The whole of what this deployment serves."
+    }
+  ],
+  "schema_version": "1.0.0",
+  "source_url": "file://tests/fixtures/admission/published-single-operation/served_operations.json"
+}

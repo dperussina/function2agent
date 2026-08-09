@@ -1,0 +1,21 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "A target that publishes OpenAPI",
+    "version": "1.4.2"
+  },
+  "paths": {
+    "/parts": {
+      "get": {
+        "operationId": "listParts",
+        "responses": {"200": {"description": "every part"}}
+      }
+    },
+    "/parts/{part_id}": {
+      "get": {
+        "operationId": "getPart",
+        "responses": {"200": {"description": "one part"}}
+      }
+    }
+  }
+}

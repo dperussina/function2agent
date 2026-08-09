@@ -1,0 +1,7 @@
+{
+  "state": "unparseable",
+  "admitted": false,
+  "rule_id": "ADM-005",
+  "operation_ids": [],
+  "exercises": "The right document shape carrying an operation with no `operation_id`. FR-002 requires the served-operation set **at operation granularity**, and an operation with no identifier cannot be resolved against by FR-010, inspected under FR-020 or denied by name under FR-011 — so accepting it would admit a target one of whose operations no later stage can refer to. This is the nearest-miss case in the set: a classifier that counted list entries without reading them would admit it, and the state would then be `published_non_empty` with one unusable operation."
+}

@@ -1,0 +1,5 @@
+{
+  "status": 401,
+  "body_text": "{\"error\": \"authentication required\"}",
+  "location": "https://gated.example.test/served-operations"
+}

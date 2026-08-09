@@ -1,0 +1,7 @@
+{
+  "state": "unparseable",
+  "admitted": false,
+  "rule_id": "ADM-005",
+  "operation_ids": [],
+  "exercises": "A sign-in page served with status 200, which is what a portal in front of an API returns instead of a 401. The credential branch cannot catch it — the status says success — so the parse is the only thing standing between this and an admitted target. Classified `unparseable` and not `unreadable_by_credential`, because the system has no evidence about the credential here: it has evidence that what came back is not a specification. Guessing the credential from the page content would be a classifier reading English."
+}

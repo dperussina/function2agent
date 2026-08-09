@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "body_text": "<!doctype html>\n<html><head><title>Sign in</title></head>\n<body><form action=\"/login\" method=\"post\">Please sign in.</form></body></html>\n",
+  "location": "https://portal.example.test/served-operations"
+}

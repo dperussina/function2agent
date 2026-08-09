@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "body_file": "../../reference-app/served_operations.json",
+  "location": "file://tests/fixtures/reference-app/served_operations.json"
+}

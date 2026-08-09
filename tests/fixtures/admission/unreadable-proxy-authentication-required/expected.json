@@ -1,0 +1,7 @@
+{
+  "state": "unreadable_by_credential",
+  "admitted": false,
+  "rule_id": "ADM-003",
+  "operation_ids": [],
+  "exercises": "A credential refused on the way to the origin rather than by the origin. Classified `unreadable_by_credential` because FR-044's state is about what the configured credential can read, and a credential that cannot get past the enforcement point cannot read the specification either — the operator's remedy is the same one. Worth committing rather than leaving implicit: every call in this system leaves through a mandatory enforcement point (OD-12), so 407 is a status this deployment shape can actually produce, and folding it into `unreachable` would tell an operator the target was down when their credential was the problem."
+}

@@ -1,0 +1,7 @@
+{
+  "state": "unparseable",
+  "admitted": false,
+  "rule_id": "ADM-005",
+  "operation_ids": [],
+  "exercises": "A real OpenAPI 3.0.3 document describing two operations at operation granularity, rejected. This is FR-053 enforced rather than described: OpenAPI has no committed fixture with an asserted expected operation list and no parser, so it is **unsupported rather than best-effort** and must not appear in any statement of what the product supports. The case is committed because the *shape of the rejection* matters — ADM-005 names the supported shape and says widening it is a v2 scope decision, where ADM-004 would have told this operator their specification is empty. It is also the case that shows why `unparseable` is a state rather than a spelling of `readable_no_operations`: this document is not empty, it is unread."
+}

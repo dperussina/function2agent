@@ -1,0 +1,7 @@
+{
+  "captured_at": "2026-08-09T00:00:00Z",
+  "deployment_id": "d-empty-specification",
+  "operations": [],
+  "schema_version": "1.0.0",
+  "source_url": "file://tests/fixtures/admission/readable-no-operations/served_operations.json"
+}

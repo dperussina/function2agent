@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-08-09T00:00:00Z",
+  "deployment_id": "d-nameless-operations",
+  "operations": [
+    {
+      "effect_tier": "read_only",
+      "method": "GET",
+      "path_template": "/parts",
+      "summary": "An operation with a path and a method and no identifier."
+    }
+  ],
+  "schema_version": "1.0.0",
+  "source_url": "file://tests/fixtures/admission/unparseable-operation-without-id/served_operations.json"
+}

@@ -1,0 +1,7 @@
+{
+  "state": "absent",
+  "admitted": false,
+  "rule_id": "ADM-002",
+  "operation_ids": [],
+  "exercises": "No specification location was configured at all, which `src/analysis/admission.py::no_location_configured` produces. The operator configured nothing, and the answer is FR-044's rejection with its remedy rather than a KeyError or an unhandled None — an operator who left a setting out gets the ADM-002 action, which is the one that tells them to configure the location. The empty `location` is the evidence, and the recorded decision says `<no specification location configured>` rather than an empty string, so a stored rejection distinguishes `asked nowhere` from `asked somewhere and lost the name`."
+}

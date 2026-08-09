@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "body_file": "openapi.json",
+  "location": "https://openapi.example.test/openapi.json"
+}

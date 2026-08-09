@@ -1,0 +1,7 @@
+{
+  "state": "unreadable_by_credential",
+  "admitted": false,
+  "rule_id": "ADM-003",
+  "operation_ids": [],
+  "exercises": "A credential that authenticated and is not permitted to read the specification, and the filesystem transport's own refusal shape: `fetch_from_file` maps PermissionError onto 403, so this case is the recorded form of a real `EACCES` and the `file://` location says so. Second unreadable case, so a classifier that recognised only 401 does not pass."
+}

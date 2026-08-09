@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "body_file": "served_operations.json",
+  "location": "https://single.example.test/served-operations"
+}

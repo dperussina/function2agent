@@ -1,0 +1,7 @@
+{
+  "state": "readable_no_operations",
+  "admitted": false,
+  "rule_id": "ADM-004",
+  "operation_ids": [],
+  "exercises": "**The case FR-044 singles out.** The fetch succeeded completely — status 200, valid UTF-8 JSON, a served_operation_set at the version the registry holds, no credential problem, nothing unreachable — and the document describes zero operations. FR-044: *a specification that fetches successfully but carries no operations MUST NOT be read as a deployment that serves nothing*, and SC-018 asks separately for **zero** admitted in this state. Every other reason to reject is absent here by construction, which is what makes it a test of the emptiness rule specifically: if the emptiness branch is removed, nothing else in the classifier stops this case being admitted."
+}

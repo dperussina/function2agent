@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "body_file": "served_operations.json",
+  "location": "https://nameless.example.test/served-operations"
+}

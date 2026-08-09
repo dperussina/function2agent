@@ -1,0 +1,13 @@
+{
+  "state": "published_non_empty",
+  "admitted": true,
+  "rule_id": "ADM-001",
+  "operation_ids": [
+    "health",
+    "list_parts",
+    "get_part",
+    "list_shipments",
+    "cancel_shipment"
+  ],
+  "exercises": "The reference application's own published specification, read from the file T116 committed rather than from a copy. Status 200, a served_operation_set that parses, five operations each carrying an operation_id. This is the only shape FR-053 lets v1 call supported, and the five identifiers in this order are what makes the expected output an assertion rather than a restatement of the state name."
+}

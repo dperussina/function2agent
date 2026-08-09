@@ -1,0 +1,7 @@
+{
+  "state": "published_non_empty",
+  "admitted": true,
+  "rule_id": "ADM-001",
+  "operation_ids": ["only_operation"],
+  "exercises": "A second admissible case, so that the admitted population is not one point. One operation is the boundary between published_non_empty and readable_no_operations, and a classifier whose emptiness test were off by one — `len(operations) < 2`, say — would admit the five-operation case and reject this one. The four-state classification's only threshold is at exactly this value, so the case sitting on it is the one that scores it."
+}

@@ -1,0 +1,7 @@
+{
+  "state": "absent",
+  "admitted": false,
+  "rule_id": "ADM-002",
+  "operation_ids": [],
+  "exercises": "An origin that says the specification used to be there and is not any more. Absent, on the same reasoning as 404 and not a state of its own: FR-044's four states turn on what is known about the specification now, and `withdrawn` and `never published` leave the system knowing the same thing. Committed as a second absent case so that a classifier which only recognised 404 would be caught rather than passing on the single status somebody thought of."
+}

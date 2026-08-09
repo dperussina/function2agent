@@ -1,0 +1,7 @@
+{
+  "state": "unreachable",
+  "admitted": false,
+  "rule_id": "ADM-006",
+  "operation_ids": [],
+  "exercises": "Nothing answered. Rejected, because admission fails closed and an unanswered question is not an answer — but rejected as `unreachable` and not as `absent`, because there is no evidence about the specification at all. Folding it into `absent` would report `this target publishes no specification` on the evidence that the target was down, and FR-047 makes this state the `after` term of a drift signal, so a wrong name here becomes a wrong drift report later. The recorded error text is the shape urllib actually produces against a closed port, reproduced live by `test_the_http_transport_reports_a_refused_connection_as_unreachable`."
+}

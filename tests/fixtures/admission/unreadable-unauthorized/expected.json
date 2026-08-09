@@ -1,0 +1,7 @@
+{
+  "state": "unreadable_by_credential",
+  "admitted": false,
+  "rule_id": "ADM-003",
+  "operation_ids": [],
+  "exercises": "The specification is present and the configured credential was refused. FR-044 keeps this apart from `absent` because the remedy is different in kind: nothing about the target has to change except who may read the document, and ADM-003 says exactly that while ADM-002 would send the operator off to publish a specification that already exists. The response carries a body, on purpose — a 401 with content is the shape that would tempt a classifier into parsing it, and the credential branch runs before the parse."
+}
