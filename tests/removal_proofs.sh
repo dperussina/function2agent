@@ -2855,6 +2855,143 @@ proof "census — the entry-point scan looks nowhere and finds nothing" \
   "tests/unit/test_instrument_census.py::test_the_entry_point_scan_reads_the_filesystem" \
   's = s.replace("    found = [\n        f\x22tools/{path.name}\x22\n        for path in sorted((REPO / \x22tools\x22).glob(\x22*.py\x22))\n    ]", "    found = []")'
 
+# ---------------------------------------------------------------------------
+# T073–T076 — admission (FR-044, SC-018).
+#
+# SC-018 asserts a SHARE — "100% of non-admissible targets are rejected" — over
+# a population the test itself assembles, which is Rule 8's shape twice over: it
+# is trivially true over an empty population, and trivially true if the
+# rejection arrived from somewhere other than the classifier. So the arms below
+# are three different questions and not one:
+#
+#   (a) MISCLASSIFICATION arms fold one state into a plausible neighbour and
+#       require the fixture set to notice. The tampered classifier still
+#       rejects — `absent` is a rejection too — so a test that only checked
+#       "was it refused" passes every one of them. They are the arms that
+#       distinguish "names a state" from "names the right state", which is what
+#       FR-044's remedy text hangs on: telling an operator to publish a
+#       specification they already publish is a wrong answer, not a coarse one.
+#
+#   (b) GATE arms remove the refusal and the ordering separately. A gate that
+#       refuses after running the work is not a gate, and no arm that only
+#       counts refusals can tell the two apart.
+#
+#   (c) INSTRUMENT arms remove the population floor and the control loop. These
+#       are the two that would leave every other arm above green while the
+#       measurement covered nothing — the fixture set shrunk to the admissible
+#       cases makes "100% of non-admissible targets rejected" true over zero
+#       targets, and an empty mutation table makes the controls stop
+#       distinguishing "admitted for the stated reason" from "admitted".
+
+# (a) One state folded into its neighbour, per state. Each names the ONE
+# fixture whose expected output moves, so an arm that passed because a
+# different case failed would be reported against the wrong mechanism.
+proof "FR-044 — an empty specification read as an absent one" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_zero_are_admitted_on_a_specification_that_fetched_and_carried_no_operations" \
+  's = s.replace("            state=READABLE_NO_OPERATIONS, operations=(),", "            state=ABSENT, operations=(),")'
+
+proof "FR-044 — a refused credential read as an absent specification" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_a_refused_credential_is_not_reported_as_an_absent_specification" \
+  's = s.replace("    if response.status in (401, 403, 407):", "    if False:")'
+
+proof "FR-044 — an origin that never answered read as one that publishes nothing" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_an_origin_that_never_answered_is_not_reported_as_publishing_nothing" \
+  's = s.replace("    if response.status >= 500:", "    if False:")'
+
+# The one that reports the wrong thing to the operator rather than merely a
+# coarser thing: an unsupported shape returned as an empty operation list says
+# "your specification is empty" about a document nobody managed to read.
+proof "FR-053 — an unsupported shape returned as an empty operation list" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_an_unsupported_shape_is_not_reported_as_an_empty_specification" \
+  's = s.replace("    operations = document.get(\x22operations\x22)", "    operations = document.get(\x22operations\x22) or []")'
+
+# Finding 032's defect, in this classifier: an outcome whose accepting set is
+# "none of the others" swallows every shape nobody enumerated.
+proof "FR-044 — the classifier given a default state instead of a refusal" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_an_unenumerated_status_is_refused_rather_than_defaulted" \
+  's = s.replace("    if response.status != 200:\n        raise UnclassifiableResponse(", "    if response.status != 200:\n        return Classification(state=ABSENT, operations=(), evidence=\x22defaulted\x22)\n    if False:\n        raise UnclassifiableResponse(")'
+
+# The credential is the one input that must not end up in the recorded
+# location, and the arm has to move what is RECORDED, not only what is sent —
+# a tamper that changed the request and left `location` alone would leave the
+# assertion satisfied and prove nothing.
+proof "FR-044 — the credential moved from a header into the URL that gets recorded" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_the_credential_never_reaches_the_url" \
+  's = s.replace("    if credential:\n        request.add_header(\x22Authorization\x22, f\x22Bearer {credential}\x22)", "    if credential:\n        url = url + \x22?token=\x22 + credential\n        request = urllib.request.Request(url, method=\x22GET\x22)")'
+
+proof "FR-044 — a file the process may not read reported as a file that is not there" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_the_file_transport_reports_the_three_filesystem_outcomes" \
+  's = s.replace("    except PermissionError:\n        return FetchResponse(status=403, body=None, location=location)", "    except PermissionError:\n        return FetchResponse(status=404, body=None, location=location)")'
+
+# (b) The gate. Two arms, because "did not start" and "did not start it first"
+# are different claims and one test cannot separate them.
+proof "FR-044 gate — the refusal removed, so a non-admissible target reaches a session" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_zero_non_admissible_targets_reach_an_agent_session" \
+  's = s.replace("    if not decision.admitted:\n        raise NotAdmitted(decision)\n    return start()", "    return start()")'
+
+proof "FR-044 gate — the session started first and refused afterwards" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_the_gate_evaluates_nothing_before_it_refuses" \
+  's = s.replace("    if not decision.admitted:\n        raise NotAdmitted(decision)\n    return start()", "    outcome = start()\n    if not decision.admitted:\n        raise NotAdmitted(decision)\n    return outcome")'
+
+# T074's two record guards, separately. One combined guard would be satisfied
+# by either half and neither arm below could say which half it removed.
+proof "T074 — a rejection recorded with nothing an operator can act on" \
+  src/analysis/admission_record.py \
+  "tests/contract/test_admission.py::test_a_rejection_record_without_a_remedy_cannot_be_constructed" \
+  's = s.replace("        if not self.admitted and not self.operator_action:", "        if False:")'
+
+proof "T074 — an admitted record carrying an outstanding remedy" \
+  src/analysis/admission_record.py \
+  "tests/contract/test_admission.py::test_an_admitted_record_carrying_a_remedy_cannot_be_constructed" \
+  's = s.replace("        if self.admitted and self.operator_action:", "        if False:")'
+
+proof "T074 — a record whose disposition disagrees with its own state" \
+  src/analysis/admission_record.py \
+  "tests/contract/test_admission.py::test_a_record_cannot_disagree_with_its_own_state" \
+  's = s.replace("        if self.admitted != (self.specification_state in ADMISSIBLE_STATES):", "        if False:")'
+
+proof "T074 — a pre-1.1.0 record read back as though it had named a state" \
+  src/analysis/admission_record.py \
+  "tests/contract/test_admission.py::test_a_pre_1_1_0_record_is_refused_rather_than_read_as_a_classification" \
+  's = s.replace("        if state is None:", "        if False:")'
+
+proof "FR-054 migration — a state invented for a decision no classifier ever made" \
+  src/contracts/migrations/__init__.py \
+  "tests/contract/test_admission.py::test_the_migration_does_not_invent_a_state_a_1_0_0_record_never_named" \
+  's = s.replace("        \x22specification_state\x22: document.get(\x22specification_state\x22),", "        \x22specification_state\x22: document.get(\x22specification_state\x22, \x22absent\x22) or \x22absent\x22,")'
+
+proof "FR-044 — a rejected classification handing back an operation list" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_a_rejected_classification_cannot_carry_an_operation_list" \
+  's = s.replace("        if self.state != PUBLISHED_NON_EMPTY and self.operations:", "        if False:")'
+
+proof "FR-044 — the admitted state recordable with no operations under it" \
+  src/analysis/admission.py \
+  "tests/contract/test_admission.py::test_the_admitted_state_cannot_be_recorded_with_no_operations" \
+  's = s.replace("        if self.state == PUBLISHED_NON_EMPTY and not self.operations:", "        if False:")'
+
+# (c) The instrument. These two are the reason the arms above mean anything:
+# with the population emptied of rejections or the control table emptied of
+# mutations, every arm above still passes and SC-018 is measured over nothing.
+proof "SC-018 instrument — the population loses its non-admissible cases, so 100% is free" \
+  tests/fixtures/admission/__init__.py \
+  "tests/contract/test_admission.py::test_the_fixture_set_covers_every_state_the_requirement_names" \
+  's = s.replace("    return tuple(cases)", "    return tuple(c for c in cases if c.expected_admitted)")'
+
+proof "SC-018 instrument — the controls attempt no mutation, so 'admissible for the stated reason' is free" \
+  tests/contract/test_admission.py \
+  "tests/contract/test_admission.py::test_every_admissible_case_is_admissible_for_the_stated_reason" \
+  's = s.replace("        for label, override, expected in MUTATIONS:", "        for label, override, expected in MUTATIONS[:0]:")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
