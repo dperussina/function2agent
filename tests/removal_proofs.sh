@@ -3127,6 +3127,92 @@ proof "FR-016 — two pins for one authority coexist, so the destination is chos
   "tests/contract/test_pinning.py::test_two_pins_for_one_authority_are_refused" \
   's = s.replace("        if key in seen and seen[key] != destination.address:", "        if False:")'
 
+# ---------------------------------------------------------------------------
+# T081 — FR-010's rule set and deny list as versioned configuration.
+#
+# The first arm is the one that matters most in this file: a rule declaring an
+# unsafe method safe resolves a write to `read_only`, and the enforcement point
+# reads the tier this artifact carries, so nothing downstream could catch it.
+# That is constitution Principle IV's *zero destructive-classified-as-read*, at
+# the only place in the Python tree where it can be violated by data.
+
+proof "FR-010 — an unsafe method admitted as a safe one, so a write resolves read-only" \
+  src/analysis/effect_rules.py \
+  "tests/contract/test_effect_rules.py::test_a_rule_cannot_declare_an_unsafe_method_safe" \
+  's = s.replace("        if self.safe and self.matcher.method not in SAFE_METHODS:", "        if False:")'
+
+# The second half of FR-010's first clause, separately: the guard above stops an
+# unsafe method being *declared* safe, and this stops the tier ignoring the
+# declaration. Either alone leaves a route from a write to `read_only`.
+proof "FR-010 — the tier stops following the target's own safe declaration" \
+  src/analysis/effect_rules.py \
+  "tests/contract/test_effect_rules.py::test_an_operation_the_target_does_not_declare_safe_is_not_read_only" \
+  's = s.replace("        return TIER_READ_ONLY if self.safe else TIER_REVERSIBLE_WRITE", "        return TIER_READ_ONLY")'
+
+proof "FR-010 — a deny-list entry admitted at a permitted tier, so the list denies nothing" \
+  src/analysis/effect_rules.py \
+  "tests/contract/test_effect_rules.py::test_a_deny_entry_cannot_declare_a_permitted_tier" \
+  's = s.replace("        if self.tier in PERMITTED_TIERS:", "        if False:")'
+
+proof "FR-011 — one rule identifier answering to two entries, so a denial names nothing" \
+  src/analysis/effect_rules.py \
+  "tests/contract/test_effect_rules.py::test_one_identifier_may_not_answer_to_two_entries" \
+  's = s.replace("            if previous is not None:", "            if False:")'
+
+# FR-010's last sentence binds interfaces, and a stored artifact a consumer
+# reads is one. The arm also holds the U-43 acknowledgement in place.
+proof "FR-010 — the artifact stops saying it is a stated rule set and not a proof" \
+  src/analysis/effect_rules.py \
+  "tests/contract/test_effect_rules.py::test_the_document_says_it_is_a_stated_rule_set_and_not_a_proof" \
+  's = s.replace("        \x22a stated rule set, not a proof (FR-010). The deny list is \x22", "        \x22the effect rule set. The deny list is \x22")'
+
+# ---------------------------------------------------------------------------
+# T082 — the review gate and its widening predicate.
+#
+# Five arms, and the reason there are five rather than one is that "an
+# unreviewed rule set does not take effect" is an assertion about an absence:
+# the gate can be defeated by admitting an approval that was never given, by
+# accepting an approval given for different bytes, by accepting one given for
+# the opposite direction of travel, or by the widening record it produces being
+# a constant. Each is removed on its own below.
+
+proof "FR-012 — the review check satisfied by nothing, so an unapproved version takes effect" \
+  src/analysis/review_gate.py \
+  "tests/contract/test_review_gate.py::test_an_approved_version_takes_effect_and_an_unapproved_one_does_not" \
+  's = s.replace("        store.repo, proposal.kind, proposal.content_hash, CHANGE_PUBLICATION)", "        store.repo, proposal.kind, proposal.content_hash, CHANGE_PUBLICATION) or {\x22reviewer\x22: \x22nobody\x22}")'
+
+proof "FR-012 — the approval unbound from the bytes, so an edit after review still applies" \
+  src/analysis/review_gate.py \
+  "tests/contract/test_review_gate.py::test_an_approval_does_not_survive_an_edit_to_the_document" \
+  's = s.replace("        where={\x22artifact_kind\x22: kind, \x22content_hash\x22: content_hash, \x22change_kind\x22: change_kind},", "        where={\x22artifact_kind\x22: kind, \x22change_kind\x22: change_kind},")'
+
+# The approval that let a version take effect must not authorise the rollback
+# back to it. This arm swaps the direction the restoration looks up, which is
+# exactly the defect the test found before the column existed.
+proof "FR-054 — a restoration admitted on the approval its publication was given" \
+  src/analysis/review_gate.py \
+  "tests/contract/test_review_gate.py::test_a_restoration_without_a_review_does_not_move_the_reference" \
+  's = s.replace("        store.repo, proposal.kind, proposal.content_hash, CHANGE_RESTORATION)", "        store.repo, proposal.kind, proposal.content_hash, CHANGE_PUBLICATION)")'
+
+proof "FR-054 — a restoration recorded by the predicate instead of as a widening" \
+  src/analysis/review_gate.py \
+  "tests/contract/test_review_gate.py::test_a_restoration_is_recorded_as_a_widening_even_where_it_narrows" \
+  's = s.replace("        widening=True,", "        widening=proposal.assessment.widening,")'
+
+# The two halves of the predicate, in opposite directions. The first makes it
+# answer `widening` unconditionally, which every widening arm would still pass;
+# only the narrowing control catches it. The second makes coverage symmetric,
+# so a generalization and a specialization become indistinguishable.
+proof "FR-019 — the widening predicate made a constant, so it stops discriminating" \
+  src/analysis/review_gate.py \
+  "tests/contract/test_review_gate.py::test_a_permission_withdrawn_is_a_narrowing_and_is_not_flagged" \
+  's = s.replace("    if added or lifted:", "    if True:")'
+
+proof "FR-019 — coverage made symmetric, so a generalized permission reads as unchanged" \
+  src/analysis/effect_rules.py \
+  "tests/contract/test_review_gate.py::test_a_permission_generalized_is_a_widening" \
+  's = s.replace("        _is_parameter(segment) or segment == counterpart", "        _is_parameter(segment) or _is_parameter(counterpart) or segment == counterpart")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
