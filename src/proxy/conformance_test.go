@@ -57,7 +57,43 @@ func loadConformance(t *testing.T) (conformanceVectors, string) {
 	if len(v.Sessions) == 0 {
 		t.Fatal("conformance vectors are empty; a vacuous pass is not a pass")
 	}
-	return v, filepath.Join(conformanceDir, v.Database)
+	return v, copyFixtureDB(t, filepath.Join(conformanceDir, v.Database))
+}
+
+// copyFixtureDB byte-copies the committed database into the test's temporary directory and
+// returns the copy's path.
+//
+// **Not a convenience, and not a weakening of what these tests read.** The committed fixture is a
+// WAL-mode database — finding 033 reads its header bytes 18/19 as 2,2 and treats that as a
+// property, because the supervisor's own writer puts every store into WAL. SQLite requires the
+// shared-memory index for a WAL database on EVERY connection including a `mode=ro` one, so
+// `OpenSessionStore` on the committed path creates `session_conformance.sqlite3-shm` and `-wal`
+// beside a tracked file and leaves them there. Two passes have now reported them as stray
+// untracked files.
+//
+// A permanently dirty `git status` is not cosmetic in this repository: reading it for entries
+// nobody created is the defence against staging something unintended, and constant noise erodes
+// it. The alternatives were both worse. Gitignoring the pair hides any future creation of them,
+// including one that is a real defect. Converting the fixture out of WAL would make it stop being
+// byte-representative of what the supervisor produces, which is the whole of its value, and
+// `tests/unit/test_session_conformance.py` asserts exactly that correspondence. Opening with
+// `immutable=1` here would stop these tests exercising `OpenSessionStore`'s production DSN, which
+// is the other half of what they are for.
+//
+// A copy changes none of that. The bytes are identical, the open is the production one, and the
+// sidecars land in a directory the test framework removes.
+func copyFixtureDB(t *testing.T, path string) string {
+	t.Helper()
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("the committed conformance database is unreadable, so this test covers "+
+			"nothing: %v", err)
+	}
+	copied := filepath.Join(t.TempDir(), filepath.Base(path))
+	if err := os.WriteFile(copied, bytes, 0o600); err != nil {
+		t.Fatalf("cannot copy the conformance database: %v", err)
+	}
+	return copied
 }
 
 // TestDigestConventionMatchesTheSupervisor pins the half of the boundary that has no type to

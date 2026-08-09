@@ -60,6 +60,18 @@ language enforces. Regenerate it with `python tests/fixtures/session_conformance
 `src/proxy/conformance_test.go` to fail until the Go side is brought back into agreement, which is
 the entire point of it.
 
+**The Go arm reads a byte copy of it in a temporary directory, and the copy is load-bearing rather
+than tidy.** The fixture is a WAL-mode database — header bytes 18 and 19 both read `2` —
+because the supervisor's own writer puts every store into WAL, and SQLite needs the shared-memory
+index on **every** connection to a WAL database, including a `mode=ro` one. Opening the committed
+file in place therefore left `session_conformance.sqlite3-shm` and `-wal` beside a tracked file on
+every `go test`, and two passes reported them as stray untracked files. They are **not** evidence
+of anything opening this database read-write; the Go store passes `mode=ro&_pragma=query_only(1)`
+and both guards have their own test. Copying keeps the production open path and the fixture's WAL
+mode intact and puts the sidecars somewhere the test framework deletes, which is why the pair is
+not gitignored: a `git status` entry nobody created is a signal this repository relies on, and
+suppressing these two would suppress a future one that mattered.
+
 The fixture's fifth row, `sess-terminated-live-lease`, is written with raw SQL rather than through
 `SessionTable.terminate()`, because `terminate()` also zeroes the lease. Without a row that is
 `TERMINATED` while its lease is still live, the fixture cannot tell a state check from an expiry
