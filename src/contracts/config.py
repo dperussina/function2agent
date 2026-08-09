@@ -258,6 +258,33 @@ RUNTIME_KEYS: tuple[Key, ...] = (
 )
 
 
+#: T078, FR-057. The analysis stage's own declared keys.
+#:
+#: **A third tuple rather than an addition to the other two**, because the
+#: containers are per-process and this key belongs to neither of those
+#: processes: the supervisor never reads a source reference and the runtime
+#: does not either. Adding it to `RUNTIME_KEYS` would have made every runtime
+#: start require a value the runtime never uses, which is the shape of a
+#: required key nobody can explain and therefore of a key that acquires a
+#: default.
+#:
+#: `F2A_SOURCE_REF` is required with **no default** and carries no
+#: `no_default_reason`, which is `F2A_TENANT_ID`'s class rather than the
+#: FR-049 bounds' class: there is no universal value that was considered and
+#: ruled out. There is no value at all — the repository and commit are facts
+#: about the operator's deployment, and nothing could stand in for them.
+ANALYSIS_KEYS: tuple[Key, ...] = (
+    Key("F2A_SOURCE_REF", Kind.STR, "FR-057",
+        "the repository and commit the operator asserts produced the admitted "
+        "deployment, as `<repository>@<commit>`. FR-028's source clock is "
+        "anchored to it. **Recorded and presented as an operator declaration "
+        "and never as verified correspondence** — this key's value is not "
+        "checked against anything, and nothing in v1 can check it "
+        "(src/analysis/correspondence.py)"),
+    Key("F2A_DEPLOYMENT_ID", Kind.STR, "FR-035", "admitted deployment identity"),
+)
+
+
 @dataclass(frozen=True)
 class Config:
     values: Mapping[str, Any]
