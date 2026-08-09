@@ -153,6 +153,7 @@ agent claiming success it did not achieve.
 | [`.specify/`](.specify/) | GitHub Spec Kit 0.15.1 scaffolding. Contains the ratified [constitution](.specify/memory/constitution.md). |
 | [`.cursor/skills/`](.cursor/skills/) | 18 project skills encoding the research as decision procedures, plus 10 Spec Kit phase prompts. See the [roster](.cursor/skills/README.md). |
 | [`docs/spec-kit-workflow.md`](docs/spec-kit-workflow.md) | How to drive the spec process. |
+| [`tools/`](tools/) | The instruments. [`instruments.py`](tools/instruments.py) is the census of every check that can fail, and the thing that keeps that census from drifting away from [the workflow that runs them](.github/workflows/ci.yml). |
 | `examples/` | Git-ignored. Nine vendored reference repos (codegraph, spec-kit, Google ADK, Anthropic SDK/cookbooks, NVIDIA OO Agents). Read-only. |
 
 ## Where to start
@@ -169,6 +170,12 @@ agent claiming success it did not achieve.
   marking which entries block.
 - **Writing the spec?** [`.specify/memory/constitution.md`](.specify/memory/constitution.md)
   first — its four non-negotiable principles are plan gates, not suggestions.
+- **Running the checks?** `python3 tools/instruments.py` prints every instrument
+  in the repository, what it checks, and where it runs; `--run` runs the fast
+  ones and *names the ones it did not run*. Do not work from a remembered list.
+  For a week this project's briefs carried five gates and reported all five
+  green while a sixth was red, and every one of those reports was true about
+  the five. See [`tools/instruments.py`](tools/instruments.py).
 
 ## How work proceeds here
 

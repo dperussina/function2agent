@@ -72,6 +72,7 @@ threshold** before you write any edit-and-restore loop of your own.
 | `proof_timeout.py` | **Not a check.** The per-arm wall-clock cap `tests/removal_proofs.sh` runs every proof under, and the reason it exists rather than `timeout(1)`: macOS ships none. Exits `124`, which the harness scores as `timed-out` — never `proved`, because a killed process is non-zero for a reason that says nothing about the mechanism, and never `skipped`, because that is how an arm leaves a green run unnoticed. |
 | `proof_attribution.py` | **Not a check.** For each removal proof, the test that actually fails once its tamper lands — the reading a human does to decide whether a proof proves what it claims. Applies every tamper, so it runs each one under `proof_timeout.py` at the same cap the harness uses; a run that was killed reports `TIMED OUT` or `SIGNALLED` and never `fails NOTHING`, which would be a claim that the test passed made by a run that never reached an assertion. |
 | `removal_proofs_summary.py` | **Not a check either.** Writes the harness's JSON record — one entry per proof, plus the kernel, privilege and toolchains the totals are a property of — and renders it for a CI run page. It exists because a green job is one bit, and one bit cannot separate a run where every arm fired from one where the kernel arms all skipped. On the harness's abort path it deliberately emits no totals at all: a record that reads as success out of a run that measured nothing is the defect, not the fix. |
+| `instruments.py` | **The census.** Every instrument in the repository that can fail, what it checks, where it runs, and whether anything runs it automatically — with `--check` reconciling that list against `.github/workflows/ci.yml` in three directions so it cannot quietly stop being the set. `--run` runs the fast gates and names the ones it did not. See [The census](#the-census--instrumentspy). |
 | `selftest.py` | Proof that each check fires, that none fires on well-formed input, and that the generator writes digits and nothing else. |
 | `threshold_probe.py` | Proof that each numeric threshold is pinned: moves every tolerance, window, bound and distance by one unit and requires the self-test to break. |
 | `fixtures/` | The two miniature corpora. See `fixtures/README.md`. |
@@ -1700,12 +1701,99 @@ Warnings do not fail the build. Add `--warnings-as-errors` once the current
 warning set is cleared, or the hook will be bypassed on the first commit that
 touches an unrelated file.
 
+## The census — `instruments.py`
+
+**Read this before quoting a list of gates, including the one below.**
+
+`python3 tools/instruments.py` prints every instrument in the repository: what
+it checks, whether a non-zero exit fails anything, which CI job runs it, and
+what to type to run it by hand. Twenty-six entries at the time of writing —
+nineteen gates, five advisories, two libraries.
+
+It exists because of a defect this directory had no name for. For a week every
+pass was briefed with a five-item list of gates — `pytest`, `check_corpus.py`,
+`gen_claims.py --check`, `check_tampers.py`, `removal_proofs.sh` — and every
+pass reported all five green. There were never five. `tests/invariants/
+runner.py` is a sixth, it went red at `7349e31` on 2026-08-08 when T096 added a
+test to `tests/invariants/` without adding the invariant that names it, and it
+stayed red through three CI runs (`abca043`, `821ef70`, `6cdd4a5`) that failed
+on it **and on nothing else**. Every "all five green" was true.
+
+That is a third shape beside the two this directory already documents. Findings
+032 and 034 are instruments that produced a clean bit over a measurement they
+had not taken — instruments that *lied*. Here nothing lied and nothing was
+absent from CI. What was absent was **the instrument from the list of
+instruments**, and no mechanism existed whose job was to notice that the list
+and the set had come apart.
+
+So `--check` makes exactly one machine-checkable claim — that the census and
+`.github/workflows/ci.yml` agree — and proves it in three directions:
+
+| direction | what it catches |
+|---|---|
+| declared and absent | a census entry names a CI job and step that the workflow no longer contains. A deleted step, or a renamed job — and a renamed job is not hypothetical here, the removal-proofs job was renamed on 2026-08-04. |
+| present and undeclared | a `run:` step names a repository instrument that no entry names. **This is the 2026-08-08 defect mechanised**: a gate wired into CI cannot stay off the list. |
+| unclassified | a file that looks like an entry point — every top-level `tools/*.py`, plus `tests/removal_proofs.sh` and `tests/invariants/runner.py` — that no entry names at all. `library` is a real answer and four files use it; not deciding is not an answer. |
+
+All four failure modes were **planted and observed firing** rather than reasoned
+about, on 2026-08-09: a deleted `gen_claims.py --check` step, a synthetic
+`tools/brand_new_gate.py` wired into the corpus job, an unclassified
+`tools/an_unclassified_tool.py` dropped into the directory, and the `corpus` job
+renamed to `corpus-gates`. Each produced its own message and exit 1.
+
+**A transcript is a measurement that happened once**, so all four plus two more
+are committed as `tests/unit/test_instrument_census.py`, with a removal-proof
+arm behind each. The two extra arms are the ones that would leave the census
+green *forever* rather than merely unhelpful: the comment exclusion, without
+which prose about a tool reads as wiring; and whether the entry-point scan
+reads the filesystem at all, since an empty candidate list satisfies direction
+3 for every input and no other test in the file would notice. That second one
+is `check_tampers.py`'s vacuity floor, one file over.
+
+`--run` runs the gates that have a standalone command, **does not stop at the
+first failure**, and then names every gate it could not run and why. That last
+part is the point: a run that quietly covered seven of nineteen and printed one
+green line would be this file's own defect one level up.
+
+Two things it deliberately does not have:
+
+- **No timeout.** Not one number in `instruments.py` is a duration, because no
+  duration in it has been measured. `proof_timeout.py` already carries a
+  measured per-arm cap and `ci.yml` carries measured job bounds; a third bound
+  invented here would be the one nobody derived.
+- **No gate ordering.** `--run` executes the table top to bottom and reports
+  every verdict, so the order changes nothing. The one place order is
+  load-bearing is `selftest.py` before `check_corpus.py`, and that ordering is
+  inherited from `ci.yml`'s own stated argument rather than invented.
+
+`--check` is wired into the `corpus` job, and the job was chosen for a reason:
+it is the only one that installs nothing, so a stdlib-only census keeps that
+job's toolchain claim honest. `--run` is deliberately **not** wired anywhere.
+CI already runs these in the jobs whose bounds were derived for them, split so
+that a contributor does not wait on a container build to learn the model-judge
+boundary was crossed; running the set again in one job would collapse that split
+and make a four-minute instrument mandatory in a nine-second job.
+
+### Where the authority lives, and why not here
+
+**This file is not read by `check_corpus.py`.** The corpus include list is
+`README.md`, `research`, `docs`, `specs`, `.cursor/skills` and
+`.specify/memory`; `tools/` is never walked. So every link, count and figure in
+this README is ungated, including the ones in this section, and a census
+maintained *here* would have been a second folklore list with better prose.
+
+That is why the authoritative census is `instruments.py` itself — a Python
+table, reconciled by a gate that runs on every push — and why the only pointer
+outside it is in the top-level `README.md`, which *is* in the corpus include
+list and therefore has its link checked. This section is commentary on a
+mechanism that lives elsewhere. When the two disagree, the mechanism is right.
+
 ## Which of these run in CI, and the one that deliberately does not
 
 Until 2026-08-04 **none** of them did. Every corpus claim in this repository
 rested on somebody having remembered to run them, which is the same standing as
-no gate at all. `.github/workflows/ci.yml` now has a `corpus` job holding four,
-in this order, and the order is the argument:
+no gate at all. `.github/workflows/ci.yml` now has a `corpus` job holding four
+of them plus the census check, in this order, and the order is the argument:
 
 | step | why it is where it is |
 |---|---|

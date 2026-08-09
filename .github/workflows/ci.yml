@@ -244,6 +244,21 @@ jobs:
             echo
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Is the list of instruments still the set of instruments?
+        # **Not part of the corpus check set, and not in its ordering.** It is
+        # here because this is the one job that installs nothing, and
+        # `tools/instruments.py` is standard-library-only for exactly that
+        # reason — a census that needed PyYAML would have to live in a job that
+        # pip-installs, and this job is what keeps the toolchain claim honest.
+        #
+        # What it closes: for a week every pass was briefed with a five-item
+        # list of gates and reported all five green, while `tests/invariants/
+        # runner.py` — a sixth, wired into the job above — was red and had been
+        # since 7349e31. Three CI runs failed on it and only on it. Nothing
+        # lied; the list was simply not the set, and nothing was checking that
+        # it was. This step is what checks it.
+        run: python3 tools/instruments.py --check
+
       - name: Are the derived claims regenerated?
         # Line counts and register ranges are machine-readable from artifacts
         # sitting beside them, and the repair is `python3 tools/gen_claims.py`

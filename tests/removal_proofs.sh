@@ -92,6 +92,13 @@ cp -r "$SRC/src" "$SRC/tests" "$SRC/tools" "$SRC/pyproject.toml" "$WORK/" 2>/dev
 # which reads deploy/images/sandbox.Dockerfile. Without them here the baseline
 # below fails for a missing file and the harness correctly refuses to report.
 cp -r "$SRC/deploy" "$SRC/requirements.lock" "$WORK/" 2>/dev/null
+# `.github/` joined the copy under finding 036, for the same reason and after
+# the same failure: tests/unit/test_instrument_census.py reads
+# .github/workflows/ci.yml, so without it here the census arms report UNUSABLE
+# — their test already fails in the baseline, which is the harness refusing to
+# score a proof it cannot attribute. That refusal working is the reason this
+# line is one line and not a debugging session.
+cp -r "$SRC/.github" "$WORK/" 2>/dev/null
 # The Go arms need the fixtures at the relative path the tests use
 # (src/proxy/../../tests/fixtures), which the copy above already satisfies.
 cd "$WORK" || exit 1
@@ -2796,6 +2803,57 @@ proof "stale bytecode — the arm inherits the image's PYTHONDONTWRITEBYTECODE a
   tests/unit/test_tamper_matching.py \
   "tests/unit/test_tamper_matching.py::test_the_stale_pyc_arm_plants_its_hazard_where_the_images_disable_bytecode" \
   's = s.replace("    env.pop(\x22PYTHONDONTWRITEBYTECODE\x22, None)", "    pass")'
+
+# ---------------------------------------------------------------------------
+# Finding 036 — the instrument census, and the six ways it goes quiet.
+#
+# `tools/instruments.py` is a validator, and the failure this repository keeps
+# hitting is a validator that passes everything because its pattern never
+# matches. Its whole product is a *report*, so every arm below removes a
+# condition and leaves a checker that still exits 0 over the perturbation it
+# was built to catch. Two arms are about looking rather than reporting — the
+# comment exclusion, and whether the entry-point scan reads the filesystem at
+# all — and those are the two that would leave the census green forever.
+
+proof "census — a renamed job reads as an ordinary missing step" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_renamed_job_is_reported" \
+  's = s.replace("        block = blocks.get(entry.job)", "        block = blocks.get(entry.job, \x22\x22)")'
+
+proof "census — a deleted CI step is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_deleted_step_is_reported" \
+  's = s.replace("        if entry.anchor not in block:", "        if False:")'
+
+# The arm for finding 036's own defect. Without this direction a gate can be
+# wired into CI and stay off the list, which is the whole reason the file
+# exists.
+proof "census — a gate wired into CI and missing from the list is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_gate_wired_into_ci_and_missing_from_the_census_is_reported" \
+  's = s.replace("                if reference not in named:", "                if False:")'
+
+# The opposite direction, and the one that gets the checker switched off. The
+# workflow discusses several tools in prose, including one it deliberately does
+# not wire; a scanner that matched comment text would report the reverse of the
+# truth about that one on every push.
+proof "census — comments are scanned, so prose about a tool reads as wiring" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_reference_inside_a_comment_is_not_reported" \
+  's = s.replace("            if line.lstrip().startswith(\x22#\x22):\n                continue", "            pass")'
+
+proof "census — a new unclassified tool is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_an_unclassified_entry_point_is_reported" \
+  's = s.replace("        if candidate not in named:", "        if False:")'
+
+# The silent death. An empty candidate list satisfies direction 3 for every
+# input, and every other test in the file passes over it: the planted case
+# supplies its own candidates, and the committed tree reconciles either way.
+proof "census — the entry-point scan looks nowhere and finds nothing" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_the_entry_point_scan_reads_the_filesystem" \
+  's = s.replace("    found = [\n        f\x22tools/{path.name}\x22\n        for path in sorted((REPO / \x22tools\x22).glob(\x22*.py\x22))\n    ]", "    found = []")'
 
 echo
 _verdict="$PASS proved, $FAIL unproven"
