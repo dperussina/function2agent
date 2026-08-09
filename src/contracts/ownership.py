@@ -131,6 +131,25 @@ OWNERSHIP: tuple[TableOwnership, ...] = (
     _own("restoration_record", ROLE_ANALYSIS, ROLE_RUNTIME,
          note="FR-054/FR-019: operator, version restored from, version "
               "restored to."),
+    _own("configuration_review", ROLE_ANALYSIS, ROLE_RUNTIME, ROLE_PROXY,
+         note="T082/FR-012: the operator's approval or rejection of one "
+              "content address, before it takes effect. **Read by the proxy** "
+              "as well as the runtime, because the enforcement point is the "
+              "consumer of the two gated kinds and is the process that would "
+              "have to answer 'who approved the rules I am enforcing'. "
+              "Written by analysis, which is also the writer of `artifact_ref` "
+              "— the approval and the reference move it authorises have to "
+              "come from one role, or an approval could be recorded by a "
+              "process that cannot act on it."),
+    _own("configuration_change", ROLE_ANALYSIS, ROLE_RUNTIME, ROLE_PROXY,
+         note="T082/FR-019: 'recorded as configuration'. Every change to a "
+              "gated kind, with FR-054's three fields — the operator, the "
+              "version moved from, the version moved to — and whether it is "
+              "recorded as a widening. Distinct from `restoration_record`, "
+              "which is FR-054's record of the rollback itself: a restoration "
+              "of a gated kind writes both, and they answer different "
+              "questions (that a rollback happened, and that the configuration "
+              "widened)."),
 
     # proxy decision log → proxy; read by runtime, which ingests into the trace.
     _own("proxy_decision", ROLE_PROXY, ROLE_RUNTIME),
