@@ -84,7 +84,51 @@ LOCATION_SET_0_9_0 = Migration(
     apply=_location_set_0_9_0_to_1_0_0,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (LOCATION_SET_0_9_0,)
+def _admission_decision_1_0_0_to_1_1_0(
+    document: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Add FR-044's three named fields, marked unrecoverable rather than guessed.
+
+    A 1.0.0 admission decision recorded `admitted`, a rule identifier and a
+    reason. FR-044 requires the state found, the criterion that failed and what
+    the operator would have to change, and **none of the three is recoverable
+    from a 1.0.0 document**: `reason` is prose, and reading a state out of it
+    would be a parse of English presented as a field.
+
+    So the three arrive as `None`, which is the same choice the location-set
+    migration makes for an unrecoverable rule identifier and the same choice
+    `fs_decisions` makes for an unreadable path. A reader that finds `None`
+    learns the record predates the requirement. `src/analysis/admission_record.py`
+    refuses to reconstruct an `AdmissionDecision` from one, which is correct:
+    the decision it describes named no state, and inventing one at load time
+    would put a classification on a record no classifier ever ran against.
+
+    Not `drops`: nothing is discarded. Three keys appear that were absent.
+    """
+    return {
+        **document,
+        "schema_version": "1.1.0",
+        "specification_state": document.get("specification_state"),
+        "failed_criterion": document.get("failed_criterion"),
+        "operator_action": document.get("operator_action"),
+    }
+
+
+ADMISSION_DECISION_1_0_0 = Migration(
+    kind="admission_decision",
+    from_version="1.0.0",
+    to_version="1.1.0",
+    reason="FR-044 requires a rejection to name the specification state found, "
+           "the admission criterion that failed and what the operator would "
+           "have to change; a 1.0.0 record carries none of the three, and "
+           "FR-047's recovery path compares states across admissions.",
+    apply=_admission_decision_1_0_0_to_1_1_0,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (
+    LOCATION_SET_0_9_0,
+    ADMISSION_DECISION_1_0_0,
+)
 
 _BY_SOURCE: dict[tuple[str, str], Migration] = {}
 for _m in MIGRATIONS:

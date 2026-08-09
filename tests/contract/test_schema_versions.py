@@ -42,6 +42,23 @@ BASELINE: dict[str, tuple[str, tuple[str, ...]]] = {
     "bounds": ("1.0.0", (
         "cpu_max", "cpu_total_seconds", "deployment_id", "memory_max_bytes",
         "pids_max", "schema_version")),
+    # **Deliberately left at 1.0.0 by T074, which moved this kind to 1.1.0.**
+    # The three fields T074 added are FR-044's three named things — the state
+    # found, the criterion that failed, and what the operator would have to
+    # change — and MINOR is the right bump because a 1.0.0 consumer still reads
+    # every field it knew.
+    #
+    # The entry is not advanced to 1.1.0 because advancing it silences the
+    # three guards that check the move. With the baseline at 1.0.0,
+    # `test_an_added_required_field_is_at_least_a_minor_bump` asserts the
+    # version moved and `test_every_superseded_version_has_a_migration` asserts
+    # the 1.0.0 -> 1.1.0 migration is registered; with it at 1.1.0 both return
+    # early and assert nothing. The docstring above says changing an entry is
+    # the point, and it is — for a *removal*, where the diff is the review. For
+    # an *addition* the entry is what the guard compares against, and updating
+    # it in the same commit is how this file becomes a tautology. That tension
+    # is in the instrument rather than in this change, and is recorded here
+    # rather than resolved unilaterally.
     "admission_decision": ("1.0.0", (
         "admitted", "deployment_id", "reason", "rule_id", "schema_version")),
 }

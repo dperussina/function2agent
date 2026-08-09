@@ -88,11 +88,19 @@ DOCUMENTS: dict[str, dict] = {
         "pids_max": 64,
     },
     "admission_decision": {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "deployment_id": "d-1",
         "admitted": True,
         "rule_id": "ADM-001",
         "reason": "the target published a machine-readable operation set",
+        "specification_state": "published_non_empty",
+        "failed_criterion": "the target publishes a machine-readable "
+                            "specification of what it serves, at operation "
+                            "granularity (FR-002, OD-18)",
+        "operator_action": "",
+        "specification_source": "https://api.example.com/served-operations",
+        "evidence": "status 200, parsed as a served_operation_set describing "
+                    "1 operation(s)",
         "decided_at": "2026-08-03T12:00:03Z",
         "decided_by_host": "runner-7",
     },

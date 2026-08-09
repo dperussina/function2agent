@@ -181,15 +181,46 @@ BOUNDS = ArtifactSchema(
 
 ADMISSION_DECISION = ArtifactSchema(
     kind="admission_decision",
-    version="1.0.0",
+    version="1.1.0",
     requirement="FR-020, FR-044, FR-054",
     required=("schema_version", "deployment_id", "admitted", "rule_id",
-              "reason"),
+              "reason", "specification_state", "failed_criterion",
+              "operator_action"),
     volatile=("decided_at", "decided_by_host"),
     source_derived=False,
     description="The recorded outcome of FR-044 and FR-020 for a named "
                 "target.",
+    stable_despite_appearance={
+        "specification_source": "the location the specification was fetched "
+                                "from. It is operator-declared configuration "
+                                "echoed back — the same string across two "
+                                "runs over the same input, which is the "
+                                "FR-055 test — and it is **hashed rather than "
+                                "volatile on purpose**: the artifact store "
+                                "retains payload bytes and discards the "
+                                "envelope's context, so a volatile field here "
+                                "would not be retained at all, and which "
+                                "location was consulted is the first thing an "
+                                "operator asks about a rejection. The kind is "
+                                "`source_derived=False`, so no drift channel "
+                                "reads its content address and the "
+                                "false-alarm argument that makes a path "
+                                "volatile elsewhere does not apply.",
+        "evidence": "what the classifier read off the response — a status, a "
+                    "byte count, a parse outcome. Same argument as "
+                    "`specification_source`, whose text it embeds.",
+    },
 )
+# **1.1.0 — the three fields FR-044 requires a rejection to name.** At 1.0.0
+# this kind carried `admitted`, `rule_id` and `reason`, which is a decision and
+# an identifier. FR-044 requires three specific things on a rejection: *which
+# state it found, which admission criterion failed, and what the operator would
+# have to change*. None of the three was recoverable from a 1.0.0 document, so a
+# stored rejection could not be read back for the reason it happened — and
+# FR-047's recovery path re-runs admission and compares states, which needs the
+# state to be a field rather than a phrase inside `reason`. MINOR rather than
+# MAJOR because a consumer written against 1.0.0 still reads every field it
+# knew; it is producers that must now supply more.
 
 SCHEMAS: tuple[ArtifactSchema, ...] = (
     SERVED_OPERATION_SET,
