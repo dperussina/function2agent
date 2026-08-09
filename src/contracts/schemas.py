@@ -153,7 +153,24 @@ EFFECT_GATE_RULE_SET = ArtifactSchema(
     description="The effect-gate rules and the deny list they ship with. One "
                 "artifact: FR-054 joins them, and a rule set rolled back to a "
                 "deny list it never shipped with is a hole.",
+    stable_despite_appearance={
+        "rules[].path_template": "a URL path template, not a filesystem path — "
+                                 "`/orders/{id}` and `/var/log` have the same "
+                                 "shape and the scanner matches on shape. It is "
+                                 "the matcher an operator declared, byte-"
+                                 "identical across two derivations over the "
+                                 "same served-operation set, which is the "
+                                 "FR-055 test. Same excusal, same reason, as "
+                                 "`egress_policy.allowed_paths[]` below.",
+        "deny_list[].path_template": "the same, for the deny list's half of the "
+                                     "artifact.",
+    },
 )
+# **`stable_despite_appearance` added by T081; the version does not move.** It
+# excuses two fields from the volatility scanner and changes neither `required`
+# nor `volatile`, so no document valid at 1.0.0 becomes invalid and no producer
+# has to supply anything new. The scanner is an authoring guard over the payload,
+# not part of the shape a consumer reads.
 
 EGRESS_POLICY = ArtifactSchema(
     kind="egress_policy",
