@@ -125,9 +125,57 @@ ADMISSION_DECISION_1_0_0 = Migration(
     apply=_admission_decision_1_0_0_to_1_1_0,
 )
 
+def _served_operation_set_1_0_0_to_1_1_0(
+    document: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Add T077's set version and freshness, and only one of the two is recoverable.
+
+    **`set_version` is recovered, not invented, and that is the whole
+    difference from the migration above.** It is a function of the operation
+    list, the operation list is in the document, and `set_version_of` is the
+    same function the producer runs — so a migrated 1.0.0 document gets the
+    version it would have been given had it been written today. Nothing is
+    guessed and the value is comparable with a freshly produced one, which is
+    the point: FR-028's deployment clock compares this field across captures,
+    and a migrated document that carried a placeholder here would read as the
+    deployment having moved on the day we released a schema.
+
+    **`captured_at` is not recoverable and arrives as `None`.** A 1.0.0
+    document recorded no observation instant, and there is nowhere to read one
+    from: the artifact row's timestamp is when it was *stored*, which is a
+    different fact, and the file's mtime is a fact about a filesystem.
+    `ServedOperationSet.from_document` refuses a `None` here rather than
+    substituting the store's clock, on the same reasoning
+    `admission_record.from_document` refuses a missing state — a freshness
+    value invented at load time would let a stale set pass FR-047's ceiling by
+    being re-read.
+
+    Not `drops`: nothing is discarded. Two keys appear that were absent.
+    """
+    from src.analysis.served_operations import set_version_of  # noqa: PLC0415
+
+    return {
+        **document,
+        "schema_version": "1.1.0",
+        "set_version": set_version_of(document.get("operations") or ()),
+        "captured_at": document.get("captured_at"),
+    }
+
+
+SERVED_OPERATION_SET_1_0_0 = Migration(
+    kind="served_operation_set",
+    from_version="1.0.0",
+    to_version="1.1.0",
+    reason="T077 requires the served-operation set to carry its own version "
+           "and its freshness alongside the deployment identity FR-002 "
+           "requires; a 1.0.0 document carries neither.",
+    apply=_served_operation_set_1_0_0_to_1_1_0,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     LOCATION_SET_0_9_0,
     ADMISSION_DECISION_1_0_0,
+    SERVED_OPERATION_SET_1_0_0,
 )
 
 _BY_SOURCE: dict[tuple[str, str], Migration] = {}

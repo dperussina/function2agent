@@ -38,6 +38,7 @@ from typing import Any
 
 import pytest
 
+from src.contracts import migrations
 from src.contracts.canonical import dumps
 from src.contracts.schemas import SERVED_OPERATION_SET
 
@@ -159,7 +160,35 @@ def test_the_measured_sources_are_enumerated_not_globbed() -> None:
 
 
 def test_the_served_operation_set_validates() -> None:
-    SERVED_OPERATION_SET.validate(seed.load_served_operations())
+    """The published document validates — after being migrated forward.
+
+    **The document stays at 1.0.0 on purpose, and the migration is the point.**
+    This file is what the *target* publishes, not what this system stores.
+    T077 added `set_version` and `captured_at` to the stored artifact's
+    required set, and `set_version` is a value **this system derives** — a
+    target cannot be required to compute it, and one that published a value
+    here would not be believed anyway (`served_operations.py` recomputes and
+    `ServedOperationSet.from_document` refuses a document that disagrees with
+    itself).
+
+    So the committed fixture is a real pre-1.1.0 document, and reading it is a
+    real exercise of the real migration against real committed bytes rather
+    than against one written for the test.
+    """
+    migrated = migrations.migrate(
+        "served_operation_set", seed.load_served_operations())
+    SERVED_OPERATION_SET.validate(migrated)
+
+
+def test_the_published_document_declares_the_version_it_is() -> None:
+    """And the migration is therefore exercised rather than skipped.
+
+    `migrate` returns a document already at the current version unchanged, so
+    the test above would pass over no migration at all if this fixture were
+    quietly bumped. This is the assertion that the fixture is still the older
+    document the test above claims to be reading.
+    """
+    assert seed.load_served_operations()["schema_version"] == "1.0.0"
 
 
 def test_every_published_operation_is_routed() -> None:

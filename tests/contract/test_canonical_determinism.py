@@ -46,8 +46,12 @@ def _fixture_document() -> dict:
     booleans, null, and non-ASCII text.
     """
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "deployment_id": "d-fixture",
+        # A literal rather than a computed one: this fixture exists to exercise
+        # the serializer, and computing the field here would make the document
+        # depend on the module under test.
+        "set_version": "sha256:" + "b" * 64,
         "operations": [
             {
                 "id": "listOrders",

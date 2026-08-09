@@ -24,8 +24,9 @@ from src.contracts.canonical import NonCanonicalValue, dumps
 # than to back a measured claim — FR-053's discipline is about the latter.
 DOCUMENTS: dict[str, dict] = {
     "served_operation_set": {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "deployment_id": "d-1",
+        "set_version": "sha256:" + "a" * 64,
         "operations": [{"id": "listOrders", "method": "GET"}],
         "captured_at": "2026-08-03T12:00:00Z",
         "source_url": "https://api.example.com/openapi.json",

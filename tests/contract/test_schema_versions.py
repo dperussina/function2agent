@@ -25,7 +25,14 @@ from src.contracts import migrations, schemas
 # has to be a MAJOR bump. If you only added an optional field, the version is a
 # MINOR bump and `required` is unchanged.
 BASELINE: dict[str, tuple[str, tuple[str, ...]]] = {
-    "served_operation_set": ("1.0.0", ("deployment_id", "operations", "schema_version")),
+    # **Moved to 1.1.0 by T077**, which added `set_version` and `captured_at`
+    # to `required`. A MINOR bump and not a MAJOR one because nothing was
+    # removed or renamed and a 1.0.0 document migrates forward — `set_version`
+    # is recovered from the document's own operations rather than invented,
+    # which is the difference from the `admission_decision` migration below.
+    "served_operation_set": ("1.1.0", (
+        "captured_at", "deployment_id", "operations", "schema_version",
+        "set_version")),
     "derived_contract": ("1.0.0", (
         "deployment_id", "failure_taxonomy", "operation_id", "postconditions",
         "preconditions", "reads", "schema_version", "writes")),

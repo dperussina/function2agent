@@ -78,14 +78,44 @@ class ArtifactSchema:
 
 SERVED_OPERATION_SET = ArtifactSchema(
     kind="served_operation_set",
-    version="1.0.0",
+    version="1.1.0",
     requirement="FR-002, FR-054",
-    required=("schema_version", "deployment_id", "operations"),
+    required=("schema_version", "deployment_id", "set_version", "captured_at",
+              "operations"),
     volatile=("captured_at", "source_url", "analyzer_host"),
     source_derived=True,
     description="What a named deployment actually serves, established above "
                 "analysis from a specification the target publishes.",
+    stable_despite_appearance={
+        "operations[].path_template": "a URL path template, not a filesystem "
+                                      "path — the same shape collision "
+                                      "`egress_policy.allowed_paths[]` has, "
+                                      "and for the same reason: the scanner "
+                                      "matches on shape and `/parts/{id}` and "
+                                      "`/etc/passwd` are the same shape. It "
+                                      "is copied verbatim out of the "
+                                      "specification the target published, so "
+                                      "two captures of an unchanged "
+                                      "deployment produce byte-identical "
+                                      "values, which is the FR-055 test.",
+    },
 )
+# `set_version` and `captured_at` are T077's, and the pair is the reason 1.0.0
+# was not enough. FR-002 requires this set to record the deployment identity it
+# describes; T077 requires it to carry its own version and its freshness as
+# well, and a 1.0.0 document carries neither.
+#
+# **`captured_at` is required and volatile at the same time, which is not a
+# contradiction.** `validate()` runs over the whole document, before
+# `envelope.wrap` splits it; so the field must be *present* and is then moved
+# BESIDE the hash. That is exactly the disposition freshness needs: a set is
+# not readable without knowing when it was observed, and re-observing an
+# unchanged deployment must not produce a new content address.
+#
+# **`set_version` is under the hash and is deliberately not the content
+# address.** See `src/analysis/served_operations.py` for the argument; the
+# short form is that the content address moves when `schema_version` moves,
+# and a schema release of ours is not the deployment clock ticking.
 
 DERIVED_CONTRACT = ArtifactSchema(
     kind="derived_contract",
