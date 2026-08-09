@@ -1019,12 +1019,12 @@ proof "FR-055 volatility scan — the detector stops detecting" \
 proof "T015 schema gate — a version moves backwards unnoticed" \
   src/contracts/schemas.py \
   "tests/contract/test_schema_versions.py" \
-  's = s.replace("    kind=\x22served_operation_set\x22,\n    version=\x221.0.0\x22,", "    kind=\x22served_operation_set\x22,\n    version=\x220.9.0\x22,")'
+  's = s.replace("    kind=\x22served_operation_set\x22,\n    version=\x221.1.0\x22,", "    kind=\x22served_operation_set\x22,\n    version=\x221.0.0\x22,")'
 
 proof "T015 schema gate — a required field removed without a MAJOR bump" \
   src/contracts/schemas.py \
   "tests/contract/test_schema_versions.py" \
-  's = s.replace("    required=(\x22schema_version\x22, \x22deployment_id\x22, \x22operations\x22),", "    required=(\x22schema_version\x22, \x22deployment_id\x22),")'
+  's = s.replace("    required=(\x22schema_version\x22, \x22deployment_id\x22, \x22set_version\x22, \x22captured_at\x22,\n              \x22operations\x22),", "    required=(\x22schema_version\x22, \x22deployment_id\x22, \x22set_version\x22),")'
 
 # The tamper names the guard inside `migrate`, not the string `raise MigrationError(`.
 # That string occurs five times, and the first is at module scope inside the duplicate-registration
@@ -2991,6 +2991,141 @@ proof "SC-018 instrument — the controls attempt no mutation, so 'admissible fo
   tests/contract/test_admission.py \
   "tests/contract/test_admission.py::test_every_admissible_case_is_admissible_for_the_stated_reason" \
   's = s.replace("        for label, override, expected in MUTATIONS:", "        for label, override, expected in MUTATIONS[:0]:")'
+
+# ---------------------------------------------------------------------------
+# T077 — the served-operation set (FR-002, OD-06).
+#
+# The version and the freshness are the two things T077 adds over an operation
+# list, and each is removable in a way that leaves a set which still looks like
+# a set. The other three arms are the refusals that keep an unusable set from
+# being constructed at all.
+
+proof "FR-002 set version — the version stops being a function of the served surface" \
+  src/analysis/served_operations.py \
+  "tests/contract/test_served_operations.py::test_the_set_version_moves_for_any_change_to_the_served_surface" \
+  's = s.replace("    return content_address([dict(operation) for operation in operations])", "    return content_address([])")'
+
+proof "FR-002 set version — a version the target published is believed instead of computed" \
+  src/analysis/served_operations.py \
+  "tests/contract/test_served_operations.py::test_a_stored_set_version_that_disagrees_with_its_operations_is_refused" \
+  's = s.replace("        if stored is not None and stored != built.set_version:", "        if False:")'
+
+proof "T077 freshness — a set with no capture instant is constructible" \
+  src/analysis/served_operations.py \
+  "tests/contract/test_served_operations.py::test_a_set_with_no_capture_time_is_refused" \
+  's = s.replace("        if not self.captured_at:", "        if False:")'
+
+proof "FR-002 — a duplicated operation id makes one entry unaddressable, unnoticed" \
+  src/analysis/served_operations.py \
+  "tests/contract/test_served_operations.py::test_a_duplicated_operation_id_is_refused" \
+  's = s.replace("            if operation.operation_id in seen:", "            if False:")'
+
+proof "OD-06 ordering — a set is built for a target FR-044 refused" \
+  src/analysis/served_operations.py \
+  "tests/contract/test_served_operations.py::test_a_target_admission_refused_produces_no_set" \
+  's = s.replace("        if decision.state not in ADMISSIBLE_STATES:", "        if False:")'
+
+proof "T014 migration — the recovered set version is invented instead of recomputed" \
+  src/contracts/migrations/__init__.py \
+  "tests/contract/test_served_operations.py::test_the_migration_recovers_the_set_version_rather_than_inventing_one" \
+  's = s.replace("        \x22set_version\x22: set_version_of(document.get(\x22operations\x22) or ()),", "        \x22set_version\x22: \x22unknown\x22,")'
+
+# ---------------------------------------------------------------------------
+# T078 — the correspondence declaration (FR-057).
+#
+# The first arm is the requirement itself: FR-057 records a declaration and
+# never a verified fact, so the mechanism being proved is a refusal that has no
+# success path. The other two are the fail-closed limbs, each paired in the
+# test file with a non-coverage arm showing the layer above accepts what it
+# refuses — which is what makes them removable rather than doubly covered.
+
+proof "FR-057 — verified correspondence becomes obtainable" \
+  src/analysis/correspondence.py \
+  "tests/contract/test_correspondence.py::test_asking_for_verified_correspondence_always_refuses" \
+  's = s.replace("    raise CorrespondenceNotEstablished(", "    if declaration.reference.commit:\n        return\n    raise CorrespondenceNotEstablished(")'
+
+proof "FR-057 — a moving name is accepted as a clock anchor" \
+  src/analysis/correspondence.py \
+  "tests/contract/test_correspondence.py::test_a_branch_name_is_refused_rather_than_resolved" \
+  's = s.replace("    if not _OBJECT_NAME.match(commit):", "    if False:")'
+
+proof "FR-057 — a source reference is attachable with no declared marking beside it" \
+  src/analysis/correspondence.py \
+  "tests/contract/test_correspondence.py::test_a_bare_reference_with_no_status_beside_it_is_refused" \
+  's = s.replace("    if not status:", "    if False:")'
+
+# ---------------------------------------------------------------------------
+# T079 — FR-020's confused-deputy inspection, FR-056's procedure.
+#
+# Every arm here guards the same failure from a different side: a procedure
+# that answers `clean` when it should decline. That is the failure that turns
+# the inspection into a rubber stamp, and each of these four removals produces
+# a version of it while leaving the whole suite otherwise green.
+
+proof "FR-056 step 2 — an unresolvable call reads as the absence of an outbound request" \
+  src/analysis/deputy_inspection.py \
+  "tests/contract/test_deputy_inspection.py::test_a_handler_containing_only_an_unresolvable_call_is_not_clean" \
+  's = s.replace("        if unresolvable:", "        if False:")'
+
+proof "FR-056 step 3 — an untraceable destination passes as clean" \
+  src/analysis/deputy_inspection.py \
+  "tests/contract/test_deputy_inspection.py::test_an_untraceable_destination_declines_rather_than_passing" \
+  's = s.replace("    if untraceable:", "    if False:")'
+
+proof "FR-056 step 3 — an f-string with a hole counts as a build-time constant" \
+  src/analysis/deputy_inspection.py \
+  "tests/contract/test_deputy_inspection.py::test_an_f_string_with_an_untraceable_hole_is_not_a_build_time_constant" \
+  's = s.replace("        return all(isinstance(part, ast.Constant) for part in node.values)", "        return True")'
+
+proof "FR-056 step 3 — influence tracing stops before its fixed point" \
+  src/analysis/deputy_inspection.py \
+  "tests/contract/test_deputy_inspection.py::test_influence_is_traced_when_the_chain_is_not_in_walk_order" \
+  's = s.replace("    changed = True\n    while changed:", "    changed = True\n    for changed in (True,):")'
+
+proof "FR-056 — uninspectable stops being denied" \
+  src/analysis/deputy_inspection.py \
+  "tests/contract/test_deputy_inspection.py::test_only_clean_is_allowed" \
+  's = s.replace("ALLOWED_OUTCOMES = frozenset({CLEAN})", "ALLOWED_OUTCOMES = frozenset({CLEAN, UNINSPECTABLE})")'
+
+# ---------------------------------------------------------------------------
+# T080 — FR-016 address pinning.
+#
+# The first arm is the positive form of "no per-request re-resolution": the
+# pin's address is what a connection is made to, and removing that is exactly
+# the edit that hands a name back to whatever dials. It is not a doubling of
+# `src/proxy/addresses.go`'s `checkDialAddress` — that one refuses a name at
+# the dial and this one stops a name being produced, and either can be deleted
+# with the other still in place.
+
+proof "FR-016 — the dial target reverts to the name, so the connection is resolved again" \
+  src/analysis/pinning.py \
+  "tests/contract/test_pinning.py::test_the_pinned_address_is_what_a_request_is_routed_to" \
+  's = s.replace("        return (self.address, self.port)", "        return (self.host, self.port)")'
+
+proof "FR-016 — a pin is allowed to hold a name instead of an address" \
+  src/analysis/pinning.py \
+  "tests/contract/test_pinning.py::test_a_pin_holding_a_name_is_refused" \
+  's = s.replace("        if parsed is None:", "        if False:")'
+
+proof "FR-016 — the port is defaulted rather than pinned, so host-and-port becomes host" \
+  src/analysis/pinning.py \
+  "tests/contract/test_pinning.py::test_an_authority_without_an_explicit_port_is_refused" \
+  's = s.replace("    if not match:", "    if False:")'
+
+proof "FR-016 — a literal destination is round-tripped through the resolver anyway" \
+  src/analysis/pinning.py \
+  "tests/contract/test_pinning.py::test_a_literal_destination_is_not_sent_to_the_resolver" \
+  's = s.replace("    literal = _as_address(host)", "    literal = None if resolve(host) else _as_address(host)")'
+
+proof "FR-016 — the sealed resolver answers instead of refusing, so a late resolve is silent" \
+  src/analysis/pinning.py \
+  "tests/contract/test_pinning.py::test_the_pin_holds_when_the_resolver_would_now_refuse_outright" \
+  's = s.replace("        raise ReresolutionAttempted(", "        return []\n        raise ReresolutionAttempted(")'
+
+proof "FR-016 — two pins for one authority coexist, so the destination is chosen at request time" \
+  src/analysis/pinning.py \
+  "tests/contract/test_pinning.py::test_two_pins_for_one_authority_are_refused" \
+  's = s.replace("        if key in seen and seen[key] != destination.address:", "        if False:")'
 
 echo
 _verdict="$PASS proved, $FAIL unproven"
