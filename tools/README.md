@@ -1230,13 +1230,17 @@ invents an anchor no rendered page carries.
 `slugify` now parks inline code before the emphasis pass and removes only non-intraword `_` pairs.
 Measured against the renderer over the whole corpus as walked on 2026-08-10: **29 of 2,371 headings
 disagreed before, 4 after, and 26 slugs moved** — every one of them restoring a literal underscore.
-Adding `tools/` to `include` later that day put a further 53 headings into the walked set, and they
-have not been put through the renderer. The count above is left at the set it was taken over rather
-than restated over a set it was not, and no current total is given in its place: the walked set also
-grows whenever the corpus does, so a "now" figure would be a baseline plus a delta and would rot on
-the next commit. The stable statements are the dated measurement and the 53. Neither family below is reachable in those 53: the only
+Adding `tools/` to `include` later that day put a further 53 headings into the walked set. ~~and they
+have not been put through the renderer.~~ **They have been, on 2026-08-10 at `1b52eb9`: all 53 were
+fetched from the renderer and all 53 agree.** The count above is left at the set it was taken over
+rather than restated over a set it was not, and no current total is given in its place: the walked set
+also grows whenever the corpus does, so a "now" figure would be a baseline plus a delta and would rot
+on the next commit. The stable statements are the dated measurement, the 53, and their agreement.
+Neither family below is reachable in those 53: the only
 non-ASCII character in any of their headings is an em dash, which both sides drop, and none of them
-ends in punctuation preceded by a space. The four survivors are two further families, neither
+ends in punctuation preceded by a space — **an argument from inspection that the differential has now
+confirmed rather than replaced, which is the order that matters, since inspection can only bound the
+families it already knows about.** The four survivors are two further families, neither
 reachable from any live link and both recorded here rather than fixed, because each is a different
 defect from the one that was briefed:
 
@@ -1244,6 +1248,35 @@ defect from the one that was briefed:
 | --- | --- | --- |
 | `plan.md:3487`, `findings/028:50`, `findings/028:78` | `①` and `②` are kept | Python's `\w` matches Unicode category `No`; GitHub's word class does not |
 | `research/12-examples-as-corpus.md:103` | a trailing `-` is missing | GitHub drops punctuation and *then* converts the remaining space, keeping a trailing hyphen; this implementation strips first |
+
+**Closing the 53 turned up a third population that no differential had ever covered, and it is larger
+than both families above put together: headings inside blockquotes.** `crossrefs._anchors_for` matches
+`^(#{1,6})\s+`, anchored at the start of the line, so a heading written `> ## Title` never enters the
+anchor set the checker builds — and it never entered the set either differential walked, which is why
+a run that reproduces the four survivors exactly can still be blind to it. GitHub renders such a
+heading as a real heading and emits an `id` for it. Re-run at `1b52eb9` with blockquote prefixes
+stripped, the corpus divides in two: the **2,425** headings the checker enumerates, of which **4**
+disagree — the two families above, unchanged, at the three `①`/`②` sites and the one `★` site — and
+the **107** it does not, of which **39** disagree. The first number is the dated set above plus the 53
+and one heading the corpus gained in between, so the two runs agree everywhere they overlap, and that
+agreement is what licenses reading the 39 as new rather than as a contradiction.
+
+**The 39 are a single family, and it is named here rather than fixed.** Every one is a heading whose
+text opens with a pictograph — `⚠️` at 29 sites, `✅` at 8, `⛔` at 2 — and in every one the renderer
+emits a leading `-` where this implementation emits none, preceded at the 29 `⚠️` sites by a literal
+U+FE0F that the renderer keeps and this implementation drops. Six of the 39 carry a circled digit as
+well and so are compounds of this family with the first one above.
+
+**What is recorded is the enumeration gap, not the slug.** The 39 are unreachable from the population
+the checker walks: no plain heading anywhere in the corpus opens with a pictograph, so the family has
+no site outside blockquotes, and the gate stands at zero errors — which is the same fact stated twice,
+because a link to one of these anchors would have found no computed target to match and would have
+fired. So the live defect is that a link into a blockquoted heading cannot be resolved *at all*, and
+whether the checker should resolve one is a different question from whether `slugify` spells it the way
+the renderer does. **Neither half is repaired here, on the `★` precedent**: the leading-hyphen fix
+reorders strip against convert for every heading, and widening the enumeration changes the anchor set
+of every document at once. Both are whole-corpus blast radii bought for a population with no live
+link in it.
 
 **The `link-label` half is fixed too, and the false-negative question was answered before the fix
 went in rather than after.** The check now resolves the target with `posixpath` — not
