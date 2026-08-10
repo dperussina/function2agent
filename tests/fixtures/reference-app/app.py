@@ -8,8 +8,8 @@
 Three things in Phase 4 need a workload rather than a proxy for one:
 
 - **T101** measures the syscall supervisor's overhead *on the reference
-  application*. `workload.sh` is the shell-heavy arm; the API sequence is
-  `Application.call`.
+  application*: `Application.call` is the in-process arm, `build_server` the
+  socket arm, and the shell-heavy arm is a proxy in the battery, not here.
 - **T114** asserts that zero calls which did not resolve read-only reach the
   target. That assertion needs a target with an operation that is *not*
   read-only, which `POST /shipments/{id}/cancel` is, and a published
