@@ -1021,6 +1021,13 @@ push a subset, and do not judge from the outside that they look finished — a c
 and correct and still be held back on purpose, and the only pass that knows is the one that wrote it.
 Improvising is the failure, not the delay.
 
+**Read the range by subject, not by the author field.** Every pass in this repository commits under
+the same `user.name` and `user.email`, so `%an` answers "yours" for every commit in the range and a
+check written against it reports clean no matter whose work is sitting there. A test that returns the
+same verdict on every input is vacuous — true, and carrying no weight, in the sense the suite's own
+vacuous-invariant banner means it. What actually distinguishes your commits is that you wrote their
+subjects minutes ago. Recognise them, and treat a subject you do not recognise as a stop.
+
 **No hook and no gate can take this over**, and the reason is not that nobody has written one. The
 question is not one a check can answer: another pass's commits are not defective, so every gate here
 passes on them cheerfully. `check_corpus.py`, `check_tampers.py` and the suite all go green on a range
