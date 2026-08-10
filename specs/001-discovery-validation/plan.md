@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ **twenty-nine** owner decisions
-(OD-01 through OD-29, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ **thirty** owner decisions
+(OD-01 through OD-30, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -3714,6 +3714,164 @@ and that any remedy naming `newuidmap` must name `CAP_SYS_ADMIN` — are confirm
 rather than changed by it. **No removal proof is warranted and none is added**: this entry is a
 record, it authorises no mechanism, and a proof asserting that deleting prose breaks a test would be
 the vacuous kind [finding 032](../002-spec-aware-agent-runtime/findings/032-removal-proof-signal-fabrication.md)
+exists to keep out of this corpus.
+
+### OD-30 — CI is the authoritative environment for T101's overhead figure, and the figure is published per arm against the same run's measured control with pooling forbidden; the `workflow_dispatch` recording route is declined because the route it would have built already exists
+
+**Decided 2026-08-10**, answering the one question
+[`tasks.md`](../002-spec-aware-agent-runtime/tasks.md)'s T101 blocker set put to an owner and
+explicitly declined to answer: **which environment produces T101's authoritative figure?** That
+bullet reads *"the decision is left unmade"* and states the reason it was left — the choice is which
+posture a recorded figure is allowed to be a property of, and no host answers it. The answer is
+**CI**, on grounds stated comparatively below, and it arrives with two riders the owner asked to have
+tested rather than implemented politely.
+
+**This is a decision and not a measurement, and two of its three limbs came back changed by
+contact.** The environment selection stands. The recording route is **declined** rather than
+deferred — the mechanism it would have installed is unnecessary and, built as specified, breaks the
+job it runs in. The publication rule stands as a rule and **its prediction about which arm it
+withholds is inverted**, which matters because the arm it actually withholds is the one **Q-09**
+names.
+
+**① CI is the authoritative environment for T101's figure. The claim is comparative and is recorded
+as comparative.** CI is a 4 vCPU hosted runner (`6.17.0-1020-azure` x86_64, euid 0, CPython 3.12.13)
+and is **not** a deployment-representative host; nothing here claims it is one. What it is, is the
+better of the two environments this corpus can reach, and the two grounds that carry it are the
+sample and the architecture. Eleven runs since `31400931286` publish a five-arm figure as an
+artifact, three of them with a k=10 within-run sample beside it, all on one documented harness and
+one runner class — against which a linuxkit figure is a local reading whose record is gitignored. And
+`6.12.76-linuxkit` on `aarch64` is a kernel and an architecture nothing deploys to, so a figure taken
+there would inherit none of CI's evidence, which is this corpus's own standing rule that two records
+on different kernels are not a before and an after.
+
+> #### ⚠️ THE HEAVIEST GROUND OFFERED FOR LIMB ① IS FALSE, AND THE LIMB STANDS WITHOUT IT
+>
+> **The ground that CI *"is the only environment that measures all five arms including both
+> reference-application arms"* does not survive reading the artifact.** The privileged linuxkit
+> container measures all five. `tests/batteries/results/seccomp-overhead.latest.json` on this host is
+> a **2026-08-10 `6.12.76-linuxkit` aarch64 record at `euid 0` carrying all five arms** —
+> `compute_only`, `path_heavy`, `shell_heavy`, `reference_app_api`, `reference_app_socket` — and it
+> carries the `euid` key the committed record lacks. The Docker daemon is reachable and
+> `f2a-dev:latest` is present, so this is a live capability rather than a historical one.
+>
+> **So the comparison is the reverse of the one the ground describes, on that axis.** Both
+> environments measure five arms; only the linuxkit one can *record*, because `record_filename`
+> writes the durable name and CI's checkout is destroyed with the runner. Limb ① therefore selects
+> the environment that **cannot** produce the recorded artifact, and it does so on the sample and the
+> architecture rather than on arm coverage. Recorded this way because a limb resting on a false
+> ground reads as settled until someone checks it, and the two surviving grounds are sufficient.
+
+**② The `workflow_dispatch` recording route is declined. The deliberateness argument is sound and
+the route it argues for already exists.** The proposal was to wire `F2A_RECORD_MEASUREMENTS` behind
+a `workflow_dispatch` input defaulting off, so that recording in CI took two deliberate human acts
+rather than one. Inspection establishes that **the flag was never the obstacle** and that the second
+act is already the whole mechanism:
+
+- **The flag governs the write target and nothing else.** `record_filename` returns
+  `seccomp-overhead.json` when the variable reads exactly `"1"` and `seccomp-overhead.latest.json`
+  otherwise. The measurement is identical on both branches; what changes is a filename.
+- **The artifact route is already built.** `ci.yml`'s *Keep the outcome record and the native figure*
+  step uploads `tests/batteries/results/seccomp-overhead.latest.json` on `if: always()`, and the
+  step above it renders that file into the run summary and **exits 1 when it is absent**. The
+  owner's belief about both was correct.
+- **So recording already costs exactly the two acts the proposal was for**: a human causes a run, and
+  a human downloads that run's artifact and commits it as the durable record. A `workflow_dispatch`
+  input adds a third act that gates nothing, because setting the flag inside CI writes the durable
+  name into a checkout that is deleted.
+
+> #### ⚠️ BUILT AS SPECIFIED, THE FLAG WOULD HAVE FAILED THE JOB AND MISREPORTED WHY
+>
+> **The render step reads `seccomp-overhead.latest.json` by name and the upload step lists it by
+> name.** Under `F2A_RECORD_MEASUREMENTS=1` the battery writes the *durable* name instead, so
+> `.latest.json` is never created, the render step takes its `[ ! -s "$figure" ]` branch, and the job
+> fails at `exit 1` under the heading **`seccomp overhead — NOT PRODUCED`** — a step whose own text
+> reads *"its absence means the measurement did not run — most likely the battery skipped"*. That
+> would be a fabricated diagnosis on the one run triggered to take a record, and the record itself
+> would go un-uploaded, the upload path naming only `.latest.json`. `on:` carries `push` and
+> `pull_request` and no `workflow_dispatch` today, so nothing was half-built.
+>
+> **Nothing is installed and no requirement moves.** The declined route is recorded rather than left
+> unmentioned so that a later pass reaching for the same one-line input finds the reading already
+> taken.
+
+**③ T101's figure is published per arm, each arm's overhead stated beside the same run's observed
+control excursion, and pooling or minimising across the four load-bearing arms is forbidden
+outright.** No threshold is invented, and that refusal stays load-bearing:
+`test_a_small_positive_overhead_is_still_published_because_no_floor_is_known` asserts it. The control
+arm **is** the measured floor, so an arm clearing that run's control excursion by orders of magnitude
+is publishable as a number and an arm inside it is published as **not resolved by this instrument**.
+Pooling is forbidden because the resolution spread across the four is an order of magnitude —
+`overhead_seconds` as a share of each arm's own `baseline_seconds` reads 729/704/635% for
+`path_heavy` against 7.7/4.9/6.6% for `reference_app_socket` — so any pooled headline is a statement
+about the worst-resolved arm wearing the others' names.
+
+> #### ⚠️ THE ARM LIMB ③ WITHHOLDS IS `shell_heavy`, NOT `reference_app_socket`, AND IT IS THE ARM
+> #### Q-09 NAMES
+>
+> **The ruling as offered predicted that the socket arm is the one sitting inside the control's
+> excursion. The readings say the opposite, and the inversion comes from two different quantities
+> being read as one.** Resolution — overhead as a share of an arm's own baseline — is where
+> `reference_app_socket` is worst, at 4.9–7.7%, and that is what makes it the widest of the four.
+> Limb ③'s rule tests something else: **absolute overhead against the control's absolute
+> excursion.**
+>
+> On that quantity the socket arm is comfortably clear and `shell_heavy` is not. The control's
+> positive extreme across three samples of identical construction reads **+0.010275, +0.017368 and
+> +0.029317 s**; the socket arm differences two ~0.7 s medians to recover **~0.05 s**; and
+> `shell_heavy`'s overhead in run `31416959913` reads **0.0188–0.0228 s**, which sits **below** that
+> run's own control excursion. In run `31415736559` all four arms clear the band and `shell_heavy` is
+> the closest at 24.9–28.3 ms of overhead against a +10.3 ms ceiling, a factor of **2.4**.
+>
+> **So limb ③, applied to current samples, withholds `shell_heavy` on the widest-control run** — and
+> `shell_heavy` is the arm the battery's own header calls *"the arm Q-09 names, because an agent that
+> composes shell commands pays this cost on every one of them"*, and the arm T101 names in its own
+> text. The hazard was already on the record at T101's magnitude-bound bullet, which observes that
+> `shell_heavy` sits only 2.4× above the bound and that a bound nudged upward *"would begin
+> suppressing a load-bearing arm"*. Limb ③ does not nudge a bound upward; it makes the widest
+> observed control the bound, which reaches the same arm by a different route.
+
+> #### ⚠️ THIS NARROWS T101 AND DOES NOT CLOSE IT, AND Q-09 IS UNAFFECTED
+>
+> **Q-09 stays satisfiable, and limb ③ is not what threatens it.** Q-09 was accepted *"with the
+> overhead measured on the reference application before it is committed"* and its operative clause is
+> a decision rule — *"if the measurement says prohibitive, the fallback is (b) with the
+> before-execution property lost, or (c)"*. That rule needs a verdict rather than a point estimate,
+> and an overhead beneath the instrument's own zero-measurement excursion answers it in the
+> **not-prohibitive** direction with more force than a number would: an overhead smaller than the
+> floor cannot be prohibitive. A bound discharges Q-09.
+>
+> **T101 is narrowed, and the narrowing lands somewhere other than where it was expected.** T101
+> asks for *"the figure and the shell-heavy arm that stresses it"*. It names **two** subjects, so it
+> never asked for a single pooled workload-level figure and limb ③'s prohibition on pooling
+> contradicts nothing in it — the worry that pooling was T101's criterion does not survive reading
+> the task. What limb ③ does put at risk is T101's *other* named subject: on the widest-control
+> sample the shell-heavy arm is published as a bound rather than as a figure, and T101 asks for it by
+> name. **The task is therefore narrowed rather than discharged**, and the honest statement of its
+> state is that it owes a figure on `reference_app_api`, a figure on `path_heavy`, and a bound on
+> whichever of the remaining two the run's own control swallows. **T101's criterion is not reworded
+> to fit this entry**, which is why the residue is recorded as a residue.
+
+**Authorises no code, no requirement text and no new task.** FR-048's recording clause and SC-022 are
+untouched, `REPEATS` stays 5, no threshold is installed, and no artifact is hand-edited — the repair
+for a stale measurement is a new measurement, which this entry selects an environment for and does
+not perform. What it authorises is a **publication shape** for a figure that is not yet recorded, and
+a **decline** that removes one route from consideration.
+
+**Propagated to** [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md)'s T101 blocker set, whose
+closing bullet said the decision was left unmade and is struck in place with this entry named, and
+whose blocker 1 is narrowed rather than contradicted: `F2A_RECORD_MEASUREMENTS` does still occur once
+in `ci.yml` at line 514 inside a comment, and what changes is that the flag is established as not
+being the obstacle it was read as; [feature 002's `plan.md`](../002-spec-aware-agent-runtime/plan.md)
+at the **Inherited decisions** bound, which tracks the register's extent by its own stated rule;
+and [`tests/batteries/test_seccomp_overhead.py`](../../tests/batteries/test_seccomp_overhead.py)'s
+`REPEATS` note, where the observation that a pooled headline is dominated by the worst-resolved arm
+becomes a rule with an entry to cite, and where the arm identified by limb ③ is named. **Feature
+002's `spec.md` is not advanced and the reason is stated rather than left as an omission**: its bound
+reads `OD-28` and has sat two entries behind since OD-29, and advancing it there calls for the
+per-decision requirement paragraph that file's convention carries, which is an owner's sentence and
+not a propagation pass's. **No removal proof is warranted and none is added**: this entry authorises
+no mechanism, and a proof asserting that deleting prose breaks a test is the vacuous kind
+[finding 032](../002-spec-aware-agent-runtime/findings/032-removal-proof-signal-fabrication.md)
 exists to keep out of this corpus.
 
 ## Open items this plan does not resolve
