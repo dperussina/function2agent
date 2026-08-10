@@ -114,14 +114,33 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #:     shell_heavy                   4.7%      29.8%    30.2%          100th
 #:     reference_app_socket         11.5%     174.4%    43.6%           86th
 #:
-#: **CI's spread is bigger than this host's within-host noise produces.** For
-#: two arms it exceeds all 435 local pairs. So CI carries a component this
-#: measurement does not account for — and **the data cannot say which
-#: component.** Between-runner variance and a larger within-host variance on a
-#: 4-vCPU x86_64 Azure guest predict the same observation, and nothing here
-#: separates them: this host differs from CI's in architecture, kernel and core
-#: count at once, and `host_property_caveat` says in terms that two records on
-#: different kernels are not a before and an after.
+#: For two arms that gap exceeds all 435 local pairs. ~~So CI carries a
+#: component this measurement does not account for, and the data cannot say
+#: which: between-runner variance and a larger within-host variance on a 4-vCPU
+#: x86_64 Azure guest predict the same observation.~~
+#:
+#: **Struck 2026-08-10 by a third draw — the inference, never the arithmetic
+#: above, which is correct for the pair it describes.** Run 31409214955, same
+#: runner class, gave 60.43 / 69.55 / 70.99 / 71.70 in that order. Against run
+#: 31400931286 those are gaps of 1.2%, 2.2%, 6.7% and 8.9% — the **20th to 64th
+#: percentile** of this host's within-host distribution, which is to say
+#: unremarkable. Every pair involving 31403771772 is 23.6–43.6%, at the 83rd to
+#: 100th.
+#:
+#: **So the observed spread is one anomalous run and not a wide runner class**,
+#: and two things follow that a two-run reading could not reach. The first is
+#: that "every arm moved 24–35%" was a property of that run rather than of CI.
+#: The second is the useful one: **31403771772 is also the run whose control
+#: flipped sign**, so `UNRATED["non-positive-overhead"]` is an in-band detector
+#: for exactly the run whose figures should not be compared, rather than only a
+#: tidier way to publish one. Two independent signals picking out the same run
+#: out of three is what makes it an outlier rather than a draw from a wide
+#: distribution.
+#:
+#: This host still differs from CI's in architecture, kernel and core count at
+#: once, and `host_property_caveat` says in terms that two records on different
+#: kernels are not a before and an after. Nothing here measures CI's own
+#: within-host variance; that is still owed.
 #:
 #: **Hence no change, and the reasoning is the refusal rather than the
 #: number.** Aggregating five runs into one — grouping the 30, which
@@ -139,8 +158,14 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: single CI run*, on one runner. That yields within-host variance for CI's own
 #: host, and the difference between it and the across-run spread is the
 #: between-runner component. It is the only measurement that makes this constant
-#: decidable, and until it exists **a CI median is not a decidable basis for
-#: Q-09** — which is a more useful answer than a tuned number.
+#: decidable, and until it exists ~~a CI median is not a decidable basis for
+#: Q-09~~ **a median over a single CI run is not a decidable basis for Q-09 —
+#: refined 2026-08-10 from three runs rather than two** — which is a more useful
+#: answer than a tuned number. A median over several runs is a different
+#: proposition and is now a reachable one, because the anomalous run is a
+#: minority of three and is flagged in-band by its control's sign rather than
+#: picked out in hindsight. What no number of runs measures is the repeat count
+#: *inside* one run, which is what `REPEATS` sets.
 #:
 #: **The denominator is not the noisy part, which rules out the other repair.**
 #: `notifications_observed` was *identical* in all 30 runs for every arm
