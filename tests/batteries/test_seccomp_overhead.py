@@ -258,8 +258,11 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: wider than anything the across-run sample shows, so the 3.0x swing in the
 #: published control rate is not an across-run effect at all: it is this arm's
 #: own within-run noise, measured. All four load-bearing arms sit clear of that
-#: band — `shell_heavy` closest at 24.9–28.3 ms of overhead against the
-#: control's +10.3 ms ceiling, a factor of 2.4.
+#: band **on this sample** — `shell_heavy` closest at 24.9–28.3 ms of overhead
+#: against the control's +10.3 ms ceiling, a factor of 2.4 **and this arm
+#: overlaps the control's band on two of the four samples now recorded, so the
+#: clearance here is a property of this draw** *(qualifier added 2026-08-10 under
+#: limb ③'s revised rule, which requires the overlap on the figure's own line)*.
 #:
 #: **THE FLOOR WAS THEN TAKEN TWICE MORE, AND THE SPLIT REPRODUCES WHILE THE
 #: NUMBERS DO NOT.** Runs `31416789165` and `31416959913`, same runner class,
@@ -434,9 +437,13 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: establish there is *"no single number here to be a floor"* for.
 #:
 #: **`shell_heavy`'s OVERHEAD SITS AT THE SAME ABSOLUTE SCALE AS THE CONTROL'S
-#: NOISE, AND IT CLEARS THAT CONTROL ON ONE OF THE THREE RECORDED SAMPLES.
+#: NOISE, AND IT CLEARS THAT CONTROL ON TWO OF THE FOUR RECORDED SAMPLES.
 #: THIS IS A FACT ABOUT Q-09's OWN NAMED ARM AND IT IS STATED HERE RATHER THAN
-#: LEFT TO BE INFERRED.** `overhead_seconds` per run against that run's control
+#: LEFT TO BE INFERRED.** *(The count read `one of the three` until 2026-08-10,
+#: when the fourth sample below landed; it is restated in the header rather than
+#: only in the block that changed it, because a reader who arrives at this
+#: heading by `grep` reads the count here and not four paragraphs down.)*
+#: `overhead_seconds` per run against that run's control
 #: positive extreme, re-derived from the three `seccomp-variance.latest.json`
 #: artifacts at 10 draws per arm:
 #::
