@@ -469,6 +469,20 @@ def test_no_engine_specific_sql_lives_above_the_repository() -> None:
         # repository would be routing a read of somebody else's database
         # through our tenancy layer.
         root / "analysis" / "codegraph_pin.py",
+        # T093. Reads the *enforcement point's* decision database — another
+        # process's store, written by Go, with its own schema and none of
+        # FR-035's scope columns. Same footing as `codegraph_pin.py`: routing
+        # it through `Repository` would route a read of somebody else's
+        # database through our tenancy layer, and `Repository` opens for
+        # writing (it sets journal mode), which is exactly the thing the
+        # ownership direction forbids here.
+        #
+        # **This exemption is narrower than it looks, and the narrowing is
+        # tested.** `tests/contract/test_proxy_ingest.py`'s
+        # `test_the_ingest_issues_no_write_statement_at_all` scans the same
+        # file for write- and schema-bearing SQL, so what is suspended is
+        # "no engine-specific SQL" and not "no writes".
+        root / "runtime" / "proxy_ingest.py",
     }
 
     offenders: list[str] = []
