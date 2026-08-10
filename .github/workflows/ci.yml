@@ -266,6 +266,95 @@ jobs:
         # the window between an edit and that command.
         run: python3 tools/gen_claims.py --check
 
+  slug-differential:
+    # **The one oracle in this repository that belongs to somebody else.**
+    # `link-anchor` resolves every `#fragment` in the corpus with
+    # `corpuscheck.corpus.slugify`. For as long as that function was described
+    # from GitHub's documentation rather than measured against GitHub it
+    # invented anchors no rendered page carried, `link-anchor` computed every
+    # target with the same defect, and two committed links were written to
+    # match the invention and passed a green gate. The differential closed
+    # that on 2026-08-10 and then nothing was left watching, so a renderer
+    # change would reopen it in exactly the same silence.
+    #
+    # **Non-gating, and the reason is the one already recorded in this file.**
+    # The step needs outbound HTTPS to `api.github.com`, so an upstream
+    # incident, a rate limit or a renderer change would redden builds while
+    # saying nothing about the merge. `ci.yml` declines `--warnings-as-errors`
+    # on the stated reasoning that a gate which flaps gets worked around, and a
+    # network-dependent gate is that argument's strongest case. So this takes
+    # the shape the unshare pair takes: `continue-on-error`, a non-zero exit
+    # surfaced as a `::warning::` and a step summary. Visible, never blocking.
+    #
+    # **Its own job rather than a step in `corpus`, on that job's own
+    # reasoning.** `corpus` is a fast signal — 44s observed max, installing
+    # nothing — and the whole-corpus differential measured **105.7s** on an
+    # M-series laptop at `8f15f50` on 2026-08-10, which would more than double
+    # it. That job also exists partly to keep the claim that `tools/` is
+    # standard-library-only with no network honest, and hanging the one
+    # network-dependent instrument off it muddies what a green tick there
+    # means. The harness is deliberately not in `tools/` for the same reason;
+    # it is invoked at its harness path here.
+    #
+    # **Whole corpus rather than a subtree, measured before choosing.**
+    # `--path tools` is one document and 1.6s, and it reaches **0** blockquoted
+    # headings — the population that hid a defect for two differentials
+    # running. A canary blind to the family that was last wrong is not a
+    # canary. The full run covers 137 documents and 2,548 headings, 2,439
+    # anchored at `^#` plus 109 blockquoted, and costs 137 authenticated
+    # requests against a 1,000/hour budget.
+    #
+    # **`push` only.** On `pull_request` the checked-out SHA is a merge commit
+    # this workflow did not push, and the contents endpoint renders a ref the
+    # remote holds; the harness reports the miss as HTTP 404 rather than as a
+    # corpus difference, which is correct behaviour and a useless annotation on
+    # every PR. Renderer drift is a property of the renderer, not of a branch,
+    # so observing it once per merge is the same observation.
+    if: github.event_name == 'push'
+    name: slugify vs GitHub's renderer (non-gating observation)
+    runs-on: ubuntu-latest
+    # Not scaled off the work. The observed 105.7s is a laptop figure against a
+    # residential link, the runner's path to `api.github.com` is a different
+    # measurement, and this job is 137 sequential round trips — so the floor is
+    # set to fire on a hang rather than to bound the work.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/runner-identity
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No `pip install`. The harness is `urllib` and the standard library.
+
+      - name: "`slugify` against GitHub's own renderer — NON-GATING observation"
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # `set +e` for the reason the unshare pair states: the run whose
+          # record somebody needs is the failing one, and `bash -e` would abort
+          # before anything reached the run page.
+          set +e
+          set -u
+          python3 \
+            specs/001-discovery-validation/harness/slug-differential/slug_differential.py \
+            > slug-differential.txt 2>&1
+          status=$?
+          {
+            echo '<details><summary>slugify vs GitHub'"'"'s renderer — whole corpus at this commit</summary>'
+            echo
+            echo '```'
+            cat slug-differential.txt
+            echo '```'
+            echo '</details>'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -ne 0 ]; then
+            echo "::warning title=slug differential::slugify and GitHub's renderer disagree, or the differential could not run. Both are worth reading, and they are different findings: the first moves every #fragment link-anchor resolves, the second means nothing was measured. See the run summary. This does not gate the build."
+          fi
+          exit "$status"
+
   python:
     name: pytest (kernel mechanisms included)
     runs-on: ubuntu-latest
