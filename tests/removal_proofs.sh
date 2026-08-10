@@ -3685,6 +3685,24 @@ proof "T101 — the process-spawn enumeration is emptied, so 'not a shell worklo
   "tests/unit/test_reference_app.py::test_the_spawn_detector_fires_on_a_planted_call" \
   's = s.replace("_PROCESS_SPAWNING_MODULES = frozenset(\n    {\x22subprocess\x22, \x22multiprocessing\x22, \x22pty\x22, \x22asyncio.subprocess\x22}\n)", "_PROCESS_SPAWNING_MODULES = frozenset()")'
 
+# The record's host caveat was a hardcoded string until 2026-08-10, and it
+# named Docker Desktop's linuxkit VM on a native Azure runner that had never
+# been one. This arm is that defect put back: an early return in front of the
+# reading, restoring the exact sentence that shipped. It belongs in this file
+# rather than staying a transcript because the guard's whole value is that it
+# fails on a constant, and a guard nobody has watched fail is a guard nobody
+# has measured.
+#
+# It names a test in `tests/unit/`, and that is what makes it scoreable at all.
+# The reasoning above still holds for `test_seccomp_overhead.py`'s own
+# assertions — they are `linux_only` and `privileged` and a proof over them
+# reports SKIPPED — but `host_property_caveat` is a pure function of three
+# readings, so its test runs on every host and this arm scores everywhere.
+proof "T101 — the record's host caveat goes back to being a constant, and describes a host it was not measured on" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_caveat.py::test_the_host_caveat_differs_between_three_kernels" \
+  's = s.replace("    matched = sorted(", "    return \x22Docker Desktop\x27s linuxkit VM on this host, not a bare Linux host. Syscall-interception overhead is the measurement most sensitive to that difference and it may not transfer.\x22\n    matched = sorted(")'
+
 # ---------------------------------------------------------------------------
 # T004 — the `codegraph` schema pin.
 #

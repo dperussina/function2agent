@@ -9,9 +9,17 @@ number that decides.
 **What the number is a property of, stated first because it is the part that
 transfers least.** Every figure here is a property of:
 
-  - Docker Desktop's `linuxkit` VM on this host — **not a bare Linux host**.
-    Syscall cost inside a virtualized kernel is not the syscall cost on metal,
-    and syscall *interception* cost is the thing most sensitive to that.
+  - ~~Docker Desktop's `linuxkit` VM on this host — **not a bare Linux host**.~~
+    **Struck 2026-08-10: that sentence was a constant, and the record carried
+    it onto hosts it had never been true of.** It was written on a laptop. When
+    CI ran this module on GitHub's native runner the emitted record named
+    `linuxkit` in prose while `environment.kernel`, one field away, correctly
+    read `6.17.0-1020-azure`. The caveat is now a **reading**:
+    `host_property_caveat` below builds it from the kernel release, the
+    architecture and the euid the run actually observed. Syscall cost inside a
+    virtualized kernel is not the syscall cost on metal, and syscall
+    *interception* cost is the thing most sensitive to that — which is why the
+    caveat about it was the part that most needed to stop being hardcoded.
   - The host's architecture, kernel version and core count, all recorded in
     the result file rather than described here.
   - A **CPython** supervisor answering notifications with `fcntl.ioctl` and a
@@ -185,6 +193,102 @@ SHELL_HEAVY_ABSENCE = (
 )
 
 
+# --- what the figure is a property of, read rather than asserted -----------
+#
+# Kernel-release substrings that positively identify a virtualized or cloud
+# guest kernel, each with the reason it is here. **This is a closed accepting
+# set and never a complement**, which `tools/README.md` records as the shape
+# two containment checks nearly shipped with: "any errno but EPERM", then "the
+# two errnos differ", each of which would have reported a refusing host as a
+# working one. The tempting complement here is "no marker, therefore bare
+# metal", and it is wrong for the same reason — the space of kernel flavours is
+# open, and a host nobody anticipated would be classified by the branch nobody
+# checked. So a match means *known guest*; everything else means *undetermined*
+# and says so.
+#
+# The residual error is one-sided by construction: a bare-metal host running a
+# kernel whose release string happens to contain one of these is over-warned.
+# Over-warning a reader who is about to compare two figures costs a sentence.
+# Under-warning them is the defect this table exists to end.
+VIRTUALIZATION_MARKERS: dict[str, str] = {
+    "linuxkit": "Docker Desktop's linuxkit VM",
+    "azure": "an Azure hypervisor guest, which is what GitHub's hosted runners are",
+    "aws": "an AWS EC2 guest",
+    "gcp": "a Google Compute Engine guest",
+    "cloud": "a distribution 'cloud' kernel flavour, which is built for guests",
+    "microsoft": "WSL2's Microsoft kernel, a guest under a Windows host",
+}
+
+
+def host_property_caveat(kernel: str, machine: str, euid: int) -> str:
+    """The first entry of `what_this_is_a_property_of`, built from readings.
+
+    Three arguments, because three things are all this process can honestly
+    observe about the machine underneath it: the kernel release, the
+    architecture, and the privilege the measurement ran with. It deliberately
+    does **not** take a host category, and it does not derive one — see the
+    table above for why the unmarked branch declines to guess.
+    """
+    matched = sorted(
+        marker for marker in VIRTUALIZATION_MARKERS if marker in kernel.lower()
+    )
+    where = (
+        f"Kernel {kernel} on {machine}, measured at euid {euid}. "
+    )
+    if matched:
+        named = "; ".join(VIRTUALIZATION_MARKERS[marker] for marker in matched)
+        what = (
+            f"That release string names {named}, so this is a figure from a "
+            "virtualized kernel and not from a bare Linux host. "
+        )
+    else:
+        known = ", ".join(sorted(VIRTUALIZATION_MARKERS))
+        what = (
+            "That release string carries none of the virtualization markers "
+            f"this record knows how to recognise ({known}) — which is not "
+            "evidence of hardware. Nothing this process can observe "
+            "establishes whether the kernel is running on metal or in a "
+            "guest, so the figure is a property of this kernel and not of a "
+            "hardware class. "
+        )
+    return where + what + (
+        "Syscall-interception overhead is the measurement most sensitive to "
+        "that difference and it may not transfer. Two records taken on "
+        "different kernels are not a before and an after and must not be "
+        "subtracted."
+    )
+
+
+def property_caveats(kernel: str, machine: str, euid: int) -> list[str]:
+    """Everything the figure is a property of: one reading, then four
+    constants.
+
+    The split is the point. The first entry varies with the host because it is
+    a statement *about* the host; the rest are claims about the supervisor,
+    the response flag and the workloads, which are properties of this file and
+    would be just as true on any machine.
+    """
+    return [
+        host_property_caveat(kernel, machine, euid),
+        "A CPython supervisor doing one ioctl and one /proc/<pid>/mem read "
+        "per notification. A Go or C supervisor would be faster by an "
+        "unmeasured amount.",
+        "Five workloads. `shell_heavy`, `path_heavy` and `compute_only` "
+        "are proxies; `reference_app_api` and `reference_app_socket` "
+        "drive T116's reference application over the two surfaces app.py "
+        "names. The reference application existed from 2026-08-08; the "
+        "earlier record here said it did not, which was true when it was "
+        "written and is superseded.",
+        "SECCOMP_USER_NOTIF_FLAG_CONTINUE as the response. A supervisor "
+        "that denied or rewrote arguments would pay more.",
+        "An interpreter start per round. Every arm pays it in both the "
+        "baseline and the supervised run, so it cancels out of "
+        "overhead_seconds and inflates notifications_observed — which is "
+        "why microseconds_per_notification is the transferable figure and "
+        "`ratio` is not.",
+    ]
+
+
 def _run_plain(source: str) -> float:
     started = time.perf_counter()
     pid = os.fork()
@@ -265,33 +369,19 @@ def measurement() -> dict:
             "platform": platform.platform(),
             "machine": platform.machine(),
             "kernel": platform.release(),
+            # Recorded because the caveat below is built from it, and a
+            # caveat quoting a reading the record does not carry cannot be
+            # re-derived by anyone holding the artifact.
+            "euid": os.geteuid(),
             "python": sys.version.split()[0],
             "cpu_count": os.cpu_count(),
             "audit_arch": hex(_linux.audit_arch()),
             "watched_syscalls": sorted(_linux.path_taking_syscalls()),
         },
         "shell_heavy_on_the_reference_application": SHELL_HEAVY_ABSENCE,
-        "what_this_is_a_property_of": [
-            "Docker Desktop's linuxkit VM on this host, not a bare Linux host. "
-            "Syscall-interception overhead is the measurement most sensitive "
-            "to that difference and it may not transfer.",
-            "A CPython supervisor doing one ioctl and one /proc/<pid>/mem read "
-            "per notification. A Go or C supervisor would be faster by an "
-            "unmeasured amount.",
-            "Five workloads. `shell_heavy`, `path_heavy` and `compute_only` "
-            "are proxies; `reference_app_api` and `reference_app_socket` "
-            "drive T116's reference application over the two surfaces app.py "
-            "names. The reference application existed from 2026-08-08; the "
-            "earlier record here said it did not, which was true when it was "
-            "written and is superseded.",
-            "SECCOMP_USER_NOTIF_FLAG_CONTINUE as the response. A supervisor "
-            "that denied or rewrote arguments would pay more.",
-            "An interpreter start per round. Every arm pays it in both the "
-            "baseline and the supervised run, so it cancels out of "
-            "overhead_seconds and inflates notifications_observed — which is "
-            "why microseconds_per_notification is the transferable figure and "
-            "`ratio` is not.",
-        ],
+        "what_this_is_a_property_of": property_caveats(
+            platform.release(), platform.machine(), os.geteuid()
+        ),
     }
     RESULTS.mkdir(parents=True, exist_ok=True)
     serialized = json.dumps(record, indent=2, sort_keys=True) + "\n"
@@ -314,6 +404,28 @@ def test_the_measurement_is_recorded(measurement) -> None:
     assert path.is_file()
     print("\n" + json.dumps(measurement["arms"], indent=2))
     print("\nenvironment: " + json.dumps(measurement["environment"], indent=2))
+
+
+def test_the_records_caveat_is_re_derivable_from_the_environment_it_carries(
+    measurement,
+) -> None:
+    """The one step `tests/unit/test_seccomp_overhead_caveat.py` cannot reach.
+
+    That file injects environment values, so it proves the caveat is a
+    function of its arguments; it cannot prove the *fixture* passes this
+    host's readings rather than somebody's favourite constants. Here the
+    record is regenerated from the environment block the record itself
+    carries, and the two must agree — which is only checkable where the
+    fixture actually runs.
+
+    Deliberately not named by a removal proof: this module is `linux_only` and
+    `privileged`, so such a proof would report SKIPPED on every host that
+    cannot run it.
+    """
+    environment = measurement["environment"]
+    assert measurement["what_this_is_a_property_of"] == property_caveats(
+        environment["kernel"], environment["machine"], environment["euid"]
+    )
 
 
 def test_the_filter_actually_fired_so_the_numbers_mean_something(
