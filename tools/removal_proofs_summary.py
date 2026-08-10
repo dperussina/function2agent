@@ -68,7 +68,13 @@ REASONS = {
     ),
     "test-already-failing": (
         "the test already fails before the tamper, so its failure afterwards "
-        "would prove nothing"
+        "would prove nothing and the harness did NOT attempt the arm. Scored "
+        "`unusable` since 2026-08-10 and never `unproven`: an unproven arm is one "
+        "whose test PASSED without its mechanism, which says the mechanism is "
+        "dead, and this arm says nothing about its mechanism in either direction. "
+        "The commonest causes are a dirty baseline and a top-level directory "
+        "missing from the harness's copy list — `deploy/`, `.github/` and "
+        "`specs/` have each presented here"
     ),
     "test-skipped-in-baseline": (
         "pytest skipped this proof's test in this run's baseline, so the "
@@ -180,6 +186,7 @@ def _caveats(
     skipped: int,
     probed_go: bool = True,
     unreadable: int = 0,
+    unusable: int = 0,
 ) -> list[str]:
     out = [
         "Kernel {kernel} on {system}/{machine}. Four arms — pivot_root, "
@@ -231,6 +238,17 @@ def _caveats(
             "not attempt the arm. These are counted apart from the skips on "
             "purpose: a skip is an arm the environment declined, and nothing "
             "declined these. This run is not green.".format(unreadable)
+        )
+    if unusable:
+        out.append(
+            "{} arm(s) name a test that was ALREADY FAILING in this run's "
+            "baseline, so the harness refused to score them. These are counted "
+            "apart from the unproven on purpose, and the distinction is the "
+            "whole point: `unproven` means the mechanism is dead, and these arms "
+            "established nothing about their mechanisms in either direction. "
+            "Read them as a dirty baseline. If they share a directory, suspect "
+            "the harness's copy list before suspecting the mechanisms. This run "
+            "is not green.".format(unusable)
         )
     return out
 
@@ -293,7 +311,28 @@ def write(out_path: str) -> int:
         # `skipped` would hide it in the one bucket where a lost arm is invisible.
         # Same reasoning as `timed_out`, which finding 032 settled.
         unreadable = _int_or_none("F2A_UNREADABLE") or 0
-        if proved + unproven + skipped + timed_out + unreadable != len(proofs):
+        # And the same reasoning again, applied to the case the comment above
+        # missed rather than to a new one. By its own words: an arm whose baseline
+        # verdict was *read and was failing* was equally never attempted, so
+        # `unproven` overstates it in exactly the way described one line up. The
+        # chain is `timed_out` (finding 032) -> `unreadable` (same reasoning,
+        # stated above) -> here, and this is the third link, not a fourth
+        # judgement.
+        #
+        # The distinction is not cosmetic, because `unproven` is the only word
+        # this instrument produces that means **the mechanism is dead**. While
+        # this outcome was folded into it, that word was also the presenting
+        # symptom of a transiently dirty baseline ("236 proved, 58 unproven" over
+        # 234 failing outcomes, with zero vacuous arms) and of three separate
+        # omissions from the harness's copy list. Four conditions behind one word
+        # teaches every reader to discount it.
+        unusable = _int_or_none("F2A_UNUSABLE") or 0
+        # Named rather than inlined into the `if`, because every outcome added
+        # here has to join this sum and the line is now long enough that the next
+        # one would wrap it. A wrapped condition is a worse tamper target: the two
+        # removal proofs over this sum name it by its text.
+        counted = proved + unproven + skipped + timed_out + unreadable + unusable
+        if counted != len(proofs):
             doc["status"] = "inconsistent"
         doc["baseline"] = {
             "python_outcomes": _int_or_none("F2A_PY_TOTAL"),
@@ -307,6 +346,7 @@ def write(out_path: str) -> int:
             "skipped": skipped,
             "timed_out": timed_out,
             "unreadable": unreadable,
+            "unusable": unusable,
             "entries_recorded": len(proofs),
         }
         doc["skipped_titles"] = [p["title"] for p in proofs if p["outcome"] == "skipped"]
@@ -319,9 +359,12 @@ def write(out_path: str) -> int:
         doc["unreadable_titles"] = [
             p["title"] for p in proofs if p["outcome"] == "unreadable"
         ]
+        doc["unusable_titles"] = [
+            p["title"] for p in proofs if p["outcome"] == "unusable"
+        ]
         doc["proofs"] = proofs
         doc["what_this_is_a_property_of"] = _caveats(
-            env, have_go, skipped, unreadable=unreadable
+            env, have_go, skipped, unreadable=unreadable, unusable=unusable
         )
 
     body = json.dumps(doc, indent=2, sort_keys=True) + "\n"
@@ -414,20 +457,25 @@ def render(in_path: str) -> int:
     # 2026-08-08, and a missing key means the run predates the outcome rather than
     # that it had none.
     unreadable = totals.get("unreadable", 0)
+    # Same reasoning again. Absent from every record written before this outcome
+    # was split out of `unproven`, and `render` is run over the archive, so a
+    # missing key must mean the run predates the outcome rather than crash.
+    unusable = totals.get("unusable", 0)
 
     print("## Removal proofs\n")
     print(
         "| proved | unproven | **skipped** | **timed out** | "
-        "**baseline unreadable** | entries |"
+        "**baseline unreadable** | **baseline already failing** | entries |"
     )
-    print("|---:|---:|---:|---:|---:|---:|")
+    print("|---:|---:|---:|---:|---:|---:|---:|")
     print(
-        "| {} | {} | **{}** | **{}** | **{}** | {} |\n".format(
+        "| {} | {} | **{}** | **{}** | **{}** | **{}** | {} |\n".format(
             proved,
             unproven,
             skipped,
             timed_out,
             unreadable,
+            unusable,
             totals.get("entries_recorded"),
         )
     )
@@ -478,6 +526,25 @@ def render(in_path: str) -> int:
         )
         for proof in doc.get("proofs", []):
             if proof["outcome"] == "timed-out":
+                print("- **{}** — {}".format(proof["title"], proof.get("reason_text")))
+        print()
+
+    if unusable:
+        print(
+            "### {} arm(s) name a test that was ALREADY FAILING\n\n"
+            "The harness refused to score these, and they are **not** unproven. "
+            "`unproven` means the test still passed with its mechanism removed — "
+            "the mechanism is dead. These arms establish nothing about their "
+            "mechanisms in either direction, because their named test was already "
+            "failing before anything was tampered.\n\n"
+            "Read this as a dirty baseline rather than as a result. If these arms "
+            "share a directory, suspect the harness's copy list before suspecting "
+            "the mechanisms: `deploy/`, `.github/` and `specs/` each reached this "
+            "bucket by being absent from it, and in none of those cases did "
+            "anything in this summary say so.\n".format(unusable)
+        )
+        for proof in doc.get("proofs", []):
+            if proof["outcome"] == "unusable":
                 print("- **{}** — {}".format(proof["title"], proof.get("reason_text")))
         print()
 

@@ -86,31 +86,138 @@ SRC=$(pwd)
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
-cp -r "$SRC/src" "$SRC/tests" "$SRC/tools" "$SRC/pyproject.toml" "$WORK/" 2>/dev/null
-# `deploy/` and the lock file joined the copy under T096: the sandbox image's
-# FR-021 properties are checked statically by tests/invariants/test_sandbox_image.py,
-# which reads deploy/images/sandbox.Dockerfile. Without them here the baseline
-# below fails for a missing file and the harness correctly refuses to report.
-cp -r "$SRC/deploy" "$SRC/requirements.lock" "$WORK/" 2>/dev/null
-# `.github/` joined the copy under finding 036, for the same reason and after
-# the same failure: tests/unit/test_instrument_census.py reads
-# .github/workflows/ci.yml, so without it here the census arms report UNUSABLE
-# — their test already fails in the baseline, which is the harness refusing to
-# score a proof it cannot attribute. That refusal working is the reason this
-# line is one line and not a debugging session.
-cp -r "$SRC/.github" "$WORK/" 2>/dev/null
-# `specs/` joined the copy under T095, third instance of the same failure and
-# the same fix. A CONTRACT test's mechanism lives on the other side of a
-# document in `specs/*/contracts/`, so without the tree here every such test
-# fails in the baseline for a missing file and its arms report UNUSABLE rather
-# than a verdict. That silence is the thing: the three T095 arms were scored
-# `test-already-failing` on first run, and nothing about their titles said the
-# reason was the copy list rather than the mechanism. The whole tree is copied,
-# not `002` alone, because tools/corpuscheck walks `specs/*/findings` and a
-# partial copy would trade one missing-file baseline failure for another.
-cp -r "$SRC/specs" "$WORK/" 2>/dev/null
+# ---------------------------------------------------------------------------
+# THE COPY LIST, AND THE TWO DIRECTIONS IT USED TO FAIL SILENTLY IN
+#
+# What each path is here for:
+#
+#   src, tests, tools, pyproject.toml
+#       the tree under test and the suite that reads it.
+#   deploy, requirements.lock
+#       added under T096. The sandbox image's FR-021 properties are checked
+#       statically by tests/invariants/test_sandbox_image.py, which reads
+#       deploy/images/sandbox.Dockerfile.
+#   .github
+#       added under finding 036. tests/unit/test_instrument_census.py reconciles
+#       the census against .github/workflows/ci.yml, reached by segment join in
+#       `tools/instruments.py` rather than by a slash-joined literal.
+#   specs
+#       added under T095. A CONTRACT test's mechanism lives on the other side of
+#       a document in `specs/*/contracts/`. The WHOLE tree, not `002` alone,
+#       because tools/corpuscheck walks `specs/*/findings` and a partial copy
+#       trades one missing-file baseline failure for another.
+#
 # The Go arms need the fixtures at the relative path the tests use
-# (src/proxy/../../tests/fixtures), which the copy above already satisfies.
+# (src/proxy/../../tests/fixtures), which `tests` already satisfies.
+#
+# **Three of those five entries were added retroactively, each after a pass
+# discovered its tests could not read a directory, and each presenting as N arms
+# scored `test-already-failing` with nothing saying the cause was the copy list.**
+# The comments this block replaces called it "third instance of the same failure
+# and the same fix". Two things made that repeatable, and both are closed here.
+#
+# **(a) `2>/dev/null` made a failed copy indistinguishable from a path that was
+# never listed.** A renamed or absent source directory produced exactly the same
+# silence as an omission, and every dependent test then failed in the baseline
+# for a missing file. So the paths are asserted to exist BEFORE anything is
+# copied, and the copies no longer discard their own errors: a copy that fails
+# for any reason — permissions, a full disk, a path that moved — now aborts with
+# the reason on stdout instead of producing a work tree that is quietly short.
+#
+# **(b) An omission was silent by construction, and the fourth instance was
+# scheduled.** `unlisted_top_level` below closes that without changing what is
+# copied: it names every top-level entry of the source that is in neither list.
+# A new top-level directory therefore announces itself the first time the harness
+# runs after it appears, rather than N no-verdicts later.
+#
+# Why a warning at setup and a refusal only when the symptom shows: a new
+# top-level directory is usually irrelevant to this harness (`docs/`, `research/`
+# and `examples/` all are), so refusing to sweep would make an unrelated addition
+# block the instrument. The note is reprinted at the foot of the run when any arm
+# actually reported UNUSABLE, which is the one moment it is load-bearing.
+#
+# Why not invert to whole-tree-minus-a-deny-list, which is the only option that
+# forecloses (b) rather than diagnosing it — MEASURED on this tree, 2026-08-10,
+# macOS arm64 unprivileged:
+#
+#     the allowlist below                              0.71s   35,564 KB
+#     whole tree minus {.git,.venv,examples,caches}     0.93s   30,020 KB
+#     the same deny list with `examples` forgotten     14.41s  692,788 KB
+#
+# So the cost is 0.22s, and the deny list is SMALLER because `cp -r` here also
+# copies `__pycache__`. That is not the reason it was declined. `examples/` is
+# **1.38 GB and git-ignored** — 30x `.git` and `.venv` combined — so a deny list
+# is exactly as hand-maintained as this allowlist, and the work tree stops being
+# a stated set and becomes whatever untracked files a particular checkout has.
+# Two runs on two checkouts of the same commit would then sweep two different
+# populations, which is the one property this instrument's record exists to pin
+# (`what_this_is_a_property_of`). An omission from a deny list fails toward
+# performance rather than correctness, which is the better direction and is why
+# the option is worth re-opening — but it needs the copied set derived from what
+# git tracks plus what is untracked-and-not-ignored, not from a hand deny list,
+# and that is a larger change than this one. Left for an owner with the
+# measurement above attached so it need not be re-derived.
+
+#: Every top-level path the work tree must contain. Asserted, not assumed.
+REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github specs"
+
+#: Every top-level path deliberately NOT copied, so that `unlisted_top_level`
+#: can tell "declared unnecessary" from "nobody has looked at it yet". Keeping
+#: this list is the price of (b) being diagnosed rather than silent; the failure
+#: mode of letting it rot is a note naming a harmless directory, which is the
+#: right direction for a list nobody is obliged to maintain.
+#:
+#: .git/.venv and the caches are environment. `examples/` is 1.38 GB of vendored
+#: read-only reference repos. `research/`, `docs/`, `README.md`, `LICENSE`,
+#: `.gitignore`, `.cursor/` and `.specify/` are read by nothing under `tests/`,
+#: verified 2026-08-10 by grep for path literals and for segment joins off a
+#: repo-root variable — the two forms `.github` and `deploy` are reached by.
+NOT_NEEDED_PATHS=".git .venv examples research docs README.md LICENSE .gitignore .cursor .specify .pytest_cache .ruff_cache"
+
+# unlisted_top_level <dir> -> the entries of <dir> in neither list, one per line.
+#
+# A function with an enumerated answer rather than an inline loop, for the reason
+# `go_toolchain_verdict` is one: it is driven directly by
+# `tests/unit/test_removal_proof_scoring.py`, and an inline version could only
+# have been checked by reading it.
+unlisted_top_level () {
+  local entry base
+  for entry in "$1"/* "$1"/.[!.]*; do
+    [ -e "$entry" ] || continue
+    base=$(basename "$entry")
+    case " $REQUIRED_PATHS $NOT_NEEDED_PATHS " in
+      *" $base "*) ;;
+      *) echo "$base" ;;
+    esac
+  done
+}
+
+_absent=""
+for _p in $REQUIRED_PATHS; do
+  [ -e "$SRC/$_p" ] || _absent="$_absent $_p"
+done
+if [ -n "$_absent" ]; then
+  echo "  CANNOT RUN — the copy list names path(s) this tree does not have:$_absent"
+  echo
+  echo "  Every test that reads one of those would fail in the baseline for a missing"
+  echo "  file, and its arms would be refused as UNUSABLE — which says nothing about"
+  echo "  any mechanism. Refusing here instead, because a work tree that is quietly"
+  echo "  short is how this harness reported N no-verdicts three times already."
+  echo "  If a path was renamed, rename it in REQUIRED_PATHS in the same commit."
+  exit 2
+fi
+for _p in $REQUIRED_PATHS; do
+  cp -r "$SRC/$_p" "$WORK/" || {
+    echo "  CANNOT RUN — copying $_p into the work tree failed (status $?)."
+    echo "  The error is above. This used to be discarded by \`2>/dev/null\`, which"
+    echo "  made a failed copy read exactly like a path nobody had listed."
+    exit 2
+  }
+done
+
+# Computed here, where the source tree is still the working directory, and
+# printed under the banner below rather than above it.
+_unlisted=$(unlisted_top_level "$SRC" | tr '\n' ' ')
 cd "$WORK" || exit 1
 
 TAMPER="$SRC/tools/tamper.py"
@@ -158,6 +265,22 @@ TIMEOUT=0
 # bucket it used to land in — `skipped` — is the one bucket where losing it is
 # invisible. See `baseline_py` and `report_unrunnable`.
 UNREADABLE=0
+# Counted apart from FAIL for the reason UNREADABLE is counted apart from SKIP,
+# one condition over. `unproven` is the one word this harness produces that means
+# **your mechanism is dead**, and an arm whose named test was already failing
+# before the tamper establishes nothing of the kind: the harness read the
+# baseline, found no verdict worth scoring against, and refused to attempt it.
+# The two want opposite responses — a vacuous proof is a source defect, a dirty
+# baseline is an environment defect — and folding them together has already cost
+# real work in both directions. One sweep over a transiently dirty baseline (234
+# of 1653 outcomes failing) reported "236 proved, 58 unproven" with ZERO vacuous
+# arms, which read at face value says 58 mechanisms have died.
+#
+# It carries FAIL's weight in the exit status, unchanged, at the foot of this
+# file. Only the label was wrong: a dirty baseline means this sweep is not a
+# result, so red is the correct verdict and making it green would be finding
+# 032's fabrication pointing the other way.
+UNUSABLE=0
 HAVE_GO=0
 
 # The proof currently running. `_record` reads them so the call sites stay one
@@ -184,7 +307,7 @@ _write_summary () {
   F2A_ABORT_REASON="${2:-}" \
   F2A_RECORDS="$RECORDS" \
   F2A_PASS="$PASS" F2A_FAIL="$FAIL" F2A_SKIP="$SKIP" F2A_TIMEOUT="$TIMEOUT" \
-  F2A_UNREADABLE="$UNREADABLE" \
+  F2A_UNREADABLE="$UNREADABLE" F2A_UNUSABLE="$UNUSABLE" \
   F2A_PY_TOTAL="${_py_total:-}" F2A_PY_FAILED="${_py_failed:-}" \
   F2A_GO_TOTAL="${_go_total:-}" F2A_GO_FAILED="${_go_failed:-}" \
   F2A_HAVE_GO="$HAVE_GO" \
@@ -199,6 +322,15 @@ _write_summary () {
 
 echo "Removal proofs"
 echo
+
+if [ -n "$_unlisted" ]; then
+  echo "  note       top-level path(s) in neither the copy list nor the not-needed list:"
+  echo "             $_unlisted"
+  echo "             Nothing is wrong yet. If a test reads one of them, its arms will"
+  echo "             be refused as UNUSABLE — add it to REQUIRED_PATHS if the suite"
+  echo "             needs it, or to NOT_NEEDED_PATHS to record that it does not."
+  echo
+fi
 
 # ---------------------------------------------------------------------------
 # The baseline. Nothing below is attempted until this says the suite runs.
@@ -436,9 +568,13 @@ report_unrunnable () {
       _record unproven test-absent
       FAIL=$((FAIL+1)); return 0 ;;
     FAILED)
+      # Its own outcome, and note that this branch has printed `UNUSABLE` since
+      # it was written — it was the AGGREGATE that called it `unproven`, so the
+      # per-arm line and the total disagreed about the same arm. No new word is
+      # being coined here; the total is being made to say what the arm says.
       echo "  UNUSABLE  $name — $test already fails before the tamper, so its failure after proves nothing"
-      _record unproven test-already-failing
-      FAIL=$((FAIL+1)); return 0 ;;
+      _record unusable test-already-failing
+      UNUSABLE=$((UNUSABLE+1)); return 0 ;;
     SKIPPED)
       # The reason pytest gave, never a reason the harness inferred. The text
       # that used to stand here — "(privilege or platform)" — was a diagnosis
@@ -2908,6 +3044,57 @@ proof "harness scorer — a missing Go toolchain goes back to being a skip, not 
   "tests/unit/test_removal_proof_scoring.py::test_a_missing_toolchain_aborts_when_go_arms_are_declared" \
   's = s.replace("  if [ \x22$1\x22 -gt 0 ]; then echo ABORT; return; fi\n", "")'
 
+# --- The copy list's two silent directions, closed on 2026-08-10 ---------------
+#
+# Both arms cover a check whose absence is invisible by construction, which is
+# why neither existed before: a copy list that has silently lost a directory
+# reports N arms `test-already-failing` and nothing else, and that is exactly
+# what happened for `deploy/`, `.github/` and `specs/` in turn.
+proof "harness setup — the unlisted-path classifier stops naming anything, so the copy list's fourth omission is silent again" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_a_planted_top_level_directory_is_named" \
+  's = s.replace("      *) echo \x22$base\x22 ;;", "      *) : ;;")'
+
+proof "harness setup — the work-tree copy discards its errors again, so a failed copy reads as a path nobody listed" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_the_work_tree_copy_does_not_discard_its_own_errors" \
+  's = s.replace("  cp -r \x22$SRC/$_p\x22 \x22$WORK/\x22 || {", "  cp -r \x22$SRC/$_p\x22 \x22$WORK/\x22 2>/dev/null || {")'
+
+# --- The already-failing baseline, split out of `unproven` on 2026-08-10 -------
+#
+# Four arms, mirroring the four the `unreadable` outcome already has, because the
+# mechanism has the same four parts and each fails on its own: the counter, the
+# exit status, the record's total and the record's reconciliation sum.
+#
+# The first is the one worth reading twice. `unproven` is the only word this
+# instrument produces that means **the mechanism is dead**, and while an
+# already-failing baseline was counted in it, that word was also the presenting
+# symptom of a dirty suite and of three separate omissions from the copy list at
+# the top of this file. The arm below puts the fold back and the test notices.
+proof "harness scorer — an already-failing baseline counted back into unproven, where a dead mechanism is indistinguishable from a dirty suite" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_a_baseline_that_already_failed_is_counted_apart_from_the_unproven" \
+  's = s.replace("      _record unusable test-already-failing\n      UNUSABLE=$((UNUSABLE+1)); return 0 ;;", "      _record unproven test-already-failing\n      FAIL=$((FAIL+1)); return 0 ;;")'
+
+# The direction the repair could have failed in, and the worse one. These arms
+# used to be counted in FAIL, which the exit status consults, so splitting them
+# out without extending the last line turns every dirty-baseline run from red to
+# GREEN — finding 032's fabrication pointing the other way.
+proof "harness scorer — the unusable count dropped from the exit status, so a dirty baseline exits 0" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_an_already_failing_baseline_keeps_the_weight_it_already_had" \
+  's = s.replace(" && [ \x22$UNUSABLE\x22 -eq 0 ]\n", "\n")'
+
+proof "harness record — the unusable total dropped, so the unscored arm reads as a dead mechanism" \
+  tools/removal_proofs_summary.py \
+  "tests/unit/test_removal_proof_scoring.py::test_the_record_counts_an_already_failing_arm_in_a_total_of_its_own" \
+  's = s.replace("            \x22unusable\x22: unusable,\n", "")'
+
+proof "harness record — the unusable count left out of the reconciliation sum" \
+  tools/removal_proofs_summary.py \
+  "tests/unit/test_removal_proof_scoring.py::test_the_record_counts_an_already_failing_arm_in_a_total_of_its_own" \
+  's = s.replace("counted = proved + unproven + skipped + timed_out + unreadable + unusable", "counted = proved + unproven + skipped + timed_out + unreadable")'
+
 proof "harness scorer — the unreadable count dropped from the exit status" \
   tests/removal_proofs.sh \
   "tests/unit/test_removal_proof_scoring.py::test_an_unreadable_baseline_carries_weight_in_the_exit_status" \
@@ -2925,7 +3112,7 @@ proof "harness record — the unreadable total dropped, so the lost arm is not i
 proof "harness record — the unreadable count left out of the reconciliation sum" \
   tools/removal_proofs_summary.py \
   "tests/unit/test_removal_proof_scoring.py::test_the_record_counts_an_unreadable_arm_in_a_total_of_its_own" \
-  's = s.replace("if proved + unproven + skipped + timed_out + unreadable != len(proofs):", "if proved + unproven + skipped + timed_out != len(proofs):")'
+  's = s.replace("counted = proved + unproven + skipped + timed_out + unreadable + unusable", "counted = proved + unproven + skipped + timed_out + unusable")'
 
 # The bytecode arm's own condition. Not a scorer arm, but the same shape: the
 # check went quiet in exactly the environment its subject runs in.
@@ -3483,7 +3670,43 @@ _verdict="$PASS proved, $FAIL unproven"
 # the quiet form of having no outcome at all. The summary line is the only part
 # of this output anybody reliably reads.
 [ "$UNREADABLE" -gt 0 ] && _verdict="$_verdict, $UNREADABLE BASELINE UNREADABLE"
+# Named on the summary line for the reason the two above are, and against a
+# failure this one has actually produced three times. `unproven` is the word that
+# means a mechanism is dead; while these arms were counted in it, it was also the
+# presenting symptom of a dirty baseline, of `deploy/` missing from the copy list,
+# of `.github/` missing from it, and of `specs/` missing from it. Four unrelated
+# conditions behind one word teaches a reader to discount the word.
+[ "$UNUSABLE" -gt 0 ] && _verdict="$_verdict, $UNUSABLE UNUSABLE BASELINE"
 echo "$_verdict"
+if [ "$UNUSABLE" -gt 0 ]; then
+  echo
+  echo "  $UNUSABLE arm(s) name a test that was ALREADY FAILING before the tamper, so the"
+  echo "  harness refused to score them. This run is NOT green, and it is NOT a claim"
+  echo "  that those mechanisms are dead — nothing was established about them either"
+  echo "  way. Read them as a dirty baseline, not as a result:"
+  echo
+  echo "    - if the whole suite is dirty, fix the suite and re-run; the sweep is not"
+  echo "      a measurement until the baseline is clean."
+  echo "    - if only a few arms are affected and they share a directory, suspect the"
+  echo "      COPY LIST at the top of this file before suspecting the mechanisms."
+  echo "      deploy/, .github/ and specs/ each reached this bucket that way."
+  if [ -n "$_unlisted" ]; then
+    echo
+    echo "    The setup note is repeated here because this is the moment it matters."
+    echo "    These top-level paths are in NEITHER list, so the work tree does not"
+    echo "    have them and no test can read them:"
+    echo
+    echo "      $_unlisted"
+    echo
+    echo "    If one of the arms above names a test that reads one of those, the"
+    echo "    cause is the copy list and not the mechanism."
+  fi
+fi
+if [ "$UNUSABLE" -gt 0 ] && [ "$_py_failed" -gt 0 ]; then
+  echo
+  echo "  The baseline recorded ${_py_failed} of ${_py_total} python outcomes not passing, which is"
+  echo "  where to start: these arms are downstream of that, not independent of it."
+fi
 if [ "$UNREADABLE" -gt 0 ]; then
   echo
   echo "  $UNREADABLE arm(s) name a test whose baseline line carries no verdict, so they"
@@ -3504,4 +3727,4 @@ fi
 # describe arms that actually ran. It reports; it decides nothing — the line
 # below is still the only thing that carries the exit status.
 _write_summary complete
-[ "$FAIL" -eq 0 ] && [ "$TIMEOUT" -eq 0 ] && [ "$UNREADABLE" -eq 0 ]
+[ "$FAIL" -eq 0 ] && [ "$TIMEOUT" -eq 0 ] && [ "$UNREADABLE" -eq 0 ] && [ "$UNUSABLE" -eq 0 ]

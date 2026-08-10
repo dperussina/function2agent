@@ -53,6 +53,7 @@ _WANTED = {
     "baseline_py": "UNREADABLE",
     "baseline_skip_reason": "SKIPPED",
     "go_toolchain_verdict": "NO-GO-ARMS",
+    "unlisted_top_level": "NOT_NEEDED_PATHS",
 }
 
 
@@ -108,7 +109,7 @@ def _score(baseline: str, selector: str, tmp_path: pathlib.Path) -> dict[str, st
         BASELINE_PY="$1"
         RECORDS="$2"
         : >"$RECORDS"
-        PASS=0; FAIL=0; SKIP=0; TIMEOUT=0; UNREADABLE=0
+        PASS=0; FAIL=0; SKIP=0; TIMEOUT=0; UNREADABLE=0; UNUSABLE=0
         _P_NAME="planted arm"; _P_FILE="planted.py"; _P_TEST="$3"; _P_DRIFTED=no
         """
     ) + _driver(
@@ -119,7 +120,7 @@ def _score(baseline: str, selector: str, tmp_path: pathlib.Path) -> dict[str, st
         v=$(baseline_py "$3")
         report_unrunnable "$v" "planted arm" "$3"
         echo "F2A-VERDICT=$v"
-        echo "F2A-COUNTERS=PASS=$PASS FAIL=$FAIL SKIP=$SKIP TIMEOUT=$TIMEOUT UNREADABLE=$UNREADABLE"
+        echo "F2A-COUNTERS=PASS=$PASS FAIL=$FAIL SKIP=$SKIP TIMEOUT=$TIMEOUT UNREADABLE=$UNREADABLE UNUSABLE=$UNUSABLE"
         """
     )
 
@@ -157,6 +158,10 @@ _SKIPPED = (
 _UNREADABLE = (
     "tests/unit/test_thing.py::test_the_mechanism a line the test wrote itself\n"
     "PASSED                                                               [ 50%]\n"
+)
+
+_ALREADY_FAILING = (
+    "tests/unit/test_thing.py::test_the_mechanism FAILED                  [ 50%]\n"
 )
 
 
@@ -236,6 +241,52 @@ def test_an_unreadable_baseline_is_counted_apart_from_the_skips(tmp_path):
     )
 
 
+def test_a_baseline_that_already_failed_is_counted_apart_from_the_unproven(tmp_path):
+    """`unproven` means the mechanism is dead. This arm learned nothing.
+
+    The same second decision as the test above, one condition over. An arm whose
+    named test was already failing before the tamper was **never attempted** — the
+    harness read the baseline, saw no usable verdict to score against, and
+    refused. Folding it into `unproven` spends the one word in this harness that
+    means *your mechanism is dead* on a run that established nothing either way,
+    and that has now happened for at least four unrelated causes: a transiently
+    dirty baseline reported "236 proved, 58 unproven" with zero vacuous arms, and
+    the `specs/` copy-list omission produced three of these with nothing in the
+    summary naming the copy list as the cause.
+    """
+    result = _score(
+        _ALREADY_FAILING, "tests/unit/test_thing.py::test_the_mechanism", tmp_path
+    )
+    assert result["verdict"] == "FAILED", result["stdout"]
+    assert "UNUSABLE=1" in result["counters"], result["counters"]
+    assert "FAIL=0" in result["counters"], (
+        "an arm whose baseline was already failing was counted as unproven, so a "
+        "reader of the total cannot tell it from a mechanism that has died: "
+        + result["counters"]
+    )
+    assert result["record"].startswith("unusable\ttest-already-failing\t"), (
+        result["record"]
+    )
+
+
+def test_a_renamed_test_is_still_unproven_and_not_folded_in_here(tmp_path):
+    """The scope boundary of the change above, pinned rather than left implied.
+
+    `test-absent` shares the property that nothing was learned about the
+    mechanism, so it is a candidate for the same treatment — but it is a
+    different fact with a different owner: an absent test means the **proof
+    declaration** is broken and points at nothing, which `tools/check_tampers.py`
+    catches statically and which a reader should fix in the proof rather than in
+    the environment. It was left where it was deliberately. If a later pass moves
+    it, this assertion is the record of the boundary it is crossing, not an
+    argument that the boundary is right forever.
+    """
+    result = _score(_PASSED, "tests/unit/test_other.py::test_gone", tmp_path)
+    assert result["verdict"] == "ABSENT", result["stdout"]
+    assert result["record"].startswith("unproven\ttest-absent\t"), result["record"]
+    assert "UNUSABLE=0" in result["counters"], result["counters"]
+
+
 def test_a_file_level_selector_survives_the_bare_node_ids_pytest_prints(tmp_path):
     """The regression the repair could plausibly have caused, asserted.
 
@@ -300,6 +351,150 @@ def test_a_skip_with_no_recorded_reason_says_so_rather_than_inventing_one(tmp_pa
     assert result["verdict"] == "SKIPPED", result["stdout"]
     assert "no reason" in result["stdout"], result["stdout"]
     assert "privilege or platform" not in result["stdout"], result["stdout"]
+
+
+# ---------------------------------------------------------------------------
+# The copy list, whose omissions were silent by construction three times.
+
+
+def _path_lists() -> tuple[set[str], set[str]]:
+    """`REQUIRED_PATHS` and `NOT_NEEDED_PATHS`, read off the harness."""
+    text = PROOF_FILE.read_text(encoding="utf-8")
+    out = []
+    for name in ("REQUIRED_PATHS", "NOT_NEEDED_PATHS"):
+        match = re.search(rf'^{name}="([^"]*)"$', text, re.M)
+        assert match, (
+            f"`{name}` is not declared in {PROOF_FILE}. The copy list's two "
+            "halves are what `unlisted_top_level` classifies against, so an "
+            "absent one would make every test below vacuous."
+        )
+        out.append(set(match.group(1).split()))
+    return out[0], out[1]
+
+
+def _unlisted(directory: pathlib.Path) -> list[str]:
+    """Drive the harness's own `unlisted_top_level` over a planted directory."""
+    text = PROOF_FILE.read_text(encoding="utf-8")
+    declarations = "\n".join(
+        m.group(0)
+        for m in re.finditer(r'^(REQUIRED_PATHS|NOT_NEEDED_PATHS)="[^"]*"$', text, re.M)
+    )
+    script = (
+        "set -uo pipefail\n"
+        + declarations
+        + "\n"
+        + _extract("unlisted_top_level")
+        + '\nunlisted_top_level "$1"\n'
+    )
+    done = subprocess.run(
+        ["bash", "-c", script, "bash", str(directory)],
+        capture_output=True,
+        text=True,
+    )
+    assert done.returncode == 0, done.stderr
+    return sorted(done.stdout.split())
+
+
+def test_the_two_path_lists_between_them_account_for_this_tree():
+    """The check that closes the copy list's silent-omission direction.
+
+    Three top-level directories — `deploy/`, `.github/` and `specs/` — were each
+    added to the harness's copy list retroactively, after a pass found N arms
+    reporting `test-already-failing` and nothing in the output naming the copy
+    list as the cause. The harness's own comments called the third "third
+    instance of the same failure and the same fix".
+
+    Nothing made the fourth instance any louder than the first three, because an
+    omission is invisible: a path that was never listed and a path that failed to
+    copy produced identical silence. This asserts the two lists between them
+    account for every top-level entry, so a new directory is named the first time
+    the harness runs after it appears.
+    """
+    required, not_needed = _path_lists()
+    assert _unlisted(REPO) == [], (
+        "top-level path(s) of this repository appear in neither REQUIRED_PATHS "
+        "nor NOT_NEEDED_PATHS in tests/removal_proofs.sh. If the suite reads it, "
+        "add it to the first and the harness will copy it; if not, add it to the "
+        "second to record that it was looked at. Leaving it out is how the copy "
+        f"list has silently lost a directory three times.\nrequired={sorted(required)}"
+        f"\nnot_needed={sorted(not_needed)}"
+    )
+
+
+def test_the_three_directories_that_were_added_retroactively_are_all_required():
+    """The historical replay, so the check above is not satisfied by luck.
+
+    Each of these was absent from the copy list once, and each cost a pass a
+    debugging session. If a future edit drops one back out, the assertion above
+    still passes — `unlisted_top_level` would report it, but only if it is also
+    missing from `NOT_NEEDED_PATHS`, and the cheap way to silence a note is to
+    add the path there. This closes that route for the three known cases.
+    """
+    required, not_needed = _path_lists()
+    for path in ("deploy", ".github", "specs"):
+        assert path in required, (
+            f"`{path}` is not in REQUIRED_PATHS. It was added to the copy list "
+            "retroactively after its absence made dependent arms report "
+            "`test-already-failing`; removing it reinstates that."
+        )
+        assert path not in not_needed, (
+            f"`{path}` is recorded as not needed, and the suite reads it."
+        )
+
+
+def test_a_planted_top_level_directory_is_named(tmp_path):
+    """The positive control. Without it the assertion above passes on an empty
+    extraction, which is the failure mode `_extract` exists to refuse."""
+    (tmp_path / "src").mkdir()
+    (tmp_path / ".venv").mkdir()
+    (tmp_path / "a_directory_nobody_listed").mkdir()
+    (tmp_path / ".a_hidden_one_nobody_listed").mkdir()
+    assert _unlisted(tmp_path) == [
+        ".a_hidden_one_nobody_listed",
+        "a_directory_nobody_listed",
+    ], (
+        "the classifier did not name a planted top-level entry, so it cannot "
+        "report the next directory to go missing from the copy list either"
+    )
+
+
+def test_the_work_tree_copy_does_not_discard_its_own_errors():
+    """`2>/dev/null` is what made a failed copy read as a path nobody listed.
+
+    The two are different facts wanting opposite responses — one is a renamed or
+    unreadable source directory, the other is an omission from the list — and the
+    redirection collapsed them into the same silence. Both then presented as N
+    arms scored `test-already-failing`, which is the bucket this file's other
+    tests exist to get out from under.
+    """
+    text = PROOF_FILE.read_text(encoding="utf-8")
+    offenders = [
+        line
+        for line in text.splitlines()
+        if line.strip().startswith("cp -r") and "2>/dev/null" in line
+    ]
+    assert offenders == [], (
+        "the harness copies its work tree with its errors discarded, so a copy "
+        "that failed is indistinguishable from a path that was never listed:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_the_required_paths_are_all_present_in_this_tree():
+    """The other direction of `2>/dev/null`: a listed path that is not there.
+
+    A renamed or deleted source directory used to be indistinguishable from one
+    that was never listed, because the copy discarded its own errors. The harness
+    now aborts at setup; this catches the same rot in the ordinary suite, without
+    needing a sweep.
+    """
+    required, _ = _path_lists()
+    missing = sorted(p for p in required if not (REPO / p).exists())
+    assert missing == [], (
+        f"the copy list names path(s) that do not exist: {missing}. Every test "
+        "reading one of them would fail in the baseline for a missing file, and "
+        "its arms would be refused rather than scored."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -443,6 +638,100 @@ def test_the_record_counts_an_unreadable_arm_in_a_total_of_its_own(tmp_path):
     assert doc["unreadable_titles"] == ["arm two"], doc.get("unreadable_titles")
 
 
+def test_the_record_counts_an_already_failing_arm_in_a_total_of_its_own(tmp_path):
+    """The same two opposed properties as the `unreadable` case above.
+
+    A missing `unusable` total hides the arm inside `unproven`, which is the
+    defect. A present total left out of the reconciliation sum marks the record
+    `inconsistent` and burns a real signal on a run that reconciles fine.
+    """
+    records = tmp_path / "records.tsv"
+    records.write_text(
+        "proved\t\tarm one\ta.py\ta.py::test_one\tno\n"
+        "unusable\ttest-already-failing\tarm two\tb.py\tb.py::test_two\tno\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "record.json"
+    done = subprocess.run(
+        [sys.executable, str(REPO / "tools" / "removal_proofs_summary.py"), str(out)],
+        capture_output=True,
+        text=True,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "F2A_STATUS": "complete",
+            "F2A_RECORDS": str(records),
+            "F2A_PASS": "1",
+            "F2A_FAIL": "0",
+            "F2A_SKIP": "0",
+            "F2A_TIMEOUT": "0",
+            "F2A_UNREADABLE": "0",
+            "F2A_UNUSABLE": "1",
+            "F2A_HAVE_GO": "1",
+            "F2A_EUID": "0",
+            "HOME": str(tmp_path),
+        },
+    )
+    assert done.returncode == 0, done.stderr
+    doc = json.loads(out.read_text(encoding="utf-8"))
+    assert doc["totals"].get("unusable") == 1, (
+        "the record does not count the already-failing arm in a total of its "
+        f"own, so it is indistinguishable from a dead mechanism: {doc['totals']}"
+    )
+    assert doc["totals"].get("unproven") == 0, (
+        f"the already-failing arm was also counted as unproven: {doc['totals']}"
+    )
+    assert doc["status"] == "complete", (
+        "the record marks itself inconsistent for a run that reconciles, which "
+        f"means the unusable count is missing from the sum: {doc['totals']}"
+    )
+    assert doc["unusable_titles"] == ["arm two"], doc.get("unusable_titles")
+
+
+def test_a_record_written_before_this_outcome_existed_still_renders(tmp_path):
+    """The compatibility direction, for the reason `timed_out` states in place.
+
+    Every record archived before this outcome existed has no `unusable` key, and
+    `render` is run over archived records. A missing key must mean *this run
+    predates the outcome*, never a crash — the archive exists so that a run which
+    disagreed with its neighbours can still be read.
+    """
+    out = tmp_path / "old.json"
+    out.write_text(
+        json.dumps(
+            {
+                "status": "complete",
+                "environment": {
+                    "kernel": "6.12.76",
+                    "system": "Linux",
+                    "privileged": True,
+                    "python": "3.12.11",
+                },
+                "totals": {
+                    "proved": 3,
+                    "unproven": 1,
+                    "skipped": 0,
+                    "entries_recorded": 4,
+                },
+                "proofs": [],
+                "what_this_is_a_property_of": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    done = subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "tools" / "removal_proofs_summary.py"),
+            "--render",
+            str(out),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert done.returncode == 0, done.stderr
+    assert "3" in done.stdout, done.stdout
+
+
 def test_an_unreadable_baseline_carries_weight_in_the_exit_status():
     """The last line of the harness, which is the only thing CI reads.
 
@@ -461,4 +750,33 @@ def test_an_unreadable_baseline_carries_weight_in_the_exit_status():
         "the summary line does not name the unreadable count. One line about a "
         "lost arm, 222 lines down inside a collapsed CI details block, is the "
         "quiet form of having no outcome at all."
+    )
+
+
+def test_an_already_failing_baseline_keeps_the_weight_it_already_had():
+    """The constraint on the repair, and the direction it could have failed in.
+
+    Splitting this outcome out of `unproven` moves a number that the exit status
+    was already consulting, because `FAIL` carries the verdict. Move it without
+    adding the new counter to the last line and every run with a dirty baseline
+    goes from red to **green** — which is finding 032's fabrication pointing the
+    other way, and strictly worse than the mislabelling being repaired. A dirty
+    baseline genuinely means the sweep is not a result; only the label was wrong.
+    """
+    text = PROOF_FILE.read_text(encoding="utf-8")
+    final = [line for line in text.splitlines() if line.strip()][-1]
+    assert '[ "$UNUSABLE" -eq 0 ]' in final, (
+        "the harness's exit status does not consult the unusable count. Because "
+        "these arms used to be counted in FAIL, which the exit status does "
+        "consult, splitting them out without this clause makes a dirty-baseline "
+        f"run exit 0. Last line: {final!r}"
+    )
+    # `UNUSABLE` alone would be VACUOUS here: the per-arm branch has printed that
+    # word since it was written — three occurrences at `e3f3912`, before any of
+    # this — and the whole defect was that the per-arm line said it while the
+    # aggregate did not. So the token asserted is the one the SUMMARY LINE adds.
+    assert 'UNUSABLE BASELINE' in text, (
+        "the summary line does not name the unusable count, so the outcome is "
+        "reachable only by reading 300+ per-arm lines inside a collapsed CI "
+        "details block, which is the quiet form of having no outcome at all."
     )
