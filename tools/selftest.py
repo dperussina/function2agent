@@ -201,6 +201,12 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
         "dry-run-verdict",
         "specs/001-fixture/harness/probe/results/20260101T000000-dryrun/analysis.json",
         13,
+        "threshold was met",
+    ),
+    (
+        "dry-run-verdict",
+        "specs/001-fixture/harness/probe/results/20260101T000000-dryrun/analysis.json",
+        14,
         "materially better",
     ),
     (
@@ -405,6 +411,67 @@ LIFECYCLE_FLOORS: list[tuple[str, str, str, str]] = [
 ]
 
 
+def _inventory_floor_selftest(verbose: bool) -> list[str]:
+    """Prove a rule that stops matching announces itself instead of passing.
+
+    Not plantable in a fixture corpus for the same reason the lifecycle floors
+    are not: the state under test is *the absence of a claim*, and a fixture
+    that contains no claim is indistinguishable from a fixture whose rule has
+    rotted. So the claim is deleted out of a copy of `known-bad` — the corpus
+    where the rule is known to be reading — and the announcement is required.
+
+    The perturbation is the one the corpus performed on itself twice. `findings`
+    stopped matching when its scoped documents ceased stating a total, and
+    `committed-harnesses` stopped when its only in-scope site was struck. Both
+    then ran silently through every green gate, which is the failure this arm
+    makes impossible to repeat unnoticed.
+    """
+    failures: list[str] = []
+    print("\nknown-bad (perturbed) — a rule whose site is deleted must announce")
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "known-bad"
+        shutil.copytree(BAD, root)
+        readme = root / "README.md"
+        before = readme.read_text(encoding="utf-8")
+        # Both claims on the line go, the stale one and the correct one. A rule
+        # reading a claim that happens to be right is still reading, so removing
+        # only the violation would leave the rule live and test nothing.
+        after = before.replace("Nine findings", "Some findings").replace(
+            "five findings", "several findings"
+        )
+        for gone in ("Nine findings", "five findings"):
+            assert gone in before, f"known-bad no longer states {gone!r}; this arm reads nothing"
+            assert gone not in after, f"{gone!r} survived the perturbation"
+        readme.write_text(after, encoding="utf-8")
+
+        report, _ = run_checks(root)
+        skips = [r for c, r in report.skipped if c == "inventory-count" and "findings" in r]
+        announced = [r for r in skips if "nothing read" in r]
+        fired = [v for v in report.violations if v.check == "inventory-count"]
+
+        ok = bool(announced)
+        print(f"  {'PASS' if ok else 'FAIL'}  {'the deleted claim is announced':<32} "
+              f"{'skip reported' if ok else 'SILENT'}")
+        if not ok:
+            failures.append(
+                "inventory floor: deleting the only `findings` claim produced no skip; "
+                f"skips were {[r for _, r in report.skipped] or 'none'}"
+            )
+
+        # The floor must not swallow the rules that are still reading.
+        still = any("research-documents" in v.hint for v in fired)
+        print(f"  {'PASS' if still else 'FAIL'}  {'the rules still reading still fire':<32} "
+              f"{len(fired)} violation(s)")
+        if not still:
+            failures.append(
+                "inventory floor: the surviving research-documents claim stopped firing"
+            )
+        if verbose:
+            for _, r in report.skipped:
+                print(f"        skip {r}")
+    return failures
+
+
 def _lifecycle_floor_selftest(verbose: bool) -> list[str]:
     """Prove the two states in which this check reads nothing are errors."""
     from corpuscheck import corpus as corpus_mod
@@ -456,12 +523,50 @@ def _lifecycle_floor_selftest(verbose: bool) -> list[str]:
 # `slugify`'s two roles for one character. Every expected value below was read
 # off GitHub's own rendered `id` attribute on 2026-08-10, not off its documented
 # algorithm — the earlier claim rested on the documentation plus five authorings
-# and was never checked against a renderer. The two marked RENDERED are verbatim
-# ids fetched from the contents endpoint; the rest follow the mechanism those two
-# establish. `*` and `~` need no case pair because their markup role and their
-# literal role have the same outcome: both vanish, one consumed and one dropped
-# for not being a word character. `_` is the only character where the two roles
-# disagree, and it disagrees in the direction that invents an anchor no page has.
+# and was never checked against a renderer. The entries marked RENDERED are
+# verbatim ids fetched from the contents endpoint; the rest follow the mechanism
+# those establish. `*` and `~` need no case pair because their markup role and
+# their literal role have the same outcome: both vanish, one consumed and one
+# dropped for not being a word character. `_` is the only character where the two
+# roles disagree, and it disagrees in the direction that invents an anchor no
+# page has.
+#
+# **These are a pinned sample of an oracle that lives outside this file**, and
+# both halves of that sentence carry an obligation.
+#
+# The oracle is
+# `specs/001-discovery-validation/harness/slug-differential/`, which walks the
+# corpus, fetches each document's rendered HTML, and compares position by
+# position. Its three runs are dated to named commits — `2534` headings at
+# `7a60dd3`, `2537` at `58a6277`, `2548` at `ac99926`, `0` diverged each time.
+# The values below are a thirteen-case subset of that population, and the four
+# added on 2026-08-10 are the three defects it found.
+#
+# This repository declines literal-string assertions on the ground that they are
+# change-detectors an editor satisfies by updating both sides. **That objection
+# does not reach these, and the reason is structural rather than a matter of
+# degree.** It holds where both sides are ours, because the assertion then
+# restates an internal fact and adds nothing. Here the expected value's authority
+# is external: an editor who moves one to match a failing `slugify` is not
+# restating a fact in two places, they are overwriting a measurement with a
+# prediction, and the `RENDERED` label is the claim that edit falsifies.
+#
+# **Re-derivation at test time is unavailable and a committed id table is
+# refused.** `tools/` is standard-library-only with no network, which is the
+# stated reason the differential is not in this tree at all. Recording its output
+# here instead was considered and declined at
+# `slug-differential/README.md` § What it cannot reproduce: a recorded ground
+# truth stops being ground truth the moment the renderer changes, and the
+# renderer is not ours. So the honest form is the one
+# `tools/README.md` § When a figure may be a live total prescribes for a figure
+# nothing recomputes — a pinned sample, dated, naming the set and the oracle it
+# was drawn from.
+#
+# What is recomputed is how many of them claim that provenance. `RENDERED_IDS`
+# below is the `EXPECTED_PROOFS` pattern at sample scale: the count was prose
+# reading "the two marked RENDERED" while six carried the label, stale by four
+# and read by none of the seventeen corpus checks, because this is Python and
+# they read markdown.
 SLUG_ROLES = [
     # (heading, expected slug, what the case pins)
     (
@@ -537,6 +642,13 @@ SLUG_ROLES = [
 ]
 
 
+#: How many entries above carry a verbatim rendered `id` rather than a value
+#: derived from the mechanism those entries establish. Live rather than dated,
+#: because the line below recomputes it from the table itself; the prose form of
+#: this number sat at "two" while six entries carried the label.
+RENDERED_IDS = 6
+
+
 def _slug_role_selftest(verbose: bool) -> list[str]:
     """Prove `slugify` separates a character's markup role from its literal one."""
     from corpuscheck.corpus import slugify
@@ -552,6 +664,24 @@ def _slug_role_selftest(verbose: bool) -> list[str]:
             failures.append(f"slugify({heading!r}) == {got!r}, expected {expected!r}")
         if verbose:
             print(f"        heading {heading!r}")
+
+    # The sample's provenance claim, counted rather than described. An expectation
+    # bent to match a failing `slugify` keeps its RENDERED label and stays silent
+    # here; one that is honestly demoted, or a new pin added without a run behind
+    # it, moves this count and says so.
+    rendered = sum(1 for _, _, why in SLUG_ROLES if why.startswith("RENDERED:"))
+    ok = rendered == RENDERED_IDS
+    print(
+        f"  {'PASS' if ok else 'FAIL'}  {'the pinned sample states its provenance':<{width}}  "
+        f"{rendered} of {len(SLUG_ROLES)} verbatim from the renderer"
+    )
+    if not ok:
+        failures.append(
+            f"{rendered} entries are marked RENDERED, RENDERED_IDS says {RENDERED_IDS}. "
+            "Each RENDERED value is a verbatim id from the slug-differential harness; "
+            "if one was added or demoted on purpose, update RENDERED_IDS and name the "
+            "run it came from."
+        )
     return failures
 
 
@@ -615,6 +745,11 @@ def main(argv: list[str] | None = None) -> int:
     # Direction 4: the two states in which `lifecycle-taxonomy` reads nothing.
     # Neither is plantable in a fixture corpus; see LIFECYCLE_FLOORS.
     failures.extend(_lifecycle_floor_selftest(args.verbose))
+
+    # Direction 4b: the state in which an `inventory-count` rule reads nothing.
+    # Direction 1 proves the check fires; it cannot prove that each of its six
+    # config-driven rules still has something to read, and two of them did not.
+    failures.extend(_inventory_floor_selftest(args.verbose))
 
     # Direction 5: the generator that now writes two of those claim classes.
     failures.extend(_generator_selftest(args.verbose))
