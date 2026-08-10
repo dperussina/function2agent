@@ -951,10 +951,24 @@ path *exists*, not whether it is the path the sentence *means*. This is the same
 The exposure is wide and was measured rather than assumed: this corpus has **three** `plan.md`, four
 `spec.md`, three `tasks.md`, three `data-model.md`, two `requirements.md` and two `NOTES.md`, plus the
 `README.md` and `SKILL.md` families — and roughly 49 references to a bare `` `plan.md` `` across ten
-files. **That is exposure, not defects.** Exactly one real instance has been found, and most bare
-references are unambiguous to a reader who is already in the right directory. No check was built, for
-the same reason `register-range` was left hand-maintained: a rule firing on every bare basename would
-be almost entirely false positives.
+files. **That is exposure, not defects.** ~~Exactly one real instance has been found~~ **Two, as of
+2026-08-10**, and most bare references are unambiguous to a reader who is already in the right
+directory. No check was built, for the same reason `register-range` was left hand-maintained: a rule
+firing on every bare basename would be almost entirely false positives.
+
+**The second instance arrived on 2026-08-10, and the pair did not share a basename at all.** A brief
+warned that tamper needles in `src/analysis/codegraph_pin.py` were live, and quoted the plant site as
+`).fetchall()` followed by `finally:`. Those two lines sit adjacent at `codegraph_pin.py:121-122` —
+and adjacent again at `tests/unit/test_codegraph_pin.py:85-86`, where they close a `sqlite_master`
+query in a helper. A reader checking the warning against the tree finds the quoted text twice and
+cannot tell from the quotation which file was meant, so a hazard already resolved in one file reads
+as live in the other. The wrinkle is that the sibling is not a copy and shares no basename: it is the
+**`test_`-prefixed sibling**, which the eye reads as a different filename and a substring search reads
+as a superset. Every `src/` module with a unit test has one, so this variant of the exposure is as
+wide as the suite — and it is the worse variant, because a bare basename at least *looks* ambiguous,
+whereas quoting a file's text and naming one file looks specific. The remedy is the cheap one the
+house already uses everywhere else: **quote a path with a line number, not a string.** `git grep -n`
+on the quoted text before relaying it costs one command and would have shown both sites.
 
 The tell is cheap and does not need a tool: **when a note claims to have corrected a document, ask
 whether the thing corrected was the authority or a view of it.** This is the second instance this week
@@ -982,6 +996,66 @@ reporting an error.
 you did not create.** If there are any, a concurrent pass is mid-commit and the index is not yours to
 edit. This is cheap, it is the only signal available, and no gate can supply it — a hook runs after
 the damage is staged, and by then the two halves of the rename are already separated.
+
+### Staging explicit paths bounds what you commit and bounds nothing about what you push
+
+**On 2026-08-10 a brief told a pass to "commit and push" while a concurrent pass held committed but
+unpushed commits on the same branch.** There is no way to push only your own commits. `git push`
+advances the remote ref to the commit you hand it, and every commit reachable from that one travels
+with it regardless of who wrote it — so the instruction was telling a pass to publish work it had
+never read. Nothing went wrong, because the sibling pushed in the interval and the range was already
+empty when the pass reached it. That is luck. The brief did not arrange it and could not have.
+
+This is [the entry above](#staging-explicit-paths-protects-you-from-another-passs-working-tree-not-from-its-index)
+one level up, and the family relationship is the part worth carrying. Three git verbs, three
+different scopes: `git add <path>` is scoped to **a path**, `git commit` is scoped to **the index**,
+and `git push` is scoped to **the branch**. Staging explicit paths is a real defence and it is exact
+about what it defends — it bounds what enters *your commit*. It bounds nothing about what a later
+push publishes, because the push reads none of it. It reads the ref.
+
+**So the rule is one more read, and it is one command: before pushing, run
+`git log --oneline origin/main..HEAD` and look at what it prints.** If every commit in the range is
+yours, push. **If any commit is not, do not push.** Commit locally, report which commits are in the
+range and that you did not author them, and stop there. Do not rebase them out, do not attempt to
+push a subset, and do not judge from the outside that they look finished — a commit can be complete
+and correct and still be held back on purpose, and the only pass that knows is the one that wrote it.
+Improvising is the failure, not the delay.
+
+**No hook and no gate can take this over**, and the reason is not that nobody has written one. The
+question is not one a check can answer: another pass's commits are not defective, so every gate here
+passes on them cheerfully. `check_corpus.py`, `check_tampers.py` and the suite all go green on a range
+full of somebody else's finished work, and they are right to. What makes the range wrong to push is a
+fact about intent that lives outside the tree entirely. The range's contents are the whole signal, and
+a reader is the only instrument that can use them. This repository has no `pre-push` hook and
+`core.hooksPath` is unset: between a pass and the remote there is nothing at all.
+
+### A held-file list decays from the moment it is written, and relaying one from memory asserts a reading nobody took
+
+**The same 2026-08-10 brief named three files as held by a concurrent pass when five were.** The two
+it missed were `tests/removal_proofs.sh`, where every tamper needle in the repository lives, and
+`specs/002-spec-aware-agent-runtime/tasks.md`, which carried the sibling's reconciliation of the very
+figure that pass had been sent to correct. The cost was zero, because the pass happened to need
+neither file. Had it needed either, it would have edited a file the brief had told it was free.
+
+The mechanism is not the branch-scope one above. It is staler and simpler: **a held-file list is a
+snapshot of another process's working tree, and it begins decaying the instant it is taken.** Carried
+forward from an earlier brief or from memory, it becomes an assertion about the present with no
+reading behind it. The error is asymmetric, which is what makes the short list the dangerous
+direction — a list naming too many files costs a pass some unnecessary caution and nothing else,
+while a list naming too few hands it a false all-clear on exactly the files nobody is watching.
+
+**So the rule is the third read in the family: `git status` is the authority on what is held, and a
+brief's list is a hint about where to look.** Reconcile the hint against your own reading before
+touching anything, and report any file you found held that the brief did not name — that report is
+what stops the same stale list being relayed a fourth time. Where the brief and the tree disagree,
+the tree wins: it is not a summary of the state, it is the state.
+
+The three entries end in the same instruction, and it is worth stating once as a family. **`git
+status` before staging, `git log origin/main..HEAD` before pushing, and neither of them replaced by a
+remembered summary.** All three failures came from acting on a description of the repository instead
+of the repository; all three defences are a single read costing under a second; and none of the three
+can be delegated, because in every case the tree is not in an erroneous state. It is in a state whose
+meaning depends on who else is working in it, and that is not a property a checker can see.
 
 ### ~~The reference application is the one place a comment edit is a behavioural change~~ **A comment edit is a behavioural change in two file families, by two different mechanisms** *(uniqueness struck 2026-08-10)*
 
