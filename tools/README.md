@@ -90,7 +90,7 @@ the author may have made deliberately.
 | `sum-arithmetic` | error | A total shown with its components does not equal them: `$18.15 ($7.59 + $10.55)`. |
 | `table-integrity` | error | Three ways a table stops being one table: a blank line orphaning a row into body text, a row whose cell count differs from the header, and a run of pipe rows with no `\|---\|` delimiter. The orphan gap was one blank line until 2026-08-03; a new table is excluded by its delimiter, not by the gap, so a second blank was slack rather than a boundary. |
 | `link-target` | error | A relative link resolves to nothing. |
-| `link-anchor` | error | A `#fragment` names no heading in the target file. Slugs follow GitHub's algorithm including its `-1`/`-2` duplicate suffixes. |
+| `link-anchor` | error | A `#fragment` names no heading in the target file. ~~Slugs follow GitHub's algorithm including its `-1`/`-2` duplicate suffixes.~~ **The `-1`/`-2` duplicate suffixes are implemented in `_anchors_for` and are correct. The slug itself is now measured against GitHub's renderer rather than described from its documented algorithm: `slugify` reproduces the emitted `id` on 2,367 of the 2,371 headings in the walked corpus, and the four it does not are named below.** *(corrected 2026-08-10. The struck sentence was true about the suffixes and unmeasured about everything else, and the unmeasured half is what licensed two links to be written wrong — see [why a false positive is the worse failure](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes).)* |
 | `link-label` | warning | The link *text* names a different document than the link *target*: `[finding 010](.../011-reachability...)`. The link works, so no existence check catches it, and a reader following the prose lands somewhere else. |
 | `identifier-resolution` | error | `D-17`, `U-40`, `OD-06`, `FR-018`, `E15` and friends resolve to a definition. Dangling identifiers are how a superseded decision keeps getting cited. |
 | `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
@@ -1142,12 +1142,21 @@ file into a string and the only operations on it are `in` tests. So the corpus r
 figure or an identifier from Python anywhere, and neither list walks `tests/` or `tools/` at all.**
 Against a baseline of 0 errors and 0 warnings, adding each root to each list:
 
-| widening | errors | warnings | real defects |
-| --- | --- | --- | --- |
-| `include` += `tools` | 5 | 1 | 0 |
-| `search_roots` += `tools` | 0 | 0 | 0 |
-| `include` += `tests` | 0 | 2 | 0 |
-| `search_roots` += `tests` | 0 | 0 | 0 |
+| widening | errors | warnings | real defects | at 2026-08-10 post-fix |
+| --- | --- | --- | --- | --- |
+| `include` += `tools` | ~~5~~ **0** | 1 | 0 | the five errors were the checker's |
+| `search_roots` += `tools` | 0 | 0 | 0 | unchanged |
+| `include` += `tests` | 0 | ~~2~~ **0** | 0 | both warnings were the checker's |
+| `search_roots` += `tests` | 0 | 0 | 0 | unchanged |
+
+**Seven of those eight firings were defects in the checker, and they are fixed rather than
+tolerated** *(measured and corrected 2026-08-10)*. The paragraph below is left standing apart from
+the one claim in it that is now measured, because what it got wrong is the evidence: it classified
+all eight as false positives — correctly, in that no *corpus* artifact was at fault — and then read
+that as a fact about the corpus, when five of them were a fact about `slugify` and two about
+`link-label`. **A false positive is a defect somewhere.** Reading it as noise is what leaves it
+standing, and reading it as a property of the file being walked is what makes it look like a reason
+not to walk the file.
 
 Neither `search_roots` widening moves anything, which is expected: widening the index can only add
 places a figure is found, and finding one more occurrence downgrades an error to a warning rather
@@ -1156,13 +1165,63 @@ them self-reference.** The five errors are `link-anchor` and the links are right
 `_` to remove markdown emphasis, so `` ## Generated claims — `gen_claims.py` `` slugs to
 `generated-claims--genclaimspy`, while all five sites write the underscore-preserving spelling.
 Planting both spellings in a one-file fixture, the checker rejects the underscore form and proposes
-its own; the claim that GitHub keeps the underscore rests on the documented algorithm and on five
-independent authorings across two files, and was **not** verified against a renderer from here. The
+its own; ~~the claim that GitHub keeps the underscore rests on the documented algorithm and on five
+independent authorings across two files, and was **not** verified against a renderer from here.~~
+**It is verified against a renderer as of 2026-08-10 and the underscore is kept — see below.** The
 one warning is `register-range` firing at line 375 on `OD-01 through OD-14`, which is this file's own
 worked example of the sentence shape that rule exists to catch. The two `tests` warnings are
 `link-label` on `tests/conformance/cassettes/README.md`, where both labels are correct: the check
 compares the label against the **unresolved** target string, so a repo-relative label beside a
 document-relative target reads as a mismatch.
+
+#### The underscore, settled against a renderer
+
+**Both halves were measured on 2026-08-10 by fetching rendered HTML from GitHub's contents endpoint
+and reading the `id` attribute the renderer emitted, for this repository's own files at `main`.**
+Not from the documented algorithm, which is what the struck sentence above rested on.
+
+- `` ## The advisory — `cite_advisor.py` `` emits
+  `id="user-content-the-advisory--cite_advisorpy"`, and the page's own self-link is
+  `href="#the-advisory--cite_advisorpy"`. **The underscore survives.**
+- `### OD-26 — … terminated.denied_operation …` emits `…terminateddenied_operation…`. The `.` is
+  dropped and the `_` is kept **in one token**, which is the sharpest available demonstration that
+  `_` is not in the set of characters the slugger discards.
+- `#### _Note_: Multiple entry points`, in a public repository carrying that heading, emits
+  `id="user-content-note-multiple-entry-points"`. **Emphasis underscores are gone.**
+
+So the defect is a **conflation of a character's markup role with its literal role**: an
+unconditional `replace` standing in for a parse. GitHub renders the heading to HTML first, so
+`_emphasis_` is consumed as markup and never reaches the slugger, and then slugs the text content,
+where a literal `_` inside an identifier survives because `_` is a word character. **`*` and `~`
+need no such distinction and that is why only `_` was wrong**: consumed as markup they vanish, and
+left literal they are dropped anyway for not being word characters, so both roles have one outcome.
+`_` is the only character where the two roles disagree — and it disagrees in the direction that
+invents an anchor no rendered page carries.
+
+`slugify` now parks inline code before the emphasis pass and removes only non-intraword `_` pairs.
+Measured on the whole walked corpus against the renderer: **29 of 2,371 headings disagreed before,
+4 after, and 26 slugs moved** — every one of them restoring a literal underscore. The four
+survivors are two further families, neither reachable from any live link and both recorded here
+rather than fixed, because each is a different defect from the one that was briefed:
+
+| site | divergence | cause |
+| --- | --- | --- |
+| `plan.md:3487`, `findings/028:50`, `findings/028:78` | `①` and `②` are kept | Python's `\w` matches Unicode category `No`; GitHub's word class does not |
+| `research/12-examples-as-corpus.md:103` | a trailing `-` is missing | GitHub drops punctuation and *then* converts the remaining space, keeping a trailing hyphen; this implementation strips first |
+
+**The `link-label` half is fixed too, and the false-negative question was answered before the fix
+went in rather than after.** The check now resolves the target with `posixpath` — not
+`Path.resolve`, so the verdict does not depend on the filesystem, since the target may not exist,
+which is `link-target`'s finding and not this one's, and it may be a symlink, whose real path is not
+what the label is claiming. The filename branch **had no firing site in either fixture**: every
+planted filename label agreed with its target, so the branch was held only in the direction that
+passes and could have been deleted outright with the self-test still green. A firing site was added
+to `known-bad` and shown to fire on the *unfixed* code first, so the control is known to have teeth;
+the false-positive shape was added to `known-good` and shown to fire there too, which is what made
+the fix checkable. After the fix the `known-bad` control still fires and `known-good` is silent.
+Swept over the walked corpus, and again with `tests/` and `tools/` added, the change removes
+**exactly the two firings** whose labels were verified correct and **adds none** — which is the
+false-negative argument, since a resolve-before-compare can only ever remove firings.
 
 **Adding `tools/` to `include` also does not buy the coverage this residue asks for, and that is what
 settles it.** `numeric-provenance` iterates `ROLE_CONSUMER` alone, and `tools/README.md` matches no
@@ -1180,6 +1239,62 @@ relaxation and the duplicate-register-row rule. The reason is structural rather 
 example of every pattern the checker fires on. Walking it with the checker is self-referential, and
 the false-positive rate is not a threshold to tune — it is what the file is *for*. The residue stands
 unchanged, and it now covers the two coordination entries above as well as this one.
+
+**The decision stands and its stated basis has narrowed** *(2026-08-10)*. It was taken on eight
+firings by three mechanisms; seven of the eight were the checker's and are fixed, so what remains is
+one firing by one mechanism — `register-range` at line 375, this file's own worked example. The two
+grounds that carry it now are the ones that never depended on the count: **the self-reference is
+structural**, and **the widening does not buy the coverage the residue asks for**, since
+`numeric-provenance` iterates `ROLE_CONSUMER` and this file is `ROLE_OTHER`. Those are unaffected by
+anything measured here. What the count was doing was making a structural argument look like an
+arithmetic one, and an arithmetic argument moves when the arithmetic is wrong.
+
+### A checker false positive is more dangerous than a checker gap: the remedy corrupts the correct artifact, and then it passes
+
+**A gap is silence. Silence leaves the artifact alone.** A false positive names a correct artifact
+as broken, and the remedy a reader reaches for is to change the artifact until the instrument stops
+complaining. Afterwards the gate is green, so nothing distinguishes the corrupted corpus from a
+healthy one, and the instrument that caused the damage is the same one certifying it. **The
+corruption is self-confirming, which is what puts it above a gap rather than beside it.**
+
+**This is not a hypothetical here. It has already happened, in the walked corpus, and the gate was
+green over it.** `specs/002-spec-aware-agent-runtime/findings/027-lifecycle-edge-set-divergence.md`
+carried two links to OD-26 spelling the fragment `…terminateddeniedoperation…` — the underscore
+removed, which is `slugify`'s spelling and not GitHub's. **Both links are broken on GitHub** and both
+passed `link-anchor` at 0 errors, because the checker computed the target's anchor with the same
+defect the links were written with. Fixing `slugify` turned the gate red and named them; they are
+corrected at the renderer's actual `id`. Five other links across two files spell the same shape
+*correctly* and were the ones the checker rejected. So one defect produced both populations at once:
+five correct artifacts reported as errors, and two corrupted artifacts reported as fine.
+
+**The sentence at the top of this file is what licensed it.** ~~"Slugs follow GitHub's algorithm
+including its `-1`/`-2` duplicate suffixes"~~ is exactly what a future pass consults when deciding
+whether an anchor error is real, and half of it was never measured. A reader who trusts it, sees
+`link-anchor` fire on a hand-written fragment, and edits the fragment to match the checker's proposal
+has done the wrong thing while every gate agreed. The checker even offers the edit: `link-anchor`'s
+hint is `did you mean: #…`, so the wrong spelling arrives pre-written.
+
+Three things follow, and the third is the one that generalises past anchors:
+
+- **A firing you classify as a false positive is a defect report about the instrument.** Recording
+  the count and moving on is a decision to keep the defect. Seven of the eight firings that this
+  file used as evidence for declining a widening were the checker's own, and were carried as noise
+  for a day because "no corpus artifact is at fault" was read as "nothing is at fault".
+- **A documentation claim about an instrument's algorithm is load-bearing and needs a measurement,
+  not a citation.** The struck sentence was not wrong about the suffixes; it was unmeasured about
+  the slug, and an unmeasured half inside a true-sounding whole is worse than an absent claim,
+  because it answers the question a reader came with.
+- **Prefer the instrument's ground truth to the instrument's specification.** The underscore question
+  was settled by fetching a rendered page and reading the `id` GitHub emitted, after a previous pass
+  had reasoned from the documented algorithm plus five independent authorings and correctly refused
+  to act on it. Where an oracle exists — a renderer, a compiler, a kernel — a differential against
+  it is cheap and it is not an argument. The differential run here compared 2,371 real headings and
+  found a second divergence family nobody had asked about.
+
+**Its relation to the [emptiness-test inversion](#the-emptiness-test-inversion--git-diff-cannot-tell-unchanged-from-changed-back) is complementary and not duplicate**, which is why it is
+its own entry: that one is a reader misreading an *absence* of signal, and the remedy is to verify by
+presence. This one is a reader acting on a *present but wrong* signal, and no amount of verifying by
+presence catches it, because the wrong thing is what the instrument asserts.
 
 ### A proof arm with no terminator does not report a hang; it reports whatever the eventual kill looks like
 
