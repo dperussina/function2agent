@@ -300,6 +300,14 @@ jobs:
     # 14.83s the battery actually measures on this runner class. Re-derive the
     # table above rather than nudging this bound, and note that the probe's own
     # budget is the thing to reduce first if this job ever needs room.
+    #
+    # **That prediction was then tested, and it held to within 4s.** Run
+    # 31415736559 ran the probe in **152s** for 10 of 10 batteries and the whole
+    # job in **347s** against the 600s bound — 195 + 152, so the probe's cost
+    # landed on the single observation above rather than displacing it. **253s of
+    # headroom remained.** One observation again, not a maximum, and recorded
+    # here because the arithmetic worst case is the thing this bound was chosen
+    # against and it is now known to be conservative by 148s.
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
