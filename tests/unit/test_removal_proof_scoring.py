@@ -372,6 +372,25 @@ def _path_lists() -> tuple[set[str], set[str]]:
     return out[0], out[1]
 
 
+#: `unlisted_top_level` asks `git check-ignore` which top-level entries are
+#: environment rather than repository content, so the two assertions that read its
+#: answer need the git binary. The `f2a-dev` image does not carry one — observed
+#: 2026-08-10, `git: command not found`, while the rest of the suite passed 1680
+#: in that image — and the skip messages elsewhere in this suite send readers into
+#: exactly that image. Without git the classifier names every artifact in the
+#: root, which is the loud direction for the harness's note and a false failure
+#: here, so these two decline rather than report. A skip is named by `-rs` and by
+#: `tools/pytest_outcomes.py`; a wrong failure trains the reader to ignore it.
+_NEEDS_GIT = pytest.mark.skipif(
+    shutil.which("git") is None,
+    reason=(
+        "needs the git binary: `unlisted_top_level` asks `git check-ignore` to "
+        "tell repository content from environment, and without it every "
+        "untracked artifact in the root is named"
+    ),
+)
+
+
 def _unlisted(directory: pathlib.Path) -> list[str]:
     """Drive the harness's own `unlisted_top_level` over a planted directory."""
     text = PROOF_FILE.read_text(encoding="utf-8")
@@ -395,6 +414,7 @@ def _unlisted(directory: pathlib.Path) -> list[str]:
     return sorted(done.stdout.split())
 
 
+@_NEEDS_GIT
 def test_the_two_path_lists_between_them_account_for_this_tree():
     """The check that closes the copy list's silent-omission direction.
 
@@ -455,6 +475,34 @@ def test_a_planted_top_level_directory_is_named(tmp_path):
     ], (
         "the classifier did not name a planted top-level entry, so it cannot "
         "report the next directory to go missing from the copy list either"
+    )
+
+
+@_NEEDS_GIT
+def test_an_ignored_artifact_is_not_named_but_an_unlisted_directory_still_is(tmp_path):
+    """The git filter, and the control that keeps it from being a blanket skip.
+
+    The first version of `unlisted_top_level` classified against the two lists
+    alone, and named `pytest-collected.txt` on CI — the workflow writes its JUnit
+    reports into the repository root, and a local run writes them elsewhere, so
+    the check meant to catch an omitted directory failed over a report file and
+    did so only on CI.
+
+    The fix asks `git check-ignore` instead of extending the hand-written list,
+    because extending it re-creates the fourth-instance problem in the list that
+    exists to end it. That filter could pass this file's other assertions by
+    swallowing everything, so both directions are asserted here at once: the
+    ignored artifact goes unnamed, and the unlisted directory beside it does not.
+    """
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / ".gitignore").write_text("an_ignored_artifact.txt\n", encoding="utf-8")
+    (tmp_path / "an_ignored_artifact.txt").write_text("environment\n", encoding="utf-8")
+    (tmp_path / "a_directory_nobody_listed").mkdir()
+
+    assert _unlisted(tmp_path) == ["a_directory_nobody_listed"], (
+        "the classifier must drop what git ignores and keep what it does not. "
+        "Naming the artifact is the CI failure this filter fixed; dropping the "
+        "directory would make the omission check vacuous on every host."
     )
 
 

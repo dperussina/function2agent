@@ -180,15 +180,36 @@ NOT_NEEDED_PATHS=".git .venv examples research docs README.md LICENSE .gitignore
 # `go_toolchain_verdict` is one: it is driven directly by
 # `tests/unit/test_removal_proof_scoring.py`, and an inline version could only
 # have been checked by reading it.
+#
+# **git decides what is environment, because a hand-written artifact list is the
+# defect this function exists to fix, one directory over.** The first version of
+# this classified against `NOT_NEEDED_PATHS` alone and named
+# `pytest-collected.txt` on CI, where the workflow writes its JUnit reports into
+# the repository root — so the check meant to catch an omitted *directory* failed
+# over a *report file*, and it failed only on CI, because a local run writes the
+# same reports somewhere else. Adding those five names to `NOT_NEEDED_PATHS`
+# would have re-created the fourth-instance problem in the list that was supposed
+# to end it: the next tool to drop a file in the root breaks it again.
+#
+# `.gitignore` already states which paths are environment, is maintained for its
+# own reasons, and is the same answer on every host. `check-ignore` consults the
+# index, so a *tracked* path matching an ignore pattern is still content and is
+# still named.
+#
+# The suppressed stderr is not the `2>/dev/null` this pass removed from the copy
+# list. There, a non-zero exit was discarded; here it is the answer — no repo, no
+# git, or any other failure leaves the entry **named**, which is the loud
+# direction. A missing git makes this noisy, never quiet.
 unlisted_top_level () {
   local entry base
   for entry in "$1"/* "$1"/.[!.]*; do
     [ -e "$entry" ] || continue
     base=$(basename "$entry")
     case " $REQUIRED_PATHS $NOT_NEEDED_PATHS " in
-      *" $base "*) ;;
-      *) echo "$base" ;;
+      *" $base "*) continue ;;
     esac
+    git -C "$1" check-ignore -q -- "$base" 2>/dev/null && continue
+    echo "$base"
   done
 }
 
@@ -3053,7 +3074,12 @@ proof "harness scorer — a missing Go toolchain goes back to being a skip, not 
 proof "harness setup — the unlisted-path classifier stops naming anything, so the copy list's fourth omission is silent again" \
   tests/removal_proofs.sh \
   "tests/unit/test_removal_proof_scoring.py::test_a_planted_top_level_directory_is_named" \
-  's = s.replace("      *) echo \x22$base\x22 ;;", "      *) : ;;")'
+  's = s.replace("\n    echo \x22$base\x22\n", "\n    :\n")'
+
+proof "harness setup — the classifier stops asking git, so a report file in the repository root reads as an omitted directory" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_an_ignored_artifact_is_not_named_but_an_unlisted_directory_still_is" \
+  's = s.replace("    git -C \x22$1\x22 check-ignore -q -- \x22$base\x22 2>/dev/null && continue\n", "")'
 
 proof "harness setup — the work-tree copy discards its errors again, so a failed copy reads as a path nobody listed" \
   tests/removal_proofs.sh \

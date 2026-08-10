@@ -189,12 +189,25 @@ tests/batteries/results/removal-proofs-history/*
 # can upload them as artifacts; they are readings of one run and are never
 # committed. Listed rather than written to a temp directory because
 # `actions/upload-artifact` reads paths relative to the workspace.
+#
+# This block is load-bearing beyond keeping the tree clean, and that is not
+# visible from either side. `unlisted_top_level` in `tests/removal_proofs.sh`
+# asks `git check-ignore` which top-level entries are environment, so a root
+# artifact absent from here reads as a directory the harness's copy list forgot
+# — a failure in a Linux job that no local run can reproduce, because none of
+# these files exists on a developer's machine. The two `unshare-pair` lines were
+# missed when the rest of the block was written and cost run 31395964023 exactly
+# that way. Anything a workflow step writes to the repository root belongs here
+# in the same commit that writes it, and the set was reconciled against every
+# `tee`, `--out` and `--junitxml=` in `ci.yml` on 2026-08-10.
 /preflight.txt
 /pytest-collected.txt
 /pytest-privileged.xml
 /pytest-unprivileged.xml
 /privileged-suite-identity.json
 /proof-attribution.txt
+/unshare-pair-privileged.json
+/unshare-pair-unprivileged.json
 src/proxy/go-test.txt
 
 # `tests/invariants/runner.py` writes this to count outcomes per invariant.
