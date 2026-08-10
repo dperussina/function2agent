@@ -134,7 +134,7 @@ specify workflow run speckit --input spec="<description>" --input integration=cu
 
 | Feature | State |
 |---|---|
-| **001 — discovery and validation** | **Closed.** Fifteen numbered experiments, nine ladder positions reached, eight run. The adjudication is [`../specs/001-discovery-validation/VERDICT.md`](../specs/001-discovery-validation/VERDICT.md); the binding scope decisions are **OD-01** through ~~**OD-14**~~ ~~**OD-20**~~ ~~**OD-21**~~ ~~**OD-25**~~ **OD-28** in [`../specs/001-discovery-validation/plan.md`](../specs/001-discovery-validation/plan.md) |
+| **001 — discovery and validation** | **Closed.** Fifteen numbered experiments, nine ladder positions reached, eight run. The adjudication is [`../specs/001-discovery-validation/VERDICT.md`](../specs/001-discovery-validation/VERDICT.md); the binding scope decisions are **OD-01** through ~~**OD-14**~~ ~~**OD-20**~~ ~~**OD-21**~~ ~~**OD-25**~~ ~~**OD-28**~~ **OD-30** in [`../specs/001-discovery-validation/plan.md`](../specs/001-discovery-validation/plan.md) |
 | **002 — spec-aware agent runtime** | ~~**Specify phase complete.**~~ **Clarify and plan phases complete.** [`../specs/002-spec-aware-agent-runtime/spec.md`](../specs/002-spec-aware-agent-runtime/spec.md), its quality checklist, and [`plan.md`](../specs/002-spec-aware-agent-runtime/plan.md) with its research, data model, contracts and quickstart. ~~Three `[NEEDS CLARIFICATION]` markers await the owner~~ |
 
 > **Both rows corrected 2026-08-03 — stale, not wrong when written.** The OD range
@@ -169,6 +169,23 @@ specify workflow run speckit --input spec="<description>" --input integration=cu
 > reading as the paragraph above, this row states the register's extent and
 > nothing narrower, so all three are inside it whether or not they bear on
 > feature 001.
+>
+> **Advanced again 2026-08-10: the range now ends at OD-30**, and it had gone two
+> entries behind. **OD-29** landed 2026-08-10 and settles the supervisor's own
+> privilege posture — it may hold `CAP_SETUID` and `CAP_SETGID` and writes the uid
+> map directly rather than delegating to `newuidmap` — which retires the
+> replacement second ground OD-24 had been carrying and leaves that entry's
+> ground ① as the sole reason the build waits. **OD-30** landed the same day and
+> selects CI as the authoritative environment for T101's overhead figure,
+> declines a `workflow_dispatch` recording route on the ground that the route
+> already exists, and fixes the shape the figure is published in; its
+> publication limb was revised later the same day so that every arm publishes
+> with the control's range beside it and nothing is withheld. **Neither changes
+> feature 001's closure or this row's other figures** — the experiment counts and
+> the verdict are untouched, and OD-29's own subject is feature 002's execution
+> environment rather than anything feature 001 measured. On the same reading as
+> the paragraphs above, this row states the register's extent and nothing
+> narrower, so both are inside it whether or not they bear on feature 001.
 
 ~~**The next command is `/speckit-plan`**, once the three markers are resolved —
 or `/speckit-clarify` first if the owner prefers to resolve them through the

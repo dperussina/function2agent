@@ -421,21 +421,57 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: figure PER ARM against the same run's measured control, and forbids pooling
 #: or minimising across the four outright.** No threshold is installed and
 #: `test_a_small_positive_overhead_is_still_published_because_no_floor_is_known`
-#: still asserts the refusal; the control arm *is* the floor, so an arm clearing
-#: that run's control excursion by orders of magnitude publishes a number and an
-#: arm inside it publishes as **not resolved by this instrument**.
+#: still asserts the refusal.
+#: ~~The control arm *is* the floor, so an arm clearing that run's control
+#: excursion by orders of magnitude publishes a number and an arm inside it
+#: publishes as **not resolved by this instrument**.~~ **Struck 2026-08-10 with
+#: limb ③'s revision at `OD-30`: no arm is withheld. Every arm publishes its
+#: overhead with the same run's control excursion and the pooled control range
+#: beside it, and any overlap with either is stated AS an overlap on the same
+#: line as the figure it qualifies.** The comparator that was struck was a
+#: per-run maximum, so the set of published arms was a property of the draw —
+#: and the quantity it made a bound out of is the one the paragraphs above
+#: establish there is *"no single number here to be a floor"* for.
 #:
-#: **The arm that rule withholds is `shell_heavy`, and not this one, which is
-#: the one place reading the two quantities as one inverts the answer.**
-#: Resolution — overhead as a share of an arm's own baseline — is where
-#: `reference_app_socket` is worst, and it is what the table above measures. The
-#: rule tests *absolute* overhead against the control's *absolute* excursion,
-#: and on that quantity this arm is clear: it recovers **~0.05 s** against a
-#: control whose widest observed positive extreme over the three samples is
-#: **+0.029317 s**, while `shell_heavy`'s **0.0188–0.0228 s** in `31416959913`
-#: sits below that run's own control. So the arm at risk of being withheld is
-#: the one Q-09 names and T101 names, which is why the risk is recorded beside
-#: the resolution table rather than left to be inferred from it.
+#: **`shell_heavy`'s OVERHEAD SITS AT THE SAME ABSOLUTE SCALE AS THE CONTROL'S
+#: NOISE, AND IT CLEARS THAT CONTROL ON ONE OF THE THREE RECORDED SAMPLES.
+#: THIS IS A FACT ABOUT Q-09's OWN NAMED ARM AND IT IS STATED HERE RATHER THAN
+#: LEFT TO BE INFERRED.** `overhead_seconds` per run against that run's control
+#: positive extreme, re-derived from the three `seccomp-variance.latest.json`
+#: artifacts at 10 draws per arm:
+#::
+#:     run           control extreme   shell_heavy overhead   draws above
+#:     31415736559       +0.010275 s    0.024945-0.028304 s     10 of 10
+#:     31416789165       +0.017368 s    0.014794-0.017791 s      1 of 10
+#:     31416959913       +0.029317 s    0.018794-0.022802 s      0 of 10
+#::
+#: Pooled over all 30 draws the control runs **-0.007711 to +0.029317 s**,
+#: non-positive in 9 of them, and `shell_heavy` is **the only one of the four
+#: load-bearing arms that overlaps it at all** — 0.014794 to 0.028304 s, inside
+#: the control's ceiling — while `path_heavy`, `reference_app_api` and
+#: `reference_app_socket` clear it on every draw, at minima of 0.081526,
+#: 0.032178 and 0.031767 s. **So a `shell_heavy` figure quoted from this battery
+#: is a measurement whose precision is insufficient to separate it from the
+#: instrument's own zero reading on two samples of three, and it must not be
+#: quoted without that sentence.** It is a measurement rather than an absence,
+#: which is why it is published; FR-043's *"marked unvalidated wherever it
+#: appears"* discipline is the family it belongs to, and `costs.UNPRICED` — where
+#: the quantity's definition rules the value out — is not.
+#:
+#: **This arm is not the one at risk, and that is the one place reading the two
+#: quantities as one inverts the answer.** Resolution — overhead as a share of
+#: an arm's own baseline — is where `reference_app_socket` is worst, and it is
+#: what the table above measures. The withheld-arm question tested *absolute*
+#: overhead against the control's *absolute* excursion, and on that quantity
+#: this arm clears its own run's control in all three samples.
+#: ~~It recovers **~0.05 s** against a control whose widest observed positive
+#: extreme over the three samples is **+0.029317 s**.~~ **Struck 2026-08-10: that
+#: sentence spliced two runs.** The ~0.05 s is `31415736559`'s figure and
+#: +0.029317 s is `31416959913`'s control, and this file's own rule is that the
+#: comparison is made within one run. Taken within each run this arm clears by
+#: factors of 5.34, 1.83 and 1.23 — so it does clear, three for three, but the
+#: margin on the widest-control sample is **1.23** and not the order of
+#: magnitude the spliced pair implied.
 #:
 #: ~~`notifications_observed` was *identical* in all 30 runs for every arm
 #: (2116 / 1189 / 1143 / 539 / 116)~~ **The 30-run list above is read in this

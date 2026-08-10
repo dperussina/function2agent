@@ -3716,7 +3716,7 @@ record, it authorises no mechanism, and a proof asserting that deleting prose br
 the vacuous kind [finding 032](../002-spec-aware-agent-runtime/findings/032-removal-proof-signal-fabrication.md)
 exists to keep out of this corpus.
 
-### OD-30 — CI is the authoritative environment for T101's overhead figure, and the figure is published per arm against the same run's measured control with pooling forbidden; the `workflow_dispatch` recording route is declined because the route it would have built already exists
+### OD-30 — CI is the authoritative environment for T101's overhead figure, and the figure is published per arm against the same run's measured control with pooling forbidden and, after limb ③'s revision of 2026-08-10, with nothing withheld and any overlap with the control stated as overlap; the `workflow_dispatch` recording route is declined because the route it would have built already exists
 
 **Decided 2026-08-10**, answering the one question
 [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md)'s T101 blocker set put to an owner and
@@ -3797,10 +3797,12 @@ act is already the whole mechanism:
 **③ T101's figure is published per arm, each arm's overhead stated beside the same run's observed
 control excursion, and pooling or minimising across the four load-bearing arms is forbidden
 outright.** No threshold is invented, and that refusal stays load-bearing:
-`test_a_small_positive_overhead_is_still_published_because_no_floor_is_known` asserts it. The control
-arm **is** the measured floor, so an arm clearing that run's control excursion by orders of magnitude
-is publishable as a number and an arm inside it is published as **not resolved by this instrument**.
-Pooling is forbidden because the resolution spread across the four is an order of magnitude —
+`test_a_small_positive_overhead_is_still_published_because_no_floor_is_known` asserts it.
+~~The control arm **is** the measured floor, so an arm clearing that run's control excursion by orders
+of magnitude is publishable as a number and an arm inside it is published as **not resolved by this
+instrument**.~~ **Struck 2026-08-10 by the revision two blockquotes below: every arm publishes its
+overhead, and the control's excursion is stated beside it as an overlap rather than used to withhold
+it.** Pooling is forbidden because the resolution spread across the four is an order of magnitude —
 `overhead_seconds` as a share of each arm's own `baseline_seconds` reads 729/704/635% for
 `path_heavy` against 7.7/4.9/6.6% for `reference_app_socket` — so any pooled headline is a statement
 about the worst-resolved arm wearing the others' names.
@@ -3822,13 +3824,120 @@ about the worst-resolved arm wearing the others' names.
 > run's own control excursion. In run `31415736559` all four arms clear the band and `shell_heavy` is
 > the closest at 24.9–28.3 ms of overhead against a +10.3 ms ceiling, a factor of **2.4**.
 >
-> **So limb ③, applied to current samples, withholds `shell_heavy` on the widest-control run** — and
+> **So limb ③, applied to current samples, withholds `shell_heavy` ~~on the widest-control run~~ on
+> two of the three recorded samples** *(count corrected 2026-08-10 by re-derivation from all three
+> artifacts; the singular was read off the one sample this entry named and understated the rule's
+> reach — the revision below carries the derivation)* — and
 > `shell_heavy` is the arm the battery's own header calls *"the arm Q-09 names, because an agent that
 > composes shell commands pays this cost on every one of them"*, and the arm T101 names in its own
 > text. The hazard was already on the record at T101's magnitude-bound bullet, which observes that
 > `shell_heavy` sits only 2.4× above the bound and that a bound nudged upward *"would begin
 > suppressing a load-bearing arm"*. Limb ③ does not nudge a bound upward; it makes the widest
 > observed control the bound, which reaches the same arm by a different route.
+
+> #### ⚠️ LIMB ③ IS REVISED 2026-08-10 — NOTHING IS WITHHELD, AND THE OVERLAP IS PUBLISHED *AS* AN
+> #### OVERLAP ON THE SAME LINE AS THE FIGURE IT QUALIFIES
+>
+> **This is a revision, on OD-23's and OD-24's precedent, and not a narrowing or a correction.** It is
+> the **same question** — what shape T101's figure is published in — revisited the same day, and the
+> answer taken is the alternative this entry's own text named and set aside. A *narrowing* would leave
+> the withholding rule live over a smaller set of arms, and the rule's defect is not its extent. A
+> *correction* would assert the rule was mis-transcribed, and it was not: it was written down as
+> intended, and the intent does not survive its own measurements. **Struck text stays**, because the
+> wrong-arm prediction above is the evidence for this revision rather than a casualty of it, and a
+> register recording only the amended rule would leave that prediction pointing at nothing.
+>
+> **The rule as revised, in three elements.** Every arm publishes its `overhead_seconds`. Beside it
+> stands **the same run's observed control excursion** and **the pooled control range across the
+> recorded samples**. Where the arm's figure overlaps either range, the overlap is stated **as an
+> overlap, on the same line as the figure it qualifies** — not in a banner, a preamble or a footnote.
+> No arm is withheld. Pooling and minimising across the four load-bearing arms stay forbidden,
+> unchanged, and no threshold is installed.
+>
+> **The comparator that was struck was a per-run maximum, and that is the defect that carries the
+> revision rather than the wrong-arm prediction.** A per-run maximum makes the set of published arms a
+> property of the draw: the noisiest run publishes the fewest arms, and one extreme control draw drops
+> a real figure without anything reporting that it did. This corpus has already ruled that no single
+> CI run is a decidable basis for this quantity — `tasks.md`'s blocker 3 states it as *"the across-run
+> spread is wide with no outlier, so no single CI run's median is a decidable basis for Q-09"* — and
+> the magnitude-bound bullet states of the control's positive extreme that **"there is no single
+> number here to serve as a floor."** Limb ③ took that quantity, which the corpus had just finished
+> establishing is not a floor, and made it one per run.
+>
+> **Re-derived from all three artifacts rather than inherited, and the rule's reach is wider than the
+> entry recorded.** `overhead_seconds` per arm against the same run's control positive extreme, over
+> `seccomp-variance.latest.json` from the three k=10 runs, 10 draws per arm per run:
+>
+> | run | control positive extreme | `shell_heavy` overhead | draws above the extreme | limb ③ |
+> |---|---|---|---|---|
+> | `31415736559` | +0.010275 s | 0.024945 – 0.028304 s | 10 of 10 | publishes |
+> | `31416789165` | +0.017368 s | 0.014794 – 0.017791 s | 1 of 10 | **withholds** |
+> | `31416959913` | +0.029317 s | 0.018794 – 0.022802 s | 0 of 10 | **withholds** |
+>
+> **So the published set moves with the draw, which is ground ② as a measurement rather than as an
+> argument**: limb ③ publishes four of the four load-bearing arms on the first sample and three on
+> each of the other two. **And the rule sits one draw away from withholding three of four.** On
+> `31416959913` the surviving arms clear that run's control extreme by factors of only 3.01, 1.33 and
+> 1.23 for `path_heavy`, `reference_app_api` and `reference_app_socket` — a control draw a quarter
+> wider than the widest yet observed would take two more arms with it. The revised rule publishes five
+> of five on every sample, and its published set is a property of the battery rather than of the boot.
+>
+> **The pooled control range is the second comparator because it is the stable one**: −0.007711 to
+> +0.029317 s over all 30 draws, non-positive in 9 of them. Against that range **`shell_heavy` is the
+> only arm of the four that overlaps at all** — its pooled span of 0.014794 to 0.028304 s sits inside
+> the control's ceiling — while `path_heavy`, `reference_app_api` and `reference_app_socket` clear it
+> on every draw at 0.081526, 0.032178 and 0.031767 s respectively at their minima. That is a sharper
+> statement than any per-run verdict and it is available only because the ranges are pooled *for
+> disclosure* while the publication decision is not pooled at all.
+>
+> **Three of the four grounds offered for this amendment hold; the fourth does not, and it fails
+> against the repository's own code.** *It invents no threshold* holds, and holds more strongly than
+> offered: `test_a_small_positive_overhead_is_still_published_because_no_floor_is_known`
+> (`tests/unit/test_seccomp_overhead_record.py`) pins that a small positive difference still publishes,
+> and its module's own reasoning is that a floor would be *"a constant silently deciding which figures
+> get published."* Limb ③'s comparator was not a constant but a value that moves from +0.010275 to
+> +0.029317 s across three samples of identical construction on one runner class, which is that
+> objection with the number made unstable as well as invented. *It is stable
+> across runs* holds and is measured in the table above. *It is strictly more information* holds
+> **conditionally on the third element**, and without that element it is more information carrying a
+> false precision. **The house-pattern ground fails as offered.** `costs.UNPRICED` is not the
+> record-the-reason-beside-the-value precedent it was offered as: it records the reason **in place of**
+> the value — OpenAI has no rate in that table at all — and `CONTEXT_TIERED_WITHOUT_THRESHOLD` makes
+> that refusal executable on the express ground that letting a number be supplied *"would recreate
+> that defect with the operator's name on it, which is worse than the present refusal because it looks
+> authorised."* `UNRATED` is not a different case from it either: the test
+> `test_every_withholding_reason_is_recorded_in_prose` states in its own docstring that `UNPRICED` is
+> **"the table this one is modelled on."** Both suppress, and both are authority *for* withholding
+> where a number would otherwise look authorised.
+>
+> **The nearer precedent is FR-043's marking discipline, and it is the one that survives contact.**
+> Three requirements already publish a number that is not a measurement and require it *"marked
+> unvalidated **wherever it appears** externally"* — FR-049's two bounds, FR-046's detection window and
+> FR-047's staleness ceiling — and **T112** measures the residual lease window on the same footing,
+> its own task text recording that the window *"is disclosed rather than denied."* That is the family
+> this figure belongs to: a real measurement whose precision is insufficient, published with a mark
+> that travels with it. `UNPRICED` and `UNRATED` are the other family, where the quantity's own
+> definition rules the value out.
+>
+> **The quote-an-unresolved-number objection is real, it is the reason the third element exists, and
+> it is not answered by a fourth ground.** Disclosure beside a figure does let a reader lift the figure
+> and leave the disclosure, and this corpus has already paid for exactly that: `dry-run-verdict`'s
+> motivating artifact *did* disclose itself, with a banner and a directory name, and its decision row
+> still read `verifier is a headline feature` — *"a reader who arrives by `grep` reads that row and no
+> banner."* That cost five artifacts. The remedy this repository already adopted for it is not
+> withholding but **line-locality**: a disclosure token must sit within 120 characters of the claim it
+> licenses, measured rather than chosen, because the grep-shaped reader is the one being protected. So
+> the amendment takes that remedy rather than a new argument, and the overlap statement is required on
+> the figure's own line. **What the third element does not yet have is a machine-readable half**, and
+> that is recorded as owed rather than installed: a per-arm field in the record asserting whether the
+> arm cleared its own run's control would make the mark travel into anything that reads the artifact,
+> and adding one is code this entry does not authorise and a measurement nobody has taken.
+>
+> **What this revision does not license.** It is **not** a finding that `shell_heavy`'s overhead is
+> resolved — it is not, on two of three samples, and the disclosure says so. It is **not** permission
+> to quote any arm's figure without the control ranges beside it. It is **not** a floor, a threshold or
+> a bound, and it installs none. And it does **not** retire the hazard the struck text named: the arm
+> whose resolution is worst in absolute terms is still the arm Q-09 and T101 name.
 
 > #### ⚠️ THIS NARROWS T101 AND DOES NOT CLOSE IT, AND Q-09 IS UNAFFECTED
 >
@@ -3865,11 +3974,15 @@ being the obstacle it was read as; [feature 002's `plan.md`](../002-spec-aware-a
 at the **Inherited decisions** bound, which tracks the register's extent by its own stated rule;
 and [`tests/batteries/test_seccomp_overhead.py`](../../tests/batteries/test_seccomp_overhead.py)'s
 `REPEATS` note, where the observation that a pooled headline is dominated by the worst-resolved arm
-becomes a rule with an entry to cite, and where the arm identified by limb ③ is named. **Feature
+becomes a rule with an entry to cite, and where the arm identified by limb ③ is named. ~~**Feature
 002's `spec.md` is not advanced and the reason is stated rather than left as an omission**: its bound
 reads `OD-28` and has sat two entries behind since OD-29, and advancing it there calls for the
 per-decision requirement paragraph that file's convention carries, which is an owner's sentence and
-not a propagation pass's. **No removal proof is warranted and none is added**: this entry authorises
+not a propagation pass's.~~ **Advanced 2026-08-10 on the owner's authority, at both of its bounds and
+at `docs/spec-kit-workflow.md`'s row, for OD-29 and OD-30 together**: the per-decision paragraph that
+convention calls for is written for each, and neither entry places an obligation on requirement text —
+which is what the paragraphs say, in each entry's own terms and for each entry's own reason.
+**No removal proof is warranted and none is added**: this entry authorises
 no mechanism, and a proof asserting that deleting prose breaks a test is the vacuous kind
 [finding 032](../002-spec-aware-agent-runtime/findings/032-removal-proof-signal-fabrication.md)
 exists to keep out of this corpus.

@@ -13,7 +13,7 @@
 This is the production specification. It follows feature 001, which planned fifteen numbered
 experiments, reached nine ladder positions, ran eight of them, and closed with a verdict
 ([`VERDICT.md`](../001-discovery-validation/VERDICT.md)). Its binding scope decisions are the owner
-decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ ~~OD-21~~ ~~OD-25~~ **OD-28** in [`plan.md`](../001-discovery-validation/plan.md)
+decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ ~~OD-21~~ ~~OD-25~~ ~~OD-28~~ **OD-30** in [`plan.md`](../001-discovery-validation/plan.md)
 *(extended 2026-08-03: **OD-15** drops ADK for v1 and partially reverses OD-01, **OD-16** removes
 `litellm` from the shipped product, and **OD-17** makes Linux the only supported platform. None of
 the three changes a requirement in this document; all three change what the plan builds against)*.
@@ -49,6 +49,25 @@ model no vendor page prices, as a second *provenance* rather than a second row, 
 startup as well as at the call. **OD-28** keeps the `SessionTable` → `Repository` migration deferred
 and routes future instances of the shape to `tasks.md` T016's note; it schedules no work, moves no
 requirement text, and its operative half is an expiry condition rather than a disposition.
+**Extended 2026-08-10 with OD-29 and OD-30; the bound above is advanced to OD-30 to match, having been
+two entries behind since OD-29.** **Neither changes a requirement in this document**, and as with the
+three above the reason differs in each case. **OD-29** settles that the supervisor **may** hold
+`CAP_SETUID` and `CAP_SETGID` and writes the uid map directly rather than through `newuidmap`. That is
+the same division of labour OD-24 already records and the entry states it in its own terms: FR-048,
+FR-049 and FR-050 **state properties**, and this decision narrows the **mechanism** those properties
+would be delivered by. What it authorises is a statement to an operator — the bundle may require those
+two capabilities, and a deployment refusing them gets the plain-drop fallback. **Its one obligation on
+this document is an audit rather than an edit**, and the audit was taken: the entry retires the premise
+*"the supervisor holds nothing"* and requires any argument resting on it to be re-checked, and this
+specification carries **no such argument** — its only mention of a uid-map write is the AppArmor
+narrowing at FR-048's kernel-floor caveat, which rests on where an LSM refuses rather than on what
+authority the supervisor holds, and OD-29 expressly preserves finding 023's readings as its own
+evidence. **OD-30** selects CI as the authoritative environment for T101's overhead figure, declines
+the `workflow_dispatch` recording route, and fixes the **publication shape** of a figure that is not
+yet recorded; **FR-048's recording clause and SC-022 are untouched**, no threshold is installed, and
+the entry authorises no code and no task. Its limb ③ was revised the same day so that every arm
+publishes its overhead with the control's range beside it and nothing is withheld — a change to how a
+measurement is reported, which is why it reaches `tasks.md` T101 and the battery and stops there.
 
 **What the product is.** The operator points the system at a codebase and at a *named running
 deployment* of that codebase. The system derives contracts from the source, establishes what the
@@ -2507,7 +2526,7 @@ above depends on each of them.
   `/speckit-implement` for any feature that adds a permission tier, and this feature adds one
   (FR-008 through FR-012).
 - **Feature 001's record.** [`VERDICT.md`](../001-discovery-validation/VERDICT.md) for what was
-  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-21~~ ~~OD-25~~ **OD-28**, and
+  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-21~~ ~~OD-25~~ ~~OD-28~~ **OD-30**, and
   [`research/14-architecture-synthesis.md`](../../research/14-architecture-synthesis.md) for the
   decision, contradiction and uncertainty registers.
 - **A reference application** that is real, data-driven, seedable and publishes its operations, for
