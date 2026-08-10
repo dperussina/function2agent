@@ -1,13 +1,22 @@
 """T004 — the `codegraph` pin's own floors.
 
-**Every fixture here is synthetic and constructed in the test.** No artifact
-produced by a real `codegraph` is used, and that is deliberate rather than a
-concession: `codegraph` is a git-ignored vendored TypeScript source tree with no
-installed build, so a fixture built from a real artifact would make this file's
-population depend on a tool nobody running the suite can obtain. It would also
-tie the tests to the same unobserved digest **U-04** is open about. The schemas
-below therefore resemble `codegraph`'s shape and claim nothing about it — what is
-under test is `schema_digest()` and `verify()`, not upstream's table set.
+~~**Every fixture here is synthetic and constructed in the test.**~~ **Struck
+2026-08-10 — true when written, and half of it still is.** The reasoning was
+that `codegraph` is a git-ignored vendored TypeScript tree with no installed
+build, so a fixture derived from a real artifact would make this file's
+population depend on a tool nobody running the suite can obtain, and would tie
+the tests to the digest **U-04** was open about. The first ground held; the
+second is spent, because the digest has now been observed.
+
+**There are two fixture populations now, and the difference between them is the
+point.** The synthetic schemas below still carry every property test — they
+resemble `codegraph`'s shape, claim nothing about it, and what is under test
+there is `schema_digest()` and `verify()` rather than upstream's table set. The
+second population is `tests/fixtures/codegraph-schema/schema.sql`, a verbatim
+copy of upstream's own DDL at the pinned revision, from which a **zero-row**
+database is built in the test. No index and no artifact is involved: the whole
+reason a 8.5 KB file can stand in for a 149 MB one is the property this module
+is testing, that only the schema participates in the digest.
 
 **Nothing here is gated on a platform, a kernel or a privilege.** The only
 facilities used are `sqlite3` and a temporary directory, so every assertion is
@@ -23,6 +32,8 @@ their own code having moved, which is the failure the module exists to prevent.
 from __future__ import annotations
 
 import sqlite3
+import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -43,6 +54,15 @@ CREATE TABLE nodes( id INTEGER PRIMARY KEY, name TEXT, kind TEXT );
 CREATE TABLE edges( src INTEGER, dst INTEGER, kind TEXT );
 CREATE INDEX idx_nodes_name ON nodes(name);
 """
+
+# Upstream's own DDL at the pinned revision. See that directory's README for
+# where it came from and for the one link in the chain it does not establish.
+PINNED_SCHEMA_SQL = (
+    Path(__file__).resolve().parents[1]
+    / "fixtures"
+    / "codegraph-schema"
+    / "schema.sql"
+)
 
 
 def a_db(tmp_path, script, name="codegraph.db"):
@@ -65,6 +85,33 @@ def schema_rows(path):
         return conn.execute("SELECT type, name, sql FROM sqlite_master").fetchall()
     finally:
         conn.close()
+
+
+def table_names(path):
+    conn = sqlite3.connect(path)
+    try:
+        return [
+            name
+            for (name,) in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        ]
+    finally:
+        conn.close()
+
+
+def a_db_from_the_pinned_schema(tmp_path=None):
+    """A **zero-row** database built from upstream's own DDL at the pinned
+    revision.
+
+    Not an index and not an artifact: `PINNED_SCHEMA_SQL` is 194 lines of
+    committed `CREATE` statements, and nothing is ever inserted here unless a
+    test does it deliberately. A real index of the same revision is 149 MB and
+    could not be committed; it does not need to be, because the digest under
+    test reads `sqlite_master` and nothing else.
+    """
+    directory = Path(tempfile.mkdtemp()) if tmp_path is None else tmp_path
+    return a_db(directory, PINNED_SCHEMA_SQL.read_text(), name="pinned-schema.db")
 
 
 def insert_rows(path, count):
@@ -211,16 +258,139 @@ def test_the_digest_carries_the_pinned_version(tmp_path):
 # --- verify(): the assertion, and both directions it fails in ---------------
 
 
-def test_the_pinned_hash_is_unset_because_no_digest_has_ever_been_observed():
-    """T004's outstanding half, pinned so it cannot be closed by fabrication.
+def test_the_pinned_digest_is_re_derived_from_the_pinned_revisions_own_schema():
+    """~~`test_the_pinned_hash_is_unset_because_no_digest_has_ever_been_observed`~~
+    **superseded 2026-08-10 — the digest was observed, so the guard changed job
+    rather than being retired.**
 
-    No `codegraph` artifact has been produced in this repository, so there is no
-    observed digest to assert against. A constant invented to make the assertion
-    pass would make it pass against nothing. This test fails the moment one is
-    written, which is the point: setting it is an owner action taken together
-    with a recorded observation, not an edit.
+    The retired test asserted `CODEGRAPH_SCHEMA_SHA256 is None` and existed to
+    fail the moment anyone fabricated a hash. That was the strongest available
+    guard while no digest existed. It cannot survive the digest existing, and
+    the two obvious replacements are both worse than nothing:
+
+    - **Deleting it** leaves the constant with no guard at all, which is the
+      state the `None` was invented to avoid.
+    - **Asserting the literal string** is a change-detector. An editor who
+      fabricates a digest satisfies it by pasting the same fabrication on both
+      sides, and it would read to a later reviewer as verification.
+
+    So this asserts the one thing that is *derivable from committed evidence*:
+    the constant equals the digest of a database built from upstream's own DDL
+    at the pinned revision. **A fabricated constant cannot satisfy this**, because
+    satisfying it means producing 194 lines of SQL that digest to the fabrication,
+    and the only tractable way to do that is to copy the real schema and compute
+    the real digest — which is the honest procedure.
+
+    **What it does not verify, stated plainly rather than left to be assumed.**
+    It does not verify that the committed SQL is what upstream ships. Nothing
+    offline can: `examples/` is git-ignored, so the only evidence that would
+    settle it is absent from the repository by design. That link was established
+    once, by measurement, on 2026-08-10 — a real index of `adk-python` built by
+    this revision digested to this same value — and it is recorded in the
+    constant's provenance block and in the fixture's README, not here. **Nothing
+    in this file re-runs `codegraph`, and a green run of it is not evidence that
+    the pinned revision still produces this schema.** Only re-running the recipe
+    in `specs/001-discovery-validation/harness/recall-adk-fastapi/run.sh` is.
     """
-    assert CODEGRAPH_SCHEMA_SHA256 is None
+    built = a_db_from_the_pinned_schema()
+
+    # The floor, and it is not decoration. This test's whole weight rests on the
+    # fixture actually being upstream's schema; a truncated or empty file would
+    # otherwise fail with a digest mismatch that reads like an upstream change.
+    found = schema_digest(built)
+    assert found.table_count == 12, (
+        f"the pinned schema built {found.table_count} tables, not 12 — the "
+        "fixture is not upstream's schema, so the equality below would be "
+        "comparing against the wrong thing"
+    )
+    assert {"nodes", "edges", "files"} <= set(table_names(built))
+
+    assert found.digest == CODEGRAPH_SCHEMA_SHA256
+
+
+def test_the_pinned_version_names_a_revision_that_cannot_be_installed():
+    """The version and the digest move together, and only one of them is a hash.
+
+    A digest is self-describing; a version string is not, and `CODEGRAPH_VERSION`
+    appears in `verify()`'s mismatch message where a reader reaches it without
+    ever seeing the comment above the constant. The vendored tree is seven
+    commits past its last tag, so a string that reads as a release invites
+    exactly the wrong repair — installing `1.5.0`, getting different code, and
+    finding a digest that does not match with nothing explaining why.
+
+    This asserts the disclosure is *in the value*, on the same principle as the
+    line-local rule `dry-run-verdict` enforces on the corpus: a caveat somewhere
+    else in the file does not travel with the string.
+    """
+    assert "49c11fc2e0c02170742be8411e66a31af611f4b7" in CODEGRAPH_VERSION
+    assert "not an npm version" in CODEGRAPH_VERSION
+
+    # A bare release number would be the specific mistake. `1.5.0` may appear —
+    # it is what `package.json` says — but never as the whole of it.
+    assert CODEGRAPH_VERSION.strip() != "1.5.0"
+
+
+def test_verify_accepts_the_pinned_revisions_schema_with_nothing_monkeypatched():
+    """The accepting path against the value this module actually ships.
+
+    Every other `verify()` arm substitutes the constant, so all of them would
+    pass with a shipped constant that matches no real schema at all. This one
+    runs the assertion as an operator gets it: the committed digest, upstream's
+    committed DDL, and no patching.
+    """
+    accepted = verify(a_db_from_the_pinned_schema())
+
+    assert accepted.digest == CODEGRAPH_SCHEMA_SHA256
+    assert accepted.version == CODEGRAPH_VERSION
+    assert accepted.table_count == 12
+
+
+def test_rows_in_upstreams_real_schema_do_not_move_the_pinned_digest(tmp_path):
+    """Row-independence against upstream's schema rather than a stand-in.
+
+    The synthetic arm above proves the property on two tables and an index.
+    Upstream's schema is 12 tables including five FTS5 shadow tables and three
+    triggers that fire on every `nodes` insert, and that is a materially
+    different thing to be row-independent about — an insert here writes into
+    other tables by itself. `ANALYZE` is run too, because it creates
+    `sqlite_stat*` tables and those are a property of the data.
+
+    This is the closest a committed test comes to the cross-repository control
+    that was actually run on 2026-08-10 — three repositories of different size
+    and language mix, one digest. It is not a substitute for it: 500 synthetic
+    rows are not a second repository.
+    """
+    built = a_db_from_the_pinned_schema(tmp_path)
+    before = schema_digest(built)
+
+    conn = sqlite3.connect(built)
+    try:
+        conn.executemany(
+            "INSERT INTO nodes(id, kind, name, qualified_name, file_path, "
+            "language, start_line, end_line, start_column, end_column, "
+            "updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                (f"n{i}", "function", f"sym_{i}", f"m.sym_{i}", "a/b.py",
+                 "python", i, i + 1, 0, 9, 0)
+                for i in range(500)
+            ],
+        )
+        conn.execute("ANALYZE")
+        conn.commit()
+        # The floor: the inserts landed, the triggers fired into the FTS table,
+        # and ANALYZE produced something. Without this the equality below is
+        # satisfied by a fixture where nothing happened.
+        assert conn.execute("SELECT count(*) FROM nodes").fetchone()[0] == 500
+        assert conn.execute("SELECT count(*) FROM nodes_fts").fetchone()[0] == 500
+        assert [
+            name
+            for _, name, sql in schema_rows(built)
+            if name.startswith("sqlite_stat") and sql is not None
+        ]
+    finally:
+        conn.close()
+
+    assert schema_digest(built).digest == before.digest == CODEGRAPH_SCHEMA_SHA256
 
 
 def test_verify_fails_closed_while_the_pinned_hash_is_unset(tmp_path, monkeypatch):
