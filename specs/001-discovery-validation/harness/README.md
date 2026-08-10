@@ -35,6 +35,7 @@ ever**, and say so at the top of their own README.
 | [`provider-sdk-roundtrip`](./provider-sdk-roundtrip/) | E16 — opaque-state round-trip through each vendor's own SDK | [016](../findings/016-provider-sdk-roundtrip.md) | 25,214 tokens; **no dollar total** — one arm measured at $0.001860, [see below](#the-e16-row-added-2026-08-03) | committed at the time | yes — with your own credentials |
 | [`pass-by-reference`](./pass-by-reference/) | E17 — inlined command output vs a bounded preview plus a filesystem handle | none yet — **pre-registered, not run** | **$0.00** — no model has been called | committed at the time | yes for everything committed; the paid arm does not exist |
 | [`slug-differential`](./slug-differential/) | (outside the ladder) — `slugify` against GitHub's own renderer | none; the result is read at `slugify`'s docstring and [`tools/README.md`](../../../tools/README.md)'s `link-anchor` row | **$0.00** — no model is called | **rebuilt from prose 2026-08-10 and then run against the live renderer** | yes — with network egress and a GitHub token |
+| [`verifier-vs-judge`](./verifier-vs-judge/) | E8 — a contract-derived verifier against an LLM judge, hypothesis **H2**; **built, self-tested, dry-run, and deliberately not run** | [015](../findings/015-verifier-vs-judge-not-run.md) — **the finding is that it did not run**; narrowed by [017](../findings/017-evaluation-contemporaneity.md) and [018](../findings/018-verifier-false-alarm-attested-denominator.md) | **$0.0000** — no judge call was ever billed; twelve committed run directories, every one a dry run | committed at the time, **and then edited**: every `analysis.json` and `report.md` under `results/` had its decision block neutralised on 2026-08-03 and no figure was altered — [`NEUTRALISATION.md`](./verifier-vs-judge/results/NEUTRALISATION.md) | yes — offline, no credential, no network, no container; **arm (c1) is quarantined and refuses to be scored** |
 
 `runtime-provider-agnosticism` and `graph-loop-primitives` are the harnesses behind
 **OD-01** (adopt Google ADK for graph execution, build our own safety layer) and **OD-02**
@@ -43,18 +44,26 @@ runtime substrate. They were written up as *not committed* by finding 006 §Repr
 and by [`VERDICT.md`](../VERDICT.md); their scripts survived in `/tmp`, are committed
 here, and **both documents were corrected on 2026-08-02** rather than left stale.
 
-## The position count above is stale, and one directory besides the new one is missing from the table
+## The position count above is stale, and every directory now carries a row
 
 The counts in the index paragraph — eight experiments, nine positions, ten after E16 — are
 superseded, and each was correct when written. `ls` now returns **thirteen** directories beside
-this file while the table carries **twelve** rows.
+this file and the table carries **thirteen** rows.
 
-The one row that is owed rather than added here is [`verifier-vs-judge`](./verifier-vs-judge/),
-E8, which is a committed directory absent from the table. It is named rather than filled in:
-its finding, its spend and its provenance are E8's to state, and a row assembled by someone who
-had not read the experiment is the plausible-looking substitute this tree refuses elsewhere on
-the same page. `slug-differential` sits outside the experiment ladder in the same way
-`provider-credentials` does, so it adds a position without adding an experiment.
+[`verifier-vs-judge`](./verifier-vs-judge/), E8, was the directory with no row, and until
+2026-08-10 it was named rather than filled in on the ground that its finding, its spend and its
+provenance were E8's to state. **That ground held against assembling a row and does not reach a
+cited one.** Three findings speak to this position —
+[015](../findings/015-verifier-vs-judge-not-run.md),
+[017](../findings/017-evaluation-contemporaneity.md) and
+[018](../findings/018-verifier-false-alarm-attested-denominator.md) — so every cell of the row is
+quoted from an author who ran the experiment rather than inferred by one who did not, which is a
+different act from the plausible-looking substitute this tree refuses elsewhere on the same page.
+
+**The row is not a row with blanks in it.** E8 called no model, and *that it did not run* is the
+finding rather than the absence of one, so the Finding cell states it and a reader stops having to
+infer it from a missing line. `slug-differential` sits outside the experiment ladder in the same
+way `provider-credentials` does, so it adds a position without adding an experiment.
 
 **Every claim in this file about how many of something the tree holds had gone stale at least
 once**, and until 2026-08-10 that placed the directory count in the first of the two ungateable
