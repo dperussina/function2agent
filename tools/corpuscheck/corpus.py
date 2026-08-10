@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import fnmatch
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -215,20 +216,37 @@ _PARKED_RE = re.compile(r"\x00(\d+)\x00")
 # following one is not, which is what leaves `cite_advisor` alone.
 _EMPHASIS_UNDERSCORE_RE = re.compile(r"(?<!\w)(_{1,2})(?=\S)(.+?)(?<=\S)\1(?!\w)")
 
+_SLUG_KEEP_RE = re.compile(r"[\w\s\-]", re.UNICODE)
+#: Categories Python's `\w` admits and GitHub's word class does not.
+_SLUG_DROP_CATEGORIES = frozenset({"No"})
+
+
+def _slug_keeps(ch: str) -> bool:
+    """One character's fate in an anchor, as GitHub's renderer decides it."""
+    category = unicodedata.category(ch)
+    if category in _SLUG_DROP_CATEGORIES:
+        return False
+    # Combining marks survive the renderer and are not word characters here.
+    return category.startswith("M") or bool(_SLUG_KEEP_RE.match(ch))
+
 
 def slugify(heading: str) -> str:
-    r"""Reproduces GitHub's emitted heading `id` on 2,367 of 2,371 headings.
+    r"""Reproduces GitHub's emitted heading `id` on every heading measured.
 
     ~~"GitHub's heading-anchor algorithm, close enough for link checking."~~
-    **Measured on 2026-08-10 against ids fetched from GitHub's renderer, over
-    the 2,371 headings the corpus walked that day** — a dated count over a named
-    set, not a live ratio; `tools/` entered `include` later the same day and
-    added 53 headings that the differential has not been run over. The retired
-    sentence is retired for its second clause. *Close enough* is the phrase that
-    licensed nobody checking, and while it stood this function invented anchors
-    no rendered page carried, `link-anchor` computed every target with the same
-    defect, and two committed links were written to match the invention and
-    passed a green gate.
+    ~~Measured on 2026-08-10 against ids fetched from GitHub's renderer, over
+    the 2,371 headings the corpus walked that day.~~ **That set was the
+    non-blockquoted headings only, and nothing said so — the filter is what hid
+    a third population of 109 for two differentials running.** Re-measured on
+    2026-08-10 at `7a60dd3` over **both** populations — the 2,425 headings
+    anchored at `^#` and the 109 written `> ## Title` inside a blockquote,
+    2,534 in all — this function agrees with the renderer on **all 2,534**.
+    That is a dated count over a named set rather than a live ratio: the walked
+    set grows whenever the corpus does. The retired sentence is retired for its
+    second clause. *Close enough* is the phrase that licensed nobody checking,
+    and while it stood this function invented anchors no rendered page carried,
+    `link-anchor` computed every target with the same defect, and two committed
+    links were written to match the invention and passed a green gate.
 
     GitHub renders the heading to HTML and slugs the *text content*, so a
     character's markup role and its literal role have different fates. `*` and
@@ -242,27 +260,31 @@ def slugify(heading: str) -> str:
     renders `...terminateddenied_operation...`, dropping the `.` and keeping the
     `_` in one token. See tools/README.md for the differential.
 
-    **The four disagreements are two families. Both are named here and neither
-    is fixed.**
+    **Three defects were measured and all three are repaired.** Each was
+    declined once for a blast radius nobody had counted; counted, the three
+    together move **5** of the 2,425 already-enumerated slugs, and those 5 are
+    the 5 that were wrong. No live link pointed at any of them.
 
-      * **Circled digits survive.** `\u2460` and `\u2461` are Unicode category
-        `No`, which Python's `\w` matches and GitHub's word class does not, so
-        this implementation keeps them and the renderer drops them. Three sites:
-        `specs/001-discovery-validation/plan.md` and two headings in
-        `specs/002-spec-aware-agent-runtime/findings/028-*.md`.
-      * **A trailing `\u2605` costs a hyphen.** GitHub drops the punctuation and
-        *then* converts the space that preceded it, leaving a trailing `-`; this
-        implementation strips first and emits none. One site,
-        `research/12-examples-as-corpus.md`, and it is the only heading in the
-        corpus that ends in punctuation preceded by a space.
+      * **Trimming happens before the character drop, not after.** GitHub
+        trims, *then* drops the characters outside its word class, *then*
+        converts every remaining space to `-`. Dropping first and trimming
+        after loses a hyphen wherever a dropped character sits at either end
+        behind a space. Blast radius over the enumerated population: **1**, the
+        trailing `\u2605` in `research/12-examples-as-corpus.md`. The same
+        defect at the *leading* edge is the whole of the pictograph family —
+        `\u26a0\ufe0f`, `\u2705`, `\u26d4` opening a blockquoted banner heading — so the
+        one-site fix and the 40-site fix are the same fix.
+      * **Category `No` is dropped.** `\u2460` and `\u2461` are Unicode `No`, which
+        Python's `\w` matches because `str.isalnum()` is true for them and
+        GitHub's word class does not. Blast radius: **4**.
+      * **Combining marks are kept.** A U+FE0F after a pictograph is not a word
+        character to Python and is not dropped by the renderer, so the renderer
+        emits it into the `id` and this implementation was deleting it. Blast
+        radius over the enumerated population: **0**; it reaches 30 blockquoted
+        headings and nothing else.
 
-    Each is a different defect from the underscore one settled the same day, so
-    fixing them here would put two unmeasured changes behind one measured one.
-    The `\u2605` fix in particular reorders strip against convert for **every**
-    heading, which is a whole-corpus blast radius for one site. No live link
-    reaches either family, so what stands is a slug nothing resolves against
-    rather than a broken link — the opposite of the underscore case, where the
-    links existed and were wrong.
+    Category `So` needs no entry: `\u2605` and the pictographs are already outside
+    `\w`, so the existing class drops them without help.
 
     Inline code is parked before the emphasis pass so a `_` inside a code span
     can never pair with one outside it.
@@ -281,10 +303,9 @@ def slugify(heading: str) -> str:
     text = _EMPHASIS_UNDERSCORE_RE.sub(r"\2", text)
     text = text.replace("*", "").replace("~", "")
     text = _PARKED_RE.sub(lambda m: parked[int(m.group(1))], text)
-    text = text.lower()
-    text = re.sub(r"[^\w\s\-]", "", text, flags=re.UNICODE)
-    text = text.strip().replace(" ", "-")
-    return text
+    text = text.lower().strip()
+    text = "".join(ch for ch in text if _slug_keeps(ch))
+    return text.replace(" ", "-")
 
 
 @dataclass

@@ -509,6 +509,31 @@ SLUG_ROLES = [
         "star-emph-heading",
         "`*` vanishes in either role",
     ),
+    # The three defects repaired on 2026-08-10. Each expected value is a
+    # verbatim rendered `id`, and each case fires on the code it replaced:
+    # the first two lost their hyphen to trimming after the character drop
+    # instead of before, the third kept a `No` the renderer removes, and the
+    # fourth lost a U+FE0F the renderer keeps.
+    (
+        "## Exception 1 — `adk-python` itself. **A genuine Class B target.** \u2605",
+        "exception-1--adk-python-itself-a-genuine-class-b-target-",
+        "RENDERED: a trailing dropped char keeps its hyphen",
+    ),
+    (
+        "## \u26d4 QUARANTINED 2026-08-03 — this arm may not be scored",
+        "-quarantined-2026-08-03--this-arm-may-not-be-scored",
+        "RENDERED: a leading dropped char keeps its hyphen",
+    ),
+    (
+        "## 1. Ground \u2460 — survives, and it is the ground actually carrying the deferral",
+        "1-ground---survives-and-it-is-the-ground-actually-carrying-the-deferral",
+        "RENDERED: a circled digit is dropped, not kept",
+    ),
+    (
+        "## \u26a0\ufe0f THE EXPIRY CONDITION, WHICH IS THIS ENTRY'S MOST IMPORTANT CONTENT",
+        "\ufe0f-the-expiry-condition-which-is-this-entrys-most-important-content",
+        "RENDERED: U+FE0F survives the pictograph that carried it",
+    ),
 ]
 
 
