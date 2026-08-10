@@ -19,3 +19,8 @@ because that is how the real findings state them too. Token use fell by a factor
 of 6.4 once the cache was warm. The arms finished at a ratio of 8.2 on wall
 clock. And the tool arm ran at 1/35th of the baseline's cost, which is the only
 form in which that particular figure is stated anywhere.
+
+A label naming the document from the repository root beside a link written
+relative to this file: [`specs/001-fixture/spec.md`](../spec.md). The label is
+correct and the link resolves to exactly the document it names, so `link-label`
+must stay silent — which it can only do by resolving the target before comparing.

@@ -120,3 +120,8 @@ because that is the only way to hold it. One session cost **$7.42**. A finding
 writes `7.42` — the same digits, standing alone, with no `$` in front of them,
 because there it is not a dollar amount. Drop the `$` requirement and this line
 reads as sourced.
+
+The filename branch of `link-label` had no firing site in either fixture until
+2026-08-10 — every planted filename label agreed with its target, so the branch
+was held only in the direction that passes. This label names one document and
+the link goes to another: [`research/01-fixture-metrics.md`](research/14-fixture-synthesis.md).

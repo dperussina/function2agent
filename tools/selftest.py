@@ -104,6 +104,12 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     ("link-anchor", "README.md", 22, "#9-the-conclusion"),
     ("link-label", "README.md", 20, "finding 010"),
     ("link-label", "README.md", 20, "findings/010-"),
+    # The filename branch, which until 2026-08-10 was held only in the direction
+    # that passes: every planted filename label agreed with its target, so the
+    # branch could have been deleted outright and Direction 1 would still have
+    # been satisfied by the two `finding NNN` rows above. This row is what makes
+    # resolving the target before comparing a change that can be checked.
+    ("link-label", "README.md", 127, "research/01-fixture-metrics.md"),
     ("identifier-resolution", "research/14-fixture-synthesis.md", 16, "D-99"),
     ("identifier-gap", None, None, "D-03"),
     # 4 — findings numbering
@@ -447,6 +453,83 @@ def _lifecycle_floor_selftest(verbose: bool) -> list[str]:
     return failures
 
 
+# `slugify`'s two roles for one character. Every expected value below was read
+# off GitHub's own rendered `id` attribute on 2026-08-10, not off its documented
+# algorithm — the earlier claim rested on the documentation plus five authorings
+# and was never checked against a renderer. The two marked RENDERED are verbatim
+# ids fetched from the contents endpoint; the rest follow the mechanism those two
+# establish. `*` and `~` need no case pair because their markup role and their
+# literal role have the same outcome: both vanish, one consumed and one dropped
+# for not being a word character. `_` is the only character where the two roles
+# disagree, and it disagrees in the direction that invents an anchor no page has.
+SLUG_ROLES = [
+    # (heading, expected slug, what the case pins)
+    (
+        "## The advisory — `cite_advisor.py`",
+        "the-advisory--cite_advisorpy",
+        "RENDERED: literal `_` in a code span survives",
+    ),
+    (
+        "#### _Note_: Multiple entry points",
+        "note-multiple-entry-points",
+        "RENDERED: `_emphasis_` is consumed as markup",
+    ),
+    (
+        "## Bare snake_case_identifier heading",
+        "bare-snake_case_identifier-heading",
+        "intraword `_` outside code is literal",
+    ),
+    (
+        "## A __strong__ heading",
+        "a-strong-heading",
+        "`__strong__` is consumed as markup",
+    ),
+    (
+        "## Mixed `cite_advisor` and _emph_ together",
+        "mixed-cite_advisor-and-emph-together",
+        "both roles in one heading",
+    ),
+    (
+        "## OD-26 — `terminated.denied_operation` is struck",
+        "od-26--terminateddenied_operation-is-struck",
+        "`.` dropped and `_` kept in one token",
+    ),
+    (
+        "## An unpaired _ delimiter",
+        "an-unpaired-_-delimiter",
+        "an unpaired `_` is literal, not markup",
+    ),
+    (
+        "## Strike ~~gone~~ heading",
+        "strike-gone-heading",
+        "`~` vanishes in either role",
+    ),
+    (
+        "## Star *emph* heading",
+        "star-emph-heading",
+        "`*` vanishes in either role",
+    ),
+]
+
+
+def _slug_role_selftest(verbose: bool) -> list[str]:
+    """Prove `slugify` separates a character's markup role from its literal one."""
+    from corpuscheck.corpus import slugify
+
+    failures: list[str] = []
+    print("\nslugify — markup role and literal role, both directions")
+    width = max(len(why) for _, _, why in SLUG_ROLES)
+    for heading, expected, why in SLUG_ROLES:
+        got = slugify(heading)
+        ok = got == expected
+        print(f"  {'PASS' if ok else 'FAIL'}  {why:<{width}}  {got}")
+        if not ok:
+            failures.append(f"slugify({heading!r}) == {got!r}, expected {expected!r}")
+        if verbose:
+            print(f"        heading {heading!r}")
+    return failures
+
+
 def _matches(v, path, line, needle) -> bool:
     if path is not None and v.path != path:
         return False
@@ -510,6 +593,11 @@ def main(argv: list[str] | None = None) -> int:
 
     # Direction 5: the generator that now writes two of those claim classes.
     failures.extend(_generator_selftest(args.verbose))
+
+    # Direction 6: the anchor slugger, which no fixture corpus can pin in both
+    # directions at once — a fixture proves a link resolves, and a link that
+    # resolves to a wrong-but-self-consistent slug is exactly the failure here.
+    failures.extend(_slug_role_selftest(args.verbose))
 
     print()
     if failures:

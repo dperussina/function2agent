@@ -18,6 +18,7 @@ liveness and this one does not rebuild it.
 
 from __future__ import annotations
 
+import posixpath
 import re
 from urllib.parse import unquote
 
@@ -189,7 +190,18 @@ def link_label(corpus: Corpus, ctx: dict) -> list[Violation]:
             fnm = _FILENAME_IN_TEXT.fullmatch(text.strip())
             if fnm:
                 named = fnm.group(1)
-                if not path_part.endswith(named.lstrip("./")):
+                # Against the *resolved* target, not the authored string. A
+                # repo-root-relative label beside a document-relative link
+                # names the same file, and comparing the unresolved string read
+                # that agreement as a mismatch. Resolved with posixpath rather
+                # than Path.resolve so the verdict does not depend on the
+                # filesystem — the target may not exist, which is link-target's
+                # finding and not this one's, and it may be a symlink, whose
+                # real path is not what the label is claiming.
+                where = posixpath.normpath(
+                    posixpath.join(posixpath.dirname(doc.relpath), path_part)
+                )
+                if not where.endswith(named.lstrip("./")):
                     out.append(
                         _mismatch(doc, lineno, m, text, target, f"a path ending {named}")
                     )
