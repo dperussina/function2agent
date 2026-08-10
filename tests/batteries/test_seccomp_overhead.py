@@ -17,10 +17,25 @@ transfers least.** Every figure here is a property of:
   - A **CPython** supervisor answering notifications with `fcntl.ioctl` and a
     `/proc/<pid>/mem` read per attempt. A Go or C supervisor would be faster;
     how much faster is not measured and is not guessed at.
-  - The specific workloads below, which are proxies for "shell-heavy" and are
-    not the reference application. **T101 asks for the reference application
-    and this is not it** — recorded as an outstanding obligation, not as a
-    substitution.
+  - The five workloads below. Three are proxies — `shell_heavy`, `path_heavy`
+    and the `compute_only` control — and two drive the reference application
+    T116 built, over the two surfaces `app.py` names: `Application.call` is
+    the in-process API sequence and `build_server` the socket arm.
+
+**The shell-heavy arm on the reference application does not exist, and its
+absence is deliberate and checked.** T101 asks for "the shell-heavy arm that
+stresses it". `shell_heavy` below is that arm and has been measured since
+2026-08-03; what T116 did not bring is a shell-heavy arm *of the reference
+application*, and building one would have been a mistake rather than a gap.
+The reference application composes no shell command — it spawns no process at
+all, which `tests/unit/test_reference_app.py::
+test_the_reference_application_spawns_no_process` asserts mechanically so the
+claim is checked rather than argued. An arm that wrapped it in `sh -c` would
+be measuring `sh`'s process spawn and the client's, attribute both to the
+reference application, and hand back the proxy figure wearing the fixture's
+name. The absence is recorded in the result file with this reasoning, and the
+assertion is the tripwire: if anyone gives the reference application a
+subprocess call, it fires and this clause reopens.
 
 This corpus has been burned by exactly this class of error: a measured 1.0000
 precision that turned out to be a property of the target rather than of the
@@ -55,6 +70,8 @@ pytestmark = [
 from src.supervisor import _linux, seccomp  # noqa: E402
 
 RESULTS = Path(__file__).resolve().parent / "results"
+REPO = Path(__file__).resolve().parents[2]
+REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 REPEATS = 5
 
 # --- the workloads --------------------------------------------------------
@@ -92,6 +109,79 @@ COMPUTE_ONLY = textwrap.dedent(
     for i in range(4_000_000):
         total += i
     """
+)
+
+# --- the reference application (T116) -------------------------------------
+#
+# The two arms `app.py` names, and the reason there are two: an overhead figure
+# and a safety assertion must be measurements of one program, and T116's
+# `test_the_origin_serves_the_same_bytes_the_in_process_call_returns` is what
+# holds these two surfaces to that. Measuring only the socket arm would fold
+# the HTTP stack's cost into the application's; measuring only the in-process
+# arm would leave the surface an operator actually reaches unmeasured.
+#
+# The paths are interpolated at run time and are never written down: an
+# absolute path into somebody's checkout does not belong in a committed file,
+# and a relative one would depend on the subprocess's working directory.
+_REFAPP_PREAMBLE = """
+import sys
+sys.path.insert(0, {repo!r})
+sys.path.insert(0, {refapp!r})
+import app, seed
+"""
+
+# The in-process API sequence. State is re-read each round on purpose — that
+# read is the reference application's real filesystem contact, and hoisting it
+# out of the loop would leave an arm that touches no path after import and
+# measures the interpreter's startup instead.
+REFERENCE_APP_API = _REFAPP_PREAMBLE + """
+for _ in range(40):
+    a = app.Application(seed.load_state())
+    a.call('GET', '/health')
+    a.call('GET', '/parts')
+    a.call('GET', '/parts/P-0007')
+    a.call('GET', '/shipments?part_id=P-0003')
+    a.call('GET', '/shipments?part_id=P-0011')
+"""
+
+# The socket arm: the same operations over `build_server`, which is the surface
+# an operator's session actually reaches.
+REFERENCE_APP_SOCKET = _REFAPP_PREAMBLE + """
+import json, threading, urllib.request
+a = app.Application(seed.load_state())
+server = app.build_server(a, host='127.0.0.1', port=0)
+host, port = server.server_address[0], server.server_address[1]
+thread = threading.Thread(target=server.serve_forever, daemon=True)
+thread.start()
+base = 'http://%s:%d' % (host, port)
+try:
+    for _ in range(40):
+        for path in ('/health', '/parts', '/parts/P-0007',
+                     '/shipments?part_id=P-0003', '/shipments?part_id=P-0011'):
+            with urllib.request.urlopen(base + path, timeout=10) as r:
+                json.loads(r.read().decode('utf-8'))
+finally:
+    server.shutdown()
+    server.server_close()
+"""
+
+
+def _reference_app_source(template: str) -> str:
+    return template.format(repo=str(REPO), refapp=str(REFAPP_DIR))
+
+
+#: Recorded in the result file rather than only in the docstring, because the
+#: artifact outlives the module a reader would otherwise have to go and find.
+SHELL_HEAVY_ABSENCE = (
+    "There is NO shell-heavy arm of the reference application, and the "
+    "absence is deliberate. T101's shell-heavy clause is discharged by the "
+    "`shell_heavy` arm above. The reference application composes no shell "
+    "command and spawns no process — asserted by "
+    "tests/unit/test_reference_app.py::"
+    "test_the_reference_application_spawns_no_process — so an arm wrapping it "
+    "in `sh -c` would measure sh's process spawn and the client's, attribute "
+    "both to the reference application, and reproduce the proxy figure under "
+    "the fixture's name. If that assertion ever fires, this clause reopens."
 )
 
 
@@ -146,6 +236,8 @@ def measurement() -> dict:
         ("shell_heavy", SHELL_HEAVY),
         ("path_heavy", PATH_HEAVY),
         ("compute_only", COMPUTE_ONLY),
+        ("reference_app_api", _reference_app_source(REFERENCE_APP_API)),
+        ("reference_app_socket", _reference_app_source(REFERENCE_APP_SOCKET)),
     ):
         baseline = _median(_run_unsupervised_subprocess, source)
         supervised_samples = [_run_supervised(source) for _ in range(REPEATS)]
@@ -178,6 +270,7 @@ def measurement() -> dict:
             "audit_arch": hex(_linux.audit_arch()),
             "watched_syscalls": sorted(_linux.path_taking_syscalls()),
         },
+        "shell_heavy_on_the_reference_application": SHELL_HEAVY_ABSENCE,
         "what_this_is_a_property_of": [
             "Docker Desktop's linuxkit VM on this host, not a bare Linux host. "
             "Syscall-interception overhead is the measurement most sensitive "
@@ -185,12 +278,19 @@ def measurement() -> dict:
             "A CPython supervisor doing one ioctl and one /proc/<pid>/mem read "
             "per notification. A Go or C supervisor would be faster by an "
             "unmeasured amount.",
-            "These three workloads, which are proxies for 'shell-heavy'. T101 "
-            "asks for the measurement on the reference application; the "
-            "reference application does not exist yet, so that part of T101 "
-            "is OUTSTANDING and this does not discharge it.",
+            "Five workloads. `shell_heavy`, `path_heavy` and `compute_only` "
+            "are proxies; `reference_app_api` and `reference_app_socket` "
+            "drive T116's reference application over the two surfaces app.py "
+            "names. The reference application existed from 2026-08-08; the "
+            "earlier record here said it did not, which was true when it was "
+            "written and is superseded.",
             "SECCOMP_USER_NOTIF_FLAG_CONTINUE as the response. A supervisor "
             "that denied or rewrote arguments would pay more.",
+            "An interpreter start per round. Every arm pays it in both the "
+            "baseline and the supervised run, so it cancels out of "
+            "overhead_seconds and inflates notifications_observed — which is "
+            "why microseconds_per_notification is the transferable figure and "
+            "`ratio` is not.",
         ],
     }
     RESULTS.mkdir(parents=True, exist_ok=True)
@@ -245,6 +345,36 @@ def test_the_compute_control_shows_the_overhead_is_attributable(
         f"compute-only control ({control['ratio']}x), so the overhead is not "
         "attributable to syscall interception"
     )
+
+
+def test_the_reference_application_arms_ran_and_fired_the_filter(
+    measurement,
+) -> None:
+    """T101's outstanding clause: the figure on the **reference application**,
+    not on a proxy for one.
+
+    Both surfaces `app.py` names are measured. A zero-notification arm here
+    would mean the workload never reached the state on disk, which is the
+    reference application's only filesystem contact and therefore the only
+    thing the supervisor has to intercept.
+    """
+    for name in ("reference_app_api", "reference_app_socket"):
+        arm = measurement["arms"][name]
+        assert arm["notifications_observed"] > 100, (
+            f"the {name} arm triggered {arm['notifications_observed']} "
+            "notifications; it did not reach the application's state"
+        )
+        assert arm["microseconds_per_notification"] is not None
+
+
+def test_the_absence_of_a_shell_heavy_reference_arm_is_recorded(
+    measurement,
+) -> None:
+    """The clause T101 asks for and this file declines to build, recorded with
+    its reasoning rather than dropped quietly."""
+    recorded = measurement["shell_heavy_on_the_reference_application"]
+    assert "spawns no process" in recorded
+    assert "shell_heavy" in measurement["arms"]
 
 
 def test_overhead_is_reported_not_asserted_against_a_threshold(

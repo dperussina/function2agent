@@ -26,9 +26,11 @@ the unforgeable half of the fixture is gone.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import importlib.util
 import json
+import subprocess
 import sys
 import threading
 import urllib.request
@@ -536,6 +538,110 @@ def test_the_application_touches_one_directory_and_names_it() -> None:
     """T115's declared set has a single member and no way to move it."""
     assert app_mod.state_root() == FIXTURE
     assert seed.STATE_PATH.parent == app_mod.state_root()
+
+
+#: Modules and attributes that put a new process on the host. Enumerated,
+#: never written as "anything that looks like exec": a classifier stated as a
+#: complement is one unknown member away from admitting the thing it exists to
+#: exclude, which this fixture's own `IN_FLIGHT_STATUSES` comment says in as
+#: many words.
+_PROCESS_SPAWNING_MODULES = frozenset(
+    {"subprocess", "multiprocessing", "pty", "asyncio.subprocess"}
+)
+_PROCESS_SPAWNING_OS_CALLS = frozenset(
+    {
+        "system", "popen", "fork", "forkpty", "posix_spawn", "posix_spawnp",
+        "execv", "execve", "execvp", "execvpe", "execl", "execle", "execlp",
+        "execlpe", "spawnv", "spawnve", "spawnvp", "spawnvpe", "spawnl",
+        "spawnle", "spawnlp", "spawnlpe",
+    }
+)
+
+
+def test_the_reference_application_spawns_no_process() -> None:
+    """The tripwire under **T101's** shell-heavy decision.
+
+    T101 asks for a shell-heavy arm; `tests/batteries/test_seccomp_overhead.py`
+    supplies one and declines to build a *second* one wrapped around this
+    application, on the ground that this application composes no shell command
+    — so an `sh -c` wrapper would measure the wrapper. That ground is a claim
+    about the fixture, and a claim about a fixture that nothing checks is an
+    opinion. This is the check.
+
+    If someone gives the reference application a subprocess call, this fails,
+    and T101's shell-heavy clause reopens on the reference application rather
+    than staying discharged by an argument that has quietly stopped being true.
+    """
+    offences: list[str] = []
+    for name in size_mod.APPLICATION_SOURCES:
+        tree = ast.parse((FIXTURE / name).read_text(), filename=name)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name.split(".")[0] in _PROCESS_SPAWNING_MODULES:
+                        offences.append(f"{name}: imports {alias.name}")
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                if node.module.split(".")[0] in _PROCESS_SPAWNING_MODULES:
+                    offences.append(f"{name}: imports from {node.module}")
+            elif isinstance(node, ast.Attribute):
+                if (
+                    isinstance(node.value, ast.Name)
+                    and node.value.id == "os"
+                    and node.attr in _PROCESS_SPAWNING_OS_CALLS
+                ):
+                    offences.append(f"{name}: calls os.{node.attr}")
+    assert offences == [], (
+        "the reference application now spawns a process: "
+        f"{offences}. T101's shell-heavy clause was recorded as discharged by "
+        "the generic `shell_heavy` proxy arm *because* this application was "
+        "not a shell workload. It is one now, and "
+        "tests/batteries/test_seccomp_overhead.py owes it an arm."
+    )
+
+
+def test_t101s_reference_application_workloads_run_on_any_platform() -> None:
+    """The two arms T101 drives are only *measured* on privileged Linux, and a
+    workload string that has rotted fails there and nowhere else.
+
+    So the sources are executed here, unsupervised, on whatever host is
+    running. This asserts nothing about overhead — it asserts the arms are
+    still programs, which is the part that decays silently between privileged
+    runs.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "_t101_battery",
+        Path(__file__).resolve().parents[1] / "batteries"
+        / "test_seccomp_overhead.py",
+    )
+    assert spec and spec.loader
+    battery = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(battery)
+
+    for template in (battery.REFERENCE_APP_API, battery.REFERENCE_APP_SOCKET):
+        source = battery._reference_app_source(template)
+        completed = subprocess.run(
+            [sys.executable, "-c", source], capture_output=True
+        )
+        assert completed.returncode == 0, completed.stderr.decode()[-2000:]
+
+
+def test_the_spawn_detector_fires_on_a_planted_call() -> None:
+    """The detector's own negative control.
+
+    A checker whose enumeration is emptied reports a clean fixture forever,
+    and the reading a pass produces here is "no finding" — which is every way
+    this check can break. So the enumeration is exercised against source that
+    genuinely spawns.
+    """
+    planted = ast.parse("import subprocess\nsubprocess.run(['/bin/sh'])\n")
+    imported = {
+        alias.name
+        for node in ast.walk(planted)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    assert imported & _PROCESS_SPAWNING_MODULES
+    assert "system" in _PROCESS_SPAWNING_OS_CALLS
 
 
 # ---------------------------------------------------------------------------
