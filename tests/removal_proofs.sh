@@ -3213,6 +3213,135 @@ proof "FR-019 — coverage made symmetric, so a generalized permission reads as 
   "tests/contract/test_review_gate.py::test_a_permission_generalized_is_a_widening" \
   's = s.replace("        _is_parameter(segment) or segment == counterpart", "        _is_parameter(segment) or _is_parameter(counterpart) or segment == counterpart")'
 
+# ---------------------------------------------------------------------------
+# T118 — the SC-001 window as two spans, with the subject's size and FR-045's
+# share beside it. Ten arms, because `src/analysis/timing.py` is ten refusals
+# and each of them fails in its own direction.
+#
+# The three structural ones — size required, share required, analysis span
+# required — are the whole of T118's mechanism, and each has to be removed
+# separately: taking one out leaves the other two reporting, so a single arm
+# would score the pair rather than the piece it names.
+
+proof "T118 — a report becomes constructible with no subject size, so a wall time loses its denominator" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_report_cannot_be_built_without_the_subject_size" \
+  's = s.replace("        if not isinstance(self.subject_size, SubjectSize):", "        if False:")'
+
+proof "T118 — a report becomes constructible with no FR-045 share, which is the vacuity SC-001 invites" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_report_cannot_be_built_without_the_not_verifiable_share" \
+  's = s.replace("        if not isinstance(self.not_verifiable, NotVerifiableShare):", "        if False:")'
+
+# The defect T118 exists for, stated as a tamper: one figure over a bounded
+# step and an unbounded one, quietly true on small inputs and quietly false on
+# large ones. Nothing else in the module refuses this, because a window with a
+# zero analysis span is arithmetically consistent.
+proof "T118 — a window with no analysis span becomes a single fused total" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_window_with_no_analysis_span_is_a_fused_total_and_is_refused" \
+  's = s.replace("        if self._analysis_spans == 0:", "        if False:")'
+
+# Assessability is derived from FR-045 having reported over a production
+# window. Made a constant `True`, every harness run reports an assessable
+# SC-001 — which is precisely the reading the specification forbids at the
+# passage this arm is named for.
+proof "T118 — SC-001 becomes assessable from a harness run, dropping the FR-045 precondition" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_harness_run_is_not_independently_assessable" \
+  's = s.replace("        return self.not_verifiable.production", "        return True")'
+
+proof "T118 — an analysis figure taken without codegraph stops saying so, so U-21 reads as answered" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_an_analysis_figure_taken_without_codegraph_says_so" \
+  's = s.replace("    codegraph_invoked: bool = False", "    codegraph_invoked: bool = True")'
+
+proof "T118 — FR-045's breakdown stops having to account for its own total" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_breakdown_that_does_not_sum_to_its_total_describes_neither" \
+  's = s.replace("        if counted != self.not_verifiable:", "        if False:")'
+
+# SC-001 names the *first* verified answer. Without the guard the mark moves
+# to the last one, and a run whose fourth question took ten minutes reports
+# ten minutes for a criterion its first question met in a second.
+proof "T118 — a later verified answer moves the mark, so the criterion times the wrong one" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_later_verified_answer_does_not_move_the_first" \
+  's = s.replace("        if self._first_verified is None:\n            self._first_verified = self._since_start()", "        self._first_verified = self._since_start()")'
+
+proof "T118 — a share over an empty population becomes a low share instead of no measurement" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_share_over_an_empty_population_is_refused" \
+  's = s.replace("        if not isinstance(self.attempted, int) or self.attempted <= 0:", "        if False:")'
+
+proof "T118 — a numerator above its denominator passes, so two populations report as one" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_numerator_above_its_denominator_names_two_populations" \
+  's = s.replace("        if self.not_verifiable > self.attempted:", "        if False:")'
+
+proof "T118 — a size document missing a field is filled in, so staleness stops being visible" \
+  src/analysis/timing.py \
+  "tests/unit/test_sc001_timing.py::test_a_size_document_missing_a_field_is_not_defaulted" \
+  's = s.replace("        missing = [key for key in required if key not in document]", "        missing = []")'
+
+# ---------------------------------------------------------------------------
+# T117 — the unattended SC-001 harness.
+#
+# Three arms, and none of them duplicates the ten above: those are the report's
+# refusals, these are the run's. A run can satisfy every structural refusal in
+# `timing.py` and still hand it numbers taken over the wrong population.
+
+# FR-045's share is a share of the NOT-VERIFIABLE state. Booked as a failure,
+# a refusal costs the run its answer and disappears from the share anyway,
+# which is the one way to get a clean share out of a run that verified nothing.
+proof "T117 — a missing evidence channel is booked as a failure, so it leaves FR-045's share" \
+  tests/integration/test_sc001_first_answer.py \
+  "tests/integration/test_sc001_first_answer.py::test_absent_evidence_is_not_verifiable_and_not_a_failure" \
+  's = s.replace("ABSENT_EVIDENCE_OUTCOME = VerificationOutcome.NOT_VERIFIABLE", "ABSENT_EVIDENCE_OUTCOME = VerificationOutcome.FAILED")'
+
+# The evidence channel being *present* and the evidence channel being *checked*
+# are two mechanisms. The arm above removes the first; this removes the second,
+# and only an attestation that is present and wrong can tell them apart.
+proof "T117 — the recomputed evidence digest stops being compared, so a wrong attestation verifies" \
+  tests/integration/test_sc001_first_answer.py \
+  "tests/integration/test_sc001_first_answer.py::test_an_altered_attestation_fails_verification_rather_than_refusing_it" \
+  's = s.replace("    if digest != question[\x22evidence_digest\x22]:", "    if False:")'
+
+# The cherry-pick. A run that stops at the first verified answer divides
+# FR-045's share by however many questions it reached before getting lucky,
+# and SC-001 then reports a timing produced by that question alone.
+proof "T117 — the run stops at the first verified answer, so the share is taken over what it reached" \
+  tests/integration/test_sc001_first_answer.py \
+  "tests/integration/test_sc001_first_answer.py::test_every_question_is_attempted_even_after_the_first_verified_answer" \
+  's = s.replace("            if result.is_verified:\n                timer.first_verified_answer()", "            if result.is_verified:\n                timer.first_verified_answer()\n                break")'
+
+# ---------------------------------------------------------------------------
+# T101 — the reference-application arms, and the shell-heavy clause this pass
+# declined to build a second time.
+#
+# **No arm here targets `tests/batteries/test_seccomp_overhead.py`'s own
+# assertions.** That module is `linux_only` and `privileged`, so on any host
+# that cannot run it every such proof reports SKIPPED — an outcome that says
+# nothing and costs a reader the same attention as one that does. The two arms
+# below name tests that run everywhere and guard the two things about T101
+# that can rot without a privileged run noticing.
+
+# The workload strings are executed only under the supervisor, on privileged
+# Linux. A rotted one therefore fails in the one place nobody can reproduce.
+proof "T101 — the reference-application workload stops being a program, unnoticed until a privileged run" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_reference_app.py::test_t101s_reference_application_workloads_run_on_any_platform" \
+  's = s.replace("import app, seed\n", "import app, seed, this_module_does_not_exist\n")'
+
+# T101's shell-heavy clause is recorded as discharged by the generic proxy arm
+# *because* the reference application is not a shell workload. Emptying the
+# enumeration makes that claim unfalsifiable, which is the state it was in
+# before this detector existed.
+proof "T101 — the process-spawn enumeration is emptied, so 'not a shell workload' stops being checkable" \
+  tests/unit/test_reference_app.py \
+  "tests/unit/test_reference_app.py::test_the_spawn_detector_fires_on_a_planted_call" \
+  's = s.replace("_PROCESS_SPAWNING_MODULES = frozenset(\n    {\x22subprocess\x22, \x22multiprocessing\x22, \x22pty\x22, \x22asyncio.subprocess\x22}\n)", "_PROCESS_SPAWNING_MODULES = frozenset()")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
