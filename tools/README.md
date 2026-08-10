@@ -96,7 +96,7 @@ the author may have made deliberately.
 | `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
 | `findings-numbering` | error / warning | Duplicate numeric prefixes in `findings/` (**error**), a citation of a finding number that does not exist (**error**), and a gap in the sequence (**warning**). |
 | `register-range` | warning | A prose summary of a register — `(D-01 … D-19)` — that stops short of the register's real last entry. **`gen_claims.py` now writes the standalone ones**; this rule is what fires when it has not been run, and is the *only* mechanism at the narrated sites the generator refuses. |
-| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again. |
+| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again. A rule whose subject is not in the tree at all declares that as a `precondition` and announces being out of scope rather than disabled — see [the `vendored-repos` disposition](#vendored-repos-is-out-of-scope-in-ci-by-construction-and-says-so-rather-than-reporting-an-incident). |
 | `definition-count` | error / warning | A prose count of a *register* — "58 functional requirements" — against the definitions in the specification it describes. **error** when the target yields zero definitions, unconditionally; **warning** on an ordinary mismatch, because a deliberately historical figure is a real case and the strike convention is its escape. See [Why zero definitions is an error](#why-zero-definitions-is-an-error-and-not-a-comparison). |
 | `catalog-line-count` | warning | A `Lines` column, or an inline `(N lines)`, that has drifted from the file it describes. **`gen_claims.py` writes these**; this rule is what fires when it has not been run. Exact since 2026-08-03 — the previous ±2 tolerance was concealing a live 2-line drift. |
 | `toc-coverage` | warning | A `##` section missing from its document's own table of contents, and therefore unreachable from the top of an 800-line file. |
@@ -559,6 +559,48 @@ than a documented residue.
 register that hands out a taken number. The search above is the only guard, it is
 run by a human, and it is one command per namespace.
 
+#### The first collision to arrive is outside the residue as written, and it widens it
+
+**Measured 2026-08-10 at `6f55897`.** The identifier `E8` names two different
+experiments: the Stage-D synthesis experiment defined in
+[`plan.md`](../specs/001-discovery-validation/plan.md), which the experiment
+ladder and the budget table both mean, and the verifier-vs-judge experiment
+closed under OD-14, which owns a harness directory, a preregistration, a
+viability document and three findings. A reader tracing the ladder arrives at the
+wrong closure. Three things about it are worth more than the repair, and none of
+them is the case the residue above predicted.
+
+**It is a definition and a use, not two definitions — inside the document where
+it does the damage.** `definitions_in` treats three shapes as defining, and
+within `plan.md` exactly one occurrence is any of them: the Stage-D section
+heading. The two ladder occurrences sit inside a fenced Mermaid block and are
+skipped outright; the cost-table row carries the identifier in its **second**
+cell, and only an exact first-cell match defines; every occurrence belonging to
+the verifier-vs-judge experiment is prose. **So the per-document set collapse is
+not what is happening here** — that set has one member because the document
+defines one thing.
+
+**The collapse that is real is the cross-document union, which is the residue's
+other clause.** The verifier-vs-judge experiment holds its own heading
+definitions in other files, so `_collect_definitions` unions two experiments into
+one entry and every reference resolves to it. `identifier-resolution` passes and
+is right to pass: it asks whether a token resolves to a definition, not whether
+it resolves to the one meant.
+
+**The declined guard would not have caught it either, and that is what moves the
+boundary.** The candidate rule reuses the existing first-cell rule, so its
+definition sites are **table rows**. This identifier has no first-cell definition
+site anywhere in the corpus — both experiments define by heading — so the
+candidate fires zero times on this collision at every one of the three scopes it
+was measured at. That measurement reproduces exactly at `6f55897`: `12` firings
+at corpus scope, `9` at document scope, `2` at table scope, and the twelve are
+the twelve named above, unchanged. **The residue therefore understated itself.**
+Nothing will notice a register that hands out a taken number, and nothing will
+notice a **heading** that hands out a taken number either — including the guard
+that was constructed, measured and declined. The human search remains the only
+instrument, and it has to read headings as well as register rows, which the
+one-command-per-namespace form above does not do.
+
 ## Every rule, measured against its own scope
 
 Six of this tool's seventeen checks are driven by rules in `config.json` rather
@@ -629,6 +671,73 @@ is one edit from zero, and three of the six inventory rules stand there —
 on a single cell of `README.md`'s repository-map table. Nothing proposes to
 duplicate those claims to buy redundancy, because a second copy of a count is
 another thing to rot; the floor is what makes their loss audible.
+
+### `vendored-repos` is out of scope in CI by construction, and says so rather than reporting an incident
+
+**The disposition, ruled by the product owner on 2026-08-10: the precondition is
+stated in config, the rule is not retired, and no manifest is committed.** The
+reasoning is recorded here rather than re-derived, because both alternatives were
+considered and both lose something the rule currently holds.
+
+**Retiring it deletes the only guard on a class of claim that demonstrably
+rots.** The rule reads `README.md` and `research/README.md`, and both of those
+state a repository count that has moved at least once — the `examples/` tree
+stood at eight directories when [`research/12`](../research/12-examples-as-corpus.md)
+was written and stands at nine now. **Committing a manifest is worse than
+retiring**, because it converts a check of *prose against reality* into a check
+of *prose against a second copy of the prose*, which is the hazard the residue
+above already names about single-cell rules: a second copy of a count is another
+thing to rot, and it rots silently against the directories it was copied from.
+
+**It has never fired in CI, and the reason is structural rather than
+circumstantial.** `examples/` is git-ignored at `.gitignore:156`, so no checkout
+contains it, `_count` returns zero, and the rule short-circuits **before it reads
+a claim**. There is therefore no gate figure for this rule at all — not a figure
+of zero, but no measurement, because the comparison never runs. The only figure
+that exists is a laptop figure, taken in a working tree that has the vendored
+repositories beside the corpus.
+
+**What the CI record shows, read per job and per step.** Of the runs of
+`ci.yml` available through the API, the `corpus gates (consistency, no model)`
+job appears in `108`, and its step `The corpus gate` — the one that runs
+`check_corpus.py` — reached a conclusion in `105` of them, `100` successful and
+`5` failed. In none of those `105` could this rule have contributed a violation,
+because the count it compares against is zero before any claim is read; the `5`
+failures belong to other checks. The announcement itself is visible in the run
+log verbatim, as `rule vendored-repos disabled: glob examples/*/ matched
+nothing`, which is the wording this disposition replaces.
+
+**One measured fact travels with the disposition, and it bounds what the
+announcement is worth.** The skip reaches two places: the standard output of a
+step that exits `0`, which GitHub renders collapsed, and the
+`<details>` disclosure widget the warnings step writes into the run summary,
+which GitHub renders collapsed as well. It produces no annotation, no non-zero
+exit, and no change to any job's conclusion. It ran that way on every one of the
+`105` executed gate steps and drew no response in any of them. **So visibility of
+this kind is documentation and not detection**, and nothing here proposes a
+louder channel: a rule that cannot read its subject has nothing to escalate, and
+an annotation on a condition that is correct by construction is the flapping gate
+this repository already refuses elsewhere.
+
+**How a reader now tells the two zero-states apart.** A rule may declare a
+`precondition` — a path its subject lives at, and why. Where that path is absent
+the skip reads *out of scope in this tree, as declared*, and names the reason.
+Where a glob counts zero with no precondition declared, or with the declared path
+present, the skip keeps the word **`disabled`**, which is now reserved for the
+state that is a fault. The three cases were exercised rather than reasoned: a
+working tree with the directories present produces no skip because the rule reads
+a live claim, a tree without `examples/` produces the out-of-scope announcement,
+and a tree with an empty `examples/` produces `disabled`.
+
+**The scope correction that came out of the same reading, because it changes what
+the rule may be credited with.** The rule's `files` scope is
+`README.md` and `research/README.md`, and it has never included
+`research/12-examples-as-corpus.md`. The stale scope sentence superseded in that
+document on 2026-08-10 was therefore **never inside this rule's reach**, and
+citing it as evidence that the rule guards live claims would be citing a defect
+the rule could not have seen. What the rule guards is the two index claims, both
+of which are currently correct at nine; what the `research/12` case demonstrates
+is the narrowness of the scope, not the value of the check.
 
 ## When a figure may be a live total, and when it must be dated
 

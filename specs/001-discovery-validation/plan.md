@@ -696,6 +696,12 @@ successor feature rather than stretching this one. It runs only if E7 clears.
 
 ### E8 — Does synthesis reach the ceiling?
 
+> **⚠️ ONE IDENTIFIER, TWO EXPERIMENTS — AND THIS SECTION IS THE ONE THE LADDER AND THE COST TABLE MEAN.** Flagged 2026-08-10. **No renumbering is taken here**, because which experiment keeps the identifier is an owner's decision and neither option is free of consequence; the options and their blast radius are set out in the [collision note under OD-14](#od-14--the-verifiers-margin-over-an-llm-judge-is-declared-unmeasured-the-production-spec-is-unblocked-and-the-measurement-is-deferred-to-production). This notice exists so nobody traces the ladder into the wrong closure while that decision is open.
+>
+> **What this section defines** is the Stage-D synthesis experiment described below: three arms on the ceiling test's battery, deferred to feature `002`, never built and never run. The `clears` edge out of the gate in the ladder above reaches *this* experiment, and the Stage D row of the [budget table](#budget-and-the-feature-split) prices *this* experiment.
+>
+> **What it does not define** is the verifier-vs-judge experiment, which carries the same identifier from OD-14 onward and is a different experiment entirely: a contract-derived verifier against a general-purpose LLM judge, with its own harness directory, its own preregistration, its own viability document at [`E8-VIABILITY.md`](./E8-VIABILITY.md), and findings 015, 017 and 018. That one was built, self-tested, dry-run and deliberately not executed. **It is closed. This one is deferred. They are different states of different experiments, and the closure recorded under OD-14 does not close this section.**
+
 **Question.** Do tools generated from the code graph, with an LLM authoring the semantic layer,
 recover the advantage that hand-written ideal tools demonstrated?
 
@@ -1784,8 +1790,49 @@ next artifact again.
 
 **The decision.** The **marginal detection of a contract-derived verifier over a general-purpose LLM
 judge is UNMEASURED**, and will remain so until it is measured against real traffic in production.
-Experiment **E8** is closed as a null on *power*, not on **H2**: it does not report that the verifier
+~~Experiment **E8** is closed~~ **The verifier-vs-judge experiment is closed** as a null on *power*, not on **H2**: it does not report that the verifier
 lacks a margin, it reports that this corpus cannot tell. The production specification proceeds.
+*(Named rather than numbered, 2026-08-10: the identifier struck here also names the Stage-D
+synthesis experiment, which this decision does not close — see the collision note below.)*
+
+> ## ⚠️ THE IDENTIFIER CLOSED ABOVE NAMES A SECOND, DIFFERENT EXPERIMENT IN THIS SAME DOCUMENT
+>
+> **Opened 2026-08-10. Nothing is renumbered, and the decision is the owner's.** Two experiments in
+> this plan carry the identifier `E8`, and a reader tracing the experiment ladder arrives at a
+> closure that belongs to the other one.
+>
+> * **The Stage-D synthesis experiment** — *does synthesis reach the ceiling?* — is defined at
+>   [Stage D](#e8--does-synthesis-reach-the-ceiling), is the node the ladder's `clears` edge reaches,
+>   and is the experiment the [budget table](#budget-and-the-feature-split) prices in its Stage D
+>   row. It was never built and is deferred to feature `002`.
+> * **The verifier-vs-judge experiment** — *does a contract-derived verifier catch anything an LLM
+>   judge does not?* — is the one OD-14 closes. It has a harness directory, a preregistration, a
+>   viability document, twelve committed run directories, and findings 015, 017 and 018.
+>
+> **Why the checkers cannot see this, which is worth recording separately from the defect.**
+> `identifier-resolution` asks whether a token resolves to *a* definition, not whether it resolves to
+> the one meant, so it passes here and is right to. **The collision is a definition and a use, not
+> two definitions**: inside this document the Stage-D heading is the only site the checker treats as
+> defining, and every occurrence belonging to the verifier-vs-judge experiment is a *use* that
+> resolves to it. The two definitions exist, but in different documents, and
+> `identifier-resolution` unions per-document definition sets, so they collapse into one entry
+> corpus-wide.
+>
+> **Both numbering options, with their blast radius, so the decision can be taken on numbers.**
+>
+> | Option | What moves | Measured blast radius | What it costs |
+> |---|---|---|---|
+> | **A — Stage-D synthesis keeps the identifier** | the verifier-vs-judge experiment is renumbered | `128` occurrences across `52` files in the verifier-vs-judge set alone, plus `17` harness source files, `12` committed run directories whose manifests name the experiment in a hashed record, the document filename `E8-VIABILITY.md` and every link to it, and citations in four research documents, the root README, VERDICT, the harness index, three project skills and two files under `tools/` | Touches **frozen run artifacts**. The freeze refuses to start on a hash change, and the results were already edited once under a recorded neutralisation that altered no figure; this would be a second edit to committed evidence |
+> | **B — verifier-vs-judge keeps the identifier** | the Stage-D synthesis experiment is renumbered | `4` sites in this document — ladder node, ladder edge, section heading, cost-table row — plus `5` range sites across four documents that write `E8–E9` and `E8–E13` | Breaks **contiguous range notation** in VERDICT, the harness index and a checklist, since the neighbours do not move. The lowest free number is `E19`, so the ladder's numbering would stop running in its own dependency order — the one property this register has |
+>
+> **Neither option is free of consequence, so neither is taken here.** The repair that *was* taken
+> is the one that costs nothing and survives either decision: the closure sentence above now names
+> its experiment instead of numbering it, and both meeting points carry a notice. Renaming prose is
+> not renumbering — the identifier still belongs to whichever experiment the owner assigns it to.
+>
+> **What an owner should decide.** Which experiment keeps `E8`. Until then, every occurrence of that
+> identifier in this corpus is ambiguous by meaning while resolving correctly by construction, and
+> that is the state this notice exists to make visible rather than to resolve.
 
 **Why the corpus cannot answer it.** E8 was pre-registered, built, self-tested and dry-run at
 **$0.00** — no judge call was ever billed — and stopped before its first paid call, for four reasons

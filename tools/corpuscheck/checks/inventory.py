@@ -37,6 +37,17 @@ decorative. `tools/README.md` documents this check with the example phrase
 `committed-harnesses` and is not struck — so a search of the corpus at large
 reports that rule as live while the rule itself, which never looks at
 `tools/README.md`, sees nothing at all.
+
+**A rule whose glob counts zero has two causes, and until now they printed the
+same word.** A glob that matches nothing because the corpus moved under it is a
+defect in the rule. A glob that matches nothing because its subject is not in
+the tree — `vendored-repos` reads `examples/`, which is git-ignored, so no
+checkout can contain it — is the rule being out of scope by construction, and it
+is the state every CI run has been in. A rule may declare that condition as a
+`precondition`, and where the declared path is absent the announcement says so
+instead of reporting an incident. `disabled` is now reserved for the case where
+the precondition held and the glob still found nothing, which is the one worth
+reading as a fault.
 """
 
 from __future__ import annotations
@@ -90,10 +101,19 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
     for rule in rules:
         actual = _count(corpus.root, rule["glob"], rule.get("glob_exclude"))
         if actual == 0:
-            ctx["skip"](
-                "inventory-count",
-                f"rule {rule['name']} disabled: glob {rule['glob']} matched nothing",
-            )
+            pre = rule.get("precondition")
+            if pre and not (corpus.root / pre["path"]).exists():
+                ctx["skip"](
+                    "inventory-count",
+                    f"rule {rule['name']} is out of scope in this tree, as declared: "
+                    f"{pre['path']} is absent, which is the rule's stated precondition "
+                    f"and not a fault — {pre['why']}",
+                )
+            else:
+                ctx["skip"](
+                    "inventory-count",
+                    f"rule {rule['name']} disabled: glob {rule['glob']} matched nothing",
+                )
             continue
         scope = rule.get("files", default_files)
         rx = re.compile(rule["pattern"], re.IGNORECASE)

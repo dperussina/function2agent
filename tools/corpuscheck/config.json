@@ -174,9 +174,14 @@
       "glob": ".cursor/skills/speckit-*/SKILL.md"
     },
     {
+      "_comment": "The only rule in this set whose subject is not committed. `examples/` is git-ignored at `.gitignore:156`, so no checkout contains it and this rule reads nothing in CI by construction rather than by fault — measured across every run whose gate step executed, it has never once compared a claim. `precondition` is what makes that legible: with the declared path absent the skip says the rule is out of scope here, and the word `disabled` is reserved for a glob that matched nothing while its precondition held, which is the state that is actually a defect. The rule is kept rather than retired because the claims it guards are live and do rot, and it is not converted to a committed manifest because a manifest would check prose against a second copy of the prose instead of against the directories.",
       "name": "vendored-repos",
       "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten))\\s+vendored\\s+reference\\s+repos(?:itories)?",
-      "glob": "examples/*/"
+      "glob": "examples/*/",
+      "precondition": {
+        "path": "examples",
+        "why": "`examples/` is git-ignored at `.gitignore:156`; this rule reads a claim only in a working tree that has the vendored repositories checked out beside the corpus"
+      }
     }
   ],
 
