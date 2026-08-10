@@ -4,8 +4,12 @@ Three checks share one link parse.
 
   link-target   A relative link resolves to a file that exists.
   link-anchor   A `#fragment` resolves to a heading in the target file. Slugs
-                follow GitHub's algorithm, including its `-1`, `-2` suffixes
-                for repeated headings.
+                are measured against GitHub's renderer rather than described
+                from its documented algorithm — see `corpus.slugify`. The
+                `-1`, `-2` suffixes for repeated headings are implemented here.
+                The enumeration includes blockquoted headings; widening it can
+                only add anchors, never remove one, which is what made it safe
+                to install (measured — see tools/README.md).
   link-label    The link *text* agrees with the link *target*. This is the one
                 worth having: `[finding 010](.../011-reachability...)` is a
                 correct link with a wrong label, it survives every existence
@@ -28,7 +32,12 @@ from ..report import ERROR, WARNING, Violation
 
 _LINK = re.compile(r"(?<!!)\[((?:[^\[\]]|\[[^\]]*\])*)\]\(\s*([^)\s]+)(?:\s+\"[^\"]*\")?\s*\)")
 _HTML_ANCHOR = re.compile(r"<a\s[^>]*(?:name|id)\s*=\s*[\"']([^\"']+)[\"']", re.IGNORECASE)
-_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
+#: Blockquote markers before the hashes are part of the heading's container,
+#: not of the heading. GitHub renders `> ## Title` as a heading and emits an
+#: `id` for it, so a pattern anchored at `^#` builds an anchor set the rendered
+#: page does not have. Nesting (`> > ####`) and up to three spaces of list
+#: indentation both occur in this corpus and both render as headings.
+_HEADING = re.compile(r"^(?:\s{0,3}(?:>\s?)+)?(#{1,6})\s+(.*?)\s*#*\s*$")
 
 _SKIP_SCHEMES = ("http://", "https://", "mailto:", "tel:", "ftp:", "data:")
 

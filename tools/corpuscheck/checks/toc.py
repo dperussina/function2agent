@@ -9,6 +9,19 @@ navigated by cross-reference is close to the section not existing.
 
 Only `##`-level headings are considered. Deeper levels are inconsistently
 listed across the corpus and enforcing them would be noise.
+
+**Blockquoted headings are deliberately not enumerated here, and this is the
+one enumerator where that is a decision rather than an oversight.**
+`crossrefs._anchors_for` was widened on 2026-08-10 to reach `> ## Title`,
+because an anchor set that omits a heading the renderer emits an `id` for
+produces a false positive against a correct link. The same widening applied to
+`_H2` produces **three** warnings, and all three are banner boxes — the
+findings convention of opening a document with `> ## READ THIS FIRST`. A banner
+is not a section, it is not navigated to, and requiring it in a table of
+contents would make the convention itself the violation. The two enumerators
+answer different questions: one asks *what can be linked to*, which the
+renderer decides, and this one asks *what a reader needs to reach from the
+top*, which the corpus's own conventions decide.
 """
 
 from __future__ import annotations
