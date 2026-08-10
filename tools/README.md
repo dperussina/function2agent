@@ -1125,6 +1125,55 @@ is `README.md`, `research`, `docs`, `specs`, `.cursor/skills`, `.specify/memory`
 guarded by nothing. `check_tampers.py` does guard the underlying fact, and would have caught the
 regression on any gated commit; it is this *write-up* that no instrument reads.
 
+**The widening was measured on 2026-08-10 and declined.** Two lists could carry `tools/` and they are
+different knobs. `include`, filtered by `extensions`, is `.md` and `.markdown` only and decides which
+documents are **walked and checked**. `search_roots`, filtered by `search_extensions` — which already
+contains `.py`, `.sh`, `.yml` and `.json` — decides only where a figure may be **found** when a check
+asks whether it occurs anywhere else, and it never parses what it reads: `search.build` loads each
+file into a string and the only operations on it are `in` tests. So the corpus reads `.py` under
+`specs/` today in the weakest possible sense, and **the sharper statement is that no check extracts a
+figure or an identifier from Python anywhere, and neither list walks `tests/` or `tools/` at all.**
+Against a baseline of 0 errors and 0 warnings, adding each root to each list:
+
+| widening | errors | warnings | real defects |
+| --- | --- | --- | --- |
+| `include` += `tools` | 5 | 1 | 0 |
+| `search_roots` += `tools` | 0 | 0 | 0 |
+| `include` += `tests` | 0 | 2 | 0 |
+| `search_roots` += `tests` | 0 | 0 | 0 |
+
+Neither `search_roots` widening moves anything, which is expected: widening the index can only add
+places a figure is found, and finding one more occurrence downgrades an error to a warning rather
+than creating either. **All eight `include` firings are false positives, by three mechanisms, two of
+them self-reference.** The five errors are `link-anchor` and the links are right — `slugify` strips
+`_` to remove markdown emphasis, so `` ## Generated claims — `gen_claims.py` `` slugs to
+`generated-claims--genclaimspy`, while all five sites write the underscore-preserving spelling.
+Planting both spellings in a one-file fixture, the checker rejects the underscore form and proposes
+its own; the claim that GitHub keeps the underscore rests on the documented algorithm and on five
+independent authorings across two files, and was **not** verified against a renderer from here. The
+one warning is `register-range` firing at line 375 on `OD-01 through OD-14`, which is this file's own
+worked example of the sentence shape that rule exists to catch. The two `tests` warnings are
+`link-label` on `tests/conformance/cassettes/README.md`, where both labels are correct: the check
+compares the label against the **unresolved** target string, so a repo-relative label beside a
+document-relative target reads as a mismatch.
+
+**Adding `tools/` to `include` also does not buy the coverage this residue asks for, and that is what
+settles it.** `numeric-provenance` iterates `ROLE_CONSUMER` alone, and `tools/README.md` matches no
+`consumer` glob — `README.md` does not fnmatch `tools/README.md` — so it is classified `ROLE_OTHER`.
+A false four-decimal ratio and a false cent-precise spend planted in this file under that widening
+produce **zero** firings. Closing the gap needs `consumer` widened as well; that configuration was
+measured too, and it does catch both plants, at the cost of six further `numeric-provenance`
+warnings — five of them this file quoting the external multipliers (`15×`, `200×`, `100×`, `25×`)
+that the [false-positive register](#known-false-positive-modes) exists to explain, and one a `72x`
+derived in the open from 360 and 5 two entries below.
+
+**So the widening is declined on measurement**, on the same grounds that declined the `register-range`
+relaxation and the duplicate-register-row rule. The reason is structural rather than arithmetic:
+`tools/README.md` is the document that documents the checker, so it necessarily contains a worked
+example of every pattern the checker fires on. Walking it with the checker is self-referential, and
+the false-positive rate is not a threshold to tune — it is what the file is *for*. The residue stands
+unchanged, and it now covers the two coordination entries above as well as this one.
+
 ### A proof arm with no terminator does not report a hang; it reports whatever the eventual kill looks like
 
 **On 2026-08-05 the `T065 wiring` arm ran for 56 minutes of continuous CPU without returning, and the
