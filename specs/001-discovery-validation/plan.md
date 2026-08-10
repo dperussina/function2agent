@@ -3969,9 +3969,13 @@ about the worst-resolved arm wearing the others' names.
 > the task. What limb ③ does put at risk is T101's *other* named subject: on the widest-control
 > sample the shell-heavy arm is published as a bound rather than as a figure, and T101 asks for it by
 > name. **The task is therefore narrowed rather than discharged**, and the honest statement of its
-> state is that it owes a figure on `reference_app_api`, a figure on `path_heavy`, and a bound on
-> whichever of the remaining two the run's own control swallows. **T101's criterion is not reworded
-> to fit this entry**, which is why the residue is recorded as a residue.
+> state is that it owes ~~a figure on `reference_app_api`, a figure on `path_heavy`, and a bound on
+> whichever of the remaining two the run's own control swallows~~ **a figure on all four load-bearing
+> arms, each carrying the control ranges beside it, with no arm withheld** *(superseded 2026-08-10 by
+> the revision two blockquotes above, which is what makes the count four figures rather than three and
+> a bound. The struck clause is left standing because it records what the withholding rule cost T101 —
+> a named subject demoted to a bound — which is the residue the revision removes)*. **T101's criterion
+> is not reworded to fit this entry**, which is why the residue is recorded as a residue.
 
 **Authorises no code, no requirement text and no new task.** FR-048's recording clause and SC-022 are
 untouched, `REPEATS` stays 5, no threshold is installed, and no artifact is hand-edited — the repair
