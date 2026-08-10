@@ -349,6 +349,18 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: that the median-of-5 never moved — which is the quantity the rate is
 #: computed from and therefore the one that matters.
 #:
+#: **A fourth sample was taken after the paragraphs below were written and
+#: confirms them prospectively, which is the only kind of confirmation this
+#: file counts.** Run `31421757875`, the CI run of the commit that first
+#: recorded this finding, same runner class, 10 of 10 batteries in 154.7 s.
+#: `reference_app_socket` is again the widest of the four at **7.8%** against
+#: a widest sibling of 6.2%, **1.26x**; `notifications_observed` is again one
+#: distinct value in every arm, **833** for this arm, taking the denominator
+#: check to **20 of 20 arm-sample cells**; and the resolution table below
+#: reads **459% / 56% / 41% / 6.4%** in the same order on that run. Four for
+#: four on a claim that was committed at three, against a draw that did not
+#: exist when it was written.
+#:
 #: **The cause is that this arm extracts the smallest signal from the largest
 #: timed region of the four, measured on CI's own artifacts.**
 #: `overhead_seconds` as a percentage of the arm's own `baseline_seconds`, from
