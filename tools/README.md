@@ -2586,10 +2586,17 @@ recorded at the job:
   every PR, for an observation that is a property of the renderer rather than of
   a branch.
 
-What is owed: the job has no row in `ci.yml`'s duration table, because it has
-not yet run there and the figures above are laptop figures. **A CI figure and a
-laptop figure are different measurements**, which is the rule that file opens
-with, so the row waits for a run rather than being estimated from these.
+It first ran at `3c21260` and took `50` seconds, `45` of them in the
+differential, and reported no divergence. **A CI figure and a laptop figure are
+different measurements**, which is the rule `ci.yml` opens with, and they
+differed by `2.1`× — `105.7` seconds on the laptop against `50` in CI — in the
+direction that leaves the 15-minute bound conservative.
+
+What is owed is still the table row. Every row in that table is forty runs, and
+`med`, `p90` and `max` are not defined on a single observation; this job's
+duration is also mostly the endpoint's rather than this repository's, so one
+draw says nothing about the tail a bound is read against. The figure is recorded
+at the job and the row waits for the next whole re-derivation.
 
 ### `gen_claims.py --check` reports per generator, and zero is an error
 

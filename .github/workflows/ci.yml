@@ -102,6 +102,22 @@
 # that run the suite once; both stay far inside a bound that was a floor to
 # begin with. `corpus gates` and `go test` did not move.
 #
+# **A sixth job exists and has no row, because one run is not a sample.**
+# `slug-differential` first ran at `3c21260` on 2026-08-10 and took **50s**,
+# 45s of it in the differential itself. That is one observation against a table
+# whose every row is forty, and the quantities the rows carry — med, p90, max —
+# are not defined on it. It is also the one job here whose duration is mostly
+# somebody else's: 137 sequential round trips to `api.github.com`, so its
+# spread is a property of that endpoint rather than of this repository, and a
+# single draw says nothing about the tail a bound is set against. The figure is
+# recorded rather than promoted, and the row waits for the next whole
+# re-derivation.
+#
+# The one thing it does settle is the direction of the laptop comparison. The
+# job below set its bound off 105.7s measured on an M-series laptop and said
+# outright that a CI figure and a laptop figure are different measurements. They
+# were, by 2.1x, and in the direction that leaves the bound conservative.
+#
 # **One incident window is excluded, by a rule that never looks at a
 # duration.** GitHub had a critical Actions incident from 2026-08-06T15:22:49Z
 # to roughly 2026-08-07T12:09Z. A run is excluded iff `[run_started_at,
@@ -316,7 +332,10 @@ jobs:
     # Not scaled off the work. The observed 105.7s is a laptop figure against a
     # residential link, the runner's path to `api.github.com` is a different
     # measurement, and this job is 137 sequential round trips — so the floor is
-    # set to fire on a hang rather than to bound the work.
+    # set to fire on a hang rather than to bound the work. The first CI run came
+    # in at 50s, which confirms the two measurements differ and leaves this
+    # where it is: 18x one observation is not a derived bound, and the header
+    # says why the row is still owed.
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
