@@ -128,14 +128,34 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: 100th.
 #:
 #: **So the observed spread is one anomalous run and not a wide runner class**,
-#: and two things follow that a two-run reading could not reach. The first is
-#: that "every arm moved 24–35%" was a property of that run rather than of CI.
-#: The second is the useful one: **31403771772 is also the run whose control
-#: flipped sign**, so `UNRATED["non-positive-overhead"]` is an in-band detector
-#: for exactly the run whose figures should not be compared, rather than only a
-#: tidier way to publish one. Two independent signals picking out the same run
-#: out of three is what makes it an outlier rather than a draw from a wide
-#: distribution.
+#: and "every arm moved 24–35%" was a property of that run rather than of CI.
+#: A fourth draw, 31410461698, keeps that reading and widens the concordant
+#: band: excluding 31403771772, the three remaining runs sit 1.2–13.8% apart,
+#: against local within-host medians of 3.3–11.5% and maxima of 20–174%.
+#:
+#: ~~The second thing is the useful one: 31403771772 is also the run whose
+#: control flipped sign, so `UNRATED["non-positive-overhead"]` is an in-band
+#: detector for exactly the run whose figures should not be compared. Two
+#: independent signals picking out the same run out of three is what makes it an
+#: outlier.~~
+#:
+#: **Struck by the fourth draw, which is the run that could falsify it and
+#: did.** 31410461698's control flipped sign too — overhead -0.028136s, rate
+#: withheld — and that run is *not* extreme on any other arm. So the control's
+#: sign is **sensitive but not specific**: it fires on the anomalous run and
+#: also on an ordinary one, and it must not be read as marking a run whose
+#: figures are unusable. What it marks is exactly what it says — an arm whose
+#: own difference came out non-positive, for that arm.
+#:
+#: **What the flip rate does carry is the first evidence separating the two
+#: components above, and it is suggestive rather than established at n=4.** The
+#: control went non-positive in 2 of 4 CI runs and in 3 of 30 here — 50% against
+#: 10%. A sign flip happens when the difference is small next to the run-to-run
+#: variation, so its frequency is a crude proxy for that variation, and the
+#: proxy says CI's 4-vCPU x86_64 guest is the noisier host. That favours *larger
+#: within-host variance on CI* over *between-runner variance* as the explanation
+#: for the excess — the two readings the strike above says nothing separates.
+#: Four runs cannot settle it, and the measurement named below still can.
 #:
 #: This host still differs from CI's in architecture, kernel and core count at
 #: once, and `host_property_caveat` says in terms that two records on different
