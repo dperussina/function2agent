@@ -436,6 +436,25 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: and the quantity it made a bound out of is the one the paragraphs above
 #: establish there is *"no single number here to be a floor"* for.
 #:
+#: **THE MARK NOW TRAVELS INTO THE ARTIFACT AND NOT ONLY THROUGH THIS PROSE —
+#: 2026-08-10.** Line-locality in a docstring protects a reader of this module
+#: and reaches nobody holding the record. `overhead_against_this_runs_control`
+#: and its `_because` sit beside every arm's `overhead_seconds`, carrying the
+#: verdict and both ranges on the figure's own line. **The verdict compares
+#: like with like** — the arm's difference of medians against the control's
+#: difference of medians — and the control's own draw excursion qualifies it
+#: rather than deciding it. That split was paid for: for one commit the
+#: excursion *was* the comparator, and run `31434583620` returned three of the
+#: four load-bearing arms as not clearing while the same run's k=10 probe put
+#: all four clear on 10 of 10 draws. A range of raw pairwise differences is a
+#: wider statistic than a difference of medians, so the mismatch under-claimed,
+#: and an artifact contradicting the better-powered reading of its own
+#: instrument is worse than one that says less. **No pooled range is written
+#: into the record**: a pooled range is a constant, and a constant here would
+#: travel onto hosts it was never measured on, which is what
+#: `host_property_caveat` stopped being a hardcoded sentence to end. The pooled
+#: half of limb ③ is carried in prose, where a human states its provenance.
+#:
 #: **`shell_heavy`'s OVERHEAD SITS AT THE SAME ABSOLUTE SCALE AS THE CONTROL'S
 #: NOISE, AND IT CLEARS THAT CONTROL ON TWO OF THE FOUR RECORDED SAMPLES.
 #: THIS IS A FACT ABOUT Q-09's OWN NAMED ARM AND IT IS STATED HERE RATHER THAN
@@ -781,6 +800,20 @@ def observed_excursion(
     standard error or a percentile. A narrower one would be a chosen bound,
     and a chosen bound is the fabricated constant
     `UNRATED["non-positive-overhead"]` refuses at length.
+
+    **This is a qualifier and NOT the verdict's comparator, and the distinction
+    was paid for.** It was the comparator for one commit. A range of raw
+    pairwise differences is a wider statistic than the difference of two
+    medians every arm publishes, so testing one against the other is a
+    mismatch that runs one way: it under-claims. Run 31434583620 made that
+    concrete — three of the four load-bearing arms came back as not clearing,
+    against the same run class's probe analysis where all four clear on 10 of
+    10 draws. An artifact that contradicts the better-powered reading of the
+    same instrument is worse than one that stays quiet, so the verdict moved
+    to the like-for-like comparison and this interval stayed on as what it
+    honestly is: a statement of how far this run's control draws roamed, which
+    is the second range limb ③ asks to be stated as an overlap where one
+    exists.
     """
     return (
         round(min(supervised_samples) - max(baseline_samples), 6),
@@ -809,22 +842,27 @@ def observed_excursion(
 #: reaches the trace. Prose in this file cannot reach that reader.
 CLEARANCE: Mapping[str, str] = {
     "clears-this-runs-control": (
-        "The arm's overhead stands above the widest positive difference this "
-        "run's control draws can form, so the figure is separable from this "
-        "instrument's own zero reading ON THIS RUN. It is not separable in "
-        "general and this field does not say it is: the comparison is within "
-        "one run because that is the only scope on which a control and an arm "
-        "share a host, a boot and a scheduler. A margin measured here does not "
-        "transfer to another run and must not be quoted as though it did."
+        "The arm's overhead stands above the same run's control overhead. The "
+        "two are the SAME statistic — a median of REPEATS supervised draws "
+        "minus a median of REPEATS baseline draws — so the comparison is like "
+        "for like, which is the property that makes it a comparison at all. "
+        "Whether the margin survives the control's own draw-to-draw roaming is "
+        "stated on the line beside it, because a median-of-REPEATS difference "
+        "is one draw of a noisy quantity and a single battery observes no "
+        "excursion of it. The across-battery excursion is what "
+        "`tools/seccomp_variance_probe.py` measures over k repeats and this "
+        "record does not carry it. A margin measured here is a property of "
+        "this run and does not transfer to another."
     ),
     "does-not-clear-this-runs-control": (
-        "The arm's overhead does not stand above the widest positive "
-        "difference this run's control draws can form, so this run does not "
-        "separate the figure from the instrument's own zero reading. The "
-        "figure is published rather than withheld — it is a measurement and "
-        "not an absence — and this field is the sentence that must travel with "
-        "it. No threshold decided this: the comparator is the control's own "
-        "measured excursion on this run and there is no floor constant here."
+        "The arm's overhead does not stand above the same run's control "
+        "overhead, compared like for like as two differences of medians, so "
+        "this run does not separate the figure from the instrument's own zero "
+        "reading. The figure is published rather than withheld — it is a "
+        "measurement and not an absence — and this field is the sentence that "
+        "must travel with it. No threshold decided this: the comparator is the "
+        "control's own measured figure on this run and there is no floor "
+        "constant anywhere in this record."
     ),
     "is-this-runs-control": (
         "This arm IS the control, so the comparison is the control against "
@@ -849,6 +887,7 @@ CLEARANCE: Mapping[str, str] = {
 
 def control_clearance(
     overhead_seconds: float,
+    control_overhead_seconds: float,
     control_excursion: tuple[float, float],
     is_the_control: bool,
 ) -> tuple[str, str]:
@@ -863,34 +902,53 @@ def control_clearance(
     a banner and a directory name while its decision row still read as a
     headline.
 
+    **TWO ranges stand beside the figure and they answer different questions**,
+    which is limb ③'s shape rather than a decoration on it. The verdict tests
+    the arm's overhead against the control's overhead, like for like. The
+    control's own draw excursion is the second range, and where the arm's
+    figure falls inside it that is stated AS an overlap in the same sentence —
+    so a margin that the control's own draws could have produced by roaming
+    never reads as a clean clearance.
+
     A pure function of readings, so it is checkable on hosts this module
     cannot run on — the same argument `record_filename`, `notification_rate`
     and `host_property_caveat` are each written under, and the reason all four
     of their tests live in `tests/unit/`.
     """
     low, high = control_excursion
-    band = f"this run's control excursion of {low:+f} to {high:+f} s"
+    against = f"this run's control overhead of {control_overhead_seconds:+f} s"
+    roam = f"the control's own draw excursion of {low:+f} to {high:+f} s"
     if is_the_control:
         key = "is-this-runs-control"
-        reading = f"{overhead_seconds:+f} s of overhead, which IS {band}"
+        reading = f"{overhead_seconds:+f} s of overhead, which IS {against}"
     elif overhead_seconds <= 0:
         key = "no-overhead-to-clear-with"
         reading = (
-            f"{overhead_seconds:+f} s of overhead, non-positive, against {band}"
+            f"{overhead_seconds:+f} s of overhead, non-positive, against {against}"
         )
-    elif overhead_seconds > high:
-        key = "clears-this-runs-control"
-        margin = (
-            f" — clearing it by {overhead_seconds / high:.2f}x"
-            if high > 0
-            else " — and that excursion has no positive part on this run"
-        )
-        reading = f"{overhead_seconds:+f} s of overhead against {band}{margin}"
     else:
-        key = "does-not-clear-this-runs-control"
+        if overhead_seconds > control_overhead_seconds:
+            key = "clears-this-runs-control"
+            margin = (
+                f" — clearing it by {overhead_seconds / control_overhead_seconds:.2f}x"
+                if control_overhead_seconds > 0
+                else " — and the control's own figure is non-positive on this run"
+            )
+        else:
+            key = "does-not-clear-this-runs-control"
+            margin = " — NOT clearing it"
+        # The second range, and the overlap stated as an overlap on this same
+        # line. A reader who lifts the margin without this clause is the
+        # reader line-locality exists for.
+        qualifier = (
+            f", and OVERLAPPING {roam}, so this run's own control draws roamed "
+            "far enough to have produced a difference this size"
+            if low <= overhead_seconds <= high
+            else f", and standing clear of {roam}"
+        )
         reading = (
-            f"{overhead_seconds:+f} s of overhead against {band} — OVERLAPPING "
-            "it, so this figure is not separated from zero on this run"
+            f"{overhead_seconds:+f} s of overhead against "
+            f"{against}{margin}{qualifier}"
         )
     return key, f"{reading}. {CLEARANCE[key]}"
 
@@ -1099,9 +1157,13 @@ def measurement() -> dict:
     # control, which is the scope limb ③ names — a figure read against some
     # other run's control would be the splice this file has already struck.
     control_excursion = excursions[CONTROL_ARM]
+    control_overhead = arms[CONTROL_ARM]["overhead_seconds"]
     for name, arm in arms.items():
         key, sentence = control_clearance(
-            arm["overhead_seconds"], control_excursion, name == CONTROL_ARM
+            arm["overhead_seconds"],
+            control_overhead,
+            control_excursion,
+            name == CONTROL_ARM,
         )
         # Beside the figure it qualifies rather than in a header, and always
         # present rather than only on the overlapping branch — a key that
@@ -1367,19 +1429,23 @@ def test_every_arm_says_where_it_stands_against_this_runs_control(
     one layer down.
     """
     control_excursion = tuple(measurement["control_excursion_seconds"])
+    control_overhead = measurement["arms"][CONTROL_ARM]["overhead_seconds"]
     for name, arm in measurement["arms"].items():
         key = arm["overhead_against_this_runs_control"]
         assert key in CLEARANCE, (
             f"{name} recorded {key!r}, which names no reading in CLEARANCE"
         )
         expected, sentence = control_clearance(
-            arm["overhead_seconds"], control_excursion, name == CONTROL_ARM
+            arm["overhead_seconds"],
+            control_overhead,
+            control_excursion,
+            name == CONTROL_ARM,
         )
         assert key == expected, (
             f"{name} recorded {key!r} where its own overhead of "
-            f"{arm['overhead_seconds']}s against {control_excursion} gives "
-            f"{expected!r}, so the record's verdict is not a reading of the "
-            "figures beside it"
+            f"{arm['overhead_seconds']}s against a control of "
+            f"{control_overhead}s gives {expected!r}, so the record's verdict "
+            "is not a reading of the figures beside it"
         )
         assert arm["overhead_against_this_runs_control_because"] == sentence
         assert str(arm["overhead_seconds"]).lstrip("-")[:6] in sentence or (

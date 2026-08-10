@@ -294,35 +294,63 @@ def test_a_small_positive_overhead_is_still_published_because_no_floor_is_known(
 # invisible — a field that read the same on both of these would be reporting
 # nothing while looking like a disclosure.
 
-#: Run 31427947131 — control -0.012760 to +0.021070 s, `shell_heavy` at its
-#: recorded low of 0.024417 s. The arm clears, by 1.16x, the narrowest margin
-#: of the four samples.
-CLEARING_RUN = (0.024417, (-0.012760, 0.021070))
+#: Run 31434583620's own privileged suite — `shell_heavy` +0.015670 s against
+#: that run's control of +0.014906 s. The arm clears, by 1.05x, and the
+#: control's draws roamed far enough to cover it.
+CLEARING_RUN = (0.015670, 0.014906, (-0.030465, 0.056783))
 
-#: Run 31416959913 — control ceiling +0.029317 s, `shell_heavy` 0.018794 s.
-#: The same arm, the same battery, the same runner class, and it does not
-#: clear.
-OVERLAPPING_RUN = (0.018794, (-0.007711, 0.029317))
+#: The same run's ninth probe battery — `shell_heavy` +0.016378 s against a
+#: control of +0.026519 s. The same arm on the same runner in the same job,
+#: and it does not clear.
+OVERLAPPING_RUN = (0.016378, 0.026519, (-0.030465, 0.056783))
+
+#: The same run's `path_heavy` — +0.073308 s against the same +0.014906 s
+#: control, clearing by 4.92x and standing outside the control's roaming.
+WELL_CLEAR_RUN = (0.073308, 0.014906, (-0.030465, 0.056783))
 
 
 def test_an_arm_that_clears_its_own_runs_control_says_so(battery) -> None:
-    overhead, excursion = CLEARING_RUN
-    key, sentence = battery.control_clearance(overhead, excursion, False)
+    key, sentence = battery.control_clearance(*CLEARING_RUN, False)
     assert key == "clears-this-runs-control"
-    assert "1.16x" in sentence, (
+    assert "1.05x" in sentence, (
         "the margin is not on the line, so a reader who arrives at this arm "
         f"by grep cannot see how narrowly it cleared: {sentence}"
     )
 
 
-def test_an_arm_the_control_swallows_says_that_on_the_same_line(battery) -> None:
-    overhead, excursion = OVERLAPPING_RUN
-    key, sentence = battery.control_clearance(overhead, excursion, False)
-    assert key == "does-not-clear-this-runs-control"
+def test_a_margin_the_controls_own_roaming_covers_is_marked_on_that_line(
+    battery,
+) -> None:
+    """**The half that stops a 1.05x margin reading as a clean clearance.**
+
+    The verdict is like for like — one difference of medians against another —
+    and that is the only comparison a single battery can make. It says nothing
+    about whether the margin would survive another draw. The control's own
+    excursion is the second range limb ③ names, and where the arm's figure sits
+    inside it the sentence has to say so, on the same line, or the margin
+    travels alone.
+    """
+    key, sentence = battery.control_clearance(*CLEARING_RUN, False)
+    assert key == "clears-this-runs-control"
     assert "OVERLAPPING" in sentence
-    assert "+0.029317" in sentence, (
-        "the control's ceiling is not on the figure's own line, which is the "
-        "disclosure-that-does-not-travel shape this field exists to end"
+    assert "+0.056783" in sentence
+
+    clear_key, clear_sentence = battery.control_clearance(*WELL_CLEAR_RUN, False)
+    assert clear_key == "clears-this-runs-control"
+    assert "OVERLAPPING" not in clear_sentence, (
+        "an arm standing outside the control's roaming was marked as "
+        "overlapping it, so the qualifier fires regardless and says nothing"
+    )
+    assert "standing clear of" in clear_sentence
+
+
+def test_an_arm_the_control_swallows_says_that_on_the_same_line(battery) -> None:
+    key, sentence = battery.control_clearance(*OVERLAPPING_RUN, False)
+    assert key == "does-not-clear-this-runs-control"
+    assert "NOT clearing" in sentence
+    assert "+0.026519" in sentence, (
+        "the control's own figure is not on the figure's own line, which is "
+        "the disclosure-that-does-not-travel shape this field exists to end"
     )
 
 
@@ -358,7 +386,9 @@ def test_the_control_is_not_reported_as_having_cleared_itself(battery) -> None:
     a clearance in either direction would put a claim about the supervisor in
     the record where no claim was measured.
     """
-    key, sentence = battery.control_clearance(0.003848, (-0.001, 0.004821), True)
+    key, sentence = battery.control_clearance(
+        0.014906, 0.014906, (-0.030465, 0.056783), True
+    )
     assert key == "is-this-runs-control"
     assert "clear" not in key
     assert "IS" in sentence
@@ -376,8 +406,10 @@ def test_a_non_positive_overhead_is_not_the_same_reading_as_an_overlap(
     rate for it — so a record that called both "did not clear" would be
     claiming the instrument resolved something it did not.
     """
-    swallowed, _ = battery.control_clearance(0.018794, (-0.007711, 0.029317), False)
-    absent, _ = battery.control_clearance(-0.03922, (-0.007711, 0.029317), False)
+    swallowed, _ = battery.control_clearance(*OVERLAPPING_RUN, False)
+    absent, _ = battery.control_clearance(
+        -0.03922, 0.026519, (-0.030465, 0.056783), False
+    )
     assert swallowed == "does-not-clear-this-runs-control"
     assert absent == "no-overhead-to-clear-with"
     assert swallowed != absent
@@ -391,10 +423,12 @@ def test_every_clearance_reading_is_recorded_in_prose(battery) -> None:
     gap; a row nothing reaches describes a branch that no longer exists.
     """
     reached = {
-        battery.control_clearance(0.024417, (-0.01276, 0.02107), False)[0],
-        battery.control_clearance(0.018794, (-0.007711, 0.029317), False)[0],
-        battery.control_clearance(0.003848, (-0.001, 0.004821), True)[0],
-        battery.control_clearance(-0.03922, (-0.007711, 0.029317), False)[0],
+        battery.control_clearance(*CLEARING_RUN, False)[0],
+        battery.control_clearance(*OVERLAPPING_RUN, False)[0],
+        battery.control_clearance(*CLEARING_RUN[:3], True)[0],
+        battery.control_clearance(
+            -0.03922, 0.026519, (-0.030465, 0.056783), False
+        )[0],
     }
     assert reached == set(battery.CLEARANCE), (
         f"{reached ^ set(battery.CLEARANCE)} is a reading with no prose or a "
@@ -445,29 +479,33 @@ def test_the_excursion_is_the_widest_difference_the_draws_admit(battery) -> None
     assert low < high
 
 
-def test_the_excursion_widens_rather_than_narrows_the_clearance_claim(
+def test_the_verdict_compares_like_with_like_and_the_excursion_never_decides(
     battery,
 ) -> None:
-    """The direction the conservatism runs, which is the half worth checking.
+    """**The comparator this field was corrected to, held there by a test.**
 
-    Reading the control as its median difference alone would be the narrowest
-    possible comparator and would let arms clear that the draws do not
-    separate. The excursion's high end is at or above that median difference
-    by construction, so an arm that clears the excursion clears the point too
-    and never the other way round.
+    Every arm publishes a difference of two medians, so the control's
+    comparable quantity is its own difference of two medians. The excursion is
+    a range of the control's raw *pairwise* differences, which is a wider
+    statistic, and testing one against the other biases the answer one way.
+    Run 31434583620 made that concrete: with the excursion as comparator three
+    of the four load-bearing arms came back as not clearing, while the same
+    run's k=10 probe puts all four clear on 10 of 10 draws. An artifact that
+    contradicts the better-powered reading of its own instrument is worse than
+    one that says less.
+
+    So the excursion qualifies the sentence and never decides the key. Moving
+    it must not move a verdict.
     """
-    baseline = [0.20, 0.21, 0.19, 0.205, 0.195]
-    supervised = [0.204, 0.212, 0.198, 0.207, 0.201]
-    _, high = battery.observed_excursion(baseline, supervised)
-    import statistics
-
-    point = statistics.median(supervised) - statistics.median(baseline)
-    assert high >= point
-    at_the_point = point + 1e-6
-    assert (
-        battery.control_clearance(at_the_point, (0.0, high), False)[0]
-        == "does-not-clear-this-runs-control"
-    ), "an arm clearing the median difference cleared the excursion too"
+    overhead, control, _ = CLEARING_RUN
+    verdicts = {
+        battery.control_clearance(overhead, control, band, False)[0]
+        for band in ((-0.001, 0.002), (-10.0, 10.0), (0.0, 0.0))
+    }
+    assert verdicts == {"clears-this-runs-control"}, (
+        f"the excursion moved the verdict ({verdicts}), so the comparison is "
+        "no longer like for like"
+    )
 
 
 def test_the_rate_is_re_derivable_from_the_two_fields_beside_it(battery) -> None:
