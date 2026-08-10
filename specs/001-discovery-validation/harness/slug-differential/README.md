@@ -133,3 +133,16 @@ compared — `2428` anchored at `^#` plus `109` blockquoted — `0` diverged, `0
 `136` documents. That is an independent re-derivation of the agreement `tools/README.md`
 records at `7a60dd3` over the `2534` headings the corpus held then, taken with a separately
 written walker at a later commit.
+
+**The committed form of the file was then run from a clean detached worktree at its own
+commit**, which is the reproduction SC-005 actually asks for — the earlier run measured a
+working tree, and a harness verified only before it was committed has not been verified in the
+shape a stranger receives. At `ac99926`, over `137` documents: `2439` anchored at `^#` plus
+`109` blockquoted, `2548` compared, `0` diverged, `0` errors, exit `0`.
+
+The three dated figures move — `2534` at `7a60dd3`, `2537` at `58a6277`, `2548` at `ac99926` —
+and the last two commits in that sequence are the ones that added this directory and a section
+to `tools/README.md`. **The instrument's own commits enlarge the population it counts**, which
+is the second of the two ungateable kinds in
+[`tools/README.md` § When a figure may be a live total](../../../../tools/README.md#when-a-figure-may-be-a-live-total-and-when-it-must-be-dated)
+and the reason none of the three is written as a current total.
