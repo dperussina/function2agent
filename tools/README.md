@@ -90,7 +90,7 @@ the author may have made deliberately.
 | `sum-arithmetic` | error | A total shown with its components does not equal them: `$18.15 ($7.59 + $10.55)`. |
 | `table-integrity` | error | Three ways a table stops being one table: a blank line orphaning a row into body text, a row whose cell count differs from the header, and a run of pipe rows with no `\|---\|` delimiter. The orphan gap was one blank line until 2026-08-03; a new table is excluded by its delimiter, not by the gap, so a second blank was slack rather than a boundary. |
 | `link-target` | error | A relative link resolves to nothing. |
-| `link-anchor` | error | A `#fragment` names no heading in the target file. ~~Slugs follow GitHub's algorithm including its `-1`/`-2` duplicate suffixes.~~ **The `-1`/`-2` duplicate suffixes are implemented in `_anchors_for` and are correct. The slug itself is now measured against GitHub's renderer rather than described from its documented algorithm: `slugify` reproduces the emitted `id` on 2,367 of the 2,371 headings in the walked corpus, and the four it does not are named below.** *(corrected 2026-08-10. The struck sentence was true about the suffixes and unmeasured about everything else, and the unmeasured half is what licensed two links to be written wrong — see [why a false positive is the worse failure](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes).)* |
+| `link-anchor` | error | A `#fragment` names no heading in the target file. ~~Slugs follow GitHub's algorithm including its `-1`/`-2` duplicate suffixes.~~ **The `-1`/`-2` duplicate suffixes are implemented in `_anchors_for` and are correct. The slug itself is now measured against GitHub's renderer rather than described from its documented algorithm: `slugify` reproduces the emitted `id` on 2,367 of the 2,371 headings the corpus walked on 2026-08-10, and the four it does not are named below. That is a dated count over a named set rather than a live ratio — `tools/` entered `include` later the same day and added 53 headings the differential has not been re-run over, none of which is reachable by either named family.** *(corrected 2026-08-10. The struck sentence was true about the suffixes and unmeasured about everything else, and the unmeasured half is what licensed two links to be written wrong — see [why a false positive is the worse failure](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes).)* |
 | `link-label` | warning | The link *text* names a different document than the link *target*: `[finding 010](.../011-reachability...)`. The link works, so no existence check catches it, and a reader following the prose lands somewhere else. |
 | `identifier-resolution` | error | `D-17`, `U-40`, `OD-06`, `FR-018`, `E15` and friends resolve to a definition. Dangling identifiers are how a superseded decision keeps getting cited. |
 | `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
@@ -372,9 +372,13 @@ confirmed against `_RANGE` and `_is_whole_register_claim` on 2026-08-03:
 - **A single range introduced by punctuation.** A range starting at entry 01
   whose preceding text ends in `(`, `[`, `:`, an em dash or an en dash — after
   `*~_` and spaces are stripped — is a site on its own. A provenance sentence of
-  the shape `…instead of by the bound: OD-01 through OD-14 came out of
-  measurement…` is caught by the colon, with no second register anywhere near
-  it.
+  the shape
+  `…instead of by the bound: OD-01 through OD-14 came out of measurement…` is
+  caught by the colon, with no second register anywhere near it. **That code
+  span has to stay on one source line.** `build_masked` masks line by line, so
+  a span opening on one line and closing on the next is not recognised as a
+  span at all and neither half is masked; re-wrapping the sentence puts a live
+  `register-range` warning back into the gate.
 
 **Emphasis around the whole range does not save you; emphasis around each
 identifier does, and only by accident.** Verified on 2026-08-03 by running both
@@ -1127,12 +1131,15 @@ the tool at 338 proofs / 0 errors before the plant and again after the revert, n
 recorded above is exactly why: `git diff` prints nothing for a tree that was never touched and for one
 that was destroyed and restored wrong, so absence distinguishes neither.
 
-One residue, stated rather than fixed: **`check_corpus.py` does not walk `tools/`** — its include list
-is `README.md`, `research`, `docs`, `specs`, `.cursor/skills`, `.specify/memory` — so this entry is
-guarded by nothing. `check_tampers.py` does guard the underlying fact, and would have caught the
-regression on any gated commit; it is this *write-up* that no instrument reads.
+~~One residue, stated rather than fixed: **`check_corpus.py` does not walk `tools/`** — its include
+list is `README.md`, `research`, `docs`, `specs`, `.cursor/skills`, `.specify/memory` — so this entry
+is guarded by nothing.~~ **`check_corpus.py` walks `tools/` as of 2026-08-10, and this entry is
+guarded by it.** `check_tampers.py` guards the underlying fact and would have caught the regression
+on any gated commit; the *write-up* is what had no instrument, and the residue closed when the
+instrument defects that made the widening look expensive were fixed rather than when anything about
+this entry changed.
 
-**The widening was measured on 2026-08-10 and declined.** Two lists could carry `tools/` and they are
+**The widening was measured on 2026-08-10, declined the same day, and installed the same day.** Two lists could carry `tools/` and they are
 different knobs. `include`, filtered by `extensions`, is `.md` and `.markdown` only and decides which
 documents are **walked and checked**. `search_roots`, filtered by `search_extensions` — which already
 contains `.py`, `.sh`, `.yml` and `.json` — decides only where a figure may be **found** when a check
@@ -1142,12 +1149,26 @@ file into a string and the only operations on it are `in` tests. So the corpus r
 figure or an identifier from Python anywhere, and neither list walks `tests/` or `tools/` at all.**
 Against a baseline of 0 errors and 0 warnings, adding each root to each list:
 
-| widening | errors | warnings | real defects | at 2026-08-10 post-fix |
-| --- | --- | --- | --- | --- |
-| `include` += `tools` | ~~5~~ **0** | 1 | 0 | the five errors were the checker's |
-| `search_roots` += `tools` | 0 | 0 | 0 | unchanged |
-| `include` += `tests` | 0 | ~~2~~ **0** | 0 | both warnings were the checker's |
-| `search_roots` += `tests` | 0 | 0 | 0 | unchanged |
+| widening | errors | warnings | real defects | at 2026-08-10 post-fix | installed |
+| --- | --- | --- | --- | --- | --- |
+| `include` += `tools` | ~~5~~ **0** | ~~1~~ **0** | 0 | the five errors were the checker's; the one warning was this file's own worked example, and the example is reflowed | **yes** |
+| `consumer` += `tools/*.md` | 0 | ~~6~~ **0** | 0 | five were figures mentioned without the code span the same paragraph already uses on the same values; one was a multiplier derived in this file and is restated as its two operands | **yes** |
+| `search_roots` += `tools` | 0 | 0 | 0 | unchanged | no — it buys nothing |
+| `include` += `tests` | 0 | ~~2~~ **0** | 0 | both warnings were the checker's | no — see below |
+| `search_roots` += `tests` | 0 | 0 | 0 | unchanged | no — it buys nothing |
+
+**The two installed rows are one knob and not two, and the order matters.** `load` walks the
+`include` roots and assigns a role only to what it walked, so `consumer` += `tools/*.md` on its own
+changes nothing at all; the consumer row above is measured with the `include` row already in place.
+The reverse is what the residue turned on: `include` alone walks the catalogue for links, tables,
+TOCs and register ranges and leaves **every figure in it unread**, because `numeric-provenance`
+iterates `ROLE_CONSUMER` and `README.md` does not fnmatch `tools/README.md`.
+
+**`tests` is measured free and is not installed.** `tools/fixtures/*` carries an `exclude` entry
+because fixture documents are deliberately-broken artifacts and gating them is incoherent;
+`tests/fixtures/*` carries none, so `include` += `tests` would put five fixture READMEs under the
+gate on the wrong side of a distinction the corpus already draws. Adding the matching exclude is a
+second decision, and nothing has asked for it.
 
 **Seven of those eight firings were defects in the checker, and they are fixed rather than
 tolerated** *(measured and corrected 2026-08-10)*. The paragraph below is left standing apart from
@@ -1168,8 +1189,16 @@ Planting both spellings in a one-file fixture, the checker rejects the underscor
 its own; ~~the claim that GitHub keeps the underscore rests on the documented algorithm and on five
 independent authorings across two files, and was **not** verified against a renderer from here.~~
 **It is verified against a renderer as of 2026-08-10 and the underscore is kept — see below.** The
-one warning is `register-range` firing at line 375 on `OD-01 through OD-14`, which is this file's own
-worked example of the sentence shape that rule exists to catch. The two `tests` warnings are
+one warning was `register-range` firing at line 375 on `OD-01 through OD-14`, this file's own worked
+example of the sentence shape that rule exists to catch. **Its mechanism was the masking and not the
+self-reference, and that is why it turned out to cost nothing.** The example already sat inside a
+backtick code span, which is the documented escape; the span opened on one source line and closed on
+the next, and `build_masked` masks line by line, so `_INLINE_CODE_RE` — which needs its opening and
+closing runs in one string — matched neither half and the span was never recognised as a span at
+all. Reflowing it onto a single line masks it and clears the warning, at no semantic cost. Nothing
+about the containment tests in `figures.inside_spans` is involved; those govern struck spans, and a
+partially-contained *code* span is not a containment failure but a span the masker cannot see.
+The two `tests` warnings are
 `link-label` on `tests/conformance/cassettes/README.md`, where both labels are correct: the check
 compares the label against the **unresolved** target string, so a repo-relative label beside a
 document-relative target reads as a mismatch.
@@ -1199,10 +1228,15 @@ left literal they are dropped anyway for not being word characters, so both role
 invents an anchor no rendered page carries.
 
 `slugify` now parks inline code before the emphasis pass and removes only non-intraword `_` pairs.
-Measured on the whole walked corpus against the renderer: **29 of 2,371 headings disagreed before,
-4 after, and 26 slugs moved** — every one of them restoring a literal underscore. The four
-survivors are two further families, neither reachable from any live link and both recorded here
-rather than fixed, because each is a different defect from the one that was briefed:
+Measured against the renderer over the whole corpus as walked on 2026-08-10: **29 of 2,371 headings
+disagreed before, 4 after, and 26 slugs moved** — every one of them restoring a literal underscore.
+Adding `tools/` to `include` later that day grew the walked set to 2,424 headings; the 53 it added
+have not been put through the renderer, and the count above is left at the set it was taken over
+rather than restated over a set it was not. Neither family below is reachable in those 53: the only
+non-ASCII character in any of their headings is an em dash, which both sides drop, and none of them
+ends in punctuation preceded by a space. The four survivors are two further families, neither
+reachable from any live link and both recorded here rather than fixed, because each is a different
+defect from the one that was briefed:
 
 | site | divergence | cause |
 | --- | --- | --- |
@@ -1223,31 +1257,46 @@ Swept over the walked corpus, and again with `tests/` and `tools/` added, the ch
 **exactly the two firings** whose labels were verified correct and **adds none** — which is the
 false-negative argument, since a resolve-before-compare can only ever remove firings.
 
-**Adding `tools/` to `include` also does not buy the coverage this residue asks for, and that is what
-settles it.** `numeric-provenance` iterates `ROLE_CONSUMER` alone, and `tools/README.md` matches no
-`consumer` glob — `README.md` does not fnmatch `tools/README.md` — so it is classified `ROLE_OTHER`.
-A false four-decimal ratio and a false cent-precise spend planted in this file under that widening
-produce **zero** firings. Closing the gap needs `consumer` widened as well; that configuration was
-measured too, and it does catch both plants, at the cost of six further `numeric-provenance`
-warnings — five of them this file quoting the external multipliers (`15×`, `200×`, `100×`, `25×`)
-that the [false-positive register](#known-false-positive-modes) exists to explain, and one a `72x`
-derived in the open from 360 and 5 two entries below.
+**Adding `tools/` to `include` buys no figure coverage on its own, and the two knobs are what the
+residue turned on.** `numeric-provenance` iterates `ROLE_CONSUMER` alone, and `tools/README.md`
+matches no `consumer` glob — `README.md` does not fnmatch `tools/README.md` — so under the `include`
+widening alone this file is classified `ROLE_OTHER`. A false four-decimal ratio and a false
+cent-precise spend planted here under that widening produce **zero** firings. Both knobs are now
+installed: `include` carries `tools`, `consumer` carries `tools/*.md`, and the same two plants
+produce **two errors** under the installed configuration. The plant was re-run rather than inherited,
+and the file was restored by rewriting the original bytes and re-reading them, not by observing an
+empty diff.
 
-**So the widening is declined on measurement**, on the same grounds that declined the `register-range`
-relaxation and the duplicate-register-row rule. The reason is structural rather than arithmetic:
-`tools/README.md` is the document that documents the checker, so it necessarily contains a worked
-example of every pattern the checker fires on. Walking it with the checker is self-referential, and
-the false-positive rate is not a threshold to tune — it is what the file is *for*. The residue stands
-unchanged, and it now covers the two coordination entries above as well as this one.
+**The widening was declined on measurement and is installed on measurement** *(installed 2026-08-10,
+reversing a decline recorded the same morning)*. The decline rested on an arithmetic ground and a
+structural one, and both moved.
 
-**The decision stands and its stated basis has narrowed** *(2026-08-10)*. It was taken on eight
-firings by three mechanisms; seven of the eight were the checker's and are fixed, so what remains is
-one firing by one mechanism — `register-range` at line 375, this file's own worked example. The two
-grounds that carry it now are the ones that never depended on the count: **the self-reference is
-structural**, and **the widening does not buy the coverage the residue asks for**, since
-`numeric-provenance` iterates `ROLE_CONSUMER` and this file is `ROLE_OTHER`. Those are unaffected by
-anything measured here. What the count was doing was making a structural argument look like an
-arithmetic one, and an arithmetic argument moves when the arithmetic is wrong.
+**The arithmetic ground was seven warnings by two mechanisms, and every one of them was an instrument
+reading or a marking this file was already using a few lines away.** `register-range` at the worked
+example was the masker failing to see a code span wrapped across two source lines, and reflowing it
+onto one line clears it. Five of the six `numeric-provenance` warnings were external multipliers
+*mentioned* in the [false-positive register](#known-false-positive-modes) as a census of warning
+values, written bare on three lines where the next sentence of the same paragraph writes the same
+values in backticks; the code span is this file's own marking for a mentioned token, and applying it
+consistently clears them. The sixth was a multiplier this file derived in the open from two bounds,
+which is the class `numeric-provenance` records as a real defect rather than a false positive, and it
+is restated as its two operands on the precedent that struck four `3.7×` claims and put
+`220 against 60` in their place.
+
+**The structural ground was the stronger of the two, and it is the one that turned out to be
+answerable.** `tools/README.md` is the document that documents the checker, so it necessarily
+contains a worked example of every pattern the checker fires on, and walking it with the checker is
+self-referential. That is true, and it is not the same as unfixable. A worked example has to be *read
+as an example*, this corpus already has a marking that says so, and every self-referential firing
+here was an example that carried no marking or carried one the masker could not see. The distinction
+the residue closed on is between *the file is full of examples* and *the examples are unmarked*, and
+only the second is a property of the file rather than of its punctuation.
+
+**What the count was doing was making a structural argument look like an arithmetic one.** That
+diagnosis was right and it cut the other way in the end: the arithmetic moved when the arithmetic was
+shown to be the instrument's, and the structural ground moved with it, because seven false positives
+inside the checker had been standing in for a property of the corpus. The two coordination entries
+above are covered by the installed gate along with this one.
 
 ### A checker false positive is more dangerous than a checker gap: the remedy corrupts the correct artifact, and then it passes
 
@@ -1421,7 +1470,7 @@ trades the cap's diagnostic for a cancelled job. And the corollary for the other
 sentence, because it is the honest half of the same pass: their 5 minutes is a **floor**, stated as
 one rather than dressed up as a derivation, since the jobs it covers finish in under a minute every
 time and a value scaled off that work would be measuring PyPI rather than the job. It still fires on
-a hang, and it is 72x tighter than GitHub's 360-minute default.
+a hang, and it is far tighter than GitHub's default: 5 minutes against 360.
 
 ## Roles: who is authoritative
 
@@ -1431,7 +1480,7 @@ checks see which files.
 | Role | Glob | Meaning |
 |---|---|---|
 | `authority` | `specs/*/findings/*.md` | The source of record for measured numbers. Nothing checks these for provenance; they *are* the provenance. |
-| `consumer` | `README.md`, `research/*.md`, `specs/*/plan.md`, `spec.md`, `VERDICT.md`, `.cursor/skills/*/SKILL.md`, `docs/*.md` | Documents that quote findings. `numeric-provenance` runs here. |
+| `consumer` | `README.md`, `research/*.md`, `specs/*/plan.md`, `spec.md`, `VERDICT.md`, `checklists/*.md`, `tools/*.md`, `.cursor/skills/*/SKILL.md`, `docs/*.md` | Documents that quote findings. `numeric-provenance` runs here. `tools/*.md` is spelled out because `README.md` does not fnmatch `tools/README.md`. |
 | `harness` | `specs/*/harness/**` | Experiment code and committed results. Searched by the index, checked only for structure and links. |
 | `other` | everything else in scope | Structure and links only. |
 
@@ -1535,9 +1584,9 @@ construct is accepted; what is struck is the claim that you will see it.
   closed thirty-two warnings. The entry is kept because the *mechanism* is what
   matters and it is unchanged: the rule still fires the moment a citation is
   dropped. Typing the multiplier lookup surfaced them;
-  it did not create them. All 32 were external figures — Anthropic's ~15× token
-  multiplier for multi-agent systems (23 sites), a permissive-mode 200× approval
-  figure (2), a 5–100× search-loop cost range (5), a 10–25× model-family price
+  it did not create them. All 32 were external figures — Anthropic's `~15×` token
+  multiplier for multi-agent systems (23 sites), a permissive-mode `200×` approval
+  figure (2), a `5–100×` search-loop cost range (5), a `10–25×` model-family price
   range (2) — and none is a measurement this corpus took. Under the untyped rule
   they read as sourced because their digits occurred *somewhere* in a finding, and
   the occurrences are worth naming: `15×` was satisfied by "LiteLLM 1.95.0
@@ -1551,7 +1600,7 @@ construct is accepted; what is struck is the claim that you will see it.
   was a citation on each line, which belonged to the documents and not to this tool,
   and that is what was done.
   Do not add these values to `numeric_allow`: it is keyed on the digit string, so
-  allowing `15×` would also exempt a future genuine 15× measurement.
+  allowing `15×` would also exempt a future genuine `15×` measurement.
 
 ## Auditing a threshold — `threshold_probe.py`
 

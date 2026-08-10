@@ -6,6 +6,7 @@
     "research",
     "docs",
     "specs",
+    "tools",
     ".cursor/skills",
     ".specify/memory"
   ],
@@ -23,6 +24,7 @@
     "specs/*/findings/*.md"
   ],
 
+  "_comment_consumer": "`README.md` does not fnmatch `tools/README.md`, so the catalogue needs its own glob and adding `tools` to `include` alone buys it no figure coverage at all. Measured 2026-08-10: a false four-decimal ratio and a false cent-precise spend planted in `tools/README.md` produce zero firings under the `include` widening alone and two errors once `tools/*.md` is a consumer.",
   "consumer": [
     "README.md",
     "research/*.md",
@@ -31,6 +33,7 @@
     "specs/*/spec.md",
     "specs/*/VERDICT.md",
     "specs/*/checklists/*.md",
+    "tools/*.md",
     ".cursor/skills/*/SKILL.md"
   ],
 
