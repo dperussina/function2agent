@@ -1334,7 +1334,19 @@ Three things follow, and the third is the one that generalises past anchors:
 - **A documentation claim about an instrument's algorithm is load-bearing and needs a measurement,
   not a citation.** The struck sentence was not wrong about the suffixes; it was unmeasured about
   the slug, and an unmeasured half inside a true-sounding whole is worse than an absent claim,
-  because it answers the question a reader came with.
+  because it answers the question a reader came with. **A third instance landed the same day, and it
+  is a degree worse than unmeasured: it is contradicted by the code it describes.** The multiplier
+  entry under [Known false-positive modes](#known-false-positive-modes) told a reader that "one
+  citation covers every claim within four lines of it"; `numeric-provenance` reads the figure's own
+  line and nothing else. Unmeasured and false are the same defect at two severities and the remedy is
+  the same for both — a measurement against the instrument, never a better-sourced sentence — so the
+  instance belongs to this bullet rather than to a bullet of its own. **What it adds is where such a
+  sentence comes from.** That mechanism was not misremembered; it was invented, to reconcile two
+  figures taken over different scopes — lines edited in one directory against warnings counted over
+  the corpus — so that the smaller number would explain the larger. **A stated mechanism whose only
+  work is to make two numbers agree is the shape to distrust**, and the test is cheap: re-measure both
+  figures over one scope. Doing that here dissolved the sentence, because the eight edits reach seven
+  of the thirty-two and the commit closed the rest elsewhere.
 - **Prefer the instrument's ground truth to the instrument's specification.** The underscore question
   was settled by fetching a rendered page and reading the `id` GitHub emitted, after a previous pass
   had reasoned from the documented algorithm plus five independent authorings and correctly refused
@@ -1346,6 +1358,18 @@ Three things follow, and the third is the one that generalises past anchors:
 its own entry: that one is a reader misreading an *absence* of signal, and the remedy is to verify by
 presence. This one is a reader acting on a *present but wrong* signal, and no amount of verifying by
 presence catches it, because the wrong thing is what the instrument asserts.
+
+**The four-line-window instance is recorded inside this entry rather than beside it, and the same test
+is what decides that.** A wrong *signal* and a wrong *explanation of the signal* look like two
+subjects, and the argument for separating them is real: the second is what lets the first survive
+review. But the test this entry applies is not what the defect is about, it is **what error the reader
+makes and what remedy corrects it** — and on both counts the two are one. The reader acts on something
+the instrument asserts, and the correction is a measurement against the instrument. The distinction is
+also already doing work *within* this entry: the struck sentence at the top of the file is what
+licensed the two broken links named above, so the explanation and the signal are the two halves of a
+single case here rather than two cases. Splitting them would put the licensing claim in one entry and
+the instance that demonstrates it in another, which is the duplication the paragraph above declines
+for the opposite reason.
 
 ### A proof arm with no terminator does not report a hang; it reports whatever the eventual kill looks like
 
@@ -1580,12 +1604,32 @@ construct is accepted; what is struck is the claim that you will see it.
 - *Third-party multipliers with no citation.* ~~**32 warnings, and they are the
   reason this gate is not at zero.**~~ **32 warnings at `cee7ff8`, and they were
   the reason that gate was not at zero. All 32 are now cleared and the gate is at
-  zero** — the fix named at the end of this entry was applied, in commit `1f5450b`,
-  as eight inline citations across five `.cursor/skills/*/SKILL.md` files; one
+  zero** — the fix named at the end of this entry was applied, in commit `1f5450b`.
+  ~~as eight inline citations across five `.cursor/skills/*/SKILL.md` files; one
   citation covers every claim within four lines of it, which is why eight edits
-  closed thirty-two warnings. The entry is kept because the *mechanism* is what
-  matters and it is unchanged: the rule still fires the moment a citation is
-  dropped. Typing the multiplier lookup surfaced them;
+  closed thirty-two warnings.~~ **Struck 2026-08-10. There is no four-line window
+  in this check and there never was one:** `run` reads
+  `externally_attributed(doc.lines[i - 1])` — the line the figure sits on, and
+  nothing else — and exempts the figures on that line alone. A reader who trusted
+  the struck sentence and put a citation three lines away would get a warning the
+  documentation had promised them away. **The sentence existed to reconcile two
+  figures taken over different scopes**: `8` counts the lines `1f5450b` changed in
+  the five skill files, `32` counts warnings over the whole corpus, and the window
+  was invented to make the second follow from the first. **Re-measured this pass by
+  running the current check against three worktrees, one implementation over all
+  three:** `32` warnings outside `tools/README.md` at `cee7ff8`, the same `32` at
+  `d1f7d7a`, and none at `1f5450b`. The intervening commit closed nothing, so the
+  clearing is `1f5450b`'s and the attribution survives; what does not survive is the
+  account of how. The `32` sat across **fourteen** documents. The five
+  `.cursor/skills/*/SKILL.md` files carried **seven** of them, which is what eight
+  edited lines in that directory can reach; the other **twenty-five** sat in eight
+  `research/*.md` documents and in `specs/001-discovery-validation/plan.md`, all of
+  which the same commit also edited. **Thirty** of the thirty-two closed by a
+  citation arriving on the figure's own line; the remaining **two** closed by the
+  figure being struck rather than sourced — both `100×` claims, retracted in the
+  house style, which `figures.struck_spans` skips. The entry is kept because the
+  *mechanism* is what matters and it is unchanged: the rule still fires the moment a
+  citation is dropped. Typing the multiplier lookup surfaced them;
   it did not create them. All 32 were external figures — Anthropic's `~15×` token
   multiplier for multi-agent systems (23 sites), a permissive-mode `200×` approval
   figure (2), a `5–100×` search-loop cost range (5), a `10–25×` model-family price
@@ -1598,7 +1642,15 @@ construct is accepted; what is struck is the claim that you will see it.
   `$3.7687` defect in a wider form — a status code sourcing a cost multiplier —
   and these warnings are it being caught. Six sibling claims at the same values
   *are* exempt, because they carry the inline link the house style requires; these
-  32 carried none, and no citation sat within four lines of any of them. The fix
+  32 carried none~~, and no citation sat within four lines of any of them~~.
+  **Struck 2026-08-10 with the sentence above, and struck for a second reason.** The
+  clause reads as a statement about the observed data rather than about the
+  mechanism, and it would have been worth keeping on that ground — but measured over
+  the pre-fix tree it is false as data too: **five** of the 32 did have a citation
+  within four lines, one in `.cursor/skills/multi-agent-topology-review/SKILL.md`,
+  three in `research/01-agent-anatomy.md` and one in `research/README.md`.
+  **The surviving clause is the exactly true one**: none of the 32 carried a citation
+  on its own line, which is the only distance this check measures. The fix
   was a citation on each line, which belonged to the documents and not to this tool,
   and that is what was done.
   Do not add these values to `numeric_allow`: it is keyed on the digit string, so
