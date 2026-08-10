@@ -96,7 +96,7 @@ the author may have made deliberately.
 | `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
 | `findings-numbering` | error / warning | Duplicate numeric prefixes in `findings/` (**error**), a citation of a finding number that does not exist (**error**), and a gap in the sequence (**warning**). |
 | `register-range` | warning | A prose summary of a register — `(D-01 … D-19)` — that stops short of the register's real last entry. **`gen_claims.py` now writes the standalone ones**; this rule is what fires when it has not been run, and is the *only* mechanism at the narrated sites the generator refuses. |
-| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: "five committed harnesses" when there are eight. Six rules; the `findings` one had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`. |
+| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again. |
 | `definition-count` | error / warning | A prose count of a *register* — "58 functional requirements" — against the definitions in the specification it describes. **error** when the target yields zero definitions, unconditionally; **warning** on an ordinary mismatch, because a deliberately historical figure is a real case and the strike convention is its escape. See [Why zero definitions is an error](#why-zero-definitions-is-an-error-and-not-a-comparison). |
 | `catalog-line-count` | warning | A `Lines` column, or an inline `(N lines)`, that has drifted from the file it describes. **`gen_claims.py` writes these**; this rule is what fires when it has not been run. Exact since 2026-08-03 — the previous ±2 tolerance was concealing a live 2-line drift. |
 | `toc-coverage` | warning | A `##` section missing from its document's own table of contents, and therefore unreachable from the top of an 800-line file. |
@@ -558,6 +558,77 @@ than a documented residue.
 **The residue, stated so it is not mistaken for coverage.** Nothing will notice a
 register that hands out a taken number. The search above is the only guard, it is
 run by a human, and it is one command per namespace.
+
+## Every rule, measured against its own scope
+
+Six of this tool's seventeen checks are driven by rules in `config.json` rather
+than by code, which makes a rule cheap to add and cheap to lose. A rule that
+matches nothing contributes no violations, and no violations is what a correct
+corpus also contributes. Swept on 2026-08-10 over every rule in every
+rule-driven check — the six `inventory_rules`, the two `definition_count_rules`,
+the nine `identifier_namespaces`, the three enabled `numeric_kinds`, and the
+seven `dry_run.verdict_patterns` — **three were reading nothing at all**, and
+each had been silent through every green gate since it stopped.
+
+The three are not one defect, and the difference decides the response.
+
+* **`committed-harnesses` had a site and lost it.** Its one in-scope match was
+  struck on 2026-08-02 and re-stated on 2026-08-03 without a fixed count, on the
+  explicit reasoning that `harness/` is the authority for how many harnesses
+  there are. The claim was sent somewhere the rule did not look, and nothing
+  carried the rule after it. Its number words also stopped at `ten` against a
+  directory count of thirteen, so the spelled-out true count could not have
+  matched had anyone written it.
+* **`findings` never had one, twice.** It matched nothing until 2026-08-03
+  because its pattern required a trailing comma, was repaired pointwise, and
+  matches nothing again because the scoped documents state no total. Twenty-one
+  phrases of its shape sit elsewhere in the corpus and every one of them is
+  prose about conclusions rather than a count of documents, which is why the
+  scope is right and the rule is nonetheless empty.
+* **`gate-state` had never fired anywhere, including the fixture.** Alone among
+  the seven dry-run patterns it appeared in neither the corpus nor
+  `known-bad`, so nothing had ever shown it capable of matching. The other four
+  with no corpus match are exercised by the fixture and were therefore known to
+  work. `known-bad` now states a threshold as met, and the self-test requires
+  that line, which is what the `EXPECTED` table beside it already says is owed:
+  *a rule of seven alternatives is seven rules and a single smoke test would let
+  six of them rot.*
+
+**Polarity decides whether zero is a defect, and conflating the two produces the
+wrong ruling.** An *assertion* rule — `inventory-count`, `definition-count` —
+reads a claim the corpus makes and checks it; zero sites means it verified
+nothing. A *prohibition* rule — every `dry_run.verdict_pattern`,
+`identifier-resolution` — searches for something that must not be present; zero
+sites is the outcome it exists to produce, and demanding a live site would
+require the corpus to keep a defect. What a prohibition rule owes instead is a
+fixture that fires it, which is why `gate-state` is the only one of the five
+quiet patterns that is a finding.
+
+**The `gen_claims.py` floor of one transfers in its visibility and not in its
+severity.** That tool errors on a generator matching no sites, on the reasoning
+that a silent generator's `0 stale` is what a clean tree also prints — the same
+argument, exactly. The severity does not carry: a generator's whole job is to
+write claims, so one with no sites is dead by construction, whereas a count rule
+with no sites may be reading a corpus that simply makes no such claim, and a
+corpus is not obliged to state its own inventory. `definition-count` had already
+drawn that line, announcing a skip per rule that matches nothing and declining
+to fail the run; `inventory-count` now does the same, and the announcement names
+the glob and its count so the reader can see what was not compared.
+
+That answers the question a pointwise repair leaves open. Fixing `findings`'
+comma in 2026-08-03 fixed a rule and not the class, and the class recurred in
+the same check within a week — twice, in two different ways, neither of which a
+pattern edit would have prevented. **A rule that cannot fire is a defect in the
+instrument rather than in the corpus, so the instrument is where it is now
+reported.**
+
+The sweep itself has a residue worth naming. It measures whether a rule *reads*
+something, not whether what it reads is worth reading: a rule with one live site
+is one edit from zero, and three of the six inventory rules stand there —
+`research-documents`, `project-skills` and `speckit-phase-prompts`, each resting
+on a single cell of `README.md`'s repository-map table. Nothing proposes to
+duplicate those claims to buy redundancy, because a second copy of a count is
+another thing to rot; the floor is what makes their loss audible.
 
 ## When a figure may be a live total, and when it must be dated
 
@@ -2481,6 +2552,44 @@ against 184 ablated clean cases, and rejected. Wiring an advisory into a gate
 rebuilds exactly that rejected rule. Running it ungated on every push emits a
 permanent listing a reader learns to scroll past, which is how its one true
 positive gets lost. It stays a human-run audit aid.
+
+### The renderer is watched, and watching it may not gate
+
+`slugify` is the one function in this tree whose oracle belongs to somebody
+else, and after the differential measured it nothing was left watching. A
+renderer change would reopen the defect that wrote two committed links against
+invented anchors, in the same silence as the first time. `ci.yml` grew a
+`slug-differential` job on 2026-08-10 that runs
+[the differential](../specs/001-discovery-validation/harness/slug-differential/)
+over the whole corpus on every push.
+
+It is a `NON-GATING observation`, the category `ci.yml` already carries for the
+unshare pair, and the reasoning is this file's own: the step needs outbound
+HTTPS, so an upstream incident or a rate limit would redden a build while saying
+nothing about the merge, and a gate that flaps gets worked around. It runs under
+`continue-on-error` and reports a divergence as a `::warning::` and a step
+summary instead.
+
+Three choices in it were measured rather than assumed, and all three are
+recorded at the job:
+
+* **Its own job, not a step in `corpus`.** The whole-corpus run took `105.7`
+  seconds on an M-series laptop at `8f15f50`, against a `corpus` job whose
+  observed maximum is `44` seconds and whose value is being a fast signal.
+* **The whole corpus, not `--path tools`.** The subtree is one document and
+  `1.6` seconds, and it reaches `0` blockquoted headings — the population that
+  hid a defect for two differentials running. A canary blind to the family that
+  was last wrong is not one.
+* **`push` only.** On `pull_request` the checked-out SHA is a merge commit
+  nothing pushed, so the contents endpoint returns HTTP 404 and the harness
+  correctly reports a miss rather than a difference — a useless annotation on
+  every PR, for an observation that is a property of the renderer rather than of
+  a branch.
+
+What is owed: the job has no row in `ci.yml`'s duration table, because it has
+not yet run there and the figures above are laptop figures. **A CI figure and a
+laptop figure are different measurements**, which is the rule that file opens
+with, so the row waits for a run rather than being estimated from these.
 
 ### `gen_claims.py --check` reports per generator, and zero is an error
 
