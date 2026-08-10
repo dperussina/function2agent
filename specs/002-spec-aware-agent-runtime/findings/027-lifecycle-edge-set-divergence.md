@@ -163,7 +163,7 @@ vacuous.
 ## 4. The question this left for the owner — answered 2026-08-05, see the second pass below
 
 > **This section is preserved as it was asked.** The owner took the **third** option on 2026-08-05
-> under [OD-26](../../001-discovery-validation/plan.md#od-26--srccontractsterminalpy-is-authoritative-for-terminal-state-membership-and-data-modelmd-21-is-a-derived-view-of-it-terminateddeniedoperation-is-struck-from-the-diagram),
+> under [OD-26](../../001-discovery-validation/plan.md#od-26--srccontractsterminalpy-is-authoritative-for-terminal-state-membership-and-data-modelmd-21-is-a-derived-view-of-it-terminateddenied_operation-is-struck-from-the-diagram),
 > and `terminated.denied_operation` — the sub-question the first option left open — was **struck**.
 > The options below are not edited, because a question is evidence about what was and was not obvious
 > at the time, and rewriting it to match the answer destroys that.
@@ -221,7 +221,7 @@ have found it
 
 > ## Read this second: four results, and the last one is negative
 >
-> **A. §4's question is answered by [OD-26](../../001-discovery-validation/plan.md#od-26--srccontractsterminalpy-is-authoritative-for-terminal-state-membership-and-data-modelmd-21-is-a-derived-view-of-it-terminateddeniedoperation-is-struck-from-the-diagram):
+> **A. §4's question is answered by [OD-26](../../001-discovery-validation/plan.md#od-26--srccontractsterminalpy-is-authoritative-for-terminal-state-membership-and-data-modelmd-21-is-a-derived-view-of-it-terminateddenied_operation-is-struck-from-the-diagram):
 > `src/contracts/terminal.py` wins, §2.1 is a derived view.** This is §4's third option and it was
 > taken on this finding's own §2 evidence — the asymmetry that a diagram-wins rule invalidates
 > `terminated.unrecoverable_fault`, which ships. The consumer census the decision rests on was

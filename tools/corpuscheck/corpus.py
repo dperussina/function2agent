@@ -208,17 +208,48 @@ def looks_like_table_row(row: str) -> bool:
     return stripped.startswith("|") and stripped.count("|") >= 2
 
 
+_CODE_SPAN_RE = re.compile(r"`([^`]*)`")
+_PARKED_RE = re.compile(r"\x00(\d+)\x00")
+# An emphasis pair whose delimiters are not intraword. `_` opens only where the
+# preceding character is not a word character and closes only where the
+# following one is not, which is what leaves `cite_advisor` alone.
+_EMPHASIS_UNDERSCORE_RE = re.compile(r"(?<!\w)(_{1,2})(?=\S)(.+?)(?<=\S)\1(?!\w)")
+
+
 def slugify(heading: str) -> str:
     """GitHub's heading-anchor algorithm, close enough for link checking.
 
-    Strips markdown emphasis and inline code, drops everything that is not a
-    word character, space or hyphen, lowercases, then spaces to hyphens.
+    GitHub renders the heading to HTML and slugs the *text content*, so a
+    character's markup role and its literal role have different fates. `*` and
+    `~` need no distinction — consumed as markup they vanish, and left literal
+    they are dropped anyway for not being word characters. **`_` is the one that
+    does**, because `_` *is* a word character: consumed as emphasis it vanishes,
+    and left literal inside an identifier it survives into the anchor.
+
+    Measured against GitHub's renderer on 2026-08-10 rather than read off its
+    documented algorithm. `#### _Note_: Multiple entry points` renders
+    `id="user-content-note-multiple-entry-points"` — emphasis consumed — while
+    this repository's own `### OD-26 — ... terminated.denied_operation ...`
+    renders `...terminateddenied_operation...`, dropping the `.` and keeping the
+    `_` in one token. See tools/README.md for the differential.
+
+    Inline code is parked before the emphasis pass so a `_` inside a code span
+    can never pair with one outside it.
     """
     text = heading.strip()
     text = re.sub(r"^#+\s*", "", text)
-    text = re.sub(r"`([^`]*)`", r"\1", text)
+
+    parked: list[str] = []
+
+    def _park(m: re.Match) -> str:
+        parked.append(m.group(1))
+        return f"\x00{len(parked) - 1}\x00"
+
+    text = _CODE_SPAN_RE.sub(_park, text)
     text = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", text)  # links -> text
-    text = text.replace("*", "").replace("_", "").replace("~", "")
+    text = _EMPHASIS_UNDERSCORE_RE.sub(r"\2", text)
+    text = text.replace("*", "").replace("~", "")
+    text = _PARKED_RE.sub(lambda m: parked[int(m.group(1))], text)
     text = text.lower()
     text = re.sub(r"[^\w\s\-]", "", text, flags=re.UNICODE)
     text = text.strip().replace(" ", "-")
