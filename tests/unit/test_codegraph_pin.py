@@ -371,6 +371,26 @@ def test_rows_in_upstreams_real_schema_do_not_move_the_pinned_digest(tmp_path):
     same filter `test_sqlite_internal_tables_are_excluded_from_the_digest`
     covers from the `sqlite_stat*` side.
 
+    **`PRAGMA table_list` is not how you re-derive that decomposition, and it is
+    the method most likely to be reached for** — it types each object directly
+    instead of matching names, which is exactly the property the name filter
+    above looks like a workaround for. It is sound for four of the five
+    categories: `nodes_fts` comes back `virtual` and the four shadows come back
+    `shadow`. It cannot separate the fifth, which is the only one in question.
+    `sqlite_sequence` comes back `type=table`, indistinguishable from the seven
+    ordinary tables, **so a decomposition derived from `table_list` assumes the
+    thing it was invoked to establish.** Measured 2026-08-10 on CPython's
+    `sqlite3` 3.53.3 against `tests/fixtures/codegraph-schema/schema.sql`, and
+    it is worse than a tie: `table_list` also reports `sqlite_schema`, which is
+    not a `sqlite_master` row at all, so it answers 14 rows to `sqlite_master`'s
+    13 with **two** internal objects typed `table` rather than one.
+
+    The route that does work is causal rather than nominal: **strip
+    `AUTOINCREMENT` from the `edges` and `unresolved_refs` declarations and
+    rebuild — the count falls 13 to 12 and `sqlite_sequence` is gone.** That
+    establishes the category by its cause, which is the only evidence that
+    separates a table SQLite maintains from one this schema declares.
+
     This is the closest a committed test comes to the cross-repository control
     that was actually run on 2026-08-10 — three repositories of different size
     and language mix, one digest. It is not a substitute for it: 500 synthetic
