@@ -267,12 +267,24 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: batteries in 127.7 s and 139.3 s. Three closed samples at n=10 each, three
 #: boots; no sample is folded into another. Within-run pairwise-gap medians:
 #::
-#:     path_heavy            2.3%   3.3%   3.1%
+#:     path_heavy            6.0%   3.3%   3.1%
 #:     reference_app_api     2.3%   4.5%   3.8%
 #:     shell_heavy           4.6%   7.0%   6.8%
 #:     reference_app_socket  7.4%   7.8%  10.1%
-#:     compute_only          127%   98%    70%     (10, 8 and 6 of 10 rated)
+#:     compute_only          127%   98%    70%     (7, 8 and 6 of 10 rated)
 #::
+#: **Two cells of that table were transcription errors and are corrected
+#: 2026-08-10 by re-derivation from the artifacts.** `path_heavy`'s first
+#: column read **2.3%**, which is `reference_app_api`'s value one row down —
+#: the detailed block above for the same run says `path_heavy` gap
+#: **6.0% / 13.9%**, so the table contradicted its own source four paragraphs
+#: up. `compute_only`'s rated count for that run read **10**, where the same
+#: block says **7 of 10** and 3 of 10 draws are non-positive. Neither error
+#: reaches a conclusion: the load-bearing range `2.3–7.4%` is over all four
+#: arms and 2.3% is `reference_app_api`'s, so it stands as written. Recorded
+#: rather than silently fixed because the same two cells had propagated to
+#: `specs/002-spec-aware-agent-runtime/tasks.md`, which is the
+#: claim-in-a-different-file-from-its-subject shape `tools/README.md` names.
 #: **So TIGHT-on-the-four and WIDE-on-the-control is reproducible, three for
 #: three, and that is the part `REPEATS` is decided on.** The medians themselves
 #: are not: the same arm's median-of-ten-medians reads 62.70, 40.82 and 43.97
@@ -313,6 +325,103 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: timing numerator. Raising an arm's notification count would buy quantization
 #: and not stability, and for `compute_only` it would destroy the control — an
 #: arm that takes no paths is what makes it one.
+#:
+#: **`reference_app_socket` IS REPRODUCIBLY THE WIDEST OF THE FOUR
+#: LOAD-BEARING ARMS, AND THAT IS A PROPERTY OF THE WORKLOAD RATHER THAN A
+#: DEFECT IN THE ARM. Established 2026-08-10.** The width is in the table
+#: above — widest of the four in all three samples, gap median 7.4 / 7.8 /
+#: 10.1% against its widest sibling's 6.0 / 7.0 / 6.8%, gap maximum 26.7 /
+#: 34.1 / 31.0% against a sibling ceiling of 14.4 / 18.4 / 19.3%, and range
+#: 28.0 / 39.7 / 32.2% against 15.3 / 18.3 / 19.5%. Three for three on every
+#: one of the three statistics, so the pattern is not noise about noise. This
+#: entry records **which of the two things it is**, because the answers want
+#: opposite responses and the arm is one of the four any T101 figure rests on.
+#:
+#: **The denominator is fixed for this arm as it is for the others, which is
+#: the single most decisive check and it comes out clean.**
+#: `notifications_observed` takes **exactly one distinct value across all ten
+#: draws, in every arm, in all three samples** — 15 of 15 arm-sample cells at
+#: one distinct value. For `reference_app_socket` that value is **833 / 835 /
+#: 835**. So a moving denominator is ruled out here specifically and not by
+#: inheritance from the others, and the whole of this arm's excess width is in
+#: the timing numerator. **The recorded field is itself a median of `REPEATS`
+#: counts** and the record does not retain the five, so what is established is
+#: that the median-of-5 never moved — which is the quantity the rate is
+#: computed from and therefore the one that matters.
+#:
+#: **The cause is that this arm extracts the smallest signal from the largest
+#: timed region of the four, measured on CI's own artifacts.**
+#: `overhead_seconds` as a percentage of the arm's own `baseline_seconds`, from
+#: the three runs' `seccomp-overhead.latest.json`:
+#::
+#:     path_heavy            729%   704%   635%
+#:     reference_app_api      83%    64%    62%
+#:     shell_heavy            60%    52%    56%
+#:     reference_app_socket  7.7%   4.9%   6.6%
+#:     compute_only         -6.0%  -4.0%   1.8%   (the control)
+#::
+#: `reference_app_socket` differences two ~0.7 s medians to recover ~0.05 s.
+#: The other three recover between half and seven times their own baseline, an
+#: order of magnitude better resolved, and the arm nearest the socket arm's
+#: regime is **the control**. `overhead_seconds` is a difference, so a
+#: workload's constant cost cancels exactly and only its run-to-run *noise*
+#: survives — which means an arm whose absolute noise is large next to the
+#: overhead it carries is the widest arm with nothing wrong anywhere. Measured
+#: directly on `6.12.76-linuxkit` aarch64 euid 0 at n=25 through this module's
+#: own `_run_unsupervised_subprocess`, the workloads' `stdev / overhead` ranks
+#: **0.01 / 0.15 / 0.24 / 2.29** for path, api, shell and socket, and that
+#: ordering is the observed width ordering of the four on the same host. A
+#: ranking that could have come out in any order came out in that one.
+#:
+#: **The obvious repair was planted and it does not work, which is why it is
+#: recorded here rather than installed.** Most of this arm's timed region is
+#: not the workload: `socketserver.BaseServer.serve_forever` polls its
+#: shutdown flag at a default `poll_interval` of **0.5 s**, so
+#: `server.shutdown()` waits out the current `select` and the arm's teardown
+#: is **bimodal — ~0.0001 s or ~0.505 s**, 3 and 17 of 20 draws. Phase-timed
+#: unsupervised at n=20 on the linuxkit host, that teardown is **78% of the
+#: workload's median wall clock and 88% of its peak-to-peak spread**, which
+#: makes it look like the whole answer. It is not. Passing
+#: `poll_interval=0.01` and repeating the probe at k=10 on one host took the
+#: battery's own cost from 12.0 s to 8.47 s and the probe from **134 s to
+#: 90 s** — so the dead time is real and was removed — while the arm's gap
+#: median moved only **38.0% → 34.0%**, still the widest of the four at
+#: **1.76x** its widest sibling against 1.84x before. **The teardown is dead
+#: time that cancels out of a difference of medians and is absorbed by the
+#: median-of-5; it is not the source of the width.** Both directions are on
+#: the record so that the next reader does not remove it, observe no
+#: improvement, and conclude the width was an instrument defect after all.
+#: `notifications_observed` was unmoved in both directions
+#: (2116 / 1189 / 479 / 1143 / 116), so the plant did not buy its result by
+#: changing the denominator.
+#:
+#: **What follows for quoting a figure that rests on this arm.** The four
+#: load-bearing arms are **not equally resolved**, and the table above is the
+#: statement of by how much. A figure quoted from `reference_app_socket` alone
+#: carries roughly an order of magnitude less resolution than the same figure
+#: from `path_heavy`, and any headline that pools or minimises across the four
+#: is dominated by the worst-resolved of them. The arm stays exactly as it is:
+#: it measures the surface an operator's session actually reaches, its width
+#: is that surface's own timing noise, and narrowing it by editing the
+#: workload would buy a tighter number by measuring something else.
+#:
+#: ~~`notifications_observed` was *identical* in all 30 runs for every arm
+#: (2116 / 1189 / 1143 / 539 / 116)~~ **The 30-run list above is read in this
+#: file's own arm order and its middle two entries do not survive a re-reading
+#: on the same host — flagged 2026-08-10, and deliberately not rewritten.** In
+#: the k=10 readings taken here on `6.12.76-linuxkit` aarch64 euid 0, the same
+#: container and the same CPython, `path_heavy`, `reference_app_api` and
+#: `compute_only` reproduce that list exactly at **2116 / 1189 / 116**, while
+#: `shell_heavy` reads **479** and `reference_app_socket` reads **1143** — so
+#: the value the list assigns to `shell_heavy` is the one this host gives
+#: `reference_app_socket`. Three of five matching exactly makes a transposition
+#: of the middle pair likelier than three independent drifts, but **539 is not
+#: reproduced by anything measured here** and the 30-run sample cannot be
+#: re-read, so the list is left standing with this note rather than corrected
+#: to figures its own pass never took. **The paragraph's conclusion is
+#: unaffected either way**: every value was identical across all 30 runs, which
+#: is what ruled the denominator out, and that holds under any assignment of
+#: the two.
 REPEATS = 5
 
 # --- the workloads --------------------------------------------------------
