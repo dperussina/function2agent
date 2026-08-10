@@ -13,6 +13,30 @@ match count is the truth. Adding a rule is a JSON entry, not code.
 A count inside `~~…~~` is not a claim. The corpus supersedes by striking through
 and dating rather than by deleting, so reading struck text as live would make
 the convention unsatisfiable.
+
+**A rule with no live site in its own scope reports nothing and is
+indistinguishable from a rule that passes**, which is why the tail of this
+function announces one rather than contributing a silent zero. The floor is the
+one `definition-count` already carries, and it is here for the same reason: a
+count check's clean output and its blind output are the same output. Measured
+2026-08-10 over all six rules, two were reporting on nothing — `findings`, whose
+scoped documents stopped stating a total, and `committed-harnesses`, whose only
+in-scope site was struck on 2026-08-02 and re-stated without a count on
+2026-08-03. Both had been silent through every green run since.
+
+The announcement is a skip and not an error, which is where this parts company
+with `gen_claims.py`'s floor of one. A generator that matches nothing is dead by
+construction, because writing claims is the whole of its job. A count rule that
+matches nothing may instead be describing a corpus that makes no such claim, and
+a corpus is not required to state its own inventory. What transfers is the
+visibility; the severity does not.
+
+Scope is read from the rule's own `files`, and the difference that makes is not
+decorative. `tools/README.md` documents this check with the example phrase
+*"five committed harnesses" when there are eight*, which matches
+`committed-harnesses` and is not struck — so a search of the corpus at large
+reports that rule as live while the rule itself, which never looks at
+`tools/README.md`, sees nothing at all.
 """
 
 from __future__ import annotations
@@ -73,6 +97,7 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
             continue
         scope = rule.get("files", default_files)
         rx = re.compile(rule["pattern"], re.IGNORECASE)
+        sites = 0
         for doc in corpus.markdown():
             if not any(fnmatch.fnmatch(doc.relpath, p) for p in scope):
                 continue
@@ -82,9 +107,15 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
                 struck = struck_spans(masked)
                 for m in rx.finditer(masked):
                     claimed = _to_int(m.group(1))
-                    if claimed is None or claimed == actual:
+                    if claimed is None:
                         continue
                     if inside_spans(struck, m.start(), m.end()):
+                        continue
+                    # Counted before the comparison: a claim that agrees with the
+                    # filesystem is the case this check exists to keep true, and
+                    # it is evidence the rule is reading something.
+                    sites += 1
+                    if claimed == actual:
                         continue
                     out.append(
                         Violation(
@@ -103,4 +134,13 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
                             ),
                         )
                     )
+
+        if sites == 0:
+            ctx["skip"](
+                "inventory-count",
+                f"rule {rule['name']} matched no live claim in "
+                + ", ".join(scope)
+                + f" (glob {rule['glob']} counts {actual}): its zero findings mean "
+                "'nothing read', not 'nothing wrong'",
+            )
     return out

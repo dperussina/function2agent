@@ -56,11 +56,29 @@ had not read the experiment is the plausible-looking substitute this tree refuse
 the same page. `slug-differential` sits outside the experiment ladder in the same way
 `provider-credentials` does, so it adds a position without adding an experiment.
 
-**Every claim in this file about how many of something the tree holds has now gone stale at
-least once**, which is the case the rule at
+**Every claim in this file about how many of something the tree holds had gone stale at least
+once**, and until 2026-08-10 that placed the directory count in the first of the two ungateable
+kinds the rule at
 [`tools/README.md` § When a figure may be a live total](../../../tools/README.md#when-a-figure-may-be-a-live-total-and-when-it-must-be-dated)
-calls the first of its two ungateable kinds: nothing counts these directories, so a count of
-them belongs in a dated sentence rather than in a standing one.
+names: nothing counted these directories, so a count of them belonged in a dated sentence rather
+than in a standing one.
+
+Something counts them now, and the count is therefore standing rather than dated: **there are
+thirteen committed harnesses**. `inventory-count`'s `committed-harnesses` rule globs
+`harness/*/` for the truth and reads this file for the claim, so the figure sits in the column
+where the tool holds it and a reader does not have to remember it. A reader who finds that
+sentence wrong has found a failing gate rather than a stale document, which is the whole of the
+difference the rule above draws.
+
+**That rule had never read anything, and a rule that reads nothing is indistinguishable from a
+rule that passes.** Its scope was `README.md`, `research/README.md` and `specs/*/VERDICT.md`.
+The corpus's one matching phrase sat struck at [`VERDICT.md`](../VERDICT.md)'s FR-016 entry,
+where the fixed count was retired on 2026-08-03 in favour of this directory being its own
+authority — and no site was written here to receive what was sent. Its number words also stopped
+at `ten` while the count stood at thirteen, so the spelled-out true count could not have matched
+even where one was written. Both defects and the missing site closed on 2026-08-10; the scope
+now includes this file, and the rule announces a skip rather than a silent pass whenever one of
+its six rules has no live site left.
 
 ## The `ceiling-test` row, updated 2026-08-03
 

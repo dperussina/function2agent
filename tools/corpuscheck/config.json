@@ -156,10 +156,11 @@
       "glob": "specs/*/findings/[0-9]*.md"
     },
     {
+      "_comment": "The number-word alternation ran to `ten` while the directory count stood at thirteen, so the rule could not have read a spelled-out true count even where one was written. `specs/*/harness/README.md` is in scope because that is where VERDICT.md sent the claim on 2026-08-03 when it re-stated FR-016 without a fixed count: `harness/` is the authority for how many there are. Widening the words to twenty and the scope to the harness index changed no firing count anywhere in the corpus — measured 2026-08-10, both readings zero in scope and one out of it — because the site the rule now reads was written in the same pass.",
       "name": "committed-harnesses",
-      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten))\\s+committed\\s+harnesses",
+      "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\\s+committed\\s+harnesses",
       "glob": "specs/001-discovery-validation/harness/*/",
-      "files": ["README.md", "research/README.md", "specs/*/VERDICT.md"]
+      "files": ["README.md", "research/README.md", "specs/*/VERDICT.md", "specs/*/harness/README.md"]
     },
     {
       "name": "project-skills",
