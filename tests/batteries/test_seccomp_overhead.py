@@ -81,6 +81,73 @@ from src.supervisor import _linux, seccomp  # noqa: E402
 RESULTS = Path(__file__).resolve().parent / "results"
 REPO = Path(__file__).resolve().parents[2]
 REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
+#: Samples per arm, of which the median is taken.
+#:
+#: **Five, and it stays five on the evidence below rather than for want of
+#: any.** Q-09's recorded decision — commit the mechanism, or fall back to an
+#: audit channel — was to be taken against this battery's figure, and two CI
+#: runs of the *same runner class* (31400931286 and 31403771772, both native
+#: `6.17.0-1020-azure` x86_64 4 vCPU euid 0, CPython 3.12.13) moved every arm
+#: 24–35% and flipped the control's sign. So the repeat count needed a basis.
+#:
+#: **What was measured, and it is one of the two quantities and not both.**
+#: 30 sequential runs of this battery in one `f2a-dev:latest` container on
+#: 2026-08-10 — Linux 6.12.76-linuxkit aarch64, euid 0 read from
+#: `/proc/self/status`, 10 CPUs, CPython 3.12.13. That is **WITHIN-HOST
+#: variance**. It is not between-runner variance and cannot stand for it.
+#: `microseconds_per_notification`, median [min–max] over n=30:
+#:
+#:     path_heavy            61.55  [39.74 –  66.48]
+#:     reference_app_api     74.72  [65.56 –  80.14]
+#:     shell_heavy           79.26  [63.25 –  85.36]
+#:     reference_app_socket  75.25  [34.62 – 506.77]
+#:     compute_only         112.27  [ 4.75 – 400.42]   (27 of 30 rated)
+#:
+#: **A range over 30 draws is not the statistic two CI runs give**, and
+#: comparing them would have been the whole defect of the exercise. Compared
+#: like with like — the distribution of |relative gap| between two runs on this
+#: host, 435 pairs per arm, against the single gap each CI pair shows:
+#:
+#:     arm                   local median  local max   CI gap   CI percentile
+#:     path_heavy                    3.3%      50.3%    27.1%           83rd
+#:     reference_app_api             3.8%      20.0%    36.9%          100th
+#:     shell_heavy                   4.7%      29.8%    30.2%          100th
+#:     reference_app_socket         11.5%     174.4%    43.6%           86th
+#:
+#: **CI's spread is bigger than this host's within-host noise produces.** For
+#: two arms it exceeds all 435 local pairs. So CI carries a component this
+#: measurement does not account for — and **the data cannot say which
+#: component.** Between-runner variance and a larger within-host variance on a
+#: 4-vCPU x86_64 Azure guest predict the same observation, and nothing here
+#: separates them: this host differs from CI's in architecture, kernel and core
+#: count at once, and `host_property_caveat` says in terms that two records on
+#: different kernels are not a before and an after.
+#:
+#: **Hence no change, and the reasoning is the refusal rather than the
+#: number.** Aggregating five runs into one — grouping the 30, which
+#: approximates `REPEATS = 25` — does shrink the within-host range a long way
+#: (path_heavy 43.4% → 4.9%, reference_app_api 19.5% → 4.0%, shell_heavy 27.9%
+#: → 7.2%, reference_app_socket 627% → 16.5%). So more repeats demonstrably buys
+#: within-host stability **on this host**. What it is not shown to buy is the
+#: thing it would be raised for: if CI's excess component is between-runner,
+#: more samples inside one run reduce it by exactly nothing, and raising the
+#: count five-fold at 5× the wall clock on evidence that does not reach the
+#: target is tuning a constant until the figures look stable.
+#:
+#: **What would decide it**, stated because the absence is a gap somebody
+#: should close rather than a conclusion: repeat this battery k times *inside a
+#: single CI run*, on one runner. That yields within-host variance for CI's own
+#: host, and the difference between it and the across-run spread is the
+#: between-runner component. It is the only measurement that makes this constant
+#: decidable, and until it exists **a CI median is not a decidable basis for
+#: Q-09** — which is a more useful answer than a tuned number.
+#:
+#: **The denominator is not the noisy part, which rules out the other repair.**
+#: `notifications_observed` was *identical* in all 30 runs for every arm
+#: (2116 / 1189 / 1143 / 539 / 116), so the entire spread above is in the
+#: timing numerator. Raising an arm's notification count would buy quantization
+#: and not stability, and for `compute_only` it would destroy the control — an
+#: arm that takes no paths is what makes it one.
 REPEATS = 5
 
 # --- the workloads --------------------------------------------------------
