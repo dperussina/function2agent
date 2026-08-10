@@ -90,7 +90,7 @@ the author may have made deliberately.
 | `sum-arithmetic` | error | A total shown with its components does not equal them: `$18.15 ($7.59 + $10.55)`. |
 | `table-integrity` | error | Three ways a table stops being one table: a blank line orphaning a row into body text, a row whose cell count differs from the header, and a run of pipe rows with no `\|---\|` delimiter. The orphan gap was one blank line until 2026-08-03; a new table is excluded by its delimiter, not by the gap, so a second blank was slack rather than a boundary. |
 | `link-target` | error | A relative link resolves to nothing. |
-| `link-anchor` | error | A `#fragment` names no heading in the target file. ~~Slugs follow GitHub's algorithm including its `-1`/`-2` duplicate suffixes.~~ **The `-1`/`-2` duplicate suffixes are implemented in `_anchors_for` and are correct. The slug itself is now measured against GitHub's renderer rather than described from its documented algorithm: `slugify` reproduces the emitted `id` on 2,367 of the 2,371 headings the corpus walked on 2026-08-10, and the four it does not are named below. That is a dated count over a named set rather than a live ratio — `tools/` entered `include` later the same day and added 53 headings the differential has not been re-run over, none of which is reachable by either named family.** *(corrected 2026-08-10. The struck sentence was true about the suffixes and unmeasured about everything else, and the unmeasured half is what licensed two links to be written wrong — see [why a false positive is the worse failure](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes).)* |
+| `link-anchor` | error | A `#fragment` names no heading in the target file. ~~Slugs follow GitHub's algorithm including its `-1`/`-2` duplicate suffixes.~~ **The `-1`/`-2` duplicate suffixes are implemented in `_anchors_for` and are correct. The slug itself is now measured against GitHub's renderer rather than described from its documented algorithm: `slugify` reproduces the emitted `id` on all 2,534 headings the corpus walked at `7a60dd3` on 2026-08-10 — the 2,425 anchored at `^#` and the 109 written inside a blockquote, both populations named because an earlier figure of this kind named neither. That is a dated count over a named set rather than a live ratio; the walked set grows whenever the corpus does. `_anchors_for` enumerates blockquoted headings as of the same commit.** *(corrected 2026-08-10, twice. The struck sentence was true about the suffixes and unmeasured about everything else, and the unmeasured half is what licensed two links to be written wrong — see [why a false positive is the worse failure](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes).)* |
 | `link-label` | warning | The link *text* names a different document than the link *target*: `[finding 010](.../011-reachability...)`. The link works, so no existence check catches it, and a reader following the prose lands somewhere else. |
 | `identifier-resolution` | error | `D-17`, `U-40`, `OD-06`, `FR-018`, `E15` and friends resolve to a definition. Dangling identifiers are how a superseded decision keeps getting cited. |
 | `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
@@ -1001,7 +1001,29 @@ you did not create.** If there are any, a concurrent pass is mid-commit and the 
 edit. This is cheap, it is the only signal available, and no gate can supply it — a hook runs after
 the damage is staged, and by then the two halves of the rename are already separated.
 
-### Staging explicit paths bounds what you commit and bounds nothing about what you push
+### "Use a detached worktree" names no path, so two passes share one, and the collision is silent in the direction that matters
+
+**On 2026-08-10 two concurrent passes were each told to measure in a detached worktree, and both
+created it at `/tmp/f2a-wt`.** The second pass's checkout wiped three worktrees the first had placed
+there and left one of the first pass's worktrees *inside* the second's tree. Nothing was lost,
+because both passes had already captured their measurements — which is luck, not a property of the
+arrangement.
+
+**The damage a shared scratch path does is not the lost checkout, it is the polluted `git status`.**
+A stray worktree inside your tree shows up as untracked files under a path you did not create, and
+`git status` is precisely the instrument a pass reads to decide what to stage. This repository
+already requires reading it for [staged entries you did not
+create](#staging-explicit-paths-protects-you-from-another-passs-working-tree-not-from-its-index);
+a second pass's checkout arriving as untracked noise makes that read harder at the moment it is
+being relied on. The failure is silent, and it is silent in the direction that corrupts a commit
+rather than the direction that blocks one.
+
+**The convention, in the form a brief can quote:** *"Put the worktree at
+`/tmp/f2a-<job>-<unique>`, never at a shared fixed path, and never at `/tmp/f2a-wt`."* A brief that
+says "a detached worktree" and names no path has delegated the collision to chance, and the two
+passes that collided were each following their brief exactly. `git worktree list` before creating
+one costs nothing and shows what is already there; `git worktree remove` when done keeps the next
+pass's `git status` clean. The proximate cause is the brief, so the remedy belongs in the brief.
 
 **On 2026-08-10 a brief told a pass to "commit and push" while a concurrent pass held committed but
 unpushed commits on the same branch.** There is no way to push only your own commits. `git push`
@@ -1228,7 +1250,9 @@ left literal they are dropped anyway for not being word characters, so both role
 invents an anchor no rendered page carries.
 
 `slugify` now parks inline code before the emphasis pass and removes only non-intraword `_` pairs.
-Measured against the renderer over the whole corpus as walked on 2026-08-10: **29 of 2,371 headings
+Measured against the renderer over ~~the whole corpus as walked on 2026-08-10~~ **the non-blockquoted
+headings of the corpus as walked on 2026-08-10, which is a scope this sentence did not state and
+which is corrected below**: **29 of 2,371 headings
 disagreed before, 4 after, and 26 slugs moved** — every one of them restoring a literal underscore.
 Adding `tools/` to `include` later that day put a further 53 headings into the walked set. ~~and they
 have not been put through the renderer.~~ **They have been, on 2026-08-10 at `1b52eb9`: all 53 were
@@ -1240,43 +1264,162 @@ Neither family below is reachable in those 53: the only
 non-ASCII character in any of their headings is an em dash, which both sides drop, and none of them
 ends in punctuation preceded by a space — **an argument from inspection that the differential has now
 confirmed rather than replaced, which is the order that matters, since inspection can only bound the
-families it already knows about.** The four survivors are two further families, neither
+families it already knows about.** The four survivors were two further families, ~~neither
 reachable from any live link and both recorded here rather than fixed, because each is a different
-defect from the one that was briefed:
+defect from the one that was briefed~~ **both repaired 2026-08-10 at `7a60dd3`, and the repair is
+below**:
 
 | site | divergence | cause |
 | --- | --- | --- |
-| `plan.md:3487`, `findings/028:50`, `findings/028:78` | `①` and `②` are kept | Python's `\w` matches Unicode category `No`; GitHub's word class does not |
+| `plan.md:3487`, `plan.md:3719`, `findings/028:50`, `findings/028:78` | `①`, `②` and `③` are kept | Python's `\w` matches Unicode category `No`; GitHub's word class does not |
 | `research/12-examples-as-corpus.md:103` | a trailing `-` is missing | GitHub drops punctuation and *then* converts the remaining space, keeping a trailing hyphen; this implementation strips first |
+
+**The circled-digit row lists four sites and was written listing three, and the fourth arrived
+between the differential and the sentence describing it.** `plan.md:3719` is OD-30's heading, which
+gained a `③` at `0236005` the same afternoon. Nothing was mis-transcribed: the run was correct when
+it ran, the corpus moved under it within hours, and a count of divergences is a live quantity
+however carefully the set it was taken over is named. The dated-set discipline that protects the
+denominator does not protect the numerator, and that is the reason the repair below is worth more
+than a more careful count would have been.
 
 **Closing the 53 turned up a third population that no differential had ever covered, and it is larger
 than both families above put together: headings inside blockquotes.** `crossrefs._anchors_for` matches
 `^(#{1,6})\s+`, anchored at the start of the line, so a heading written `> ## Title` never enters the
 anchor set the checker builds — and it never entered the set either differential walked, which is why
 a run that reproduces the four survivors exactly can still be blind to it. GitHub renders such a
-heading as a real heading and emits an `id` for it. Re-run at `1b52eb9` with blockquote prefixes
-stripped, the corpus divides in two: the **2,425** headings the checker enumerates, of which **4**
-disagree — the two families above, unchanged, at the three `①`/`②` sites and the one `★` site — and
-the **107** it does not, of which **39** disagree. The first number is the dated set above plus the 53
+heading as a real heading and emits an `id` for it. Re-run at `7a60dd3` with blockquote prefixes
+stripped, the corpus divides in two: the **2,425** headings the checker enumerates, of which **5**
+disagree — the two families above, at the four `①`/`②`/`③` sites and the one `★` site — and
+the **109** it does not, of which **40** disagree. The first number is the dated set above plus the 53
 and one heading the corpus gained in between, so the two runs agree everywhere they overlap, and that
-agreement is what licenses reading the 39 as new rather than as a contradiction.
+agreement is what licenses reading the 40 as new rather than as a contradiction. **This paragraph
+read 107 and 39 when it was written at `1b52eb9`, and both were correct there.** Commit `0236005`
+added the two-line banner at `plan.md:3838`–`:3839` a few hours later; one of those lines opens with
+`⚠️`, which is what moves 107 to 109 and 39 to 40, and the same commit's `③` in OD-30's heading is
+what moved 4 to 5. Three of the five figures in this section were live quantities and none of them
+survived the afternoon.
 
-**The 39 are a single family, and it is named here rather than fixed.** Every one is a heading whose
-text opens with a pictograph — `⚠️` at 29 sites, `✅` at 8, `⛔` at 2 — and in every one the renderer
-emits a leading `-` where this implementation emits none, preceded at the 29 `⚠️` sites by a literal
-U+FE0F that the renderer keeps and this implementation drops. Six of the 39 carry a circled digit as
+**A claim has been circulating that GitHub emits no anchor for `plan.md:3838`–`:3839`. It emits one
+for both**, and the differential aligns 1:1 with the renderer across all 136 documents, which is how
+that is known rather than assumed. The pair is a single heading the author wrapped across two source
+lines, each line carrying its own `####`, so the renderer sees two headings and anchors them
+separately — the second anchor being the tail of a sentence, `#overlap-on-the-same-line-as-the-figure-it-qualifies`.
+`plan.md:3810`–`:3811` is a second instance of the same wrap and has the same shape. Neither is a
+defect in the checker; both are headings that read as one and anchor as two.
+
+**The 40 are a single family.** Every one is a heading whose
+text opens with a pictograph — `⚠️` at 30 sites, `✅` at 8, `⛔` at 2 — and in every one the renderer
+emits a leading `-` where this implementation emitted none, preceded at the 30 `⚠️` sites by a literal
+U+FE0F that the renderer keeps and this implementation dropped. Seven of the 40 carry a circled digit as
 well and so are compounds of this family with the first one above.
 
-**What is recorded is the enumeration gap, not the slug.** The 39 are unreachable from the population
-the checker walks: no plain heading anywhere in the corpus opens with a pictograph, so the family has
-no site outside blockquotes, and the gate stands at zero errors — which is the same fact stated twice,
-because a link to one of these anchors would have found no computed target to match and would have
-fired. So the live defect is that a link into a blockquoted heading cannot be resolved *at all*, and
-whether the checker should resolve one is a different question from whether `slugify` spells it the way
-the renderer does. **Neither half is repaired here, on the `★` precedent**: the leading-hyphen fix
-reorders strip against convert for every heading, and widening the enumeration changes the anchor set
-of every document at once. Both are whole-corpus blast radii bought for a population with no live
-link in it.
+### A filtered population presented as a total, for the third time this week — and the neighbours inherit the filter
+
+**"2,371 headings compared" was a count over the non-blockquoted headings only, and nothing at any
+of its four sites said so.** The figure was never wrong about its own set. What it omitted was which
+set, and the omission is what let two differentials run, a docstring be rewritten, and a catalogue
+row be corrected, all without anyone noticing that 109 headings had never been looked at. **An
+unstated scope does not read as a scope. It reads as a total**, and a reader who wants to know
+whether a population is covered has no way to ask the figure.
+
+This is the third instance of one defect in a week, and the two before it were repaired the same
+way — by naming the population at the site rather than by changing the figure:
+
+| instance | the figure | the population it was actually over |
+| --- | --- | --- |
+| `12 tables` | `research/06` §1, `research/12` §6.5, `research/14` §2.2, `tasks.md` | what `schema_digest()`'s `sql IS NOT NULL AND name NOT LIKE 'sqlite_%'` leaves; `sqlite_master` holds 13 |
+| `five gaps` | `research/14` §2.12 | the five this synthesis carries, selected from the eleven `06` §8 names |
+| `2,371 headings` | `slugify`'s docstring, this file's `link-anchor` row, the differential write-up, the oracle lesson | the non-blockquoted headings; the population it excluded held 107 then and 109 at `7a60dd3` |
+
+**The neighbouring figures inherited the filter, which is the part worth carrying forward, because
+it is what makes this a pattern rather than three coincidences.** The two prior instances had it and
+so does this one. Beside the 2,371 stood "29 disagreed before, 4 after, and 26 slugs moved", and all
+three were scoped the same way without saying so. Re-running the pre-fix implementation at
+`7a60dd3` over both populations, **three blockquoted headings diverge for exactly the underscore
+reason the 29 counted** — `plan.md:3810` and two in `findings/023` — so the before-count was low by
+at least three and the moved-count by the same three. "4 after" was the worst of them: the honest
+figure over both populations was 43.
+
+**One neighbour did not inherit it, and it is worth saying which and why.** The 53 headings `tools/`
+added are scope-invariant: all 53 are non-blockquoted, so the figure is the same under either
+population and the differential that closed them was complete despite being scoped. That is luck
+rather than method — nothing about how the 53 was taken would have revealed a blockquoted heading
+if one had been there. **A figure that happens to be scope-invariant and a figure that states its
+scope are not the same artifact**, and only the second survives the corpus growing.
+
+### Both halves were declined on a blast radius nobody had counted, and counting it reversed both
+
+**The `★` precedent did not transfer, because it is not a precedent — it is the same fix.** The
+leading-hyphen defect at the 40 pictograph sites and the trailing-hyphen defect at the one `★` site
+are one defect: `slugify` trimmed *after* dropping characters outside the word class, where the
+renderer trims *before*. Any dropped character sitting at either end behind a space loses its hyphen.
+So the question was never whether a leading-pictograph rule is more additive than a trailing-`★`
+rule; there is one rule, and it was declined once on the reasoning that reordering trim against
+convert "reorders it for **every** heading, which is a whole-corpus blast radius for one site".
+
+**That sentence conflated the computation changing with the output changing, and only the second is a
+blast radius.** Measured over the 2,425 already-enumerated headings, the three repairs move:
+
+| repair | slugs moved in the enumerated population | of which were wrong before |
+| --- | --- | --- |
+| trim before the character drop, not after | 1 | 1 |
+| drop Unicode category `No` | 4 | 4 |
+| keep combining marks, so U+FE0F survives | 0 | 0 |
+| **all three together** | **5** | **5** |
+
+Every slug that moved was one of the five that disagreed with the renderer, and no live link pointed
+at any of them. After the repair, **0 of 2,425 and 0 of 109 disagree** — 2,534 headings, no
+divergence. The compounds needed no separate statement in the end: the circled-digit repair was
+measured in the same pass and is as cheap, so the seven are fixed rather than left as a residue.
+
+### Widening the enumeration was measured per check, and only one check could not take it
+
+**The argument that widening is monotone is specific to `link-anchor` and was not assumed for the
+others.** `link-anchor` tests a fragment for membership in an anchor *set*, so a larger set can only
+resolve more links — but that holds only if the old set is a subset of the new one, and
+`_anchors_for` also assigns `-1`/`-2` duplicate suffixes, which a new heading can renumber. It is a
+subset: the suffixed set for a base slug is determined by how many headings carry it, so adding one
+extends `{s, s-1, … s-(k-1)}` to `{s, … s-k}` and removes nothing. Measured over the corpus,
+**0 documents lose an anchor and 109 are added**. That is the invariant, not just today's count.
+
+The other checks were measured rather than argued. Each enumerator was widened alone:
+
+| check | baseline | widen `crossrefs` | widen `toc` | widen `identifiers` | installed |
+| --- | --- | --- | --- | --- | --- |
+| `link-anchor` | 0 | 0 | 0 | 0 | **yes** |
+| `link-target` | 0 | 0 | 0 | 0 | n/a — reads no heading |
+| `link-label` | 0 | 0 | 0 | 0 | n/a — reads no heading |
+| `toc-coverage` | 0 | 0 | **3** | 0 | **no** |
+| `identifier-resolution` | 0 | 0 | 0 | 0 | no — see below |
+| `identifier-gap` | 0 | 0 | 0 | 0 | no — see below |
+| `definition-count` | 0 | 0 | 0 | 0 | no — see below |
+| the remaining ten checks | 0 | 0 | 0 | 0 | n/a — read no heading |
+
+**`link-label` reads no heading enumeration at all**, which is worth stating because it is easy to
+assume otherwise from the fact that it resolves its target before comparing: what it resolves is a
+*path*, with `posixpath`, and it never consults an anchor set.
+
+**`toc-coverage` is the check that blocked a full widening, and its three firings are all correct
+refusals.** They are banner boxes — `> ## ✅ PHASE 0 RAN…` in `research/11`, and two `> ## ⚠️` flags in
+`research/14`. A banner is not a section, nobody navigates to it, and requiring it in a table of
+contents would make the findings convention itself the violation. The two enumerators answer
+different questions: `_anchors_for` asks *what can be linked to*, which the renderer decides, and
+`toc` asks *what a reader must be able to reach from the top*, which this corpus's conventions
+decide. They are correctly not the same set, and that is now recorded at the `toc` site.
+
+**Widening the identifier enumerator is free and buys nothing, so it is not installed.** It fires
+zero either way, and it adds **no** definition the corpus did not already have — 247 identifiers
+defined before and 247 after. Installing it would only widen what counts as *defining* an
+identifier, so a blockquoted annotation that merely mentions `OD-29` would begin to define it, which
+can only ever silence a dangling-reference error. A loosening that fixes nothing is a loosening.
+
+**The reason to widen `link-anchor` was never the count, which is zero, but the class.** No link
+points into those 109 today, so nothing is broken. The hazard is the first author who writes one:
+they would get a `link-anchor` error against a target that exists on the rendered page, and the
+remedy they would reach for is to change the correct artifact — the failure this file records as
+[more dangerous than a gap](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes).
+The population is also not static: `specs/001-discovery-validation/plan.md` carries 28 blockquoted
+headings and `findings/026` carries 18, and the banner-box convention adds more with every finding.
 
 **The `link-label` half is fixed too, and the false-negative question was answered before the fix
 went in rather than after.** The check now resolves the target with `posixpath` — not
@@ -1384,8 +1527,10 @@ Three things follow, and the third is the one that generalises past anchors:
   was settled by fetching a rendered page and reading the `id` GitHub emitted, after a previous pass
   had reasoned from the documented algorithm plus five independent authorings and correctly refused
   to act on it. Where an oracle exists — a renderer, a compiler, a kernel — a differential against
-  it is cheap and it is not an argument. The differential run here compared 2,371 real headings and
-  found a second divergence family nobody had asked about.
+  it is cheap and it is not an argument. The differential run here compared 2,371 real headings —
+  **the non-blockquoted ones, a scope the run did not state, and the unstated half is where a third
+  population of 109 headings sat through two differentials** — and found a second divergence family
+  nobody had asked about. Re-run over both populations it compares 2,534.
 
 **Its relation to the [emptiness-test inversion](#the-emptiness-test-inversion--git-diff-cannot-tell-unchanged-from-changed-back) is complementary and not duplicate**, which is why it is
 its own entry: that one is a reader misreading an *absence* of signal, and the remedy is to verify by
