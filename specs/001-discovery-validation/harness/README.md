@@ -34,6 +34,7 @@ ever**, and say so at the top of their own README.
 | [`provider-credentials`](./provider-credentials/) | (outside the ladder) — live credential probe | [002](../findings/002-provider-credentials.md) | $0.00 | **recovered from `/tmp` 2026-08-02** | **no — one person's credentials** |
 | [`provider-sdk-roundtrip`](./provider-sdk-roundtrip/) | E16 — opaque-state round-trip through each vendor's own SDK | [016](../findings/016-provider-sdk-roundtrip.md) | 25,214 tokens; **no dollar total** — one arm measured at $0.001860, [see below](#the-e16-row-added-2026-08-03) | committed at the time | yes — with your own credentials |
 | [`pass-by-reference`](./pass-by-reference/) | E17 — inlined command output vs a bounded preview plus a filesystem handle | none yet — **pre-registered, not run** | **$0.00** — no model has been called | committed at the time | yes for everything committed; the paid arm does not exist |
+| [`slug-differential`](./slug-differential/) | (outside the ladder) — `slugify` against GitHub's own renderer | none; the result is read at `slugify`'s docstring and [`tools/README.md`](../../../tools/README.md)'s `link-anchor` row | **$0.00** — no model is called | **rebuilt from prose 2026-08-10 and then run against the live renderer** | yes — with network egress and a GitHub token |
 
 `runtime-provider-agnosticism` and `graph-loop-primitives` are the harnesses behind
 **OD-01** (adopt Google ADK for graph execution, build our own safety layer) and **OD-02**
@@ -41,6 +42,23 @@ ever**, and say so at the top of their own README.
 runtime substrate. They were written up as *not committed* by finding 006 §Reproduction
 and by [`VERDICT.md`](../VERDICT.md); their scripts survived in `/tmp`, are committed
 here, and **both documents were corrected on 2026-08-02** rather than left stale.
+
+## The position count above is stale, and one directory besides the new one is missing from the table
+
+The counts in the index paragraph — eight experiments, nine positions, ten after E16 — are
+superseded, and each was correct when written. `ls` now returns **thirteen** directories beside
+this file while the table carries **twelve** rows.
+
+The one row that is owed rather than added here is [`verifier-vs-judge`](./verifier-vs-judge/),
+E8, which is a committed directory absent from the table. It is named rather than filled in:
+its finding, its spend and its provenance are E8's to state, and a row assembled by someone who
+had not read the experiment is the plausible-looking substitute this tree refuses elsewhere on
+the same page. `slug-differential` sits outside the experiment ladder in the same way
+`provider-credentials` does, so it adds a position without adding an experiment.
+
+**Every claim in this file about how many of something the tree holds has now gone stale at
+least once.** Nothing counts these directories, so a count of them belongs in a dated sentence
+rather than in a standing one.
 
 ## The `ceiling-test` row, updated 2026-08-03
 
