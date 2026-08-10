@@ -885,6 +885,101 @@ CLEARANCE: Mapping[str, str] = {
 }
 
 
+#: Where an arm's overhead stands against the control's own draw *excursion*,
+#: keyed by the reading that put it there. **This is the qualification and
+#: never the verdict**, and the two live in one field because of what happened
+#: when they did not.
+#:
+#: **The defect this table repairs, stated as the record showed it.** Run
+#: `31435892323`'s `shell_heavy` arm published
+#: `overhead_against_this_runs_control: "clears-this-runs-control"` while the
+#: `_because` sentence one key away said the margin was *"OVERLAPPING the
+#: control's own draw excursion ... so this run's own control draws roamed far
+#: enough to have produced a difference this size"*. Both were true. A consumer
+#: filtering arms on `== "clears-this-runs-control"` collected that arm and
+#: never reached the qualification, because the only thing carrying it was
+#: English. That is the FR-058 shape one level down from the one
+#: `overhead_against_this_runs_control` was itself built to close: the verdict
+#: had become the new bare figure.
+#:
+#: **Four readings and not a boolean, for the T206 reason the verdict is four.**
+#: An arm that IS the control has no excursion to be qualified against — the
+#: excursion is its own, and a median difference lies inside the range of the
+#: differences it is a median of by construction, so "overlaps" there is
+#: arithmetic and not a finding. An arm whose overhead came out non-positive has
+#: no overhead for any range to qualify. Those two are not `false`, and a
+#: boolean would hand all three back as one value.
+#:
+#: **The excursion appears here and in no comparator.** Nothing in this table
+#: can move `CLEARANCE`, and `excursion_qualification` below cannot see the
+#: control's overhead at all — the separation is in the signatures, so it is
+#: checkable rather than promised.
+EXCURSION_QUALIFICATION: Mapping[str, str] = {
+    "overlaps-this-runs-control-excursion": (
+        "The arm's overhead lies inside the interval this run's own control "
+        "draws span, so control draws on this very run roamed far enough to "
+        "have produced a difference this size. This does NOT reverse the "
+        "verdict beside it and must not be read as doing so: the verdict is "
+        "one difference of medians against another, like for like, and it "
+        "stands. What this says is that the margin is a property of this draw "
+        "rather than a separation the instrument resolved, so a consumer "
+        "quoting the figure carries this sentence with it."
+    ),
+    "stands-clear-of-this-runs-control-excursion": (
+        "The arm's overhead lies outside the interval this run's own control "
+        "draws span, so no roaming of the control's draws on this run reaches "
+        "it. This is the stronger of the two readings and it is still a "
+        "property of this run: the excursion is the within-battery spread of "
+        "REPEATS draws and a single battery observes no across-run excursion "
+        "of anything."
+    ),
+    "is-this-runs-control-excursion": (
+        "This arm IS the control, so the excursion is its own and the "
+        "comparison is definitional rather than measured. A median of the "
+        "differences lies inside the range of those differences by "
+        "construction, so recording an overlap here would put a finding about "
+        "syscall interception where arithmetic is the whole content."
+    ),
+    "no-overhead-to-qualify": (
+        "The arm's own overhead came out non-positive, so there is no overhead "
+        "for any range to qualify. This is a distinct reading from an overhead "
+        "the excursion covers: there the instrument resolved a cost and this "
+        "run cannot separate it, here it resolved no cost at all. "
+        "`microseconds_per_notification_absent_because` beside this carries the "
+        "same run's reasoning for the missing rate."
+    ),
+}
+
+
+def excursion_qualification(
+    overhead_seconds: float,
+    control_excursion: tuple[float, float],
+    is_the_control: bool,
+) -> str:
+    """The key in `EXCURSION_QUALIFICATION` for one arm on one run.
+
+    **Deliberately blind to the control's overhead**, which is the argument
+    `control_clearance` takes and this does not. The excursion decided a
+    verdict for exactly one commit and `58a6277` is what that cost; the
+    signature is where that separation is now enforced, because a function
+    that cannot see the comparator cannot become one. The reverse holds by the
+    same reading: `CLEARANCE`'s keys are chosen without consulting this.
+
+    The branch order is the branch order of the sentence in
+    `control_clearance`, and it has to stay that way — the field and the prose
+    disagreeing is the defect this whole table exists to repair, so they are
+    two renderings of one reading rather than two readings.
+    """
+    low, high = control_excursion
+    if is_the_control:
+        return "is-this-runs-control-excursion"
+    if overhead_seconds <= 0:
+        return "no-overhead-to-qualify"
+    if low <= overhead_seconds <= high:
+        return "overlaps-this-runs-control-excursion"
+    return "stands-clear-of-this-runs-control-excursion"
+
+
 def control_clearance(
     overhead_seconds: float,
     control_overhead_seconds: float,
@@ -951,6 +1046,61 @@ def control_clearance(
             f"{against}{margin}{qualifier}"
         )
     return key, f"{reading}. {CLEARANCE[key]}"
+
+
+def clearance_field(
+    overhead_seconds: float,
+    control_overhead_seconds: float,
+    control_excursion: tuple[float, float],
+    is_the_control: bool,
+) -> tuple[dict, str]:
+    """The record's `overhead_against_this_runs_control` and its `_because`.
+
+    **A function rather than a dict literal inside the fixture, and the reason
+    is the one `record_filename` and `host_property_caveat` are each written
+    under**: the fixture is `linux_only` and `privileged`, so a mechanism built
+    inside it is reachable only from a test that reports SKIPPED on every host
+    that cannot run the module — and a removal proof naming such a test is
+    excluded by this repository's own rule. The nesting below is the mechanism
+    this field's whole repair consists of, so it had to be somewhere a proof
+    could score.
+
+    **The object is the point and a sibling key would not have been.** Until
+    2026-08-10 this key held the verdict as a bare string and the qualification
+    reached the reader only through `_because`, which is prose. Run
+    `31435892323` published `shell_heavy` as `clears-this-runs-control` while
+    that sentence said the control's own draws roamed far enough to have
+    produced the difference — both true, one machine-readable. Adding a second
+    top-level key would have left `body["overhead_against_this_runs_control"]
+    == "clears-this-runs-control"` succeeding and reading clean, which is the
+    filter that caused the defect. Nesting makes that comparison false for
+    every arm, so the consumer who does not destructure gets an empty result
+    instead of a qualified arm wearing a clean answer.
+
+    **The verdict's value is untouched by the qualification and this function
+    does not combine them.** It calls two derivations that cannot see each
+    other's inputs and puts their answers side by side. Folding the overlap
+    into the verdict is `58a6277`'s defect, which
+    `test_the_verdict_compares_like_with_like_and_the_excursion_never_decides`
+    exists to refuse.
+    """
+    verdict, sentence = control_clearance(
+        overhead_seconds,
+        control_overhead_seconds,
+        control_excursion,
+        is_the_control,
+    )
+    qualification = excursion_qualification(
+        overhead_seconds, control_excursion, is_the_control
+    )
+    return (
+        {
+            "verdict": verdict,
+            "qualified_by": qualification,
+            "qualified_by_means": EXCURSION_QUALIFICATION[qualification],
+        },
+        sentence,
+    )
 
 
 #: Recorded in the result file rather than only in the docstring, because the
@@ -1159,7 +1309,7 @@ def measurement() -> dict:
     control_excursion = excursions[CONTROL_ARM]
     control_overhead = arms[CONTROL_ARM]["overhead_seconds"]
     for name, arm in arms.items():
-        key, sentence = control_clearance(
+        stands, sentence = clearance_field(
             arm["overhead_seconds"],
             control_overhead,
             control_excursion,
@@ -1171,7 +1321,20 @@ def measurement() -> dict:
         # grep for, which is the argument
         # `microseconds_per_notification_absent_because` is already written
         # under one field up.
-        arm["overhead_against_this_runs_control"] = key
+        #
+        # **An object and not a bare string, and the nesting is the mechanism.**
+        # This key held the verdict alone until 2026-08-10, and run
+        # 31435892323's own record is what showed the cost: `shell_heavy` read
+        # `clears-this-runs-control` while its sentence one key away said the
+        # control's draws roamed far enough to have produced the difference. A
+        # consumer filtering on `== "clears-this-runs-control"` took the arm and
+        # left the qualification, because prose was the only thing carrying it.
+        # A sibling key would not have fixed that — the naive filter still
+        # succeeds and still reads clean. Nesting makes it fail: the comparison
+        # against a string is now false for every arm, so a reader who lifts the
+        # verdict without destructuring gets an empty result rather than a
+        # qualified arm wearing a clean answer.
+        arm["overhead_against_this_runs_control"] = stands
         arm["overhead_against_this_runs_control_because"] = sentence
 
     record = {
@@ -1431,9 +1594,33 @@ def test_every_arm_says_where_it_stands_against_this_runs_control(
     control_excursion = tuple(measurement["control_excursion_seconds"])
     control_overhead = measurement["arms"][CONTROL_ARM]["overhead_seconds"]
     for name, arm in measurement["arms"].items():
-        key = arm["overhead_against_this_runs_control"]
+        stands = arm["overhead_against_this_runs_control"]
+        assert isinstance(stands, dict), (
+            f"{name}'s verdict is a bare {type(stands).__name__}, so it can be "
+            "lifted without the qualification beside it — which is the defect "
+            "the nesting exists to prevent"
+        )
+        key = stands["verdict"]
+        qualification = stands["qualified_by"]
         assert key in CLEARANCE, (
             f"{name} recorded {key!r}, which names no reading in CLEARANCE"
+        )
+        assert qualification in EXCURSION_QUALIFICATION, (
+            f"{name} recorded {qualification!r}, which names no reading in "
+            "EXCURSION_QUALIFICATION"
+        )
+        assert stands["qualified_by_means"] == EXCURSION_QUALIFICATION[
+            qualification
+        ], (
+            f"{name}'s qualification prose is not the prose its own key names, "
+            "so the record explains a reading it did not take"
+        )
+        assert qualification == excursion_qualification(
+            arm["overhead_seconds"], control_excursion, name == CONTROL_ARM
+        ), (
+            f"{name} recorded {qualification!r} where its own overhead of "
+            f"{arm['overhead_seconds']}s against an excursion of "
+            f"{control_excursion} says otherwise"
         )
         expected, sentence = control_clearance(
             arm["overhead_seconds"],
@@ -1455,6 +1642,8 @@ def test_every_arm_says_where_it_stands_against_this_runs_control(
             "does not travel on the line of the figure it qualifies"
         )
     assert (
-        measurement["arms"][CONTROL_ARM]["overhead_against_this_runs_control"]
+        measurement["arms"][CONTROL_ARM]["overhead_against_this_runs_control"][
+            "verdict"
+        ]
         == "is-this-runs-control"
     ), "the control did not identify itself, so every other arm's comparator is unnamed"

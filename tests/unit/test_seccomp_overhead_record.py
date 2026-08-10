@@ -508,6 +508,331 @@ def test_the_verdict_compares_like_with_like_and_the_excursion_never_decides(
     )
 
 
+# --- the qualification, which the verdict cannot be lifted without ---------
+#
+# Run 31435892323's record shipped `overhead_against_this_runs_control:
+# "clears-this-runs-control"` on `shell_heavy` while the sentence one key away
+# said the control's own draws roamed far enough to have produced the
+# difference. Both statements were true and only one was machine-readable, so a
+# consumer filtering on the verdict took the arm and left the qualification.
+# The repair is not a second key — a sibling leaves that filter succeeding and
+# reading clean — it is that the verdict and its qualification are one object.
+
+#: Every **committed** record that carries the comparator. Two filters, and
+#: each is doing separate work.
+#:
+#: The `.latest.json` suffix rather than `git ls-files`, and the first shape was
+#: the second and had to be given up. An ordinary privileged run leaves
+#: `seccomp-overhead.latest.json` in this directory — gitignored, so absent from
+#: a fresh checkout and from CI, present on the machine of anyone who has run
+#: the battery — and a bare glob reads whichever of those the developer happens
+#: to have, which is a test whose subject depends on who runs it. Asking git
+#: excludes it exactly. It also makes the test require a repository:
+#: `proof_attribution.py` copies the tree into a scratch directory with no
+#: `.git`, where `git ls-files` fails and the test errors *before* any tamper,
+#: so the arm scored `UNUSABLE` and named nothing. The same would happen in any
+#: exported checkout. The suffix is the property that actually matters and it
+#: is readable from the filename, so it is read from there; the pattern is the
+#: one `test_the_durable_record_is_the_tracked_one_and_the_latest_is_not` pins
+#: as a live gitignore line, which is what keeps the two halves in step.
+#:
+#: Presence of the field rather than a filename for the second filter, which is
+#: the rule `tools/README.md` records after a `git diff` emptiness test could
+#: not tell "unchanged" from "changed back". `seccomp-overhead.json` is the
+#: 2026-08-03 linuxkit record and predates the field entirely; it is excluded by
+#: not carrying it, not by being named here, so the next record to carry it is
+#: picked up without anyone editing this.
+def _records_carrying_the_comparator() -> dict:
+    import json
+
+    found = {}
+    for path in sorted((BATTERY.parent / "results").glob("*.json")):
+        if path.name.endswith(".latest.json"):
+            continue
+        try:
+            record = json.loads(path.read_text())
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if isinstance(record, dict) and "control_excursion_seconds" in record:
+            found[path.name] = record
+    return found
+
+
+def test_at_least_one_committed_record_carries_the_comparator(battery) -> None:
+    """The vacuity floor for the three tests below, which are all per-record.
+
+    Zero records is zero checks, and a clean exit over an empty set says the
+    opposite — the defect `check_tampers.py` printed `0 proofs declared, 0
+    errors` for until 2026-08-04. Every assertion below iterates, so this is
+    the one that has to refuse an empty tree.
+    """
+    assert _records_carrying_the_comparator(), (
+        "no committed record carries `control_excursion_seconds`, so every "
+        "assertion over the committed artifacts below is passing over an "
+        "empty set"
+    )
+
+
+def test_the_verdict_cannot_be_lifted_out_of_a_committed_record_alone(
+    battery,
+) -> None:
+    """**The defect, replayed as the consumer met it.**
+
+    This is the filter that took `shell_heavy` and never saw the
+    qualification. It must now select nothing at all: the field is an object,
+    so the comparison against a string is false for every arm. An empty result
+    is a visibly broken filter; a qualified arm wearing a clean verdict is not.
+
+    The honest read is asserted in the same breath, because a field that had
+    merely become unreadable would also pass the first half.
+    """
+    for name, record in _records_carrying_the_comparator().items():
+        arms = record["arms"]
+        naive = sorted(
+            arm
+            for arm, body in arms.items()
+            if body["overhead_against_this_runs_control"]
+            == "clears-this-runs-control"
+        )
+        assert naive == [], (
+            f"{name}: lifting the verdict as a bare string still selects "
+            f"{naive}, so a consumer can take the clearance and leave the "
+            "qualification exactly as before"
+        )
+        for arm, body in arms.items():
+            stands = body["overhead_against_this_runs_control"]
+            assert set(stands) == {
+                "verdict",
+                "qualified_by",
+                "qualified_by_means",
+            }, f"{name}/{arm} carries {sorted(stands)}"
+            assert stands["verdict"] in battery.CLEARANCE
+            assert stands["qualified_by"] in battery.EXCURSION_QUALIFICATION
+
+
+def test_a_committed_record_plants_both_qualifications(battery) -> None:
+    """**The both-directions plant, and it is inside a committed artifact.**
+
+    A field that read the same on every arm would be reporting nothing while
+    looking like a disclosure, which is the vacuity this repository has
+    hardened nine instruments against. Run 31435892323 is one overlapping arm
+    and three standing clear, so the two readings are not a fixture's
+    invention — they are what the authoritative environment measured.
+    """
+    seen = set()
+    for record in _records_carrying_the_comparator().values():
+        for body in record["arms"].values():
+            seen.add(body["overhead_against_this_runs_control"]["qualified_by"])
+    assert "overlaps-this-runs-control-excursion" in seen, (
+        "no committed record carries an arm the control's own draws reach, so "
+        "the qualification has never been observed firing"
+    )
+    assert "stands-clear-of-this-runs-control-excursion" in seen, (
+        "no committed record carries an arm standing outside the control's "
+        "roaming, so nothing shows the qualification can come out the other way"
+    )
+
+
+def test_the_committed_qualification_is_a_reading_of_the_figures_beside_it(
+    battery,
+) -> None:
+    """The record's verdict, its qualification and its numbers are three
+    statements of one fact, re-derivable by a reader holding only the file.
+
+    This is what makes the migration of 2026-08-10 checkable rather than
+    asserted: the committed CI record's derived fields were recomputed from the
+    readings it already carried, and nothing measured moved.
+    """
+    for name, record in _records_carrying_the_comparator().items():
+        excursion = tuple(record["control_excursion_seconds"])
+        control = record["arms"][battery.CONTROL_ARM]["overhead_seconds"]
+        for arm, body in record["arms"].items():
+            stands = body["overhead_against_this_runs_control"]
+            verdict, _ = battery.control_clearance(
+                body["overhead_seconds"], control, excursion,
+                arm == battery.CONTROL_ARM,
+            )
+            qualification = battery.excursion_qualification(
+                body["overhead_seconds"], excursion, arm == battery.CONTROL_ARM
+            )
+            assert stands["verdict"] == verdict, f"{name}/{arm}"
+            assert stands["qualified_by"] == qualification, f"{name}/{arm}"
+            assert (
+                stands["qualified_by_means"]
+                == battery.EXCURSION_QUALIFICATION[qualification]
+            ), f"{name}/{arm} explains a reading it did not take"
+
+
+def test_the_recorded_field_is_an_object_a_consumer_cannot_take_half_of(
+    battery,
+) -> None:
+    """**The repair itself, at the one place a proof can reach it.**
+
+    `clearance_field` is what the fixture writes into the record, and the whole
+    of this pass's change is that it returns an object rather than the verdict
+    alone. Asserted here rather than only against a committed artifact, because
+    a record is evidence that the emitter behaved once and this is the emitter.
+
+    The bare-string comparison is asserted to fail, in the exact form the
+    consumer wrote it. A field that had merely changed type would satisfy that;
+    the destructured read is asserted beside it so the test cannot pass on an
+    unreadable field.
+    """
+    stands, sentence = battery.clearance_field(*CLEARING_RUN, False)
+    assert stands != "clears-this-runs-control", (
+        "the verdict is a bare string again, so a consumer filtering on it "
+        "collects the arm and never reaches the qualification"
+    )
+    assert stands["verdict"] == "clears-this-runs-control"
+    assert stands["qualified_by"] == "overlaps-this-runs-control-excursion"
+    assert stands["qualified_by_means"] == battery.EXCURSION_QUALIFICATION[
+        "overlaps-this-runs-control-excursion"
+    ]
+    assert "OVERLAPPING" in sentence
+
+
+def test_the_qualification_and_the_prose_on_the_same_line_never_disagree(
+    battery,
+) -> None:
+    """**The defect stated exactly: a machine field saying one thing and its
+    own sentence saying another.**
+
+    The field is a rendering of the same reading the sentence renders, so the
+    two are checked against each other in both directions. A qualification that
+    agreed with the prose only on the overlapping branch would be the
+    fires-regardless vacuity one step along.
+    """
+    for reading in (CLEARING_RUN, WELL_CLEAR_RUN, OVERLAPPING_RUN):
+        overhead, _, band = reading
+        qualification = battery.excursion_qualification(overhead, band, False)
+        _, sentence = battery.control_clearance(*reading, False)
+        overlaps = qualification == "overlaps-this-runs-control-excursion"
+        assert overlaps == ("OVERLAPPING" in sentence), (
+            f"{qualification!r} against a sentence that reads {sentence!r} — "
+            "the machine-readable half and the prose half of one reading "
+            "disagree, which is the defect this field was added to end"
+        )
+        assert overlaps != ("standing clear of" in sentence)
+
+
+def test_the_excursion_qualifies_and_still_never_decides_the_verdict(
+    battery,
+) -> None:
+    """The pin one field along, and the direction that matters.
+
+    `test_the_verdict_compares_like_with_like_and_the_excursion_never_decides`
+    holds the verdict still while the band moves. That test would also pass if
+    the qualification were frozen too — a field indifferent to its own input.
+    So this asserts the other half: the same three bands that must not move the
+    verdict **must** move the qualification.
+    """
+    overhead, control, _ = CLEARING_RUN
+    bands = ((-0.001, 0.002), (-10.0, 10.0), (0.0, 0.0))
+    verdicts = {
+        battery.control_clearance(overhead, control, band, False)[0]
+        for band in bands
+    }
+    qualifications = {
+        battery.excursion_qualification(overhead, band, False) for band in bands
+    }
+    assert verdicts == {"clears-this-runs-control"}
+    assert qualifications == {
+        "overlaps-this-runs-control-excursion",
+        "stands-clear-of-this-runs-control-excursion",
+    }, (
+        f"the excursion moved from {bands} and the qualification read "
+        f"{qualifications}, so the field does not read the range it names"
+    )
+
+
+def test_the_qualification_cannot_see_the_comparator_that_decides_the_verdict(
+    battery,
+) -> None:
+    """**The separation is in the signature, so it is checked and not promised.**
+
+    `58a6277` shipped the excursion *as* the comparator and `cc34adb` corrected
+    it. What stops that returning is that `excursion_qualification` is not given
+    the control's overhead at all — a function that cannot see the comparator
+    cannot become one, whatever a later edit does to its body.
+    """
+    import inspect
+
+    parameters = set(
+        inspect.signature(battery.excursion_qualification).parameters
+    )
+    assert "control_overhead_seconds" not in parameters, (
+        "the qualification now takes the verdict's comparator, so the "
+        "excursion is one edit away from deciding a verdict again"
+    )
+    assert parameters == {
+        "overhead_seconds",
+        "control_excursion",
+        "is_the_control",
+    }, parameters
+
+
+def test_the_control_and_a_flat_arm_are_not_qualified_as_overlaps(
+    battery,
+) -> None:
+    """The two readings a boolean would have to call `true` here, and both
+    would be wrong for different reasons.
+
+    The control's median difference lies inside the range of the differences it
+    is a median of by construction, so `overlaps` there is arithmetic. An arm
+    with no overhead has nothing for a range to qualify. Neither is a finding
+    about syscall interception.
+    """
+    band = (-0.030465, 0.056783)
+    assert (
+        battery.excursion_qualification(0.014906, band, True)
+        == "is-this-runs-control-excursion"
+    )
+    assert (
+        battery.excursion_qualification(-0.03922, band, False)
+        == "no-overhead-to-qualify"
+    )
+    assert battery.excursion_qualification(
+        0.014906, band, True
+    ) != battery.excursion_qualification(0.014906, band, False)
+
+
+def test_every_excursion_reading_is_recorded_in_prose(battery) -> None:
+    """`EXCURSION_QUALIFICATION` is what puts the reasoning in the artifact, and
+    the set is closed in both directions — the check `UNRATED` and `CLEARANCE`
+    each carry.
+    """
+    band = (-0.030465, 0.056783)
+    reached = {
+        battery.excursion_qualification(0.015670, band, False),
+        battery.excursion_qualification(0.073308, band, False),
+        battery.excursion_qualification(0.014906, band, True),
+        battery.excursion_qualification(-0.03922, band, False),
+    }
+    assert reached == set(battery.EXCURSION_QUALIFICATION), (
+        f"{reached ^ set(battery.EXCURSION_QUALIFICATION)} is a reading with "
+        "no prose or a row nothing reaches"
+    )
+    for key, reason in battery.EXCURSION_QUALIFICATION.items():
+        assert len(reason) > 80, f"{key}'s reason is too short to be one"
+
+
+def test_the_qualifications_prose_refuses_to_reverse_the_verdict(
+    battery,
+) -> None:
+    """The misreading this field invites, refused in the record itself.
+
+    An overlap is not a finding that the arm failed to clear — the verdict is
+    like for like and it stands. A reader who took the qualification as a
+    reversal would re-introduce `58a6277`'s defect by hand, so the prose says
+    so where the reader is.
+    """
+    overlaps = battery.EXCURSION_QUALIFICATION[
+        "overlaps-this-runs-control-excursion"
+    ]
+    assert "does NOT reverse the verdict" in overlaps
+    assert "property of this draw" in overlaps
+
+
 def test_the_rate_is_re_derivable_from_the_two_fields_beside_it(battery) -> None:
     """A reader holding the record can check the rate against its own inputs.
 
