@@ -3688,7 +3688,13 @@ proof "T101 — the process-spawn enumeration is emptied, so 'not a shell worklo
 # ---------------------------------------------------------------------------
 # T004 — the `codegraph` schema pin.
 #
-# One arm, and it names the mechanism the module's own first sentence is about:
+# ~~One arm~~ **three since 2026-08-10**, when the pin stopped being half-set.
+# The first is below and is unchanged. The two after it exist because the
+# constants became assertable: while `CODEGRAPH_SCHEMA_SHA256` was `None` there
+# was nothing to remove — a guard over an unset value is satisfied by the value
+# staying unset, and no tamper distinguishes that from the mechanism working.
+#
+# The first names the mechanism the module's own first sentence is about:
 # only the schema participates in the digest, never a row. That is what makes a
 # pin over somebody else's artifact possible at all — the analysed repository
 # changes constantly, so a digest that moved with it would report every
@@ -3705,6 +3711,31 @@ proof "T004 — row counts fold into the schema digest, so a re-index reads as a
   src/analysis/codegraph_pin.py \
   "tests/unit/test_codegraph_pin.py::test_the_digest_does_not_move_when_rows_are_inserted" \
   's = s.replace("        ).fetchall()\n    finally:", "        ).fetchall()\n        rows = rows + [(\x22table\x22, \x22rowdata\x22, str([conn.execute(\x22SELECT count(*) FROM \x22 + n).fetchone() for t, n, _ in rows if t == \x22table\x22]))]\n    finally:")'
+
+# The digest itself, and this arm is the reason the fixture under
+# `tests/fixtures/codegraph-schema/` was committed rather than the constant
+# being left as an opaque 64 characters. **Without a committed schema to
+# re-derive from, this tamper fails nothing**: a test that pins the constant's
+# shape, or asserts it against a literal copy of itself, passes just as happily
+# on one hex digit as on the observed value. One digit is moved rather than the
+# whole string, because a mangled constant could be caught by a length or a
+# hex-alphabet check and this must be caught by the arithmetic.
+proof "T004 — one hex digit of the pinned digest moves, so the constant asserts nothing observed" \
+  src/analysis/codegraph_pin.py \
+  "tests/unit/test_codegraph_pin.py::test_the_pinned_digest_is_re_derived_from_the_pinned_revisions_own_schema" \
+  's = s.replace("044054b3962ba8315b2e7b2243bbfc1e9ec954cfa6b3b30db11f8eb6cb3f01f4", "144054b3962ba8315b2e7b2243bbfc1e9ec954cfa6b3b30db11f8eb6cb3f01f4")'
+
+# The disclosure inside the version string, which is a mechanism and not a
+# comment. The vendored tree is seven commits past `v1.5.0`, so a pin that reads
+# as a release sends the next reader to `npm install @colbymchenry/codegraph@1.5.0`
+# — different code, a digest that will not match, and nothing on the error
+# message explaining why. The tamper leaves the revision sha in place and removes
+# only the words, so what goes red is the disclosure requirement rather than the
+# identity.
+proof "T004 — the revision disclosure leaves the version string, so the pin reads as a release" \
+  src/analysis/codegraph_pin.py \
+  "tests/unit/test_codegraph_pin.py::test_the_pinned_version_names_a_revision_that_cannot_be_installed" \
+  's = s.replace("(describe v1.5.0-7-g49c11fc; unreleased revision, not an npm version)", "(1.5.0)")'
 
 echo
 _verdict="$PASS proved, $FAIL unproven"
