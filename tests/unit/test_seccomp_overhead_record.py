@@ -7,7 +7,9 @@ readings, and the two such functions here each replaced a defect that had
 shipped:
 
 - **`record_filename`** — which of the two result files a run writes. The
-  battery's own `test_the_measurement_is_recorded` asserted the presence of
+  battery's own `test_the_measurement_is_recorded` — since renamed
+  `test_this_runs_measurement_reached_the_file_it_was_asked_for`, so the old
+  name resolves nowhere and is quoted here as history — asserted the presence of
   `seccomp-overhead.json`, which is *tracked in git*, so it was true on a fresh
   checkout and could not fail for the reason its name gave. Every CI run to date
   passed it against a file the run never touched.

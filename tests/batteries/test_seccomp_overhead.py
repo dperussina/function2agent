@@ -127,11 +127,38 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: unremarkable. Every pair involving 31403771772 is 23.6–43.6%, at the 83rd to
 #: 100th.
 #:
-#: **So the observed spread is one anomalous run and not a wide runner class**,
-#: and "every arm moved 24–35%" was a property of that run rather than of CI.
-#: A fourth draw, 31410461698, keeps that reading and widens the concordant
-#: band: excluding 31403771772, the three remaining runs sit 1.2–13.8% apart,
-#: against local within-host medians of 3.3–11.5% and maxima of 20–174%.
+#: ~~**So the observed spread is one anomalous run and not a wide runner
+#: class**, and "every arm moved 24–35%" was a property of that run rather than
+#: of CI. A fourth draw, 31410461698, keeps that reading and widens the
+#: concordant band: excluding 31403771772, the three remaining runs sit
+#: 1.2–13.8% apart, against local within-host medians of 3.3–11.5% and maxima
+#: of 20–174%.~~
+#:
+#: **Struck 2026-08-10 at n=11 — the inference again, never the arithmetic,
+#: which is correct for the runs it describes.** Every CI run since 31400931286
+#: publishes this figure as an artifact, so the sample is **11 runs** on one
+#: runner class and not the three to five the readings above were taken over.
+#: Recomputed from the artifacts with the same statistic, 45 pairs per arm over
+#: the four load-bearing arms, **180 pairs**:
+#:
+#:     excluding 31403771772 (n=10)   median 18.5%   max 69.6%
+#:     pairs involving 31403771772                  0.1% – 43.6%
+#:
+#: So 18.5% was the **median** of the concordant band and not its extent; the
+#: extreme pair is `path_heavy` 34.33 against 64.41 — runs 31404642569 and
+#: 31411573174, **neither of them the run called anomalous** — and
+#: 31403771772's own maximum sits *below* the concordant maximum while its
+#: minimum is the smallest gap in the sample (45.46 against 31407296884's
+#: 45.49). **The run is not separable from the class it was excluded from, so
+#: the spread is wide across runs with no outlier.** That is a third reading and
+#: not a return to the struck between-runner one: nothing here says *where* the
+#: width lives, which is the question the probe below now takes.
+#:
+#: A closed sample at n=11, re-derivable rather than transcribed:
+#: `gh run download <id> -n pytest-outcomes-and-native-overhead` over those runs
+#: and `|a-b| / mean(a,b)`. The control went non-positive in **8 of 11**, and
+#: its three published positive rates are 188.02, 62.74 and 74.04 — a 3.0x
+#: swing, every value positive, every one passing the sign test.
 #:
 #: ~~The second thing is the useful one: 31403771772 is also the run whose
 #: control flipped sign, so `UNRATED["non-positive-overhead"]` is an in-band
@@ -173,19 +200,33 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: count five-fold at 5× the wall clock on evidence that does not reach the
 #: target is tuning a constant until the figures look stable.
 #:
-#: **What would decide it**, stated because the absence is a gap somebody
-#: should close rather than a conclusion: repeat this battery k times *inside a
-#: single CI run*, on one runner. That yields within-host variance for CI's own
-#: host, and the difference between it and the across-run spread is the
-#: between-runner component. It is the only measurement that makes this constant
-#: decidable, and until it exists ~~a CI median is not a decidable basis for
-#: Q-09~~ **a median over a single CI run is not a decidable basis for Q-09 —
-#: refined 2026-08-10 from three runs rather than two** — which is a more useful
-#: answer than a tuned number. A median over several runs is a different
-#: proposition and is now a reachable one, because the anomalous run is a
-#: minority of three and is flagged in-band by its control's sign rather than
-#: picked out in hindsight. What no number of runs measures is the repeat count
-#: *inside* one run, which is what `REPEATS` sets.
+#: **What decides it is now built rather than named.** Repeat this battery k
+#: times *inside a single CI run*, on one runner: that yields k medians-of-5
+#: with the runner, kernel, architecture, core count and boot held fixed, which
+#: is within-run variance for CI's own host. `tools/seccomp_variance_probe.py`
+#: takes it at **k = 10** and `ci.yml` runs it as a **non-gating** step in the
+#: same job as the privileged suite, bounded by a 90s per-battery cap and a 300s
+#: total budget. Sized against readings rather than guesses: this battery costs
+#: **14.83s on that runner class**, read off run 31412656505's
+#: `pytest-privileged.xml`, in a job that took 195s against a 600s bound.
+#:
+#: ~~a CI median is not a decidable basis for Q-09~~ **a median over a single CI
+#: run is not a decidable basis for Q-09 — refined 2026-08-10 from three runs
+#: rather than two** — which is a more useful answer than a tuned number. What
+#: no number of runs measures is the repeat count *inside* one run, which is
+#: what `REPEATS` sets, and that is exactly what the probe measures.
+#:
+#: ~~A median over several runs is a different proposition and is now a
+#: reachable one, because the anomalous run is a minority of three and is
+#: flagged in-band by its control's sign rather than picked out in hindsight.~~
+#: **Struck 2026-08-10 by the n=11 sample above, and both halves of it fail.**
+#: There is no anomalous run to be a minority of, and the control's sign is not
+#: a flag for one: it goes non-positive in **8 of 11** runs, including runs that
+#: are unremarkable on every other arm. A median over several runs is still a
+#: different proposition from a median over one, but it is not made decidable by
+#: an in-band outlier detector, because there is neither an outlier nor a
+#: detector. **`REPEATS` stays 5 on this evidence**, and the probe is what can
+#: move it.
 #:
 #: **The denominator is not the noisy part, which rules out the other repair.**
 #: `notifications_observed` was *identical* in all 30 runs for every arm

@@ -3665,9 +3665,16 @@ proof "T117 — the run stops at the first verified answer, so the share is take
 # **No arm here targets `tests/batteries/test_seccomp_overhead.py`'s own
 # assertions.** That module is `linux_only` and `privileged`, so on any host
 # that cannot run it every such proof reports SKIPPED — an outcome that says
-# nothing and costs a reader the same attention as one that does. The two arms
-# below name tests that run everywhere and guard the two things about T101
-# that can rot without a privileged run noticing.
+# nothing and costs a reader the same attention as one that does.
+#
+# **`SCORES AGAINST` is the rule and `TAMPERS` is not, and this header used to
+# blur them.** It read "The two arms below" when six follow it, and a count that
+# drifts under a rule stated once reads as though the rule had narrowed with it —
+# which is how the prohibition got restated elsewhere as *"no proof may touch
+# that file"*. It may. **Six T101 arms follow, five of which tamper this module**
+# and every one of which scores against a test in `tests/unit/` that runs on
+# every host. What is forbidden is naming an assertion that cannot run, because
+# such an arm reports SKIPPED forever and nobody notices.
 
 # The workload strings are executed only under the supervisor, on privileged
 # Linux. A rotted one therefore fails in the one place nobody can reproduce.
