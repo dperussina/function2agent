@@ -1074,6 +1074,17 @@ emphasis in the two markdown documents. A search for the suffixed spelling retur
 a search for the emphasised spelling returns one markdown file alone. Each comes back as a single
 confident hit, and a single hit reads like the whole answer rather than like one of two spellings.
 
+**A second mechanism accounts for the other false statement, and it was reproduced while writing this
+entry.** The claim that the sample count was invented came from reading the count as *three* where
+the document says *three, superseded by four*. Both statements live on the **same** line of
+`specs/002-spec-aware-agent-runtime/tasks.md`, and that line is **1873** characters long: it opens
+with the three-sample re-derivation and closes, past any reasonable truncation, with the fourth
+sample and the revised count. A reader who takes the first few hundred characters sees a
+three-sample statement and no four-sample one, and concludes the four-sample figure was invented.
+The first read taken for this entry did exactly that and had to be corrected. **Truncation is a
+search form too** — a long line is a document a partial read misrepresents, and the fix is to read
+the line to its end or to grep for the figure inside it rather than to eyeball the head of it.
+
 **The corpus does not support the further claim that the loose search was impractical, and the
 correction strengthens the rule.** Over the working tree the bare form returns **7** files, and all
 three sites are among them. Searched bare against the same index the checks use it returns **6**,
