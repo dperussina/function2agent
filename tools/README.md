@@ -983,6 +983,30 @@ you did not create.** If there are any, a concurrent pass is mid-commit and the 
 edit. This is cheap, it is the only signal available, and no gate can supply it — a hook runs after
 the damage is staged, and by then the two halves of the rename are already separated.
 
+### The reference application is the one place a comment edit is a behavioural change
+
+**On 2026-08-10 a pass corrected a stale `workload.sh` reference in a docstring inside
+`tests/fixtures/reference-app/` and broke the gate.** Nothing about the correction was wrong, and the
+guard that caught it was working exactly as designed — which is what makes this worth writing down
+rather than filing as a false positive.
+
+The reference application's **size is a committed artifact**. `size.json` is generated from the
+fixture's own sources and pinned by `test_the_committed_size_is_what_the_measurement_produces`, so any
+edit that moves a line count invalidates it. Both published figures are reachable from a comment:
+`application_lines` counts every line, blanks and comments included, so a whole-line `#` comment moves
+it; and `_code_lines` excludes only blanks and whole-line `#` comments, so a **docstring** line is
+counted as code and a docstring edit moves *both* figures. The size is not incidental metadata — T203
+requires it to be reported wherever SC-001 appears, which is why it is pinned at all: a stale figure is
+a wrong denominator in somebody else's arithmetic.
+
+There is nothing to fix in the gate. The rule is an expectation to drop: **in this fixture, and nowhere
+else in the tree, "it's only a comment" is not a reason to expect the suite to stay green.** Either
+make the edit net-zero in line count, or regenerate with
+`python tests/fixtures/reference-app/seed.py` and bring the fixture README's stated size table back
+into agreement — the table is separately pinned by `test_the_readme_states_the_size_that_was_measured`,
+so a regeneration that stops at the JSON leaves the prose everybody quotes stale and the JSON nobody
+opens correct, which is the failure mode rather than a lesser version of it.
+
 ### A proof arm with no terminator does not report a hang; it reports whatever the eventual kill looks like
 
 **On 2026-08-05 the `T065 wiring` arm ran for 56 minutes of continuous CPU without returning, and the
