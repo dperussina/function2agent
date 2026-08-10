@@ -57,8 +57,10 @@ the same page. `slug-differential` sits outside the experiment ladder in the sam
 `provider-credentials` does, so it adds a position without adding an experiment.
 
 **Every claim in this file about how many of something the tree holds has now gone stale at
-least once.** Nothing counts these directories, so a count of them belongs in a dated sentence
-rather than in a standing one.
+least once**, which is the case the rule at
+[`tools/README.md` § When a figure may be a live total](../../../tools/README.md#when-a-figure-may-be-a-live-total-and-when-it-must-be-dated)
+calls the first of its two ungateable kinds: nothing counts these directories, so a count of
+them belongs in a dated sentence rather than in a standing one.
 
 ## The `ceiling-test` row, updated 2026-08-03
 

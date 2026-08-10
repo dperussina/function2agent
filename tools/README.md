@@ -559,6 +559,84 @@ than a documented residue.
 register that hands out a taken number. The search above is the only guard, it is
 run by a human, and it is one command per namespace.
 
+## When a figure may be a live total, and when it must be dated
+
+Three rulings in this tree say the same thing from different directions. `gen_claims.py`
+refuses to rewrite a register range that shares its line with a struck one, because
+substituting the digits alone silences the signal that the note beside them needs a new line.
+`ci.yml` keeps the superseded job-duration table beside the current one rather than advancing
+the numbers, because the movement from `318` to `540` is itself the finding. The seccomp
+variance figures are each declared a closed sample at a stated `n`, on one runner and one boot,
+re-derivable from a named artifact. In every case **advancing a digit without the narrative
+beside it converts a detectable staleness into an undetectable inconsistency**, and that is the
+cost the three rulings are avoiding.
+
+`EXPECTED_PROOFS` runs the other way and does it deliberately. It is a live absolute count, its
+own comment says the coupling to the suite is the mechanism rather than an inconvenience, and it
+is the only thing that notices a proof being deleted.
+
+**So the distinction is not dated-versus-live.** It is whether anything mechanical recomputes
+the figure from a named population. Where something does, the figure may be live, because the
+tool holds the truth and a reader does not have to remember it. Where nothing does, the only
+honest form is a dated count over a named set — and the set has to be named, because an
+unstated scope does not read as a scope, it reads as a total.
+
+### Two corrections the corpus forced on the stricter version of that rule
+
+The rule is tempting to state as *a live total is admissible exactly when something fails if it
+goes stale*. The corpus does not support the stronger word, in two separate places.
+
+**A check that notices is enough; a check that fails is not required.** `inventory-count` is
+severity `warning`, and CI declines `--warnings-as-errors` on the stated reasoning that the
+warning classes flap for a few minutes whenever a document is edited before its generator is
+re-run, and *a gate that flaps gets worked around*. `README.md` nevertheless carries live
+inventory totals under it — `15` research documents, `18` project skills, `10` Spec Kit phase
+prompts — and they are accurate. Nothing fails when one rots; the divergence is still computed
+and still printed, to the run-page summary and to anyone running the gate. **Detectability is
+the property the three rulings above protect, and severity is a separate decision about
+flapping.** A figure whose truth is recomputed and reported has not become an inconsistency
+nobody can see, which is the harm.
+
+**A self-describing figure can be gated by counting, and one is.** The stronger rule adds that a
+figure whose statement changes the thing it measures can never be gated, because the gate's own
+text sits inside the population. `specs/001-discovery-validation/plan.md` is the counterexample:
+its line 17 states the OD register's range, the OD register is *defined in that same document*,
+and `gen_claims.py` gates it by counting definitions, holding at `30`. It works for two reasons
+worth separating, because only the second is about self-reference at all:
+
+- **the update is digit-local.** Rewriting the digits in place neither adds nor removes an OD
+  entry, so correcting the figure does not perturb the quantity. Line counts have the same
+  shape: replacing `806` with `812` does not change how many lines a document has.
+- **the extractor tells the claim from a member.** `_is_whole_register_claim` exists precisely so
+  that the `OD-30` inside a range claim is not counted as a thirty-first definition. Without it
+  the figure would inflate itself on every write.
+
+So the population a figure counts and the tree a gate touches are different sets, and conflating
+them produces the wrong ruling. `EXPECTED_PROOFS` sits in `tests/unit/test_tamper_matching.py`,
+and that file **is** a removal-proof target — one proof edits it. It is still not a
+self-describing figure, because what the constant counts is proof *declarations* in
+`tests/removal_proofs.sh`, and no comment or constant in the target file adds one.
+
+### What is left genuinely ungateable, which is narrower than it looks
+
+Two cases survive, and only these:
+
+- **nothing computes the figure.** No check counts headings, so `slugify`'s agreement with the
+  renderer is carried as a dated count at a named commit — `2,534` at `7a60dd3`, and `2,537` when
+  [the differential](../specs/001-discovery-validation/harness/slug-differential/) was re-run at
+  `58a6277` over `2,428` anchored and `109` blockquoted headings. Both are correct for their sets
+  and neither is a ratio a later commit rots.
+- **the statement necessarily enlarges the population.** A count of the corpus's headings that
+  arrives under a new heading has moved the number it reports. That cost is paid once, at
+  creation, rather than on every correction — **this section is an instance, having added
+  headings to the corpus it discusses** — which is why the case argues for dating such a figure
+  rather than for never gating one.
+
+A count of the harness directories is the first case and not the second: nothing counts them, the
+index that states them has gone stale more than once, and the
+[harness index](../specs/001-discovery-validation/harness/README.md) now carries its position
+count in dated sentences for that reason.
+
 ## The advisory — `cite_advisor.py`
 
 The gate rule described under [What this cannot catch](#what-this-cannot-catch)
