@@ -1059,6 +1059,72 @@ that a check has a hole, put the hole in front of it and record what it printed.
 to be expensive, say the claim is *unverified* in the same breath as making it. An honest "I have not
 run this" costs the next reader one sentence; a confident wrong one costs them an afternoon.
 
+### A negative search result is a claim about a document, and one search form does not establish it
+
+**This one caused a false retraction, and that consequence is why it is filed as a trap rather than
+as carelessness.** On 2026-08-10 a pass reported that a measured margin appeared *nowhere* in the
+corpus or in any artifact, and that the sample count quoted beside it matched nothing written down.
+Both statements were false. The margin was written in three places and the count in three, two of
+them markdown documents already inside the gated corpus. On the strength of that clean negative a
+correct record was withdrawn and its author was described as having invented a measurement.
+
+**The mechanism is that the corpus writes one figure two ways, and neither precise form finds the
+other.** The margin carries its unit suffix in the battery comment — `1.16x` — and sits bare inside
+emphasis in the two markdown documents. A search for the suffixed spelling returns the battery alone;
+a search for the emphasised spelling returns one markdown file alone. Each comes back as a single
+confident hit, and a single hit reads like the whole answer rather than like one of two spellings.
+
+**The corpus does not support the further claim that the loose search was impractical, and the
+correction strengthens the rule.** Searched bare against the same index the checks use, the figure
+returns **6** files: **3** markdown corpus documents that name it, and **3** committed trace
+artifacts that contain the digits incidentally. Over the working tree without `--hidden --no-ignore`
+it is **7** files. The reading that put it in the dozens counted the git-ignored vendored tree, which
+supplies **102** of the **110** files the widest form matches and none of the sites. So the search
+that would have found both spellings was never buried — it was a single-digit result that was not
+run. The remedy is not "search harder", it is one cheaper search.
+
+The tell is the mirror of
+[Reading an instrument is not measuring it](#reading-an-instrument-is-not-measuring-it--plant-the-case-instead),
+and the two now bracket the same error from both sides. There, the claim described *behaviour* and
+the evidence was a *document*. Here, the claim describes a *document* and the evidence is *one search
+form* — a claim about what a corpus contains, resting on a single guess about how the corpus spells
+things. **A negative search result carries the same burden as any other relayed claim**, and the
+burden is discharged by searching the bare numeral scoped to the plausible files rather than the
+formatted one.
+
+**The two costs are not symmetric, and the discipline should not be either.** A false positive here
+buys one unnecessary check: a figure is searched again and found where it was expected. A false
+negative retracts a true record, and it does so with the particular authority a clean negative
+carries — the reader cannot tell a figure that was never written from a figure that was written in
+another spelling, because both print nothing. It also attributes fabrication to whoever wrote the
+record. That asymmetry is the whole argument for spending the extra search every time.
+
+**A second limb was proposed for this entry and the measurement did not support it.** The suffixed
+site is a Python comment, and no check here reads Python as a document — the corpus walk loads
+`.md` and `.markdown` only, and the one check that parses source, `lifecycle-taxonomy`, reads a set
+of member names out of `src/contracts/terminal.py` rather than any figure. That much holds. But it
+was not the mechanism in this instance: the figure has **three** markdown homes, two of them gated
+consumers, so every instrument that reads figures could see it and every corpus-scoped search
+reached it. The episode is a search-form failure end to end, and counting it as an instance of the
+source-blindness residue would be counting it twice.
+
+**What the source-blindness residue does amount to, measured on 2026-08-10 rather than estimated.**
+The search index that answers "appears nowhere else" does include `.py`, but its roots are
+`research`, `specs`, `docs`, `README.md`, `.cursor/skills` and `.specify/memory` — so `tests/`,
+`tools/` and `src/` sit outside it entirely, and the **125** indexed Python files all live under
+`specs/*/harness/`. Extracting figures from every Python comment and docstring in the repository
+with the corpus's own extractor, under all five implemented figure kinds, gives **356** occurrences
+and **194** distinct figures, of which **28** appear nowhere else at all. Hand-triaged, **11** of
+those **28** are measurements this project took and has no other record of; the remainder are
+illustrative values inside rule docstrings, self-test fixture expectations, and one total derived in
+place from a price schedule stated on the same lines. Under the three kinds the gate actually
+enables, the exposed set is **12** and its evidential subset is **2**. The population is small and
+concentrated: **8** of the **11** are in `tests/batteries/test_seccomp_overhead.py`, and the other
+three are in `src/supervisor/lease.py` and `tests/integration/test_store_concurrent_writers.py`.
+**No check was added for it, because a population of 11 in 4 files is a smaller thing than the rule
+that would have to read Python to catch it**, and the figure that prompted the count was not in the
+population.
+
 ### Never state a classifier as a complement — enumerate the accepting set
 
 **A rule of the form "anything but X means success" is one unknown value away from inverting the
