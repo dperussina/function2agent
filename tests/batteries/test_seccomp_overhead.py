@@ -417,6 +417,26 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: is that surface's own timing noise, and narrowing it by editing the
 #: workload would buy a tighter number by measuring something else.
 #:
+#: **The paragraph above became a rule on 2026-08-10 — `OD-30` publishes T101's
+#: figure PER ARM against the same run's measured control, and forbids pooling
+#: or minimising across the four outright.** No threshold is installed and
+#: `test_a_small_positive_overhead_is_still_published_because_no_floor_is_known`
+#: still asserts the refusal; the control arm *is* the floor, so an arm clearing
+#: that run's control excursion by orders of magnitude publishes a number and an
+#: arm inside it publishes as **not resolved by this instrument**.
+#:
+#: **The arm that rule withholds is `shell_heavy`, and not this one, which is
+#: the one place reading the two quantities as one inverts the answer.**
+#: Resolution — overhead as a share of an arm's own baseline — is where
+#: `reference_app_socket` is worst, and it is what the table above measures. The
+#: rule tests *absolute* overhead against the control's *absolute* excursion,
+#: and on that quantity this arm is clear: it recovers **~0.05 s** against a
+#: control whose widest observed positive extreme over the three samples is
+#: **+0.029317 s**, while `shell_heavy`'s **0.0188–0.0228 s** in `31416959913`
+#: sits below that run's own control. So the arm at risk of being withheld is
+#: the one Q-09 names and T101 names, which is why the risk is recorded beside
+#: the resolution table rather than left to be inferred from it.
+#:
 #: ~~`notifications_observed` was *identical* in all 30 runs for every arm
 #: (2116 / 1189 / 1143 / 539 / 116)~~ **The 30-run list above is read in this
 #: file's own arm order and its middle two entries do not survive a re-reading
@@ -428,12 +448,42 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: the value the list assigns to `shell_heavy` is the one this host gives
 #: `reference_app_socket`. Three of five matching exactly makes a transposition
 #: of the middle pair likelier than three independent drifts, but **539 is not
-#: reproduced by anything measured here** and the 30-run sample cannot be
+#: reproduced by anything measured here** *(superseded 2026-08-10 — it is
+#: reproduced, by a committed artifact rather than by a run taken here; the
+#: identification is below)* and the 30-run sample cannot be
 #: re-read, so the list is left standing with this note rather than corrected
 #: to figures its own pass never took. **The paragraph's conclusion is
 #: unaffected either way**: every value was identical across all 30 runs, which
 #: is what ruled the denominator out, and that holds under any assignment of
 #: the two.
+#:
+#: ~~**539 is not reproduced by anything measured here**~~ **539 IS reproduced,
+#: and by a committed artifact rather than by a new run: it is `shell_heavy`'s
+#: own `notifications_observed` in `tests/batteries/results/seccomp-overhead.json`
+#: — identified 2026-08-10, and the transposition reading above is completed
+#: rather than replaced.** That record was written 2026-08-03 by `d1f7d7a` on the
+#: same kernel, the same architecture and the same CPython as the re-reading, and
+#: it holds `compute_only` 116, `path_heavy` 2116 and `shell_heavy` **539**. So
+#: every one of the 30-run list's five values is a real reading of a distinct
+#: arm — `path_heavy` 2116, `reference_app_api` 1189, `reference_app_socket`
+#: 1143, `shell_heavy` 539, `compute_only` 116 — and the list is a correct
+#: *multiset* written into this file's own table order with its middle pair
+#: **transposed**. Nothing is unaccounted for and no value was invented.
+#:
+#: **What the identification does not settle is why `shell_heavy` re-reads at
+#: 479, and that stays open rather than being assigned to the obvious cause.**
+#: The two records differ in their watched set — twelve syscalls in the 2026-08-03
+#: record against sixteen in the re-reading, the four added being `renameat`,
+#: `symlinkat`, `linkat` and `utimensat`, which joined on 2026-08-04 by
+#: `46fd6b5`. **That change predicts the count moving *up*, and it moved down**,
+#: so the watch set is not established as the cause and is not recorded as one.
+#: What *is* established is a dating consequence: 539 belongs to the twelve-syscall
+#: era, so it cannot be a reading from the 2026-08-10 sample the list is attached
+#: to, and the list is a splice across that boundary rather than one sample's
+#: output. **The list is still not corrected to figures its own pass never
+#: took** — the transposed order is left standing with this note, on the same
+#: ground as before, and the paragraph's conclusion is unaffected for the third
+#: time.
 REPEATS = 5
 
 # --- the workloads --------------------------------------------------------
