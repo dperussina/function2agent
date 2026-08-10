@@ -3755,6 +3755,88 @@ proof "T101 — a withheld rate stops recording why, so the absence reads as a g
   "tests/unit/test_seccomp_overhead_record.py::test_every_withholding_reason_is_recorded_in_prose" \
   's = s.replace("UNRATED: Mapping[str, str] = {", "UNRATED: Mapping[str, str] = {\n    \x22unreached-reason\x22: \x22a recorded reason for an absence that no branch can produce, which is a row nobody checks\x22,")'
 
+# --- T101, 2026-08-10: the clearance verdict and its qualification -----------
+#
+# **Six arms, and until this section the clearance machinery had none.** The
+# field shipped at `cc34adb` with thirty unit tests around it and one battery
+# assertion that reports SKIPPED on macOS, so deleting a fixture assignment left
+# the developer's suite green and was caught only in CI. That is thinner than
+# this repository's standard and the gap is closed here rather than recorded.
+#
+# **All six score on both hosts**, which is the rule the section above states:
+# each names a test in `tests/unit/`, and the mechanisms they remove are pure
+# functions of readings for exactly that reason. The one arm whose subject
+# lives in the fixture — the nesting — was moved into `clearance_field` in the
+# same pass, because a mechanism only reachable from a `privileged` assertion
+# cannot be proved anywhere the proof would be believed.
+#
+# **The vacuity shape watched for here is the second guard, not the indifferent
+# tamper.** These functions are checked from several angles at once, so a
+# careless tamper fails four tests and proves nothing about the one it names.
+# Each arm below was chosen so that its named test discriminates the mechanism
+# the arm's own sentence describes, and each was run before it was declared.
+
+# The comparator itself, which is the mechanism `58a6277` shipped wrong and
+# `cc34adb` corrected. Pointing the verdict at the control's draw excursion
+# tests a difference of medians against a range of raw pairwise differences —
+# a wider statistic — and that run returned three of the four load-bearing arms
+# as not clearing while the same run's k=10 probe put all four clear on 10 of
+# 10 draws. The named test moves the band and requires the verdict not to move.
+proof "T101 — the clearance verdict compares against the excursion again, so a wider statistic decides it" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_the_verdict_compares_like_with_like_and_the_excursion_never_decides" \
+  's = s.replace("        if overhead_seconds > control_overhead_seconds:", "        if overhead_seconds > high:")'
+
+# The nesting, which is this field's whole repair. Returning the verdict bare
+# restores exactly the record run 31435892323 published: `shell_heavy` reading
+# `clears-this-runs-control` with the overlap reachable only through prose. The
+# named test asserts the consumer's own filter fails AND that the destructured
+# read still works, so a field that had merely become unreadable does not pass.
+proof "T101 — the record's verdict goes back to a bare string, so a consumer can lift it without its qualification" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_the_recorded_field_is_an_object_a_consumer_cannot_take_half_of" \
+  's = s.replace("    return (\n        {\n            \x22verdict\x22: verdict,", "    return (\n        verdict,\n        {\n            \x22verdict\x22: verdict,")'
+
+# The qualification reading the range it names, and the tamper is a half-read
+# rather than a deletion — dropping the upper bound leaves the field firing on
+# every positive overhead, which is the fires-regardless vacuity that looks
+# like a disclosure and reports nothing. The named test moves the band across
+# three values and requires both readings to appear.
+proof "T101 — the excursion qualification drops its upper bound, so every arm reads as overlapping" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_the_excursion_qualifies_and_still_never_decides_the_verdict" \
+  's = s.replace("    if low <= overhead_seconds <= high:", "    if low <= overhead_seconds:")'
+
+# The separation held in the signature. A default argument is the edit that
+# would not break a caller, so it is the one a later pass could make without
+# noticing — and once the comparator is in scope the excursion is one line from
+# deciding a verdict again. The named test reads the signature and nothing else.
+proof "T101 — the qualification takes the verdict's comparator, so the excursion is one edit from deciding again" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_the_qualification_cannot_see_the_comparator_that_decides_the_verdict" \
+  's = s.replace("    is_the_control: bool,\n) -> str:", "    is_the_control: bool,\n    control_overhead_seconds: float = 0.0,\n) -> str:")'
+
+# The prose, not the reading. A qualification key the record cannot resolve to a
+# sentence is an absence that reads as a gap, which is the shape `costs.UNPRICED`
+# and `UNRATED` both exist to prevent. This arm is the `EXCURSION_QUALIFICATION`
+# twin of the `UNRATED` arm above and fails for the same reason: a row nothing
+# reaches describes a branch that no longer exists.
+proof "T101 — the qualification table grows a row nothing reaches, so it describes a branch that is gone" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_every_excursion_reading_is_recorded_in_prose" \
+  's = s.replace("EXCURSION_QUALIFICATION: Mapping[str, str] = {", "EXCURSION_QUALIFICATION: Mapping[str, str] = {\n    \x22unreached-qualification\x22: \x22a recorded reading of the control excursion that no branch can produce, which is a row nobody checks\x22,")'
+
+# The plant, and this arm tampers a committed *record* rather than a module —
+# the only one in this file that does. That is deliberate: the both-directions
+# evidence is required to live inside a committed artifact, not a fixture, so
+# the thing that must not silently collapse is the artifact. Run 31435892323 is
+# one overlapping arm and three standing clear; flattening the one leaves a
+# record where the qualification has never been observed firing.
+proof "T101 — the committed CI record loses its overlapping arm, so the qualification is never seen firing" \
+  tests/batteries/results/seccomp-overhead-ci-31435892323.json \
+  "tests/unit/test_seccomp_overhead_record.py::test_a_committed_record_plants_both_qualifications" \
+  's = s.replace("\x22qualified_by\x22: \x22overlaps-this-runs-control-excursion\x22", "\x22qualified_by\x22: \x22stands-clear-of-this-runs-control-excursion\x22")'
+
 # ---------------------------------------------------------------------------
 # T004 — the `codegraph` schema pin.
 #
