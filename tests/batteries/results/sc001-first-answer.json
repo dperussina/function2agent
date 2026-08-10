@@ -1,0 +1,67 @@
+{
+  "criterion": "SC-001",
+  "environment": {
+    "machine": "arm64",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "privileged": false,
+    "python": "3.12.11"
+  },
+  "measured_at": "2026-08-10T06:32:23-0600",
+  "per_question": {
+    "Q-001": {
+      "reason": null,
+      "verification": "verified"
+    },
+    "Q-002": {
+      "reason": null,
+      "verification": "verified"
+    },
+    "Q-003": {
+      "reason": null,
+      "verification": "verified"
+    },
+    "Q-004": {
+      "reason": null,
+      "verification": "verified"
+    }
+  },
+  "report": {
+    "analysis_coverage_caveat": "codegraph was NOT invoked in this run, so analysis_seconds does not include the step U-21's untested scale claim is about. T004 leaves CODEGRAPH_SCHEMA_SHA256 unset and T119 \u2014 which would invoke codegraph \u2014 does not exist. This figure is not a datapoint against U-21.",
+    "analysis_seconds": 0.000418625000065731,
+    "assessable": false,
+    "codegraph_invoked": false,
+    "criterion": "SC-001",
+    "first_verified_answer_seconds": 0.016243083000063052,
+    "not_assessable_because": "SC-001 asks for a first verified answer within fifteen minutes, which a high refusal share can defeat without anything in the runtime being wrong \u2014 so SC-001 is not independently assessable until FR-045 has reported at least once over production traffic (SC-019).",
+    "not_verifiable": {
+      "attempted": 4,
+      "by_reason": {},
+      "not_verifiable": 0,
+      "production_window": false,
+      "share": 0.0,
+      "threshold": null,
+      "threshold_note": "no threshold is pre-registered for this share (FR-045); it is an owner review input, not a pass mark"
+    },
+    "remainder_seconds": 0.517679957999917,
+    "subject": "d-reference-app (5 served operations)",
+    "subject_size": {
+      "code_lines": 442,
+      "codegraph_edges": null,
+      "codegraph_nodes": null,
+      "definitions": 32,
+      "files": 3,
+      "lines": 606,
+      "measured_by": "tests/fixtures/reference-app/size.py"
+    },
+    "total_seconds": 0.5180985829999827,
+    "verdict": "first_verified_answer_within_window",
+    "window_seconds": 900.0
+  },
+  "task": "T117",
+  "what_this_is_a_property_of": [
+    "An in-process HTTP origin on the loopback address. There is no network, no TLS and no enforcement point in this path \u2014 T114 is the battery that stands the assembled enforcement point up.",
+    "An analysis span covering FR-044 admission and served-operation capture, and NOT covering codegraph: T004 leaves the schema hash unset and T119 does not exist. This is not a datapoint against U-21's untested scale claim.",
+    "A harness run, which is not production traffic. FR-045 has reported no production window, so SC-001 is reported as not independently assessable regardless of the timing.",
+    "No model provider is in this path. The answering step recomputes from the served surface; an agent loop would add unbounded time this harness does not measure."
+  ]
+}
