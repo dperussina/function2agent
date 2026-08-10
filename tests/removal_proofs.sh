@@ -3685,6 +3685,27 @@ proof "T101 — the process-spawn enumeration is emptied, so 'not a shell worklo
   "tests/unit/test_reference_app.py::test_the_spawn_detector_fires_on_a_planted_call" \
   's = s.replace("_PROCESS_SPAWNING_MODULES = frozenset(\n    {\x22subprocess\x22, \x22multiprocessing\x22, \x22pty\x22, \x22asyncio.subprocess\x22}\n)", "_PROCESS_SPAWNING_MODULES = frozenset()")'
 
+# ---------------------------------------------------------------------------
+# T004 — the `codegraph` schema pin.
+#
+# One arm, and it names the mechanism the module's own first sentence is about:
+# only the schema participates in the digest, never a row. That is what makes a
+# pin over somebody else's artifact possible at all — the analysed repository
+# changes constantly, so a digest that moved with it would report every
+# re-index as an upstream release, and FR-028 would then hand the operator an
+# upstream release as their own code having moved.
+#
+# The tamper folds each table's row count into the hash. It is chosen over the
+# module's other refusals because **nothing else in the file catches it**: with
+# row counts in the digest the canonical ordering, the `sqlite_%` exclusion, the
+# whitespace normalisation and both of `verify()`'s arms all still hold and
+# their tests all still pass, so exactly one test goes red and the arm cannot be
+# scoring a guard it does not name. Verified by planting, not by reading.
+proof "T004 — row counts fold into the schema digest, so a re-index reads as an upstream release" \
+  src/analysis/codegraph_pin.py \
+  "tests/unit/test_codegraph_pin.py::test_the_digest_does_not_move_when_rows_are_inserted" \
+  's = s.replace("        ).fetchall()\n    finally:", "        ).fetchall()\n        rows = rows + [(\x22table\x22, \x22rowdata\x22, str([conn.execute(\x22SELECT count(*) FROM \x22 + n).fetchone() for t, n, _ in rows if t == \x22table\x22]))]\n    finally:")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
