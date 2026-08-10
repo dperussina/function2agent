@@ -65,6 +65,7 @@ import statistics
 import sys
 import textwrap
 import time
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -176,6 +177,41 @@ finally:
 
 def _reference_app_source(template: str) -> str:
     return template.format(repo=str(REPO), refapp=str(REFAPP_DIR))
+
+
+# --- which file a run writes, and why the branch is a function -------------
+
+#: Q-09's *recorded* figure. **Tracked in git**, which is the whole reason the
+#: two names below have to be told apart: `DURABLE_RECORD.is_file()` is true on
+#: a fresh checkout, so an assertion built on it cannot fail for the reason a
+#: test named "the measurement is recorded" claims to check. It was one, until
+#: 2026-08-10.
+DURABLE_RECORD = "seccomp-overhead.json"
+
+#: What an ordinary privileged run produces. Gitignored, so its presence is a
+#: statement about *this* run and not about the checkout.
+LATEST_RECORD = "seccomp-overhead.latest.json"
+
+#: The environment variable that promotes a run's figure to the recorded one.
+RECORD_REQUEST = "F2A_RECORD_MEASUREMENTS"
+
+
+def record_filename(environ: Mapping[str, str]) -> str:
+    """Which of the two files *this* run writes, read from the environment.
+
+    A function rather than an `if` inside the fixture, and it is the same
+    argument `host_property_caveat` is: the branch has to be reachable from a
+    test that runs on hosts this module cannot run on. It is also the only
+    copy — a test that re-implemented the branch in order to check it would
+    agree with itself while both halves drifted, which is the shape
+    `tools/README.md` records as a stricter second opinion reporting rot it
+    invented.
+
+    Recording is **conditional by design** (see the fixture), so the honest
+    question is never "does a file exist" but "does the file this run was asked
+    for exist". Both branches produce something, so neither is a skip.
+    """
+    return DURABLE_RECORD if environ.get(RECORD_REQUEST) == "1" else LATEST_RECORD
 
 
 #: Recorded in the result file rather than only in the docstring, because the
@@ -392,16 +428,54 @@ def measurement() -> dict:
     # re-measurement from a suite that ran in CI, and a real regression would
     # arrive as ordinary run-to-run noise in a file nobody reads twice.
     # Re-recording is now something you ask for.
-    if os.environ.get("F2A_RECORD_MEASUREMENTS") == "1":
-        (RESULTS / "seccomp-overhead.json").write_text(serialized)
-    else:
-        (RESULTS / "seccomp-overhead.latest.json").write_text(serialized)
+    (RESULTS / record_filename(os.environ)).write_text(serialized)
     return record
 
 
-def test_the_measurement_is_recorded(measurement) -> None:
-    path = RESULTS / "seccomp-overhead.json"
-    assert path.is_file()
+def test_this_runs_measurement_reached_the_file_it_was_asked_for(
+    measurement,
+) -> None:
+    """~~`assert (RESULTS / "seccomp-overhead.json").is_file()`~~
+
+    **Struck 2026-08-10: that assertion could not fail for the reason its own
+    name gave.** `seccomp-overhead.json` is *tracked in git*, so it is present
+    on a fresh checkout and the test passed whether or not the run recorded
+    anything. What an ordinary run produces is `seccomp-overhead.latest.json`,
+    and the durable file is written only when `F2A_RECORD_MEASUREMENTS=1` — so
+    on every CI run to date this was an existence check against a file the run
+    never touched. That is the silent-instrument family `tools/README.md`
+    counts at least eight of, and `ci.yml` already reasons correctly one level
+    up: *"the file is missing exactly when the measurement did not happen."*
+
+    Two things are asserted rather than one, because existence alone would
+    close only half of it:
+
+    - **The file this run was asked for**, chosen by `record_filename` from the
+      environment. That is what separates *recording was not requested* from
+      *recording was requested and did not happen* — the second fails here, the
+      first cannot arise, because both branches write something. **No skip**: a
+      test that skipped when the variable was unset would go silent on exactly
+      the configuration CI runs under, which is the same defect wearing
+      different clothes.
+    - **That it holds this run's record**, not any record. Existence is still
+      vacuous on the `F2A_RECORD_MEASUREMENTS=1` branch, for the original
+      reason — the target is tracked. Content equality is not: the committed
+      file is a 2026-08-03 linuxkit measurement and no fresh run reproduces it.
+    """
+    requested = os.environ.get(RECORD_REQUEST)
+    path = RESULTS / record_filename(os.environ)
+    assert path.is_file(), (
+        f"the fixture completed a measurement and left nothing at {path.name}. "
+        f"With {RECORD_REQUEST}={requested!r} that is the file this run was "
+        "asked to write, so the measurement happened and the recording did "
+        "not."
+    )
+    assert json.loads(path.read_text()) == measurement, (
+        f"{path.name} exists but does not hold the record this run produced. "
+        "The file is therefore left over from an earlier run — or the fixture "
+        "wrote the other one of the two names — and reading it as this "
+        "measurement is how a stale figure gets quoted as a fresh one."
+    )
     print("\n" + json.dumps(measurement["arms"], indent=2))
     print("\nenvironment: " + json.dumps(measurement["environment"], indent=2))
 

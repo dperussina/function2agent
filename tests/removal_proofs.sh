@@ -3703,6 +3703,33 @@ proof "T101 — the record's host caveat goes back to being a constant, and desc
   "tests/unit/test_seccomp_overhead_caveat.py::test_the_host_caveat_differs_between_three_kernels" \
   's = s.replace("    matched = sorted(", "    return \x22Docker Desktop\x27s linuxkit VM on this host, not a bare Linux host. Syscall-interception overhead is the measurement most sensitive to that difference and it may not transfer.\x22\n    matched = sorted(")'
 
+# --- T101, 2026-08-10: the two derived fields of the record ------------------
+#
+# **The rule these three arms are written under, because it reads as narrower
+# than the paragraph above.** The recorded decision is that no proof *scores
+# against* an assertion inside `test_seccomp_overhead.py`, because such a proof
+# reports SKIPPED on every host that cannot run the module. It does not forbid
+# *tampering* that module — the arm above already tampers it and scores on a
+# `tests/unit/` test, and these follow it exactly. Each removes a mechanism from
+# the battery and names a test that runs on every host, so all three score
+# everywhere.
+#
+# The reverse case is on the record too, and is why there is no arm for
+# `test_no_arm_publishes_a_rate_its_own_overhead_contradicts`: that assertion
+# needs the fixture, the fixture needs a kernel and root, and a proof naming it
+# would be the SKIPPED-everywhere arm the decision excludes.
+
+# The vacuity itself, put back. Until 2026-08-10 the battery asserted the
+# presence of `seccomp-overhead.json`, which is tracked in git — true on a fresh
+# checkout, so the test could not fail for the reason its name gave and every CI
+# run passed it against a file the run never touched. Collapsing the two names
+# restores exactly that: the branch stops reading the environment, and an
+# existence check is satisfied by the committed file again.
+proof "T101 — the two result-file names collapse, so 'the measurement is recorded' is vacuous again" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_the_two_settings_select_different_files" \
+  's = s.replace("    return DURABLE_RECORD if environ.get(RECORD_REQUEST) == \x221\x22 else LATEST_RECORD", "    return DURABLE_RECORD")'
+
 # ---------------------------------------------------------------------------
 # T004 — the `codegraph` schema pin.
 #
