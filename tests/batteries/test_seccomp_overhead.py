@@ -636,9 +636,13 @@ def test_this_runs_measurement_reached_the_file_it_was_asked_for(
     anything. What an ordinary run produces is `seccomp-overhead.latest.json`,
     and the durable file is written only when `F2A_RECORD_MEASUREMENTS=1` — so
     on every CI run to date this was an existence check against a file the run
-    never touched. That is the silent-instrument family `tools/README.md`
-    counts at least eight of, and `ci.yml` already reasons correctly one level
-    up: *"the file is missing exactly when the measurement did not happen."*
+    never touched. That is the silent-instrument family this repository keeps
+    finding: `ci.yml`'s own header counts *"six instruments that produced a
+    clean bit over a measurement that was absent, replayed or unnamed"*, and
+    `tools/README.md` counts *"four instruments ... hardened in one week for the
+    same defect"*. Neither number includes this one. `ci.yml` also already
+    reasons correctly one level up about this very file: *"the file is missing
+    exactly when the measurement did not happen."*
 
     Two things are asserted rather than one, because existence alone would
     close only half of it:
