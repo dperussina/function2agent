@@ -99,6 +99,16 @@ cp -r "$SRC/deploy" "$SRC/requirements.lock" "$WORK/" 2>/dev/null
 # score a proof it cannot attribute. That refusal working is the reason this
 # line is one line and not a debugging session.
 cp -r "$SRC/.github" "$WORK/" 2>/dev/null
+# `specs/` joined the copy under T095, third instance of the same failure and
+# the same fix. A CONTRACT test's mechanism lives on the other side of a
+# document in `specs/*/contracts/`, so without the tree here every such test
+# fails in the baseline for a missing file and its arms report UNUSABLE rather
+# than a verdict. That silence is the thing: the three T095 arms were scored
+# `test-already-failing` on first run, and nothing about their titles said the
+# reason was the copy list rather than the mechanism. The whole tree is copied,
+# not `002` alone, because tools/corpuscheck walks `specs/*/findings` and a
+# partial copy would trade one missing-file baseline failure for another.
+cp -r "$SRC/specs" "$WORK/" 2>/dev/null
 # The Go arms need the fixtures at the relative path the tests use
 # (src/proxy/../../tests/fixtures), which the copy above already satisfies.
 cd "$WORK" || exit 1
@@ -705,6 +715,126 @@ proof "T114 instrument — the arm table is never attempted, so zero violations 
   tests/batteries/test_adversarial_egress.py \
   "tests/batteries/test_adversarial_egress.py::test_every_arm_actually_ran" \
   's = s.replace("        for arm in ARMS", "        for arm in ARMS[:0]")'
+
+# --- T093, the decision log ingested into the trace stream -------------------
+#
+# The ownership direction is the mechanism: the proxy owns `egress_decision`
+# and the runtime reads it. Two of these prove that direction is held by the
+# ENGINE and not by the ingest's manners, and three prove the ingest refuses
+# rather than completes what it cannot represent — because the failure mode
+# this module has is not crashing, it is quietly producing a plausible record.
+proof "T093 — the decision database is opened read-write, so the direction is a manner" \
+  src/runtime/proxy_ingest.py \
+  "tests/contract/test_proxy_ingest.py::test_a_write_through_the_ingest_connection_is_refused" \
+  's = s.replace("f\x22file:{self.path}?mode=ro\x22, uri=True", "str(self.path)")'
+
+# The one place in the repository where a requirement label is not merely
+# documentation: `src/proxy/rules.go` stamps it into the log AND into the
+# client-visible error body, so a label recomputed here disagrees with the one
+# the operator was shown. The tamper substitutes a registry-plausible value,
+# which is what a re-tagging module would produce.
+proof "T093 — the requirement is recomputed on the reading side, so the log and the operator disagree" \
+  src/runtime/proxy_ingest.py \
+  "tests/contract/test_proxy_ingest.py::test_a_wrong_requirement_on_a_registered_rule_travels_verbatim" \
+  's = s.replace("\x22requirement\x22: row.requirement,", "\x22requirement\x22: \x22FR-015\x22,")'
+
+proof "T093 — the disposition map gains a default, so a third disposition records as a denial" \
+  src/runtime/proxy_ingest.py \
+  "tests/contract/test_proxy_ingest.py::test_an_unclassified_disposition_stops_the_ingest" \
+  's = s.replace("return DISPOSITION_OUTCOME[disposition]", "return DISPOSITION_OUTCOME.get(disposition, OUTCOME_DENIED)")'
+
+proof "T093 — the watermark is not read, so every pass re-ingests the whole log" \
+  src/runtime/proxy_ingest.py \
+  "tests/contract/test_proxy_ingest.py::test_a_second_ingest_over_an_unchanged_log_moves_nothing" \
+  's = s.replace("from_seq = watermark(writer, session_id)", "from_seq = 0")'
+
+proof "T093 — a row with no requirement is ingested instead of refused" \
+  src/runtime/proxy_ingest.py \
+  "tests/contract/test_proxy_ingest.py::test_a_row_with_no_requirement_is_refused" \
+  's = s.replace("for field_name in (\x22rule_id\x22, \x22reason\x22, \x22requirement\x22):", "for field_name in ():")'
+
+# `src/runtime/proxy_ingest.py` is on the `permitted` list for the
+# engine-specific-SQL invariant, which suspends that check for the whole file.
+# This proves the narrowing that pays for it — the file may hold SQL, but not a
+# write — is a live check rather than a claim in a comment.
+proof "T093 — a write statement enters the file the SQL invariant no longer scans" \
+  src/runtime/proxy_ingest.py \
+  "tests/contract/test_proxy_ingest.py::test_the_ingest_issues_no_write_statement_at_all" \
+  's = s.replace("    def close(self) -> None:", "    def purge(self) -> None:\n        self._conn.execute(\x22DELETE FROM egress_decision\x22)\n\n    def close(self) -> None:")'
+
+# --- T095, the egress-policy contract over every named denial reason ----------
+#
+# A contract test's mechanism is on the other side of the document, so these
+# tamper the Go source and the contract itself rather than the test. Each is a
+# drift a reviewer would not see: a reason renamed on one side, a containment
+# widened on the other, a stage that stops being registered, and the clause
+# that states the containment quietly dropped.
+proof "T095 — a published reason is renamed in the registry, so a denial nobody can look up" \
+  src/proxy/rules.go \
+  "tests/contract/test_egress_policy.py::test_every_named_reason_in_the_contract_is_produced_by_a_registered_rule" \
+  's = s.replace("Reason: \x22address_class_denied\x22", "Reason: \x22address_class_denied_v2\x22")'
+
+proof "T095 — the exemption gains a second address slot, so two exemptible classes mean one each" \
+  src/proxy/addresses.go \
+  "tests/contract/test_egress_policy.py::test_two_exemptible_classes_and_exactly_one_exemption" \
+  's = s.replace("type pinnedExemption struct {\n\taddr netip.Addr\n}", "type pinnedExemption struct {\n\taddr netip.Addr\n\tsecond netip.Addr\n}")'
+
+proof "T095 — the clause that holds the containment is dropped from the contract" \
+  specs/002-spec-aware-agent-runtime/contracts/egress-policy.md \
+  "tests/contract/test_egress_policy.py::test_two_exemptible_classes_and_exactly_one_exemption" \
+  's = s.replace("**Two exemptible classes, one\n   exemption**", "Two exemptible classes")'
+
+proof "T095 — a gate stage stops being registered while its type stays behind" \
+  src/proxy/main.go \
+  "tests/contract/test_egress_policy.py::test_every_stage_type_that_exists_is_wired_into_the_pipeline" \
+  's = s.replace("NewMethodStage(origin, policy),", "")'
+
+# --- T113, the runtime's own default-deny egress plane ------------------------
+#
+# One proof per constitution Principle IV bullet-1 term, plus the hook itself
+# and the fail-closed entry. The bullet says a configuration missing ANY ONE of
+# the four terms does not satisfy it, so a proof per term is what the authority
+# asks for rather than thoroughness for its own sake.
+proof "T113 — the connect hook stops consulting the plane, so default-deny is decoration" \
+  src/runtime/egress.py \
+  "tests/contract/test_runtime_egress.py::test_a_connection_to_an_unpinned_destination_is_refused_on_the_wire" \
+  's = s.replace("            plane.check(sock.family, address)\n            return saved[\x22connect\x22](sock, address)", "            return saved[\x22connect\x22](sock, address)")'
+
+proof "T113 term 2 — the port drops out of matching, so host-granular permits the database" \
+  src/runtime/egress.py \
+  "tests/contract/test_runtime_egress.py::test_the_right_address_on_the_wrong_port_is_denied_by_its_own_rule" \
+  's = s.replace("return self.address == address and self.port == port", "return self.address == address")'
+
+proof "T113 term 3 — the resolver stops refusing names, so a lookup exfiltrates without connecting" \
+  src/runtime/egress.py \
+  "tests/contract/test_runtime_egress.py::test_a_name_lookup_is_denied_while_the_plane_is_installed" \
+  's = s.replace("raise plane.resolution_denied(host) from None", "return")'
+
+proof "T113 term 4 — the declaration-time class check removed, so loopback can be pinned" \
+  src/runtime/egress.py \
+  "tests/contract/test_runtime_egress.py::test_loopback_cannot_be_pinned_and_there_is_no_exemption_path" \
+  's = s.replace("denied = classify(self.address)", "denied = None")'
+
+# The second of the two class checks, and the one the constitution's "even on
+# an allowlisted host" is about. Isolated from the arm above because the arm
+# above is the declaration check: this tamper leaves that one intact.
+proof "T113 term 4 — the connect-time class check removed, so an allowlisted metadata address is dialled" \
+  src/runtime/egress.py \
+  "tests/contract/test_runtime_egress.py::test_a_denied_class_is_refused_at_connect_time_even_when_pinned" \
+  's = s.replace("        denied = classify(address)\n", "        denied = None\n")'
+
+proof "T113 — a caller with no plane installed stops failing closed" \
+  src/runtime/egress.py \
+  "tests/contract/test_runtime_egress.py::test_a_caller_with_no_plane_installed_fails_closed" \
+  's = s.replace("    if plane is None:", "    if False:")'
+
+# The instrument, not the mechanism. The static scan is what binds T058's
+# provider transport to the plane before that transport exists, so a scan that
+# has stopped matching anything is the failure this arm is for.
+proof "T113 instrument — the outbound scan matches nothing, so 'no unguarded call site' is free" \
+  tests/contract/test_runtime_egress.py \
+  "tests/contract/test_runtime_egress.py::test_the_outbound_scan_fires_on_a_planted_call" \
+  's = s.replace("        for pattern in OUTBOUND_CALLS:", "        for pattern in OUTBOUND_CALLS[:0]:")'
 
 proof "FR-049 pids.max — the bound not written" \
   src/supervisor/bounds.py \
