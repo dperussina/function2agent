@@ -3730,6 +3730,24 @@ proof "T101 — the two result-file names collapse, so 'the measurement is recor
   "tests/unit/test_seccomp_overhead_record.py::test_the_two_settings_select_different_files" \
   's = s.replace("    return DURABLE_RECORD if environ.get(RECORD_REQUEST) == \x221\x22 else LATEST_RECORD", "    return DURABLE_RECORD")'
 
+# The negative rate, put back. CI run 31403771772 published
+# `microseconds_per_notification: -502.82` for the compute_only control over 78
+# notifications, because the supervised median came out below its own baseline.
+# Removing the sign check republishes it.
+proof "T101 — a rate is published for an overhead that came out negative" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_the_negative_rate_ci_published_is_withheld_now" \
+  's = s.replace("    if overhead_seconds <= 0:\n        return None, \x22non-positive-overhead\x22\n", "")'
+
+# The reason, not the suppression. A rate withheld with no recorded reason is an
+# absence that reads as an oversight, which is the shape `costs.UNPRICED` exists
+# to prevent — and the arm above still passes with the prose gone, because the
+# rate is still withheld. This is the half that keeps the artifact readable.
+proof "T101 — a withheld rate stops recording why, so the absence reads as a gap" \
+  tests/batteries/test_seccomp_overhead.py \
+  "tests/unit/test_seccomp_overhead_record.py::test_every_withholding_reason_is_recorded_in_prose" \
+  's = s.replace("UNRATED: Mapping[str, str] = {", "UNRATED: Mapping[str, str] = {\n    \x22unreached-reason\x22: \x22a recorded reason for an absence that no branch can produce, which is a row nobody checks\x22,")'
+
 # ---------------------------------------------------------------------------
 # T004 — the `codegraph` schema pin.
 #

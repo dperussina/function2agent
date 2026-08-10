@@ -214,6 +214,76 @@ def record_filename(environ: Mapping[str, str]) -> str:
     return DURABLE_RECORD if environ.get(RECORD_REQUEST) == "1" else LATEST_RECORD
 
 
+# --- the rate, and the reason an arm may not have one ----------------------
+
+#: Why an arm publishes no `microseconds_per_notification`, keyed by the reading
+#: that withheld it.
+#:
+#: **Shape borrowed from `src/runtime/providers/costs.py`'s `UNPRICED`, and for
+#: its reason rather than its style.** That table exists because a missing price
+#: written as `0.0` is indistinguishable from a turn that cost nothing, and the
+#: repair was `spend_usd: float | None` plus a recorded reason for every
+#: absence. A rate is the same kind of quantity: `microseconds_per_notification`
+#: is the one field here the module's own docstring calls *transferable*, so a
+#: number standing where no rate could be computed is a figure that invites
+#: subtraction and gets it.
+#:
+#: **An absence is recorded rather than left as a gap**, because a bare `null`
+#: reads as an oversight and the next reader fills it in.
+UNRATED: Mapping[str, str] = {
+    "no-notifications": (
+        "No notifications were observed, so there is no denominator. The "
+        "overhead figure beside this stands on its own; a per-notification "
+        "rate over zero notifications is not a smaller number, it is not a "
+        "number."
+    ),
+    "non-positive-overhead": (
+        "The supervised median came out at or below its own baseline, so the "
+        "difference is not an overhead and no rate is derivable from it. "
+        "Supervision is strictly additional work — an ioctl and a "
+        "/proc/<pid>/mem read per notification — so a non-positive difference "
+        "cannot be a measurement of its cost; it is evidence that the cost is "
+        "below what this instrument resolves against run-to-run variation on "
+        "this host. **The boundary is zero because the quantity's definition "
+        "forbids crossing it, and for no other reason.** This is deliberately "
+        "not a noise threshold: this battery has no measured noise floor, and "
+        "a chosen one would be a fabricated constant silently deciding which "
+        "figures get published. The consequence is stated rather than hidden — "
+        "a *small positive* difference on this host is equally dominated by "
+        "variation and this test does publish a rate for it. Closing that "
+        "needs a measured floor, which is a measurement nobody has taken, and "
+        "the honest form of not having it is a one-sided detector rather than "
+        "an invented bound. **This is a property of the instrument and not of "
+        "a runner, which is why it is fixed here rather than reported as CI "
+        "flakiness.** CI run 31403771772 published ratio 0.9066, "
+        "overhead -0.03922s and -502.82 microseconds per notification for the "
+        "compute_only control over 78 notifications; 30 sequential runs on an "
+        "unrelated host — 6.12.76-linuxkit aarch64, euid 0, 10 CPUs, "
+        "2026-08-10 — put the same arm at or below zero in 3 of 30, low "
+        "-0.022496s. A control that flips sign on two hosts of different "
+        "architecture and kernel is the measurement doing this, not a noisy "
+        "neighbour."
+    ),
+}
+
+
+def notification_rate(
+    overhead_seconds: float, notifications_observed: float
+) -> tuple[float | None, str | None]:
+    """The transferable figure, or the key in `UNRATED` naming its absence.
+
+    Takes the **rounded** overhead the record publishes rather than the raw
+    difference, so that the sign of `overhead_seconds` and the presence of a
+    rate can never disagree in one artifact, and so a reader holding the record
+    can re-derive one field from the other two.
+    """
+    if not notifications_observed:
+        return None, "no-notifications"
+    if overhead_seconds <= 0:
+        return None, "non-positive-overhead"
+    return round(overhead_seconds / notifications_observed * 1e6, 2), None
+
+
 #: Recorded in the result file rather than only in the docstring, because the
 #: artifact outlives the module a reader would otherwise have to go and find.
 SHELL_HEAVY_ABSENCE = (
@@ -383,15 +453,26 @@ def measurement() -> dict:
         supervised_samples = [_run_supervised(source) for _ in range(REPEATS)]
         supervised = statistics.median(t for t, _ in supervised_samples)
         observed = statistics.median(n for _, n in supervised_samples)
+        overhead = round(supervised - baseline, 6)
+        rate, unrated = notification_rate(overhead, observed)
         arms[name] = {
             "baseline_seconds": round(baseline, 6),
             "supervised_seconds": round(supervised, 6),
+            # **Kept as a raw reading even when it is below 1.0, and the rate
+            # beside it is not.** The ratio and the overhead are two measured
+            # medians and their quotient and difference; they are what this run
+            # observed and suppressing them would be discarding a reading. The
+            # rate is *derived*, and its derivation is only valid where the
+            # difference is an overhead.
             "ratio": round(supervised / baseline, 4) if baseline else None,
-            "overhead_seconds": round(supervised - baseline, 6),
+            "overhead_seconds": overhead,
             "notifications_observed": observed,
-            "microseconds_per_notification": (
-                round((supervised - baseline) / observed * 1e6, 2)
-                if observed else None
+            "microseconds_per_notification": rate,
+            # Always present, `null` where a rate was published. A key that
+            # appeared only on the suppressing branch would be a key no reader
+            # knows to grep for.
+            "microseconds_per_notification_absent_because": (
+                None if unrated is None else UNRATED[unrated]
             ),
         }
 
@@ -575,3 +656,34 @@ def test_overhead_is_reported_not_asserted_against_a_threshold(
     """
     for name, arm in measurement["arms"].items():
         assert arm["ratio"] is not None, f"{name} produced no ratio"
+
+
+def test_no_arm_publishes_a_rate_its_own_overhead_contradicts(
+    measurement,
+) -> None:
+    """The record's two derived fields agree, on this host's actual readings.
+
+    `tests/unit/test_seccomp_overhead_record.py` proves `notification_rate` has
+    this property against injected values; it cannot prove the *fixture* routes
+    the arms through it. This is the same gap
+    `test_the_records_caveat_is_re_derivable_from_the_environment_it_carries`
+    closes for the caveat, and it is closable only where the fixture runs.
+    """
+    for name, arm in measurement["arms"].items():
+        rate = arm["microseconds_per_notification"]
+        reason = arm["microseconds_per_notification_absent_because"]
+        if rate is None:
+            assert reason in UNRATED.values(), (
+                f"{name} published no rate and no recorded reason for the "
+                "absence, which is the gap a later reader fills in"
+            )
+            continue
+        assert reason is None, f"{name} published a rate and a reason for not"
+        assert rate > 0, (
+            f"{name} published {rate} microseconds per notification, a rate "
+            "supervision cannot produce"
+        )
+        assert arm["overhead_seconds"] > 0, (
+            f"{name} published a rate of {rate} over an overhead of "
+            f"{arm['overhead_seconds']}s, so the two disagree in sign"
+        )
