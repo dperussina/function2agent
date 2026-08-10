@@ -168,11 +168,21 @@ def test_a_thread_calling_sys_exit_is_named_as_such(channel) -> None:
 # rest of the suite is still going. That is not hypothetical: one removal-proof
 # run took a baseline in which 116 outcomes were failing — the harness scored
 # nothing and reported 20 arms UNUSABLE, which is its guard working — and a
-# re-run was clean. So the control below stops at its **first** abort, which
-# makes exactly one per suite run, and the two arms that assert *zero* are the
-# only ones that run to `TRIALS`. Do not remove the early exit to "get a better
-# rate"; the rate is recorded in `src/contracts/operator_log.py` and this is
-# the standing regression, not the measurement.
+# re-run was clean.
+#
+# So every arm stops at its **first** abort. That bounds a *failing* run to one
+# crash report without weakening a passing one, because the break is reachable
+# only once an abort has happened: an arm asserting zero never takes it and
+# still runs the full `TRIALS`, so the zero is still measured over the whole
+# population. What the early exit gives up is the failing *rate* — the arm
+# reports 1 of 1 rather than 12 of 12 — and that is not this module's claim:
+# one abort already falsifies `aborts == 0`, and the rate is recorded in
+# `src/contracts/operator_log.py`. Do not remove the early exit to recover it.
+#
+# The removal proof for the unbuffered write is what makes this bite: it
+# tampers `OperatorLog.say` back into a buffered write, so before the early
+# exit that one arm produced `TRIALS` crash reports at roughly two seconds
+# apiece every time the proof ran.
 # ---------------------------------------------------------------------------
 
 _PLANT = textwrap.dedent(
@@ -211,14 +221,20 @@ ABORTED = (-6, 134)
 
 
 def _aborts(vehicle: str, *, stop_on_abort: bool = False) -> tuple[int, list[int]]:
-    """Run the plant `TRIALS` times and count the aborts.
+    """Run the plant up to `TRIALS` times and count the aborts.
 
-    `stop_on_abort` is for the control, and it is a runtime economy rather than
-    a weakening: the control's claim is *this plant can produce the fault*, for
-    which one occurrence is the whole of the evidence. An abort costs about two
-    seconds on macOS because the crash reporter runs, so twelve of them would
-    put half a minute onto every suite run to re-establish a rate that is
-    already recorded.
+    `stop_on_abort` is a runtime economy rather than a weakening, and it is
+    asymmetric in exactly the way that makes it safe: the break is reachable
+    only after an abort, so an arm asserting *zero* runs the full `TRIALS`
+    whenever it passes and short-circuits only on a run it was already going to
+    fail. An abort costs about two seconds on macOS because the crash reporter
+    runs, so the trade is one crash report instead of twelve on a failing arm,
+    against a rate nobody reads off a failure message.
+
+    Returns the abort count and the exit codes actually collected. Callers
+    report against `len(codes)` rather than `TRIALS`, because the two differ
+    once the break fires and a message naming `TRIALS` would claim a
+    denominator the run did not reach.
     """
     codes: list[int] = []
     for _ in range(TRIALS):
@@ -259,9 +275,9 @@ def test_a_buffered_write_from_a_daemon_thread_aborts_the_process() -> None:
 
 def test_an_unbuffered_write_from_a_daemon_thread_does_not() -> None:
     """The same plant, the same threads, the same timing — `os.write`."""
-    aborts, codes = _aborts("unbuffered")
+    aborts, codes = _aborts("unbuffered", stop_on_abort=True)
     assert aborts == 0, (
-        f"{aborts} of {TRIALS} trials aborted while writing through "
+        f"{aborts} of {len(codes)} trials aborted while writing through "
         f"`OperatorLog.say` (exit codes {sorted(set(codes))}). The single "
         "unbuffered write is the whole of what stands between a daemon "
         "thread's report and SIGABRT, and it has stopped standing."
@@ -280,9 +296,9 @@ def test_the_adopted_thread_hook_does_not_abort() -> None:
     which is that `src/supervisor/lease.py`'s `raise` can no longer take the
     process down.
     """
-    aborts, codes = _aborts("raise-adopted")
+    aborts, codes = _aborts("raise-adopted", stop_on_abort=True)
     assert aborts == 0, (
-        f"{aborts} of {TRIALS} trials aborted with `adopt_thread_exceptions()` "
+        f"{aborts} of {len(codes)} trials aborted with `adopt_thread_exceptions()` "
         f"installed (exit codes {sorted(set(codes))}). The renewer's terminal "
         "branch has lost the vehicle lease.py's note says it has."
     )
