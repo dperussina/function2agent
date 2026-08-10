@@ -95,7 +95,12 @@ the TypeScript API**, because the SQLite file is queryable from any language.
 inherited the figure from `06` exactly as those two did.** Built from the 194-line file: 7 ordinary
 tables, the `nodes_fts` virtual table itself, and the 4 shadow tables its `content='nodes'` FTS5
 declaration materialises — 12 once `src/analysis/codegraph_pin.py`'s `sqlite_%` filter has run,
-beside 20 indexes and 3 triggers, 35 objects in all. **The advice is unchanged, because it never
+beside 20 indexes and 3 triggers, 35 objects in all. **All three of those figures count the pin's
+population and not `sqlite_master`'s: raw, the table holds 13 tables, 23 indexes and 39 objects.**
+The thirteenth table is `sqlite_sequence`, materialised because `edges` and `unresolved_refs` declare
+`INTEGER PRIMARY KEY AUTOINCREMENT`. **So a reader who counts the rows by hand gets 13 and has found
+the filter rather than an error here**; `06 §1` carries why the filter's two predicates do unequal
+work. **The advice is unchanged, because it never
 rested on the width**: what makes the schema the right target is that it is documented and
 language-neutral. **Size the work against the 7 ordinary tables you would actually query**, not
 against either published count. `codegraph/src/mcp/tools.ts` — the 8 MCP tools,
