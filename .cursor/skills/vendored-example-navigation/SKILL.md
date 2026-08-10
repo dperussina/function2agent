@@ -89,8 +89,16 @@ hand-tuned three-agent workflow.
 
 **How is route→handler extraction actually implemented?**
 `codegraph/src/resolution/frameworks/` — 25 resolvers; read `express.ts`, `python.ts`, `laravel.ts`.
-`codegraph/src/db/schema.sql` — four tables; **design against the schema, not the TypeScript API**,
-because the SQLite file is queryable from any language. `codegraph/src/mcp/tools.ts` — the 8 MCP tools,
+`codegraph/src/db/schema.sql` — ~~four tables~~ **twelve tables**; **design against the schema, not
+the TypeScript API**, because the SQLite file is queryable from any language.
+**Struck 2026-08-10 on the measurement that corrected `06 §1`, `12 §6.5` and `14 §2.2`; this site
+inherited the figure from `06` exactly as those two did.** Built from the 194-line file: 7 ordinary
+tables, the `nodes_fts` virtual table itself, and the 4 shadow tables its `content='nodes'` FTS5
+declaration materialises — 12 once `src/analysis/codegraph_pin.py`'s `sqlite_%` filter has run,
+beside 20 indexes and 3 triggers, 35 objects in all. **The advice is unchanged, because it never
+rested on the width**: what makes the schema the right target is that it is documented and
+language-neutral. **Size the work against the 7 ordinary tables you would actually query**, not
+against either published count. `codegraph/src/mcp/tools.ts` — the 8 MCP tools,
 a calibration point for tool-suite sizing. `codegraph/src/mcp/dynamic-boundaries.ts` — where static
 call graphs break (`handlers['save']`, `getattr`, reflection, message buses); the name is misleading
 but the "the static path ends here" reporting pattern is worth adopting.

@@ -349,11 +349,27 @@ def test_rows_in_upstreams_real_schema_do_not_move_the_pinned_digest(tmp_path):
     """Row-independence against upstream's schema rather than a stand-in.
 
     The synthetic arm above proves the property on two tables and an index.
-    Upstream's schema is 12 tables including five FTS5 shadow tables and three
-    triggers that fire on every `nodes` insert, and that is a materially
-    different thing to be row-independent about — an insert here writes into
-    other tables by itself. `ANALYZE` is run too, because it creates
-    `sqlite_stat*` tables and those are a property of the data.
+    Upstream's schema is 12 tables ~~including five FTS5 shadow tables~~
+    **— 7 ordinary, the `nodes_fts` virtual table itself, and 4 FTS5 shadow
+    tables —** and three triggers that fire on every `nodes` insert, and that
+    is a materially different thing to be row-independent about — an insert
+    here writes into other tables by itself. `ANALYZE` is run too, because it
+    creates `sqlite_stat*` tables and those are a property of the data.
+
+    **Struck 2026-08-10 — the decomposition, never the 12, which is what the
+    assertions above check and is correct.** `nodes_fts` appears in
+    `sqlite_master` with `type='table'` and its own `CREATE VIRTUAL TABLE`
+    text, so it counts in its own right rather than as one of its own shadows;
+    and the shadow set is four — `_config`, `_data`, `_docsize`, `_idx` — with
+    no `_content`, because the declaration carries `content='nodes'` and SQLite
+    materialises no content shadow for an external-content FTS5 table.
+
+    **The 12 is the count `schema_digest()`'s filter leaves, not the number of
+    `type='table'` rows, which is 13.** `AUTOINCREMENT` on `edges` and
+    `unresolved_refs` also creates `sqlite_sequence`, which carries non-null
+    SQL, so `name NOT LIKE 'sqlite_%'` is the only thing excluding it — the
+    same filter `test_sqlite_internal_tables_are_excluded_from_the_digest`
+    covers from the `sqlite_stat*` side.
 
     This is the closest a committed test comes to the cross-repository control
     that was actually run on 2026-08-10 — three repositories of different size
