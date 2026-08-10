@@ -261,6 +261,40 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: band — `shell_heavy` closest at 24.9–28.3 ms of overhead against the
 #: control's +10.3 ms ceiling, a factor of 2.4.
 #:
+#: **THE FLOOR WAS THEN TAKEN TWICE MORE, AND THE SPLIT REPRODUCES WHILE THE
+#: NUMBERS DO NOT.** Runs `31416789165` and `31416959913`, same runner class,
+#: same `6.17.0-1020-azure` x86_64, euid 0, 4 cores, CPython 3.12.13, 10 of 10
+#: batteries in 127.7 s and 139.3 s. Three closed samples at n=10 each, three
+#: boots; no sample is folded into another. Within-run pairwise-gap medians:
+#::
+#:     path_heavy            2.3%   3.3%   3.1%
+#:     reference_app_api     2.3%   4.5%   3.8%
+#:     shell_heavy           4.6%   7.0%   6.8%
+#:     reference_app_socket  7.4%   7.8%  10.1%
+#:     compute_only          127%   98%    70%     (10, 8 and 6 of 10 rated)
+#::
+#: **So TIGHT-on-the-four and WIDE-on-the-control is reproducible, three for
+#: three, and that is the part `REPEATS` is decided on.** The medians themselves
+#: are not: the same arm's median-of-ten-medians reads 62.70, 40.82 and 43.97
+#: µs/notification across the three, and the across-run gaps between them are
+#: **42.3% / 46.3% / 47.7% / 59.1%** on the four load-bearing arms and 140.5% on
+#: the control. **That is the conclusion in its strongest form.** Each of those
+#: points already aggregates fifty samples, and fifty samples still leaves a
+#: 42–59% across-run gap, so the residual is not a sample-count problem at any
+#: `REPEATS` this battery could afford. `REPEATS` stays 5.
+#:
+#: **The bound this floor looked like it licensed does not survive the repeat,
+#: and that is the load-bearing correction.** From the first sample alone the
+#: control's positive extreme was **+0.010275 s** and reporting it invited
+#: reading a floor off it. The next two give **+0.017368** and **+0.029317 s** —
+#: the defining quantity of the bound moves **2.9x** across three samples of
+#: identical construction on one runner class. Worse, in `31416959913` that
+#: extreme sits **above** `shell_heavy`'s own overhead for the same run
+#: (0.0188–0.0228 s), so a bound read off that sample's control would withhold a
+#: load-bearing arm outright. **There is no single number here to be a floor**,
+#: and the original refusal to install a magnitude bound is what this measurement
+#: vindicates rather than what it repairs.
+#:
 #: ~~A median over several runs is a different proposition and is now a
 #: reachable one, because the anomalous run is a minority of three and is
 #: flagged in-band by its control's sign rather than picked out in hindsight.~~
