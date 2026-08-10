@@ -184,6 +184,16 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: for the excess — the two readings the strike above says nothing separates.
 #: Four runs cannot settle it, and the measurement named below still can.
 #:
+#: **Settled 2026-08-10 by that measurement, and it splits: the proxy is right
+#: about the control and wrong about every other arm.** The floor below puts
+#: CI's within-run range at **12.7–28.0%** on the four load-bearing arms against
+#: this host's within-host **19.5–627%**, so CI's 4-vCPU guest is the *quieter*
+#: host there, not the noisier one. The control goes the other way — non-positive
+#: in **3 of 10** within one CI run and 3 of 30 here — which is the arm the flip
+#: rate was actually computed on. So a flip rate is a proxy for the variance *of
+#: the arm it was measured on* and does not transfer to the others, which is a
+#: narrower reading than "the noisier host" and the one the data supports.
+#:
 #: This host still differs from CI's in architecture, kernel and core count at
 #: once, and `host_property_caveat` says in terms that two records on different
 #: kernels are not a before and an after. Nothing here measures CI's own
@@ -215,6 +225,41 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: rather than two** — which is a more useful answer than a tuned number. What
 #: no number of runs measures is the repeat count *inside* one run, which is
 #: what `REPEATS` sets, and that is exactly what the probe measures.
+#:
+#: **THE FLOOR WAS TAKEN, AND THE ANSWER IS TIGHT FOR THE FOUR LOAD-BEARING
+#: ARMS AND WIDE FOR THE CONTROL.** Run 31415736559, 10 of 10 batteries in
+#: 151.0s on `6.17.0-1020-azure` x86_64, euid 0, **4 cores**, CPython 3.12.13.
+#: A closed sample at n=10, one runner, one boot; re-derivable from that run's
+#: `seccomp-variance.latest.json` artifact. `microseconds_per_notification`,
+#: median [min–max], with the pairwise-gap median and max over 45 pairs:
+#:
+#:     path_heavy            62.70  [59.42 –  68.32]  range 14.2%  gap 6.0% / 13.9%
+#:     reference_app_api     65.62  [64.44 –  74.47]  range 15.3%  gap 2.3% / 14.4%
+#:     shell_heavy           71.06  [67.06 –  76.09]  range 12.7%  gap 4.6% / 12.6%
+#:     reference_app_socket  72.44  [65.87 –  86.17]  range 28.0%  gap 7.4% / 26.7%
+#:     compute_only          24.79  [ 4.04 – 131.73]  range 515%   gap 127% / 188%   (7 of 10 rated)
+#:
+#: **So `REPEATS` stays 5, and now because the right quantity was measured.**
+#: Within-run pairwise gaps on the load-bearing arms are 2.3–7.4% at the median
+#: against the across-run **18.5% median and 69.6% maximum** above. Raising
+#: `REPEATS` shrinks the smaller component and leaves the larger one untouched,
+#: so five-fold wall clock buys a few percent of the wrong number. The residual
+#: lives at the whole-run level, which is where `REPEATS` cannot reach.
+#:
+#: **The denominator claim holds on CI too, and more strictly.**
+#: `notifications_observed` was a *single* value across all ten draws for every
+#: arm — 2078 / 827 / 372 / 833 / 78 — so the whole within-run spread is in the
+#: timing numerator. Those are not this host's counts, which is the point of
+#: recording both.
+#:
+#: **The control is the finding.** Its `overhead_seconds` straddles zero across
+#: one boot — **−0.004659 to +0.010275 s**, non-positive in 3 of 10 — and its
+#: rated draws swing **32.6x**, from 4.04 to 131.73 µs/notification. That is
+#: wider than anything the across-run sample shows, so the 3.0x swing in the
+#: published control rate is not an across-run effect at all: it is this arm's
+#: own within-run noise, measured. All four load-bearing arms sit clear of that
+#: band — `shell_heavy` closest at 24.9–28.3 ms of overhead against the
+#: control's +10.3 ms ceiling, a factor of 2.4.
 #:
 #: ~~A median over several runs is a different proposition and is now a
 #: reachable one, because the anomalous run is a minority of three and is
