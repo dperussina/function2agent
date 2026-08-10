@@ -983,7 +983,7 @@ you did not create.** If there are any, a concurrent pass is mid-commit and the 
 edit. This is cheap, it is the only signal available, and no gate can supply it — a hook runs after
 the damage is staged, and by then the two halves of the rename are already separated.
 
-### The reference application is the one place a comment edit is a behavioural change
+### ~~The reference application is the one place a comment edit is a behavioural change~~ **A comment edit is a behavioural change in two file families, by two different mechanisms** *(uniqueness struck 2026-08-10)*
 
 **On 2026-08-10 a pass corrected a stale `workload.sh` reference in a docstring inside
 `tests/fixtures/reference-app/` and broke the gate.** Nothing about the correction was wrong, and the
@@ -999,13 +999,57 @@ counted as code and a docstring edit moves *both* figures. The size is not incid
 requires it to be reported wherever SC-001 appears, which is why it is pinned at all: a stale figure is
 a wrong denominator in somebody else's arithmetic.
 
-There is nothing to fix in the gate. The rule is an expectation to drop: **in this fixture, and nowhere
-else in the tree, "it's only a comment" is not a reason to expect the suite to stay green.** Either
+There is nothing to fix in the gate. The rule is an expectation to drop: **in this fixture, ~~and nowhere
+else in the tree,~~ "it's only a comment" is not a reason to expect the suite to stay green.** Either
 make the edit net-zero in line count, or regenerate with
 `python tests/fixtures/reference-app/seed.py` and bring the fixture README's stated size table back
 into agreement — the table is separately pinned by `test_the_readme_states_the_size_that_was_measured`,
 so a regeneration that stops at the JSON leaves the prose everybody quotes stale and the JSON nobody
 opens correct, which is the failure mode rather than a lesser version of it.
+
+**The "nowhere else" clause is struck as of 2026-08-10 — the hazard is real and the uniqueness was
+not.** A second file family has the same property by a mechanism that shares no machinery with this
+one: there a comment moves a *measured figure* that a committed artifact pins, here it breaks a
+*byte-exact string match* in which no figure appears at all. It is the entry immediately below.
+
+### A tamper needle that spans a line boundary makes a comment a breaking change, and 114 of them do
+
+**On 2026-08-10 a comment inserted between two adjacent lines of `src/analysis/codegraph_pin.py` took
+`check_tampers.py` from 0 errors to 1.** Nothing was wrong with the comment. The T004 removal proof's
+tamper matches the literal string `'        ).fetchall()\n    finally:'` — the two lines that bracket
+the digest's `WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%'` filter — and a needle that spans a
+newline is only satisfied while those two lines stay adjacent. Put anything between them and the match
+is gone:
+
+```
+ERROR    T004 — row counts fold into the schema digest, so a re-index reads as an upstream release
+         NO_MATCH: no occurrence of '        ).fetchall()\n    finally:', with or without
+         whitespace normalization; the source moved under this proof
+```
+
+**Established by planting, not by reasoning**, and reverted in the same pass. `tamper.py`'s second pass
+is whitespace-tolerant, which is what makes this worth writing down rather than obvious: the tolerance
+covers *reindentation*, so it is easy to assume it also covers an inserted line. It does not, and the
+error message says so on its own — "with or without whitespace normalization" is the tolerant pass
+reporting that it also failed.
+
+**The scope is not one site.** Parsing the first argument of every `s.replace(` in
+`tests/removal_proofs.sh`, **114** needles contain a `\n` — out of 336 recovered, against the 338
+proofs `check_tampers.py` declares, the small gap being the parser's rather than a defect. Two
+independent extractions agree at 114. So roughly a third of the removal-proof corpus is anchored to
+line adjacency in some source file, and three proofs target `codegraph_pin.py` alone.
+
+**Confirm the revert by presence, never by absence.** The needle back and matching once, the planted
+string gone, `git diff` empty, and the error count returned to its starting value — which was read off
+the tool at 338 proofs / 0 errors before the plant and again after the revert, not assumed. The
+[emptiness-test inversion](#the-emptiness-test-inversion--git-diff-cannot-tell-unchanged-from-changed-back)
+recorded above is exactly why: `git diff` prints nothing for a tree that was never touched and for one
+that was destroyed and restored wrong, so absence distinguishes neither.
+
+One residue, stated rather than fixed: **`check_corpus.py` does not walk `tools/`** — its include list
+is `README.md`, `research`, `docs`, `specs`, `.cursor/skills`, `.specify/memory` — so this entry is
+guarded by nothing. `check_tampers.py` does guard the underlying fact, and would have caught the
+regression on any gated commit; it is this *write-up* that no instrument reads.
 
 ### A proof arm with no terminator does not report a hang; it reports whatever the eventual kill looks like
 
