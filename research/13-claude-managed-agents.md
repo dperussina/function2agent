@@ -54,7 +54,7 @@ The single most important sentence in the docs, and the one that decides the bui
 
 **You run:** your application. You POST `user.message` events and consume SSE. Plus, optionally: a custom-tool responder (your process executes the tool and POSTs `user.custom_tool_result`), a webhook receiver, and in `self_hosted` mode the sandbox worker.
 
-**You do not control:** the loop's structure. There is no "run this node, then that node." There is no place to insert a deterministic step between two model turns. This is the same architectural constraint `06-examples-inventory.md` §5 identifies for the Claude Agent SDK — *"the SDK's core value is a process boundary to a closed-source agent loop … you cannot restructure the loop"* — except here the boundary is an HTTP call instead of a subprocess.
+**You do not control:** the loop's structure. There is no "run this node, then that node." There is no place to insert a deterministic step between two model turns. This is the same architectural constraint `06-examples-inventory.md` §4 identifies for the Claude Agent SDK — *"the SDK's core value is a process boundary to a closed-source agent loop … you cannot restructure the loop"* — except here the boundary is an HTTP call instead of a subprocess.
 
 ### 1.2 Relationship to the rest of Anthropic's surface
 
@@ -518,6 +518,6 @@ Triggers 1 and 4 together would justify a full re-evaluation. Any one alone woul
 
 - [`02-agent-harnesses.md`](./02-agent-harnesses.md) §7 — "adopt a thin substrate, build the harness"; the sees-prompts-and-tokens test; the Claude-SDK-reaches-1.0 trigger.
 - [`05-frontier-lab-agent-definitions.md`](./05-frontier-lab-agent-definitions.md) — cost/capability spread across providers; recommendation #3 on provider routing.
-- [`06-examples-inventory.md`](./06-examples-inventory.md) §3, §5, §7 — ADK 2.6.1 capabilities and deprecation churn; the ADK-vs-Claude-SDK matrix; "process boundary to a closed-source agent loop."
+- [`06-examples-inventory.md`](./06-examples-inventory.md) §3, §4, §7 — ADK 2.6.1 capabilities and deprecation churn; the ADK-vs-Claude-SDK matrix; "process boundary to a closed-source agent loop."
 - [`08-auth-identity-and-secrets.md`](./08-auth-identity-and-secrets.md) §1, §3 — two credential planes; broker-resolved `credential_ref`; secret-custody analysis.
 - [`03-graph-and-loop-architecture.md`](./03-graph-and-loop-architecture.md) — when a graph is required over a loop.
