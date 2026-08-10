@@ -1,0 +1,112 @@
+{
+  "arms": {
+    "compute_only": {
+      "baseline_seconds": 0.356274,
+      "microseconds_per_notification": 210.88,
+      "microseconds_per_notification_absent_because": null,
+      "notifications_observed": 78,
+      "overhead_against_this_runs_control": "is-this-runs-control",
+      "overhead_against_this_runs_control_because": "+0.016449 s of overhead, which IS this run's control overhead of +0.016449 s. This arm IS the control, so the comparison is the control against itself and its outcome is a property of arithmetic rather than of syscall interception. The field records that rather than reporting a clearance, because a control that 'cleared itself' and a control that 'failed to clear itself' would both be read as findings about the supervisor, and neither is one. The control's own excursion is the comparator every other arm on this record was read against.",
+      "overhead_seconds": 0.016449,
+      "ratio": 1.0462,
+      "supervised_seconds": 0.372723
+    },
+    "path_heavy": {
+      "baseline_seconds": 0.018322,
+      "microseconds_per_notification": 64.22,
+      "microseconds_per_notification_absent_because": null,
+      "notifications_observed": 2078,
+      "overhead_against_this_runs_control": "clears-this-runs-control",
+      "overhead_against_this_runs_control_because": "+0.133442 s of overhead against this run's control overhead of +0.016449 s \u2014 clearing it by 8.11x, and standing clear of the control's own draw excursion of -0.000480 to +0.033130 s. The arm's overhead stands above the same run's control overhead. The two are the SAME statistic \u2014 a median of REPEATS supervised draws minus a median of REPEATS baseline draws \u2014 so the comparison is like for like, which is the property that makes it a comparison at all. Whether the margin survives the control's own draw-to-draw roaming is stated on the line beside it, because a median-of-REPEATS difference is one draw of a noisy quantity and a single battery observes no excursion of it. The across-battery excursion is what `tools/seccomp_variance_probe.py` measures over k repeats and this record does not carry it. A margin measured here is a property of this run and does not transfer to another.",
+      "overhead_seconds": 0.133442,
+      "ratio": 8.2833,
+      "supervised_seconds": 0.151764
+    },
+    "reference_app_api": {
+      "baseline_seconds": 0.075048,
+      "microseconds_per_notification": 65.86,
+      "microseconds_per_notification_absent_because": null,
+      "notifications_observed": 827,
+      "overhead_against_this_runs_control": "clears-this-runs-control",
+      "overhead_against_this_runs_control_because": "+0.054466 s of overhead against this run's control overhead of +0.016449 s \u2014 clearing it by 3.31x, and standing clear of the control's own draw excursion of -0.000480 to +0.033130 s. The arm's overhead stands above the same run's control overhead. The two are the SAME statistic \u2014 a median of REPEATS supervised draws minus a median of REPEATS baseline draws \u2014 so the comparison is like for like, which is the property that makes it a comparison at all. Whether the margin survives the control's own draw-to-draw roaming is stated on the line beside it, because a median-of-REPEATS difference is one draw of a noisy quantity and a single battery observes no excursion of it. The across-battery excursion is what `tools/seccomp_variance_probe.py` measures over k repeats and this record does not carry it. A margin measured here is a property of this run and does not transfer to another.",
+      "overhead_seconds": 0.054466,
+      "ratio": 1.7258,
+      "supervised_seconds": 0.129515
+    },
+    "reference_app_socket": {
+      "baseline_seconds": 0.731178,
+      "microseconds_per_notification": 64.09,
+      "microseconds_per_notification_absent_because": null,
+      "notifications_observed": 833,
+      "overhead_against_this_runs_control": "clears-this-runs-control",
+      "overhead_against_this_runs_control_because": "+0.053384 s of overhead against this run's control overhead of +0.016449 s \u2014 clearing it by 3.25x, and standing clear of the control's own draw excursion of -0.000480 to +0.033130 s. The arm's overhead stands above the same run's control overhead. The two are the SAME statistic \u2014 a median of REPEATS supervised draws minus a median of REPEATS baseline draws \u2014 so the comparison is like for like, which is the property that makes it a comparison at all. Whether the margin survives the control's own draw-to-draw roaming is stated on the line beside it, because a median-of-REPEATS difference is one draw of a noisy quantity and a single battery observes no excursion of it. The across-battery excursion is what `tools/seccomp_variance_probe.py` measures over k repeats and this record does not carry it. A margin measured here is a property of this run and does not transfer to another.",
+      "overhead_seconds": 0.053384,
+      "ratio": 1.073,
+      "supervised_seconds": 0.784561
+    },
+    "shell_heavy": {
+      "baseline_seconds": 0.045922,
+      "microseconds_per_notification": 72.65,
+      "microseconds_per_notification_absent_because": null,
+      "notifications_observed": 372,
+      "overhead_against_this_runs_control": "clears-this-runs-control",
+      "overhead_against_this_runs_control_because": "+0.027027 s of overhead against this run's control overhead of +0.016449 s \u2014 clearing it by 1.64x, and OVERLAPPING the control's own draw excursion of -0.000480 to +0.033130 s, so this run's own control draws roamed far enough to have produced a difference this size. The arm's overhead stands above the same run's control overhead. The two are the SAME statistic \u2014 a median of REPEATS supervised draws minus a median of REPEATS baseline draws \u2014 so the comparison is like for like, which is the property that makes it a comparison at all. Whether the margin survives the control's own draw-to-draw roaming is stated on the line beside it, because a median-of-REPEATS difference is one draw of a noisy quantity and a single battery observes no excursion of it. The across-battery excursion is what `tools/seccomp_variance_probe.py` measures over k repeats and this record does not carry it. A margin measured here is a property of this run and does not transfer to another.",
+      "overhead_seconds": 0.027027,
+      "ratio": 1.5885,
+      "supervised_seconds": 0.072949
+    }
+  },
+  "control_excursion_is_a_property_of": "The within-battery spread of the compute_only arm's own 5 draws on this run \u2014 the widest difference they can form, low and high. It is NOT the across-battery excursion `tools/seccomp_variance_probe.py` reports, which repeats this whole battery k times and spreads k medians; the two are different quantities on different scopes and neither stands for the other. No pooled range from any other run appears in this record, because a pooled range is a constant and a constant written here would travel onto hosts it was never measured on \u2014 which is the defect `what_this_is_a_property_of[0]` stopped being a hardcoded sentence in order to end.",
+  "control_excursion_seconds": [
+    -0.00048,
+    0.03313
+  ],
+  "environment": {
+    "audit_arch": "0xc000003e",
+    "cpu_count": 4,
+    "euid": 0,
+    "kernel": "6.17.0-1020-azure",
+    "machine": "x86_64",
+    "platform": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+    "python": "3.12.13",
+    "watched_syscalls": [
+      "access",
+      "chdir",
+      "chmod",
+      "faccessat",
+      "faccessat2",
+      "fchmodat",
+      "linkat",
+      "lstat",
+      "mkdir",
+      "mkdirat",
+      "newfstatat",
+      "open",
+      "openat",
+      "readlink",
+      "readlinkat",
+      "rename",
+      "renameat",
+      "renameat2",
+      "stat",
+      "statx",
+      "symlinkat",
+      "truncate",
+      "unlink",
+      "unlinkat",
+      "utimensat"
+    ]
+  },
+  "measured_at": "2026-08-10T21:56:41+0000",
+  "question": "Q-09",
+  "repeats_per_arm": 5,
+  "shell_heavy_on_the_reference_application": "There is NO shell-heavy arm of the reference application, and the absence is deliberate. T101's shell-heavy clause is discharged by the `shell_heavy` arm above. The reference application composes no shell command and spawns no process \u2014 asserted by tests/unit/test_reference_app.py::test_the_reference_application_spawns_no_process \u2014 so an arm wrapping it in `sh -c` would measure sh's process spawn and the client's, attribute both to the reference application, and reproduce the proxy figure under the fixture's name. If that assertion ever fires, this clause reopens.",
+  "task": "T101",
+  "what_this_is_a_property_of": [
+    "Kernel 6.17.0-1020-azure on x86_64, measured at euid 0. That release string names an Azure hypervisor guest, which is what GitHub's hosted runners are, so this is a figure from a virtualized kernel and not from a bare Linux host. Syscall-interception overhead is the measurement most sensitive to that difference and it may not transfer. Two records taken on different kernels are not a before and an after and must not be subtracted.",
+    "A CPython supervisor doing one ioctl and one /proc/<pid>/mem read per notification. A Go or C supervisor would be faster by an unmeasured amount.",
+    "Five workloads. `shell_heavy`, `path_heavy` and `compute_only` are proxies; `reference_app_api` and `reference_app_socket` drive T116's reference application over the two surfaces app.py names. The reference application existed from 2026-08-08; the earlier record here said it did not, which was true when it was written and is superseded.",
+    "SECCOMP_USER_NOTIF_FLAG_CONTINUE as the response. A supervisor that denied or rewrote arguments would pay more.",
+    "An interpreter start per round. Every arm pays it in both the baseline and the supervised run, so it cancels out of overhead_seconds and inflates notifications_observed \u2014 which is why microseconds_per_notification is the transferable figure and `ratio` is not."
+  ]
+}
