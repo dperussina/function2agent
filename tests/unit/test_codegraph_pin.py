@@ -379,11 +379,30 @@ def test_rows_in_upstreams_real_schema_do_not_move_the_pinned_digest(tmp_path):
     `shadow`. It cannot separate the fifth, which is the only one in question.
     `sqlite_sequence` comes back `type=table`, indistinguishable from the seven
     ordinary tables, **so a decomposition derived from `table_list` assumes the
-    thing it was invoked to establish.** Measured 2026-08-10 on CPython's
-    `sqlite3` 3.53.3 against `tests/fixtures/codegraph-schema/schema.sql`, and
-    it is worse than a tie: `table_list` also reports `sqlite_schema`, which is
-    not a `sqlite_master` row at all, so it answers 14 rows to `sqlite_master`'s
-    13 with **two** internal objects typed `table` rather than one.
+    thing it was invoked to establish.** And it is worse than a tie, because
+    the pragma walks each attached schema and lists that schema's own schema
+    table as an object, where `sqlite_master` carries no row describing itself.
+    Three objects therefore come back typed `table` without being tables this
+    schema declares, and only the first is a `sqlite_master` row at all:
+
+    - `sqlite_sequence`, in `main`, for the reason above.
+    - `sqlite_schema`, in `main` — `sqlite_master` under its modern name.
+    - `sqlite_temp_schema`, in the always-attached `temp` schema, **on a
+      connection that has created no temporary object**; creating one adds a
+      row beside it rather than causing it.
+
+    Every count follows from that, and none of them reconciles with the 13.
+    **Unscoped the pragma answers 15 rows, and `PRAGMA main.table_list`
+    answers 14** — row totals across `table`, `shadow` and `virtual`, where the
+    13 counts `type='table'` rows alone. Narrowing to `table`-typed rows does
+    not repair the comparison either: that is 9 in `main` — the seven ordinary
+    tables plus `sqlite_sequence` and `sqlite_schema` — and 10 unscoped once
+    `sqlite_temp_schema` joins, *below* the pin's 12 both times, because the
+    pragma types `nodes_fts` and its four shadows out of `table` altogether.
+    Measured 2026-08-10 against `tests/fixtures/codegraph-schema/schema.sql` on
+    CPython 3.12.11's `sqlite3` at **SQLite 3.53.3**, Darwin/arm64, euid 501;
+    a pragma's output set is version-sensitive, so the version is part of these
+    counts rather than context beside them.
 
     The route that does work is causal rather than nominal: **strip
     `AUTOINCREMENT` from the `edges` and `unresolved_refs` declarations and
