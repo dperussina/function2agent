@@ -1064,8 +1064,8 @@ run this" costs the next reader one sentence; a confident wrong one costs them a
 **This one caused a false retraction, and that consequence is why it is filed as a trap rather than
 as carelessness.** On 2026-08-10 a pass reported that a measured margin appeared *nowhere* in the
 corpus or in any artifact, and that the sample count quoted beside it matched nothing written down.
-Both statements were false. The margin was written in three places and the count in three, two of
-them markdown documents already inside the gated corpus. On the strength of that clean negative a
+Both statements were false. The margin was written in three files and the count in the same three,
+two of them markdown documents this checker already walks. On the strength of that clean negative a
 correct record was withdrawn and its author was described as having invented a measurement.
 
 **The mechanism is that the corpus writes one figure two ways, and neither precise form finds the
@@ -1075,13 +1075,16 @@ a search for the emphasised spelling returns one markdown file alone. Each comes
 confident hit, and a single hit reads like the whole answer rather than like one of two spellings.
 
 **The corpus does not support the further claim that the loose search was impractical, and the
-correction strengthens the rule.** Searched bare against the same index the checks use, the figure
-returns **6** files: **3** markdown corpus documents that name it, and **3** committed trace
-artifacts that contain the digits incidentally. Over the working tree without `--hidden --no-ignore`
-it is **7** files. The reading that put it in the dozens counted the git-ignored vendored tree, which
-supplies **102** of the **110** files the widest form matches and none of the sites. So the search
-that would have found both spellings was never buried — it was a single-digit result that was not
-run. The remedy is not "search harder", it is one cheaper search.
+correction strengthens the rule.** Over the working tree the bare form returns **7** files, and all
+three sites are among them. Searched bare against the same index the checks use it returns **6**,
+because `tests/` is outside the index's roots — **2** of those name the margin, and the other **4**
+are a version-number table and three trace artifacts holding the digits incidentally. Even the
+corpus-scoped search, reaching only two of the three sites, refutes *appears nowhere* outright. The
+reading that put the figure in the dozens counted the git-ignored vendored tree, which supplies
+**102** of the **110** files the widest form matches and none of the sites. So the search that would
+have found both spellings was never buried — it was a single-digit result that was not run, and
+`--hidden --no-ignore` is what turns it back into noise. The remedy is not "search harder", it is
+one cheaper search, scoped.
 
 The tell is the mirror of
 [Reading an instrument is not measuring it](#reading-an-instrument-is-not-measuring-it--plant-the-case-instead),
@@ -1103,10 +1106,13 @@ record. That asymmetry is the whole argument for spending the extra search every
 site is a Python comment, and no check here reads Python as a document — the corpus walk loads
 `.md` and `.markdown` only, and the one check that parses source, `lifecycle-taxonomy`, reads a set
 of member names out of `src/contracts/terminal.py` rather than any figure. That much holds. But it
-was not the mechanism in this instance: the figure has **three** markdown homes, two of them gated
-consumers, so every instrument that reads figures could see it and every corpus-scoped search
-reached it. The episode is a search-form failure end to end, and counting it as an instance of the
-source-blindness residue would be counting it twice.
+was not the mechanism in this instance: the margin has **two** markdown homes besides the comment,
+and the corpus-scoped search reached both, so the record was recoverable without reading a line of
+Python. The episode is a search-form failure end to end, and counting it as an instance of the
+source-blindness residue would be counting it twice. One of those two homes is worth naming for a
+different reason — `specs/*/tasks.md` is walked at role `other` and is **not** in the consumer set,
+so `numeric-provenance` does not read figures there either. The figure's only figure-checked home is
+`specs/001-discovery-validation/plan.md`.
 
 **What the source-blindness residue does amount to, measured on 2026-08-10 rather than estimated.**
 The search index that answers "appears nowhere else" does include `.py`, but its roots are
@@ -1119,11 +1125,12 @@ those **28** are measurements this project took and has no other record of; the 
 illustrative values inside rule docstrings, self-test fixture expectations, and one total derived in
 place from a price schedule stated on the same lines. Under the three kinds the gate actually
 enables, the exposed set is **12** and its evidential subset is **2**. The population is small and
-concentrated: **8** of the **11** are in `tests/batteries/test_seccomp_overhead.py`, and the other
-three are in `src/supervisor/lease.py` and `tests/integration/test_store_concurrent_writers.py`.
-**No check was added for it, because a population of 11 in 4 files is a smaller thing than the rule
-that would have to read Python to catch it**, and the figure that prompted the count was not in the
-population.
+concentrated: **8** of the **11** are in `tests/batteries/test_seccomp_overhead.py`, one of those
+eight is also carried in `tools/seccomp_variance_probe.py`, and the remaining three sit in
+`src/supervisor/lease.py` and `tests/integration/test_store_concurrent_writers.py` — **4** holding
+files in total. **No check was added for it, because a population that size is a smaller thing than
+the rule that would have to read Python to catch it**, and the figure that prompted the count was not
+in the population.
 
 ### Never state a classifier as a complement — enumerate the accepting set
 
