@@ -269,10 +269,37 @@ jobs:
   python:
     name: pytest (kernel mechanisms included)
     runs-on: ubuntu-latest
-    # 107s observed max, so 5.6x — wider than the floor jobs get because this
-    # is the only one that both installs the full pinned lock and runs
-    # privileged kernel work under `sudo`, and because its `if: always()` steps
-    # are what publish the outcome record a failing run is read from.
+    # Wider than the floor jobs get because this is the only one that both
+    # installs the full pinned lock and runs privileged kernel work under
+    # `sudo`, and because its `if: always()` steps are what publish the outcome
+    # record a failing run is read from.
+    #
+    # **The multiplier this comment used to quote was stale against the table
+    # directly above it, and the framing was the defect rather than the digit.**
+    # It read "107s observed max, so 5.6x". 107 is the max of the **2026-08-06**
+    # closed sample; the 2026-08-08 re-derivation that replaced it reports
+    # **146**, and the comment was never advanced. Both remain closed samples
+    # carrying their own n and neither is a running maximum — a later
+    # observation does not belong in either, because folding one in would leave
+    # the max disagreeing with the min, median and p90 beside it. So no
+    # multiplier is quoted here at all: the two samples are stated above and
+    # this note points at them rather than transcribing a third copy that can
+    # drift again.
+    #
+    # **A single later observation sits above both, and it is recorded as one
+    # observation and not as a new maximum.** Run 31412656505 took **195s** —
+    # 99s unprivileged, 84s privileged, every other step at or under 3s, read
+    # per job and per step off the Actions API. Against the 600s bound that is
+    # **405s of headroom**, and it is the reading the variance probe below was
+    # sized against rather than a figure this file compares anything to.
+    #
+    # **The probe is inside that headroom and cannot leave it.** It carries its
+    # own 300s total budget and launches a battery only when its 90s per-battery
+    # cap could fire inside that budget, so 195 + 300 = 495s is the arithmetic
+    # worst case against 600s. The expected cost is ~148s at 10 batteries of the
+    # 14.83s the battery actually measures on this runner class. Re-derive the
+    # table above rather than nudging this bound, and note that the probe's own
+    # budget is the thing to reduce first if this job ever needs room.
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -512,6 +539,77 @@ jobs:
             echo
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: The battery's within-run variance — NON-GATING observation
+        # **Q-09's noise floor, and the only construction that measures it.**
+        # `REPEATS = 5` means each battery run takes five samples and publishes
+        # their median, so repeating the whole battery k times *inside this one
+        # job* gives k medians-of-5 with the runner, kernel, architecture, core
+        # count and boot held fixed. Tight medians put the residual variation at
+        # the whole-run level, where raising `REPEATS` cannot reach it; wide
+        # medians mean raising it buys something real. Either answer settles the
+        # constant, and the battery's own note names this as the measurement
+        # that would.
+        #
+        # It is what `notification_rate`'s refused magnitude bound was refused
+        # for want of: the sign test's boundary is zero because the quantity's
+        # definition forbids crossing it, and a *magnitude* bound needs a
+        # measured floor rather than a chosen constant. **This step measures the
+        # floor and installs nothing.**
+        #
+        # **`continue-on-error` is the design, exactly as it is for the unshare
+        # pair above.** What this measures is the variance of a timing
+        # measurement on a shared cloud runner; a noisy neighbour on the
+        # hypervisor moves it and says nothing about the merge. A gate that
+        # fails because a variance probe was noisy is a gate that gets disabled.
+        # The renderer still exits non-zero on a missing record, which surfaces
+        # as an annotated step and a `::warning::` rather than as nothing.
+        #
+        # **Bounded inside itself, not guarded by a conditional after it.** A
+        # job timeout cancels the job and `always()` steps then run and find
+        # nothing to render, so a conditional is no protection — the probe
+        # carries a per-battery cap via `tools/proof_timeout.py` and a total
+        # budget, and it launches a battery only when the cap could fire inside
+        # that budget. Its wall clock is therefore bounded by the budget and not
+        # by k times the cap.
+        #
+        # **The numbers are measured against this job rather than picked.** The
+        # battery costs **14.83s on this runner class** — read off run
+        # 31412656505's `pytest-privileged.xml`, where the module-scoped fixture
+        # puts its whole cost on the first test that requests it and the other
+        # seven cases report 0.000s. That run's job took **195s against the 600s
+        # bound** (99s unprivileged, 84s privileged, every other step ≤3s), so
+        # there is **405s of headroom**. k=10 costs ~148s of it, leaving the
+        # 300s budget as a ceiling the probe cannot exceed: 195 + 300 = 495s
+        # inside 600s. **k is chosen on the statistic — 45 pairwise gaps per
+        # arm — and not on the budget, which would have permitted k≈25.**
+        #
+        # **It runs after the gating figure has been rendered, and it restores
+        # what it borrows.** The probe overwrites
+        # `seccomp-overhead.latest.json` once per battery by construction, so it
+        # saves the privileged suite's copy first and restores it last. Without
+        # that, the figure published above as the suite's would silently become
+        # this probe's last battery.
+        if: always()
+        continue-on-error: true
+        run: |
+          # `set +e` explicit and load-bearing, the same discipline the unshare
+          # pair step states: every `run:` here executes under `bash -e`, so a
+          # non-zero probe would abort before anything reached the run page, and
+          # the failing run is the one whose record somebody needs.
+          set +e
+          set -u
+          sudo -E env "PATH=$PATH" python3 tools/seccomp_variance_probe.py \
+            --take --k 10 \
+            --out tests/batteries/results/seccomp-variance.latest.json
+          python3 tools/seccomp_variance_probe.py --render \
+            tests/batteries/results/seccomp-variance.latest.json \
+            >> "$GITHUB_STEP_SUMMARY"
+          rendered=$?
+          if [ "$rendered" -ne 0 ]; then
+            echo "::warning title=seccomp within-run variance::The probe left no record, so the observation did not happen. See the run summary. This does not gate the build."
+          fi
+          exit "$rendered"
+
       - name: Keep the outcome record and the native figure
         if: always()
         uses: actions/upload-artifact@v4
@@ -526,6 +624,7 @@ jobs:
             unshare-pair-unprivileged.json
             unshare-pair-privileged.json
             tests/batteries/results/seccomp-overhead.latest.json
+            tests/batteries/results/seccomp-variance.latest.json
           if-no-files-found: error
           retention-days: 90
 

@@ -274,6 +274,29 @@ INSTRUMENTS: list[Instrument] = [
         slow=True,
         needs="Linux",
     ),
+    Instrument(
+        name="seccomp within-run variance probe",
+        kind=ADVISORY,
+        checks="Repeats the T101 overhead battery k times inside ONE job on "
+               "ONE runner, so each draw is a median-of-REPEATS with the "
+               "runner, kernel, architecture, core count and boot held fixed. "
+               "That is Q-09's noise floor, and the quantity the refused "
+               "magnitude bound on `notification_rate` was refused for want "
+               "of. Measures the variance of a timing measurement on a shared "
+               "cloud runner, so `continue-on-error: true` is the design and "
+               "not a convenience; the renderer's non-zero exit on a missing "
+               "record is what keeps an absent observation visible.",
+        job="python",
+        anchor="python3 tools/seccomp_variance_probe.py",
+        command=("python3", "tools/seccomp_variance_probe.py", "--render",
+                 "tests/batteries/results/seccomp-variance.latest.json"),
+        files=("tools/seccomp_variance_probe.py",),
+        slow=True,
+        needs="privileged Linux; k batteries at ~15s each",
+        notes="`--render` is what `--run` exercises, because `--take` needs "
+              "privileged Linux and minutes. It exits non-zero when there is "
+              "no record, which is the branch worth having in the census.",
+    ),
     # -- job `removal-proofs` ------------------------------------------------
     Instrument(
         name="removal proofs",
