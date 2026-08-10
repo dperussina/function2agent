@@ -1230,9 +1230,11 @@ invents an anchor no rendered page carries.
 `slugify` now parks inline code before the emphasis pass and removes only non-intraword `_` pairs.
 Measured against the renderer over the whole corpus as walked on 2026-08-10: **29 of 2,371 headings
 disagreed before, 4 after, and 26 slugs moved** — every one of them restoring a literal underscore.
-Adding `tools/` to `include` later that day grew the walked set to 2,424 headings; the 53 it added
-have not been put through the renderer, and the count above is left at the set it was taken over
-rather than restated over a set it was not. Neither family below is reachable in those 53: the only
+Adding `tools/` to `include` later that day put a further 53 headings into the walked set, and they
+have not been put through the renderer. The count above is left at the set it was taken over rather
+than restated over a set it was not, and no current total is given in its place: the walked set also
+grows whenever the corpus does, so a "now" figure would be a baseline plus a delta and would rot on
+the next commit. The stable statements are the dated measurement and the 53. Neither family below is reachable in those 53: the only
 non-ASCII character in any of their headings is an em dash, which both sides drop, and none of them
 ends in punctuation preceded by a space. The four survivors are two further families, neither
 reachable from any live link and both recorded here rather than fixed, because each is a different
