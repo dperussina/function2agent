@@ -217,7 +217,18 @@ _EMPHASIS_UNDERSCORE_RE = re.compile(r"(?<!\w)(_{1,2})(?=\S)(.+?)(?<=\S)\1(?!\w)
 
 
 def slugify(heading: str) -> str:
-    """GitHub's heading-anchor algorithm, close enough for link checking.
+    r"""Reproduces GitHub's emitted heading `id` on 2,367 of 2,371 headings.
+
+    ~~"GitHub's heading-anchor algorithm, close enough for link checking."~~
+    **Measured on 2026-08-10 against ids fetched from GitHub's renderer, over
+    the 2,371 headings the corpus walked that day** — a dated count over a named
+    set, not a live ratio; `tools/` entered `include` later the same day and
+    added 53 headings that the differential has not been run over. The retired
+    sentence is retired for its second clause. *Close enough* is the phrase that
+    licensed nobody checking, and while it stood this function invented anchors
+    no rendered page carried, `link-anchor` computed every target with the same
+    defect, and two committed links were written to match the invention and
+    passed a green gate.
 
     GitHub renders the heading to HTML and slugs the *text content*, so a
     character's markup role and its literal role have different fates. `*` and
@@ -225,13 +236,33 @@ def slugify(heading: str) -> str:
     they are dropped anyway for not being word characters. **`_` is the one that
     does**, because `_` *is* a word character: consumed as emphasis it vanishes,
     and left literal inside an identifier it survives into the anchor.
-
-    Measured against GitHub's renderer on 2026-08-10 rather than read off its
-    documented algorithm. `#### _Note_: Multiple entry points` renders
+    `#### _Note_: Multiple entry points` renders
     `id="user-content-note-multiple-entry-points"` — emphasis consumed — while
     this repository's own `### OD-26 — ... terminated.denied_operation ...`
     renders `...terminateddenied_operation...`, dropping the `.` and keeping the
     `_` in one token. See tools/README.md for the differential.
+
+    **The four disagreements are two families. Both are named here and neither
+    is fixed.**
+
+      * **Circled digits survive.** `\u2460` and `\u2461` are Unicode category
+        `No`, which Python's `\w` matches and GitHub's word class does not, so
+        this implementation keeps them and the renderer drops them. Three sites:
+        `specs/001-discovery-validation/plan.md` and two headings in
+        `specs/002-spec-aware-agent-runtime/findings/028-*.md`.
+      * **A trailing `\u2605` costs a hyphen.** GitHub drops the punctuation and
+        *then* converts the space that preceded it, leaving a trailing `-`; this
+        implementation strips first and emits none. One site,
+        `research/12-examples-as-corpus.md`, and it is the only heading in the
+        corpus that ends in punctuation preceded by a space.
+
+    Each is a different defect from the underscore one settled the same day, so
+    fixing them here would put two unmeasured changes behind one measured one.
+    The `\u2605` fix in particular reorders strip against convert for **every**
+    heading, which is a whole-corpus blast radius for one site. No live link
+    reaches either family, so what stands is a slug nothing resolves against
+    rather than a broken link — the opposite of the underscore case, where the
+    links existed and were wrong.
 
     Inline code is parked before the emphasis pass so a `_` inside a code span
     can never pair with one outside it.
