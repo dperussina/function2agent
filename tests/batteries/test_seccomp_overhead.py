@@ -747,6 +747,154 @@ def notification_rate(
     return round(overhead_seconds / notifications_observed * 1e6, 2), None
 
 
+# --- did this arm clear its own run's control ------------------------------
+
+#: The arm every other arm is read against. Named rather than positional
+#: because the loop below is ordered for readability and an index into it
+#: would silently re-point if anyone reordered the workloads.
+CONTROL_ARM = "compute_only"
+
+
+def observed_excursion(
+    baseline_samples: list[float], supervised_samples: list[float]
+) -> tuple[float, float]:
+    """The tightest interval containing every difference this run's draws form.
+
+    **A reading, and the scope of the reading is the whole of what makes it
+    honest.** `overhead_seconds` is one median minus one median, so a record
+    that carried only it would describe the control as a point and invite a
+    reader to treat that point as a floor. It is not a point: these are
+    `REPEATS` draws either side, and the widest difference they can form is
+    `max(supervised) - min(baseline)` while the narrowest is
+    `min(supervised) - max(baseline)`.
+
+    **This is NOT the across-battery excursion the module's docstring quotes
+    from `seccomp_variance_probe.py`**, and conflating the two is the splice
+    this file has already struck a sentence for. The probe repeats the whole
+    battery k times and reports the spread of k medians; this is the spread
+    *within* one battery's own draws. They are different quantities on
+    different scopes and neither stands for the other. What this one is good
+    for is the only comparison a single battery run can make without reaching
+    for a number it did not measure.
+
+    The interval is deliberately the widest the draws admit rather than a
+    standard error or a percentile. A narrower one would be a chosen bound,
+    and a chosen bound is the fabricated constant
+    `UNRATED["non-positive-overhead"]` refuses at length.
+    """
+    return (
+        round(min(supervised_samples) - max(baseline_samples), 6),
+        round(max(supervised_samples) - min(baseline_samples), 6),
+    )
+
+
+#: Why an arm's overhead stands where it does relative to its own run's
+#: control, keyed by the reading that put it there.
+#:
+#: **Four keys and not a boolean, and the reason is the T206 shape.** A
+#: `cleared: true/false` field would map three distinguishable readings onto
+#: one value: the control compared with itself, an arm with no overhead to
+#: clear anything with, and an arm whose overhead the control's own excursion
+#: swallows. Those want different responses from a reader — the first is a
+#: definitional non-answer, the second is an instrument that resolved nothing,
+#: the third is a real figure that is not separated from zero — and a boolean
+#: hands all three back as `false`, which reads as *the mechanism was measured
+#: and found not to clear*. Only one of the three says that.
+#:
+#: **Shape borrowed from `UNRATED` directly above**, which exists because a
+#: withheld quantity written as a bare `null` reads as an oversight. The same
+#: argument applies one level out: a record that carried `overhead_seconds`
+#: and nothing about the control leaves an artifact consumer lifting the bare
+#: figure, which is the FR-058 defect — the reader takes the result and never
+#: reaches the trace. Prose in this file cannot reach that reader.
+CLEARANCE: Mapping[str, str] = {
+    "clears-this-runs-control": (
+        "The arm's overhead stands above the widest positive difference this "
+        "run's control draws can form, so the figure is separable from this "
+        "instrument's own zero reading ON THIS RUN. It is not separable in "
+        "general and this field does not say it is: the comparison is within "
+        "one run because that is the only scope on which a control and an arm "
+        "share a host, a boot and a scheduler. A margin measured here does not "
+        "transfer to another run and must not be quoted as though it did."
+    ),
+    "does-not-clear-this-runs-control": (
+        "The arm's overhead does not stand above the widest positive "
+        "difference this run's control draws can form, so this run does not "
+        "separate the figure from the instrument's own zero reading. The "
+        "figure is published rather than withheld — it is a measurement and "
+        "not an absence — and this field is the sentence that must travel with "
+        "it. No threshold decided this: the comparator is the control's own "
+        "measured excursion on this run and there is no floor constant here."
+    ),
+    "is-this-runs-control": (
+        "This arm IS the control, so the comparison is the control against "
+        "itself and its outcome is a property of arithmetic rather than of "
+        "syscall interception. The field records that rather than reporting a "
+        "clearance, because a control that 'cleared itself' and a control that "
+        "'failed to clear itself' would both be read as findings about the "
+        "supervisor, and neither is one. The control's own excursion is the "
+        "comparator every other arm on this record was read against."
+    ),
+    "no-overhead-to-clear-with": (
+        "The arm's own overhead came out non-positive, so there is no overhead "
+        "to clear anything with and no clearance is stated. This is a distinct "
+        "reading from an overhead the control swallows: there the instrument "
+        "resolved a cost and could not separate it, here it resolved no cost "
+        "at all. The two share a remedy in neither direction, which is why "
+        "they are not one value. `microseconds_per_notification_absent_because` "
+        "beside this carries the same run's reasoning for the missing rate."
+    ),
+}
+
+
+def control_clearance(
+    overhead_seconds: float,
+    control_excursion: tuple[float, float],
+    is_the_control: bool,
+) -> tuple[str, str]:
+    """The key in `CLEARANCE`, and the sentence that carries this run's numbers.
+
+    Two returns rather than one, and the second is the load-bearing half. The
+    key is greppable and the prose behind it is fixed; **the sentence is where
+    the figures sit**, and they sit there because limb ③'s rule is that an
+    overlap is stated ON THE LINE of the figure it qualifies. A reader who
+    arrives at an arm by `grep` reads that arm's fields and no banner — which
+    is the defect the `dry-run-verdict` artifact shipped, disclosing itself in
+    a banner and a directory name while its decision row still read as a
+    headline.
+
+    A pure function of readings, so it is checkable on hosts this module
+    cannot run on — the same argument `record_filename`, `notification_rate`
+    and `host_property_caveat` are each written under, and the reason all four
+    of their tests live in `tests/unit/`.
+    """
+    low, high = control_excursion
+    band = f"this run's control excursion of {low:+f} to {high:+f} s"
+    if is_the_control:
+        key = "is-this-runs-control"
+        reading = f"{overhead_seconds:+f} s of overhead, which IS {band}"
+    elif overhead_seconds <= 0:
+        key = "no-overhead-to-clear-with"
+        reading = (
+            f"{overhead_seconds:+f} s of overhead, non-positive, against {band}"
+        )
+    elif overhead_seconds > high:
+        key = "clears-this-runs-control"
+        margin = (
+            f" — clearing it by {overhead_seconds / high:.2f}x"
+            if high > 0
+            else " — and that excursion has no positive part on this run"
+        )
+        reading = f"{overhead_seconds:+f} s of overhead against {band}{margin}"
+    else:
+        key = "does-not-clear-this-runs-control"
+        reading = (
+            f"{overhead_seconds:+f} s of overhead against {band} — OVERLAPPING "
+            "it, so this figure is not separated from zero on this run"
+        )
+    return key, f"{reading}. {CLEARANCE[key]}"
+
+
 #: Recorded in the result file rather than only in the docstring, because the
 #: artifact outlives the module a reader would otherwise have to go and find.
 SHELL_HEAVY_ABSENCE = (
@@ -898,26 +1046,33 @@ def _run_unsupervised_subprocess(source: str) -> float:
     return time.perf_counter() - started
 
 
-def _median(fn, *args) -> float:
-    return statistics.median(fn(*args) for _ in range(REPEATS))
-
-
 @pytest.fixture(scope="module")
 def measurement() -> dict:
     arms = {}
+    excursions = {}
     for name, source in (
         ("shell_heavy", SHELL_HEAVY),
         ("path_heavy", PATH_HEAVY),
-        ("compute_only", COMPUTE_ONLY),
+        (CONTROL_ARM, COMPUTE_ONLY),
         ("reference_app_api", _reference_app_source(REFERENCE_APP_API)),
         ("reference_app_socket", _reference_app_source(REFERENCE_APP_SOCKET)),
     ):
-        baseline = _median(_run_unsupervised_subprocess, source)
+        # The draws are kept rather than collapsed on sight, because the
+        # control's excursion is a property of the draws and `_median` threw
+        # them away. The published `baseline_seconds` is the same median of
+        # the same draws it always was.
+        baseline_samples = [
+            _run_unsupervised_subprocess(source) for _ in range(REPEATS)
+        ]
+        baseline = statistics.median(baseline_samples)
         supervised_samples = [_run_supervised(source) for _ in range(REPEATS)]
         supervised = statistics.median(t for t, _ in supervised_samples)
         observed = statistics.median(n for _, n in supervised_samples)
         overhead = round(supervised - baseline, 6)
         rate, unrated = notification_rate(overhead, observed)
+        excursions[name] = observed_excursion(
+            baseline_samples, [t for t, _ in supervised_samples]
+        )
         arms[name] = {
             "baseline_seconds": round(baseline, 6),
             "supervised_seconds": round(supervised, 6),
@@ -939,11 +1094,49 @@ def measurement() -> dict:
             ),
         }
 
+    # A second pass, because the comparator is another arm and the loop above
+    # reaches the control third. Every arm is annotated against the SAME run's
+    # control, which is the scope limb ③ names — a figure read against some
+    # other run's control would be the splice this file has already struck.
+    control_excursion = excursions[CONTROL_ARM]
+    for name, arm in arms.items():
+        key, sentence = control_clearance(
+            arm["overhead_seconds"], control_excursion, name == CONTROL_ARM
+        )
+        # Beside the figure it qualifies rather than in a header, and always
+        # present rather than only on the overlapping branch — a key that
+        # appeared only when there was bad news is a key no reader knows to
+        # grep for, which is the argument
+        # `microseconds_per_notification_absent_because` is already written
+        # under one field up.
+        arm["overhead_against_this_runs_control"] = key
+        arm["overhead_against_this_runs_control_because"] = sentence
+
     record = {
         "question": "Q-09",
         "task": "T101",
         "measured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "repeats_per_arm": REPEATS,
+        # The comparator every arm above was read against, published once so a
+        # consumer can re-derive any arm's verdict from the two fields beside
+        # it rather than taking the verdict on trust. The per-arm sentence
+        # carries it too, and the duplication is deliberate: this key serves a
+        # machine reading the record whole, the sentence serves a reader who
+        # arrived at one arm.
+        "control_excursion_seconds": list(excursions[CONTROL_ARM]),
+        "control_excursion_is_a_property_of": (
+            "The within-battery spread of the "
+            f"{CONTROL_ARM} arm's own {REPEATS} draws on this run — the widest "
+            "difference they can form, low and high. It is NOT the "
+            "across-battery excursion `tools/seccomp_variance_probe.py` "
+            "reports, which repeats this whole battery k times and spreads k "
+            "medians; the two are different quantities on different scopes and "
+            "neither stands for the other. No pooled range from any other run "
+            "appears in this record, because a pooled range is a constant and "
+            "a constant written here would travel onto hosts it was never "
+            "measured on — which is the defect `what_this_is_a_property_of[0]` "
+            "stopped being a hardcoded sentence in order to end."
+        ),
         "arms": arms,
         "environment": {
             "platform": platform.platform(),
@@ -1154,3 +1347,48 @@ def test_no_arm_publishes_a_rate_its_own_overhead_contradicts(
             f"{name} published a rate of {rate} over an overhead of "
             f"{arm['overhead_seconds']}s, so the two disagree in sign"
         )
+
+
+def test_every_arm_says_where_it_stands_against_this_runs_control(
+    measurement,
+) -> None:
+    """The mark travels into the artifact, on this host's actual readings.
+
+    `tests/unit/test_seccomp_overhead_record.py` proves `control_clearance`
+    distinguishes the four readings against injected values and plants a
+    clearing arm and an overlapping arm side by side; it cannot prove the
+    *fixture* routes the arms through it against the same run's control. That
+    is the gap `test_no_arm_publishes_a_rate_its_own_overhead_contradicts`
+    closes for the rate and it is closable only where the fixture runs.
+
+    The field exists because line-locality in this module's prose protects a
+    reader of this module and nobody else. An artifact consumer lifts
+    `overhead_seconds` and gets a bare number, which is the identical defect
+    one layer down.
+    """
+    control_excursion = tuple(measurement["control_excursion_seconds"])
+    for name, arm in measurement["arms"].items():
+        key = arm["overhead_against_this_runs_control"]
+        assert key in CLEARANCE, (
+            f"{name} recorded {key!r}, which names no reading in CLEARANCE"
+        )
+        expected, sentence = control_clearance(
+            arm["overhead_seconds"], control_excursion, name == CONTROL_ARM
+        )
+        assert key == expected, (
+            f"{name} recorded {key!r} where its own overhead of "
+            f"{arm['overhead_seconds']}s against {control_excursion} gives "
+            f"{expected!r}, so the record's verdict is not a reading of the "
+            "figures beside it"
+        )
+        assert arm["overhead_against_this_runs_control_because"] == sentence
+        assert str(arm["overhead_seconds"]).lstrip("-")[:6] in sentence or (
+            f"{arm['overhead_seconds']:+f}" in sentence
+        ), (
+            f"{name}'s sentence does not carry its own figure, so the overlap "
+            "does not travel on the line of the figure it qualifies"
+        )
+    assert (
+        measurement["arms"][CONTROL_ARM]["overhead_against_this_runs_control"]
+        == "is-this-runs-control"
+    ), "the control did not identify itself, so every other arm's comparator is unnamed"

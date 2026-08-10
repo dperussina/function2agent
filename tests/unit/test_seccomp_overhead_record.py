@@ -285,6 +285,191 @@ def test_a_small_positive_overhead_is_still_published_because_no_floor_is_known(
     )
 
 
+# --- where an arm stands against its own run's control --------------------
+#
+# Two runs of the same arm, both from the four samples recorded in the
+# battery's own docstring, chosen because they disagree. `shell_heavy` is the
+# arm Q-09 names and the only one of the four load-bearing arms that overlaps
+# the control at all, so it is the arm on which a vacuous field would be
+# invisible — a field that read the same on both of these would be reporting
+# nothing while looking like a disclosure.
+
+#: Run 31427947131 — control -0.012760 to +0.021070 s, `shell_heavy` at its
+#: recorded low of 0.024417 s. The arm clears, by 1.16x, the narrowest margin
+#: of the four samples.
+CLEARING_RUN = (0.024417, (-0.012760, 0.021070))
+
+#: Run 31416959913 — control ceiling +0.029317 s, `shell_heavy` 0.018794 s.
+#: The same arm, the same battery, the same runner class, and it does not
+#: clear.
+OVERLAPPING_RUN = (0.018794, (-0.007711, 0.029317))
+
+
+def test_an_arm_that_clears_its_own_runs_control_says_so(battery) -> None:
+    overhead, excursion = CLEARING_RUN
+    key, sentence = battery.control_clearance(overhead, excursion, False)
+    assert key == "clears-this-runs-control"
+    assert "1.16x" in sentence, (
+        "the margin is not on the line, so a reader who arrives at this arm "
+        f"by grep cannot see how narrowly it cleared: {sentence}"
+    )
+
+
+def test_an_arm_the_control_swallows_says_that_on_the_same_line(battery) -> None:
+    overhead, excursion = OVERLAPPING_RUN
+    key, sentence = battery.control_clearance(overhead, excursion, False)
+    assert key == "does-not-clear-this-runs-control"
+    assert "OVERLAPPING" in sentence
+    assert "+0.029317" in sentence, (
+        "the control's ceiling is not on the figure's own line, which is the "
+        "disclosure-that-does-not-travel shape this field exists to end"
+    )
+
+
+def test_the_two_directions_produce_visibly_different_records(battery) -> None:
+    """**The plant, and it is the whole point of the field.**
+
+    One arm, two runs that really happened, and the records must not read the
+    same. A field that returned one value either way is the vacuity this
+    repository has hardened nine instruments against — and it would be
+    *especially* invisible here, because both of these are `shell_heavy` and
+    both figures are of the same order.
+
+    Both halves are asserted: the keys differ, and the sentences differ. A key
+    that split while the prose stayed generic would leave the artifact
+    consumer — the reader this field was built for, who does not open this
+    module — with two identical explanations of two different readings.
+    """
+    clearing = battery.control_clearance(*CLEARING_RUN, False)
+    overlapping = battery.control_clearance(*OVERLAPPING_RUN, False)
+    assert clearing[0] != overlapping[0], (
+        "the same verdict for an arm that cleared its control and an arm that "
+        "did not; the field reports nothing"
+    )
+    assert clearing[1] != overlapping[1]
+    assert battery.CLEARANCE[clearing[0]] != battery.CLEARANCE[overlapping[0]]
+
+
+def test_the_control_is_not_reported_as_having_cleared_itself(battery) -> None:
+    """The reading a boolean would have to call `false`, or worse `true`.
+
+    The control compared with itself has an outcome — arithmetic guarantees
+    one — and it is not a finding about syscall interception. Recording it as
+    a clearance in either direction would put a claim about the supervisor in
+    the record where no claim was measured.
+    """
+    key, sentence = battery.control_clearance(0.003848, (-0.001, 0.004821), True)
+    assert key == "is-this-runs-control"
+    assert "clear" not in key
+    assert "IS" in sentence
+
+
+def test_a_non_positive_overhead_is_not_the_same_reading_as_an_overlap(
+    battery,
+) -> None:
+    """The second reading a boolean would collapse, and the one that matters.
+
+    An arm the control swallows produced a cost this run could not separate
+    from zero. An arm whose own difference came out negative produced no cost
+    at all. The first is a figure with a caveat and the second is not a figure,
+    and `microseconds_per_notification_absent_because` already withholds the
+    rate for it — so a record that called both "did not clear" would be
+    claiming the instrument resolved something it did not.
+    """
+    swallowed, _ = battery.control_clearance(0.018794, (-0.007711, 0.029317), False)
+    absent, _ = battery.control_clearance(-0.03922, (-0.007711, 0.029317), False)
+    assert swallowed == "does-not-clear-this-runs-control"
+    assert absent == "no-overhead-to-clear-with"
+    assert swallowed != absent
+
+
+def test_every_clearance_reading_is_recorded_in_prose(battery) -> None:
+    """`CLEARANCE` is what puts the reasoning in the artifact, and the set is
+    closed in both directions — the same check `UNRATED` carries.
+
+    A key the record cannot resolve to prose is an absence that reads as a
+    gap; a row nothing reaches describes a branch that no longer exists.
+    """
+    reached = {
+        battery.control_clearance(0.024417, (-0.01276, 0.02107), False)[0],
+        battery.control_clearance(0.018794, (-0.007711, 0.029317), False)[0],
+        battery.control_clearance(0.003848, (-0.001, 0.004821), True)[0],
+        battery.control_clearance(-0.03922, (-0.007711, 0.029317), False)[0],
+    }
+    assert reached == set(battery.CLEARANCE), (
+        f"{reached ^ set(battery.CLEARANCE)} is a reading with no prose or a "
+        "row nothing reaches"
+    )
+    for key, reason in battery.CLEARANCE.items():
+        assert len(reason) > 80, f"{key}'s reason is too short to be one"
+
+
+def test_no_pooled_range_from_another_run_is_installed_as_a_constant(
+    battery,
+) -> None:
+    """**The threshold that is deliberately absent, asserted rather than
+    admitted.**
+
+    Limb ③ asks for the pooled control range beside every figure. In prose a
+    human writes that range with its provenance attached. In the *record* it
+    would be a constant — the pooled range is `6.17.0-1020-azure` x86_64, and
+    a linuxkit aarch64 run writing it into its own artifact would publish an
+    azure-derived band as though it were its own reading. That is exactly what
+    `what_this_is_a_property_of[0]` stopped being a hardcoded sentence to end.
+
+    So the artifact carries the same-run comparator only, and this is what
+    would notice a pooled bound being added later.
+    """
+    source = BATTERY.read_text()
+    for pooled in ("-0.012760", "0.029317", "-0.007711", "0.021070"):
+        assert pooled not in source.split("REPEATS = 5")[1], (
+            f"{pooled} — a control extreme from a named CI run — appears in "
+            "this module's executable half, so a figure measured on one host "
+            "is about to be published as another host's own comparator"
+        )
+
+
+def test_the_excursion_is_the_widest_difference_the_draws_admit(battery) -> None:
+    """A reading over the draws, not a chosen bound.
+
+    The interval has to be the widest the draws can form. A tighter one — a
+    standard error, an interquartile range — would be a constant deciding
+    which arms clear, which is the fabricated threshold
+    `UNRATED['non-positive-overhead']` refuses at length.
+    """
+    baseline = [0.20, 0.21, 0.19, 0.205, 0.195]
+    supervised = [0.204, 0.212, 0.198, 0.207, 0.201]
+    low, high = battery.observed_excursion(baseline, supervised)
+    assert low == round(min(supervised) - max(baseline), 6)
+    assert high == round(max(supervised) - min(baseline), 6)
+    assert low < high
+
+
+def test_the_excursion_widens_rather_than_narrows_the_clearance_claim(
+    battery,
+) -> None:
+    """The direction the conservatism runs, which is the half worth checking.
+
+    Reading the control as its median difference alone would be the narrowest
+    possible comparator and would let arms clear that the draws do not
+    separate. The excursion's high end is at or above that median difference
+    by construction, so an arm that clears the excursion clears the point too
+    and never the other way round.
+    """
+    baseline = [0.20, 0.21, 0.19, 0.205, 0.195]
+    supervised = [0.204, 0.212, 0.198, 0.207, 0.201]
+    _, high = battery.observed_excursion(baseline, supervised)
+    import statistics
+
+    point = statistics.median(supervised) - statistics.median(baseline)
+    assert high >= point
+    at_the_point = point + 1e-6
+    assert (
+        battery.control_clearance(at_the_point, (0.0, high), False)[0]
+        == "does-not-clear-this-runs-control"
+    ), "an arm clearing the median difference cleared the excursion too"
+
+
 def test_the_rate_is_re_derivable_from_the_two_fields_beside_it(battery) -> None:
     """A reader holding the record can check the rate against its own inputs.
 
