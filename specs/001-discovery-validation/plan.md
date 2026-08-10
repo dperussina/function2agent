@@ -3890,6 +3890,19 @@ about the worst-resolved arm wearing the others' names.
 > statement than any per-run verdict and it is available only because the ranges are pooled *for
 > disclosure* while the publication decision is not pooled at all.
 >
+> ✅ **A FOURTH SAMPLE CONFIRMS THE FINDING PROSPECTIVELY AND TIGHTENS THE MARGIN, AGAINST A DRAW THAT
+> DID NOT EXIST WHEN THE REVISION WAS WRITTEN.** Run `31427947131` is the CI run of the commit that
+> recorded this revision: same runner class, 10 of 10 batteries in 150.7 s, control **−0.012760 to
+> +0.021070 s**, and `shell_heavy` at **0.024417–0.028696 s** above that run's control extreme in
+> **10 of 10** draws. So the arm **clears on this sample, by 1.16** — the narrowest margin of the four
+> and narrower than `31415736559`'s. The three-sample table above stands as correct for its sample; the
+> count becomes **two of four published and two of four withheld** under the struck rule, which leaves
+> ground ② untouched and strengthens it, the published set having now moved twice. Pooled over all
+> **40** draws the control runs **−0.012760 to +0.029317 s**, non-positive in **14**, and
+> `shell_heavy` remains **the only one of the four that overlaps it**, at 0.014794 to 0.028696 s. **The
+> claim could have come back either way and came back confirming that this arm sits at the control's
+> own scale**, which is the fact the struck rule would have hidden by withholding the number.
+>
 > **Three of the four grounds offered for this amendment hold; the fourth does not, and it fails
 > against the repository's own code.** *It invents no threshold* holds, and holds more strongly than
 > offered: `test_a_small_positive_overhead_is_still_published_because_no_floor_is_known`

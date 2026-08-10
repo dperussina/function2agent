@@ -458,6 +458,23 @@ REFAPP_DIR = REPO / "tests" / "fixtures" / "reference-app"
 #: appears"* discipline is the family it belongs to, and `costs.UNPRICED` — where
 #: the quantity's definition rules the value out — is not.
 #:
+#: **A FOURTH SAMPLE CONFIRMS THIS PROSPECTIVELY AND TIGHTENS IT, WHICH IS THE
+#: ONLY KIND OF CONFIRMATION THIS FILE COUNTS.** Run `31427947131`, the CI run of
+#: the commit that first recorded the finding above, same runner class, 10 of 10
+#: batteries in 150.7 s. Control **-0.012760 to +0.021070 s**; `shell_heavy`
+#: **0.024417-0.028696 s**, above that run's control extreme in **10 of 10**
+#: draws — so the arm *clears* here, and it clears by **1.16x**, the narrowest
+#: margin of the four samples and narrower than the 2.43x of `31415736559`. The
+#: three-sample statements above are left standing because they were correct for
+#: their sample; what the fourth changes is the count, to **two of four
+#: published and two of four withheld** under the struck rule. Pooled over all
+#: **40** draws the control runs **-0.012760 to +0.029317 s**, non-positive in
+#: **14**, and `shell_heavy` is **still the only one of the four load-bearing
+#: arms that overlaps it** at 0.014794-0.028696 s. **A claim that could have
+#: come back either way came back confirming the arm sits at the control's own
+#: scale**, and the margin moving to 1.16x is the direction that makes the
+#: disclosure matter more rather than less.
+#:
 #: **This arm is not the one at risk, and that is the one place reading the two
 #: quantities as one inverts the answer.** Resolution — overhead as a share of
 #: an arm's own baseline — is where `reference_app_socket` is worst, and it is
