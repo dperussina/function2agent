@@ -1,4 +1,4 @@
-# Finding 039 — three non-reproducing failures were asked whether they share a cause. **They do not.** One of them — today's lease-revocation flake — is not a race at all once planted: it is a **machine-wide process-table namespace keyed on a constant string**, and it fails **10 of 10** on demand with a decoy process carrying that string. Both halves are established by planting: a concurrent run's supervisor makes this test **fail**, and this test **SIGKILLs a concurrent run's supervisor**. The other two have separately stated mechanisms, and one of them **predates `e4ef6e6` by 67 minutes**, which bounds the shared-basetemp story off it entirely
+# Finding 039 — three non-reproducing failures were asked whether they share a cause. **They do not.** One of them — today's lease-revocation flake — is not a race at all once planted: it is a **machine-wide process-table namespace keyed on a constant string**, and it fails **10 of 10** on demand with a decoy process carrying that string. Both halves are established by planting: a concurrent run's supervisor makes this test **fail**, and this test **SIGKILLs a concurrent run's supervisor**. The other two are not joined to it and are not closed by it: one carries two candidate mechanisms on the record, neither bound to the sweep that produced it, and the other **predates `e4ef6e6` by 67 minutes**, which bounds the shared-basetemp story off it entirely
 
 **Date**: 2026-08-11
 **Feature**: 002. Measures
@@ -151,10 +151,15 @@ on the pre-repair side.
 any tamper — i.e. the whole suite dirty. Incident 1 is a single assertion in a single test
 with a specific string. Nothing in the process-table mechanism dirties a baseline.
 
-**2 and 3 do not join to each other either, and 2 has two separately stated causes on the
-record already.** `f3f1c89`'s own commit message names one: the work-tree copy list omitted
-`specs/`, `2>/dev/null` hid it, and *"every dependent test then failed in the baseline for a
-missing file"*. That is a deterministic omission, not contention. And the **116-outcome**
+**2 and 3 do not join to each other either, and 2 has two candidate mechanisms on the
+record already — candidates, not established causes, and the distinction is load-bearing.**
+`f3f1c89` records the 234 sweep's baseline only as *"transiently dirty"* and **does not name
+what dirtied it**. In the same commit it separately names a mechanism capable of producing a
+mass baseline failure — the work-tree copy list omitted `specs/`, `2>/dev/null` hid it, and
+*"every dependent test then failed in the baseline for a missing file"* — but it attaches
+that to *"three more of the same"*, not to the 58. Reading the second as the cause of the
+first is the move this corpus keeps having to undo, so it is not made here: it is a
+deterministic route that would produce this shape, and it is unbound. The **116-outcome**
 sibling instance — which lives in
 [`tests/unit/test_operator_log.py`](../../../tests/unit/test_operator_log.py), not in
 `tests/conftest.py` — carries a fully stated mechanism: macOS runs a crash reporter per
@@ -163,8 +168,8 @@ going"*. That was repaired in `a00f096` (2026-08-08 10:16:35 −0600) by stoppin
 its first abort.
 
 **The ranking.** Incident 1: **mechanism established, by planting.** Incident 2: **two
-stated mechanisms already on the record, neither of them this one**; residual unexplained
-share unquantified. Incident 3: **bounded off the fix by date**; cause still undetermined
+candidate mechanisms already on the record, neither of them this one, and neither bound to
+the 234 sweep**; its cause is still undetermined, and this finding does not close it. Incident 3: **bounded off the fix by date**; cause still undetermined
 and now cheap to leave so, because the pre-repair bug is gone. **There is no shared cause.**
 
 ## 6. Is serialising runs still the cheapest fix?
