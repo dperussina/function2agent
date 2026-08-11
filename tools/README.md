@@ -96,7 +96,7 @@ the author may have made deliberately.
 | `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
 | `findings-numbering` | error / warning | Duplicate numeric prefixes in `findings/` (**error**), a citation of a finding number that does not exist (**error**), and a gap in the sequence (**warning**). |
 | `register-range` | warning | A prose summary of a register — `(D-01 … D-19)` — that stops short of the register's real last entry. **`gen_claims.py` now writes the standalone ones**; this rule is what fires when it has not been run, and is the *only* mechanism at the narrated sites the generator refuses. |
-| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no live site in **any** revision of its scope until 2026-08-11, when the corpus-wide total arrived in the repository map. ~~The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again.~~ **Corrected 2026-08-11, and it was false in both halves.** No rule's pattern has ever contained a comma, in any revision, and the pattern as written matches `15 findings and an index` — replayed against the rule's own masking over all 266 revisions of `README.md` and `research/README.md`, it read nothing in every one of them, so there was no 2026-08-03 site to lose. Widening its `files` to the findings index was measured and declined: see [the sweep](#every-rule-measured-against-its-own-scope). A rule whose subject is not in the tree at all declares that as a `precondition` and announces being out of scope rather than disabled — see [the `vendored-repos` disposition](#vendored-repos-is-out-of-scope-in-ci-by-construction-and-says-so-rather-than-reporting-an-incident). |
+| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no live site in **any** revision of its scope until 2026-08-11, when the corpus-wide total arrived in the repository map. ~~The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again.~~ **Corrected 2026-08-11, and it was false in both halves.** No rule's pattern has ever contained a comma, in any revision, and the pattern as written matches `15 findings and an index` — replayed against the rule's own masking over all `14` revisions of `README.md` and `research/README.md`, seven each, it read nothing in every one of them, so there was no 2026-08-03 site to lose. *(The denominator read `266` until 2026-08-11, which is the repository's total commit count at `c9e42ad` rather than a revision count of either document; the replay's conclusion is unaffected.)* Widening its `files` to the findings index was measured and declined: see [the sweep](#every-rule-measured-against-its-own-scope). A rule whose subject is not in the tree at all declares that as a `precondition` and announces being out of scope rather than disabled — see [the `vendored-repos` disposition](#vendored-repos-is-out-of-scope-in-ci-by-construction-and-says-so-rather-than-reporting-an-incident). |
 | `definition-count` | error / warning | A prose count of a *register* — "58 functional requirements" — against the definitions in the specification it describes. **error** when the target yields zero definitions, unconditionally; **warning** on an ordinary mismatch, because a deliberately historical figure is a real case and the strike convention is its escape. See [Why zero definitions is an error](#why-zero-definitions-is-an-error-and-not-a-comparison). |
 | `catalog-line-count` | warning | A `Lines` column, or an inline `(N lines)`, that has drifted from the file it describes. **`gen_claims.py` writes these**; this rule is what fires when it has not been run. Exact since 2026-08-03 — the previous ±2 tolerance was concealing a live 2-line drift. |
 | `toc-coverage` | warning | A `##` section missing from its document's own table of contents, and therefore unreachable from the top of an 800-line file. |
@@ -779,11 +779,17 @@ The three are not one defect, and the difference decides the response.
   a trailing comma, was repaired pointwise, and matches nothing again because the
   scoped documents state no total. Twenty-one phrases of its shape sit elsewhere
   in the corpus.~~ **Corrected 2026-08-11 by replay.** Run against the rule's own
-  masking over all `266` revisions of `README.md` and `research/README.md`, the
+  masking over all ~~`266`~~ **`14`** revisions of `README.md` and
+  `research/README.md` — seven each — the
   rule read nothing in **every** revision: there was no comma in any version of
   any of the six patterns, `15 findings and an index` matches the pattern as
-  written, and the scoped documents never stated a total to stop stating. The
-  phrase count outside the rule's scope is `23` rather than twenty-one. **The
+  written, and the scoped documents never stated a total to stop stating.
+  **The `266` was corrected the same day: it is the repository's total commit
+  count at `c9e42ad`, relabelled as a document-revision count, and the replay's
+  conclusion survives the correction unchanged.** The
+  phrase count outside the rule's scope is `26` at `e551a29`, against `23` when
+  it was first measured at `7d723c1` and against the struck claim's twenty-one —
+  a dated count over the whole corpus rather than a standing total. **The
   claim that every one of them is prose about conclusions rather than a count of
   documents does not survive reading them either**, and the true shape is a better
   argument than the one it replaces: `five` state a document count explicitly and
@@ -1465,6 +1471,43 @@ eight is also carried in `tools/seccomp_variance_probe.py`, and the remaining th
 files in total. **No check was added for it, because a population that size is a smaller thing than
 the rule that would have to read Python to catch it**, and the figure that prompted the count was not
 in the population.
+
+### A measured report is not a measured figure — the wrong denominator arrived beside a conclusion that had genuinely been replayed
+
+**On 2026-08-11 a pass replayed the `findings` inventory rule over its own scope, reached the right
+conclusion, and published the wrong denominator beside it.** The replay was real and its result
+stands: the rule matched nothing in any revision of `README.md` or `research/README.md` before
+`451725f`, and the one site at that commit agrees with the filesystem. What the report gave as the
+population replayed was `266`. The two documents carry seven revisions each, so the population was
+`14`, and `266` is the repository's total commit count at `c9e42ad` — a commit count relabelled as a
+document-revision count. `266` against `14` is a factor of nineteen, and the figure reached a brief,
+this file at three sites, and the rule's own configuration comment before anyone re-derived it.
+
+**This route is filed separately from the two above it because neither of their remedies fires on
+it.** The recorded defences answer a figure carried from memory —
+[one cheaper search, scoped](#a-negative-search-result-is-a-claim-about-a-document-and-one-search-form-does-not-establish-it)
+— and a history the corpus asserted without anyone replaying it, whose defence is the replay itself,
+recorded under [What this cannot catch](#what-this-cannot-catch) beneath *Anything outside markdown*.
+A search finds this figure immediately, because it was written down and correctly transcribed
+everywhere it travelled. A replay was performed, by the pass that reported it. **The defect is
+confined to what the number counted, inside a report whose method was sound in every other respect**,
+so a reader holding *replay before relaying* has already discharged the rule that was supposed to
+catch it. The owner's tally puts this fifth among the week's wrong figures and first of its route.
+
+**The tell is cheap, needs no tool, and was available throughout: a count is worth checking against
+the age of the thing counted before it is checked against anything else.** Two markdown files in a
+repository days old cannot have `266` revisions between them, and no path in the tree could. That
+reading costs no command and no index, and it separates an impossible figure from a plausible one
+without knowing the right answer — which is what makes it usable by a reader who has no way to run
+the replay again.
+
+**What kept the substitution invisible is that the wrong figure was a near neighbour of the right
+one.** Both are counts of objects in git history, the two commands that produce them differ by a
+pathspec, and the wrong one was sitting inside the very comment the pass had been sent to replay. So
+the number was not conjured; it was carried one field to the left, out of the artifact under
+examination. **A figure that is wrong in kind announces itself, and a figure that is wrong in
+population does not** — taken from the same log as the right answer, it reads as the output of the
+work that genuinely was done.
 
 ### Never state a classifier as a complement — enumerate the accepting set
 
@@ -2667,9 +2710,11 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   found `3` narrated claims wrong: that the `findings` pattern once required a
   trailing comma, when no pattern in the check has ever contained one and that
   pattern is byte-identical from the initial commit; that the rule went silent
-  because its scoped documents stopped stating a total, when a replay over `266`
-  revisions of the two documents in scope matched in none of them and they never
-  stated one; and that `committed-harnesses`'s site was struck on `2026-08-02`,
+  because its scoped documents stopped stating a total, when a replay over the
+  `14` revisions of the two documents in scope matched in none of them and they
+  never stated one — a denominator this entry carried as `266`, the repository's
+  total commit count at `c9e42ad`, until 2026-08-11; and that
+  `committed-harnesses`'s site was struck on `2026-08-02`,
   when `deea4f3` — the initial commit of that date — holds three files and
   `VERDICT.md` is not among them. That third one is the instructive one, because
   the date was not conjured. The phrase enters the corpus at `cee7ff8` on
