@@ -154,6 +154,26 @@ def reattest(root: Path, config: dict, reason: str, unit_name: str | None) -> in
     `attest.NO_BASELINE` state and for `unratified`, so an `else` would report a
     moved tree in exactly the states where the WARNING above says whether the tree
     moved is not known from here.
+
+    **That arm was offered on 2026-08-11 and is declined — recorded here so the
+    offer is not re-derived.** The reason is not cost. The line it would assert
+    against does not exist, so it has no needle and would have to recognise a
+    movement claim by its wording, pinning a *vocabulary* rather than a
+    *behaviour* — stale the moment someone words the line differently from
+    whatever the test guessed, which is the change-detector shape this repository
+    has already declined twice. Two constructions escape the needle and neither
+    rescues the arm: an exact-output assertion over these states is sound but pins
+    *every* line's wording instead of one, so it fails the same objection harder;
+    and asserting that the comparison below carries no `else` pins a code shape
+    that today implies the property without asserting it, and stays green against
+    a movement claim printed anywhere else in this function.
+
+    **What would make it buildable, so this is a judgement and not a dead end —
+    and it is two things rather than one.** A moved-tree line existing, which
+    gives the assertion a needle. Or this function's output acquiring a
+    machine-readable structure, which gives it a *field* and retires the wording
+    problem entirely: today `main` returns at the `--reattest` branch before
+    `--format` is read, so nothing here is anything but untagged prose.
     """
     from . import attest
 

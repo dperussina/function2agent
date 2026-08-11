@@ -337,14 +337,15 @@ than* `--reattest` calls it, so nothing that edits these artifacts can refresh
 their attestation. This sentence's ancestor in
 `tools/corpuscheck/checks/preserved_evidence.py` reads *"Nothing **else** in the
 repository calls `attest.build`"*, and dropping that `else` made the claim false
-about `cli.py` first of all — the tests are a further counterexample rather than
-the only one.** And `neutralise_decision.py` — the tool that legitimately
-rewrites these artifacts, and which touches `analysis.json` and `report.md` and
-no manifest at all — does not import it: re-read at `ebff21a`, its imports are
-`argparse`, `json`, `re`, `sys` and `pathlib` and nothing else. A rebuild alone
-leaves the gate **red**, reported as `unratified` rather than as an edit, so an
-agent that refreshes without ratifying leaves a failing gate rather than no
-trace.
+about `tools/corpuscheck/cli.py` first of all — the tests are a further
+counterexample rather than the only one.** And
+`specs/001-discovery-validation/harness/verifier-vs-judge/neutralise_decision.py`
+— the tool that legitimately rewrites these artifacts, and which touches
+`analysis.json` and `report.md` and no manifest at all — does not import it:
+re-read at `ebff21a`, its imports are `argparse`, `json`, `re`, `sys` and
+`pathlib` and nothing else. A rebuild alone leaves the gate **red**, reported as
+`unratified` rather than as an edit, so an agent that refreshes without ratifying
+leaves a failing gate rather than no trace.
 
 **`--reattest` could not report that nothing had changed, because the field it
 compared moves on every rebuild.** Recorded as the defect's history rather than as
@@ -1676,10 +1677,10 @@ path *exists*, not whether it is the path the sentence *means*. This is the same
 The exposure is wide and was measured rather than assumed: this corpus has **three** `plan.md`, four
 `spec.md`, three `tasks.md`, three `data-model.md`, two `requirements.md` and two `NOTES.md`, plus the
 `README.md` and `SKILL.md` families — and roughly 49 references to a bare `` `plan.md` `` across ten
-files. **That is exposure, not defects.** ~~Exactly one real instance has been found~~ **Two, as of
-2026-08-10**, and most bare references are unambiguous to a reader who is already in the right
-directory. No check was built, for the same reason `register-range` was left hand-maintained: a rule
-firing on every bare basename would be almost entirely false positives.
+files. **That is exposure, not defects.** ~~Exactly one real instance has been found~~ ~~**Two, as of
+2026-08-10**~~ **Three, as of 2026-08-11**, and most bare references are unambiguous to a reader who
+is already in the right directory. No check was built, for the same reason `register-range` was left
+hand-maintained: a rule firing on every bare basename would be almost entirely false positives.
 
 **The second instance arrived on 2026-08-10, and the pair did not share a basename at all.** A brief
 warned that tamper needles in `src/analysis/codegraph_pin.py` were live, and quoted the plant site as
@@ -1694,6 +1695,21 @@ wide as the suite — and it is the worse variant, because a bare basename at le
 whereas quoting a file's text and naming one file looks specific. The remedy is the cheap one the
 house already uses everywhere else: **quote a path with a line number, not a string.** `git grep -n`
 on the quoted text before relaying it costs one command and would have shown both sites.
+
+**The third instance arrived on 2026-08-11, in this file, and it is the variant with a measured
+cost.** The attestation section named `` `neutralise_decision.py` `` bare, in a paragraph whose
+subject is the attestation machinery under `tools/`. The file is not under `tools/` at all — it is
+`specs/001-discovery-validation/harness/verifier-vs-judge/neutralise_decision.py`, three
+directories away under a different top-level tree. A pass reading that sentence searched `tools/`
+first and found nothing. **What distinguishes this variant from the two above is that the reader is
+not in the right directory and has no way to know it:** a shared basename is ambiguous between
+trees a reader can enumerate, and a `test_`-prefixed sibling is at least adjacent to its subject,
+whereas a bare name in a paragraph about one directory asserts a location by adjacency. The
+surrounding prose is the misdirection, so the name is not ambiguous — it is confidently wrong.
+Corrected here, and swept: the same sweep gave a path to `` `cli.py` ``, `` `runner.py` `` and two
+sites of `` `figures.py` ``, all of which live under `tools/corpuscheck/` while reading as though
+they sat in `tools/`. **This is the instance that prices the entry**, because the two above cost a
+reader a moment of ambiguity and this one cost a pass a search of the wrong directory.
 
 The tell is cheap and does not need a tool: **when a note claims to have corrected a document, ask
 whether the thing corrected was the authority or a view of it.** This is the second instance this week
@@ -1828,6 +1844,58 @@ says "a detached worktree" and names no path has delegated the collision to chan
 passes that collided were each following their brief exactly. `git worktree list` before creating
 one costs nothing and shows what is already there; `git worktree remove` when done keeps the next
 pass's `git status` clean. The proximate cause is the brief, so the remedy belongs in the brief.
+
+**Amended 2026-08-11: the convention above is the form a brief quotes, and quoted with the other
+standing rule about `PATH` it supplies no interpreter at all.** The companion rule reads
+*"`export PATH="$PWD/.venv/bin:$PATH"` before any gate"*. `.venv/` is git-ignored at
+`.gitignore:5`, so a clean detached worktree has no `.venv`, `$PWD/.venv/bin` is an empty path
+element, and the rule resolves to nothing. The two rules cannot both be followed, and they have
+been quoted together in
+every brief for a long time; what has been happening instead is that each pass silently pointed
+`PATH` at the **shared tree's** `.venv/bin`, which is obvious enough that nobody filed it. **What a
+bare `python3` gets there is not a smaller environment, it is a different interpreter:**
+`/opt/homebrew/bin/python3` is **Python 3.14.6** against the venv's **3.12.11**, and it has no
+`pytest` at all. A missing minor version is the reading to expect, not a missing site-packages set.
+
+**The instruction that holds, and it is one line: name the shared tree's interpreter by absolute
+path.** `/path/to/shared/.venv/bin/python <gate>` from inside the worktree. **Measured sound**, and
+the mechanism is why: CPython resolves `sys.prefix` from the *invoked path* — it reads the
+`pyvenv.cfg` beside the executable — so the venv answers `sys.prefix` as its own directory from any
+cwd and nothing in it resolves relative to a tree. The half that could have gone wrong is what the
+venv puts on `sys.path`, and it puts **only** its own `site-packages`: this venv has no editable
+install, no `.pth` file and no entry for this project, so **no path element points at the shared
+tree's source.** Repository modules come from the worktree — `tools.corpuscheck` imports from the
+worktree when invoked there and from the shared tree when invoked there, checked both ways. So the
+shared venv contributes third-party dependencies and nothing else, and it is sound **for all seven
+gates** rather than for some of them.
+
+**A `PATH` prefix and an absolute `-m` are outcome-identical here, and the absolute form is
+preferred for being unambiguous rather than for working better.** Both were run over the whole gate
+set from a clean detached worktree and returned the same figures. Nothing in the seven needs the
+prefix: `tools/threshold_probe.py` spawns its child as `sys.executable` and the suite's
+subprocess-spawning tests do the same, so children inherit the parent; `tools/instruments.py`
+carries bare `python3` command tuples, but `--check` compares them to `ci.yml` as **text** and
+executes none of them, which is why it passes with no venv on `PATH` at all. An absolute path also
+cannot be reordered out from under a gate by a later `PATH` edit.
+
+**Two of the seven care which directory they run from, and only one of them can be got wrong
+quietly.** `tools/gen_claims.py` takes `--root` defaulting to `"."`, so it reads the tree you are
+standing in; run from a foreign cwd it exits **1** with *"the 'register-range' generator matched no
+sites"*, which is the no-sites guard refusing to report a vacuous `0 stale` and is the behaviour to
+want. `python -m pytest` needs the repository on `sys.path` and gets it from `pythonpath = ["."]`
+resolved against the rootdir, which is discovered from the test path — so it is correct from any
+cwd provided that path points into the tree, measured from `/tmp` against an absolute `tests`
+path. The other five anchor on `Path(__file__)` and are cwd-independent: `tools/check_corpus.py`
+run from the worktree and from `/tmp` produced **byte-identical** output. **Standing in the
+worktree root satisfies all three cases**, which is why the instruction is one line and not four.
+
+**The hazard this leaves, and it is the reason the entry says "shared" twice: the interpreter is
+shared even when the tree is not.** `site-packages` resolves inside the shared tree's `.venv`, so a
+gate run from a pristine detached worktree is reading a dependency set another pass can be
+installing into at that moment, and it would read that pass's environment rather than yours.
+*"Clean detached worktree"* reads as full isolation and it is **tree** isolation only. Nothing here
+claims that has ever happened; the entry exists so that a pass reporting gate numbers knows the
+environment was not part of what its worktree isolated.
 
 **On 2026-08-10 a brief told a pass to "commit and push" while a concurrent pass held committed but
 unpushed commits on the same branch.** There is no way to push only your own commits. `git push`
@@ -2036,10 +2104,11 @@ document-relative target reads as a mismatch.
 for installation the next time someone wants the coverage; a widening that costs something is
 not. Three readings separate the two, and the third is the one the table did not carry.
 
-**One check consults the index, and not several.** `search.build` is called once in `runner.py`
-and the result is handed to every check as `ctx["search"]`, which reads as a shared input.
-`numeric-provenance` is the only check that touches it. So `search_roots` is not a noise floor
-across the check set; its entire blast radius is one rule's choice of severity.
+**One check consults the index, and not several.** `search.build` is called once in
+`tools/corpuscheck/runner.py` and the result is handed to every check as `ctx["search"]`, which
+reads as a shared input. `numeric-provenance` is the only check that touches it. So
+`search_roots` is not a noise floor across the check set; its entire blast radius is one rule's
+choice of severity.
 
 **That rule uses the index for severity alone**, which is why the zero-error, zero-warning
 readings above are what the mechanism predicts rather than evidence the roots are inert. The
@@ -2540,7 +2609,8 @@ property of what happened to be watching. **The remedy is the cheap one.** Name
 the instrument in the sentence, and name the tree, because both move.
 
 **The correction that belongs beside this, because the inference is inviting and
-wrong: `figures.py` is a library in the ordinary sense and is not one of the two
+wrong: `tools/corpuscheck/figures.py` is a library in the ordinary sense and is
+not one of the two
 files `tools/instruments.py --check` classifies as `library`.** Those two are the
 tamper matcher and the per-arm wall-clock cap — `tools/tamper.py` and
 `tools/proof_timeout.py` — and `library` there is a classification of *entry
@@ -3228,7 +3298,8 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   is deliberately not done.
 - **A fourth figure kind, if one is ever enabled.** `numeric_kinds` is
   `ratio4`, `money_cents`, `multiplier`, and each has its own lookup — exact,
-  `$`-typed and multiplicatively-typed respectively. `figures.py` also extracts
+  `$`-typed and multiplicatively-typed respectively.
+  `tools/corpuscheck/figures.py` also extracts
   `percent_decimal` and `fraction`, which the provenance check does not read; the
   bare-substring fallback in `_authoritative` is therefore reached by no enabled
   kind. Enabling either would land on that fallback, which is not even an
