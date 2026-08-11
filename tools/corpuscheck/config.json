@@ -248,6 +248,13 @@
         "attestation": "specs/001-fixture/harness/attested-malformed/attestation.json",
         "_why": "The pin below DOES match its attestation, and the tree matches too. What fails is the attestation's own internal arithmetic, so this unit holds the rule that a summary is reconciled against the entries beneath it rather than trusted.",
         "attestation_sha256": "6d84f479c5d194a2a971692bcbf916f5270ddcd67e00c411219ab527307ede58"
+      },
+      {
+        "name": "fixture-treegone",
+        "tree": "specs/001-fixture/harness/attested-treegone/records",
+        "attestation": "specs/001-fixture/harness/attested-treegone/attestation.json",
+        "_why": "This unit's attestation is intact, ratified and self-consistent, and the tree it attests does not exist. It reports the loss once against the tree rather than once per attested file. A probe on 2026-08-11 stubbed each branch of attest.verify in turn and found this the only one the other four fixtures left standing, so it is fixtured here rather than trusted.",
+        "attestation_sha256": "5d2ad5972673ef4760c23a6606b0f6924cad753039b531558450fb8692ca72a4"
       }
     ]
   }

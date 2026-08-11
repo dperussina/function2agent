@@ -685,11 +685,15 @@ each had been silent through every green gate since it stopped.
 *(Counts advanced 2026-08-11 with `preserved-evidence`, whose
 `preserved_evidence.units` are the seventh rule-driven set. **The sweep's
 population is left as it stood on 2026-08-10 and is not restated**: it is a dated
-measurement of the rules that existed when it ran, and the five units added after
-it were not among them. The new set does not have the silence failure this
-section is about — a unit whose tree is absent is skipped by name rather than
-passing quietly, and `known-bad` holds one unit per failure kind, so a rule that
-stopped reading takes the self-test with it.)*
+measurement of the rules that existed when it ran, and the six units added after
+it were not among them. The new set reached the same silence failure this section
+is about and was corrected the same day, which is recorded rather than smoothed
+over: scope was first keyed on each unit's tree, so removing an attested tree took
+the unit out of scope instead of into violation, and deleting all `59` attested
+records took the whole check to `skipped` with a line announcing itself disabled.
+Scope is now keyed on the attestation, which is committed beside the tree it
+covers, and an absent tree is a violation naming the tree. `known-bad` holds a
+unit per failure kind, so a rule that stops reading takes the self-test with it.)*
 
 The three are not one defect, and the difference decides the response.
 

@@ -107,7 +107,15 @@ def run(corpus, ctx: dict) -> list[Violation]:
         ctx["skip"]("preserved-evidence", "no `preserved_evidence` block in config.json")
         return []
 
-    units = [u for u in spec["units"] if (corpus.root / u["tree"]).is_dir()]
+    # Scope is keyed on the attestation, never on the tree. Keying it on the tree
+    # is the first thing this was written with and it was wrong: a check that goes
+    # out of scope when the thing it protects is absent is disabled by deleting
+    # that thing, and on 2026-08-11 deleting all 59 records took this check to
+    # `skipped` while it announced itself disabled. The attestation is committed
+    # beside the tree it covers, so its presence is what says the unit belongs to
+    # this root, and an absent tree is then the `removed` violation rather than
+    # silence.
+    units = [u for u in spec["units"] if (corpus.root / u["attestation"]).is_file()]
     if not units:
         # Announced once for the whole check rather than per absent unit: the
         # unit list spans this repository and the two fixture corpora, so in
@@ -115,8 +123,8 @@ def run(corpus, ctx: dict) -> list[Violation]:
         # per unit would be noise that trains a reader to ignore skip lines.
         ctx["skip"](
             "preserved-evidence",
-            "disabled: no attested tree present — looked for "
-            + ", ".join(u["tree"] for u in spec["units"]),
+            "disabled: no attestation present — looked for "
+            + ", ".join(u["attestation"] for u in spec["units"]),
         )
         return []
 

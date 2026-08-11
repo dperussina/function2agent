@@ -309,6 +309,18 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
         1,
         "tree_sha256 does not cover the entries beside it",
     ),
+    # A whole tree going missing, reported once against the tree instead of once
+    # per attested file. The same probe that found the summary-digest rule
+    # removable found this one removable too: with the tree absent, `present` is
+    # empty and the per-file loop would have called every attested file
+    # `removed`, so the self-test stayed green over a checker that had lost the
+    # ability to say the directory itself was gone.
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-treegone/records",
+        1,
+        "the attested tree is absent",
+    ),
 ]
 
 

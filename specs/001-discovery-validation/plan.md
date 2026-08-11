@@ -4277,7 +4277,7 @@ dated notice stating that every artifact beneath it records the earlier name.
   under that bullet's resolution covers `results/` and stops there**, because the cost the owner
   priced was twelve run directories and the blind study was not in front of them. Extending it is
   mechanically free: one more unit in `preserved_evidence.units`, ten more digests, no new code and no
-  new failure mode, since a unit whose tree is absent is already skipped by name. What is **not** free
+  new failure mode, since a unit is in scope wherever its attestation is committed. What is **not** free
   is the same pinning cost applied to a tree nobody ruled on, and a guard installed over an artifact
   its owner never priced is the shape this plan declines twice above. **It is an owner call and it is
   cheap either way.**
