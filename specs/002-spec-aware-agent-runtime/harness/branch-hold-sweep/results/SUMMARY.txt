@@ -1,0 +1,304 @@
+branch-hold sweep — aaa329b
+instrument: tools/selftest.py   cap: 12s   clean baseline: 0.27s
+338 runs in 146s over 279 branches
+
+The `form` column is what finding 038 §1 says is recorded per branch.
+`unscorable` carries no form: no form produced a runnable tree.
+
+branch                   site                                           verdict     form       arms
+----------------------------------------------------------------------------------------------------------------------
+attest#000               tools/corpuscheck/attest.py:122                held        and-false  invert=raised or-true=raised and-false=verdict
+attest#001               tools/corpuscheck/attest.py:188                held        invert     invert=verdict
+attest#002               tools/corpuscheck/attest.py:197                held        invert     invert=verdict
+attest#003               tools/corpuscheck/attest.py:215                held        invert     invert=verdict
+attest#004               tools/corpuscheck/attest.py:220                held        invert     invert=verdict
+attest#005               tools/corpuscheck/attest.py:226                held        invert     invert=verdict
+attest#006               tools/corpuscheck/attest.py:227                held        invert     invert=verdict
+attest#007               tools/corpuscheck/attest.py:236                held        invert     invert=verdict
+attest#008               tools/corpuscheck/attest.py:238                held        invert     invert=verdict
+attest#009               tools/corpuscheck/attest.py:240                held        invert     invert=verdict
+attest#010               tools/corpuscheck/attest.py:253                unheld      invert     invert=green
+attest#011               tools/corpuscheck/attest.py:258                unheld      invert     invert=green
+catalog#000              tools/corpuscheck/checks/catalog.py:133        held        invert     invert=verdict
+catalog#001              tools/corpuscheck/checks/catalog.py:138        held        invert     invert=verdict
+catalog#002              tools/corpuscheck/checks/catalog.py:141        held        invert     invert=verdict
+catalog#003              tools/corpuscheck/checks/catalog.py:144        held        invert     invert=verdict
+catalog#004              tools/corpuscheck/checks/catalog.py:154        held        invert     invert=verdict
+catalog#005              tools/corpuscheck/checks/catalog.py:155        held        invert     invert=verdict
+catalog#006              tools/corpuscheck/checks/catalog.py:159        held        invert     invert=verdict
+catalog#007              tools/corpuscheck/checks/catalog.py:160        held        or-true    invert=raised or-true=verdict
+catalog#008              tools/corpuscheck/checks/catalog.py:165        held        invert     invert=verdict
+catalog#009              tools/corpuscheck/checks/catalog.py:167        held        invert     invert=verdict
+catalog#010              tools/corpuscheck/checks/catalog.py:170        held        invert     invert=verdict
+catalog#011              tools/corpuscheck/checks/catalog.py:172        held        invert     invert=verdict
+catalog#012              tools/corpuscheck/checks/catalog.py:175        held        invert     invert=verdict
+crossrefs#000            tools/corpuscheck/checks/crossrefs.py:49       held        invert     invert=verdict
+crossrefs#001            tools/corpuscheck/checks/crossrefs.py:52       held        and-false  invert=raised or-true=raised and-false=verdict
+crossrefs#002            tools/corpuscheck/checks/crossrefs.py:54       held        invert     invert=verdict
+crossrefs#003            tools/corpuscheck/checks/crossrefs.py:57       held        invert     invert=verdict
+crossrefs#004            tools/corpuscheck/checks/crossrefs.py:67       held        invert     invert=verdict
+crossrefs#005            tools/corpuscheck/checks/crossrefs.py:72       held        invert     invert=verdict
+crossrefs#006            tools/corpuscheck/checks/crossrefs.py:75       held        invert     invert=verdict
+crossrefs#007            tools/corpuscheck/checks/crossrefs.py:87       held        invert     invert=verdict
+crossrefs#008            tools/corpuscheck/checks/crossrefs.py:90       held        invert     invert=verdict
+crossrefs#009            tools/corpuscheck/checks/crossrefs.py:93       held        invert     invert=verdict
+crossrefs#010            tools/corpuscheck/checks/crossrefs.py:120      unheld      or-true    invert=raised or-true=green
+crossrefs#011            tools/corpuscheck/checks/crossrefs.py:127      held        or-true    invert=raised or-true=verdict
+crossrefs#012            tools/corpuscheck/checks/crossrefs.py:131      held        invert     invert=verdict
+crossrefs#013            tools/corpuscheck/checks/crossrefs.py:133      held        invert     invert=verdict
+crossrefs#014            tools/corpuscheck/checks/crossrefs.py:135      held        invert     invert=verdict
+crossrefs#015            tools/corpuscheck/checks/crossrefs.py:136      held        invert     invert=verdict
+crossrefs#016            tools/corpuscheck/checks/crossrefs.py:143      held        invert     invert=verdict
+crossrefs#017            tools/corpuscheck/checks/crossrefs.py:145      unheld      invert     invert=green
+crossrefs#018            tools/corpuscheck/checks/crossrefs.py:155      unheld      invert     invert=green
+crossrefs#019            tools/corpuscheck/checks/crossrefs.py:172      held        invert     invert=verdict
+crossrefs#020            tools/corpuscheck/checks/crossrefs.py:175      held        invert     invert=verdict
+crossrefs#021            tools/corpuscheck/checks/crossrefs.py:179      held        and-false  invert=raised or-true=raised and-false=verdict
+crossrefs#022            tools/corpuscheck/checks/crossrefs.py:181      held        invert     invert=verdict
+crossrefs#023            tools/corpuscheck/checks/crossrefs.py:188      unheld      and-false  invert=raised or-true=raised and-false=green
+crossrefs#024            tools/corpuscheck/checks/crossrefs.py:190      unheld      invert     invert=green
+crossrefs#025            tools/corpuscheck/checks/crossrefs.py:200      held        and-false  invert=raised or-true=raised and-false=verdict
+crossrefs#026            tools/corpuscheck/checks/crossrefs.py:213      held        invert     invert=verdict
+crossrefs#027            tools/corpuscheck/checks/crossrefs.py:235      unheld      invert     invert=green
+definition_counts#000    tools/corpuscheck/checks/definition_counts.py:133 held        invert     invert=verdict
+definition_counts#001    tools/corpuscheck/checks/definition_counts.py:147 held        invert     invert=verdict
+definition_counts#002    tools/corpuscheck/checks/definition_counts.py:152 unheld      and-false  invert=raised or-true=raised and-false=green
+definition_counts#003    tools/corpuscheck/checks/definition_counts.py:160 held        invert     invert=verdict
+definition_counts#004    tools/corpuscheck/checks/definition_counts.py:163 unheld      invert     invert=green
+definition_counts#005    tools/corpuscheck/checks/definition_counts.py:166 unheld      or-true    invert=raised or-true=green
+definition_counts#006    tools/corpuscheck/checks/definition_counts.py:169 held        invert     invert=verdict
+definition_counts#007    tools/corpuscheck/checks/definition_counts.py:172 held        invert     invert=verdict
+definition_counts#008    tools/corpuscheck/checks/definition_counts.py:187 held        invert     invert=verdict
+definition_counts#009    tools/corpuscheck/checks/definition_counts.py:201 held        invert     invert=verdict
+definition_counts#010    tools/corpuscheck/checks/definition_counts.py:214 held        invert     invert=verdict
+definition_counts#011    tools/corpuscheck/checks/definition_counts.py:217 held        invert     invert=verdict
+definition_counts#012    tools/corpuscheck/checks/definition_counts.py:220 held        invert     invert=verdict
+definition_counts#013    tools/corpuscheck/checks/definition_counts.py:227 unheld      or-true    invert=raised or-true=green
+definition_counts#014    tools/corpuscheck/checks/definition_counts.py:243 held        invert     invert=verdict
+definition_counts#015    tools/corpuscheck/checks/definition_counts.py:263 held        invert     invert=verdict
+definition_counts#016    tools/corpuscheck/checks/definition_counts.py:282 unheld      invert     invert=green
+dry_run_verdict#000      tools/corpuscheck/checks/dry_run_verdict.py:134 held        invert     invert=verdict
+dry_run_verdict#001      tools/corpuscheck/checks/dry_run_verdict.py:135 held        invert     invert=verdict
+dry_run_verdict#002      tools/corpuscheck/checks/dry_run_verdict.py:138 unheld      and-false  invert=raised or-true=raised and-false=green
+dry_run_verdict#003      tools/corpuscheck/checks/dry_run_verdict.py:147 held        invert     invert=verdict
+dry_run_verdict#004      tools/corpuscheck/checks/dry_run_verdict.py:160 held        invert     invert=verdict
+dry_run_verdict#005      tools/corpuscheck/checks/dry_run_verdict.py:165 held        invert     invert=verdict
+dry_run_verdict#006      tools/corpuscheck/checks/dry_run_verdict.py:173 unheld      invert     invert=green
+dry_run_verdict#007      tools/corpuscheck/checks/dry_run_verdict.py:184 held        invert     invert=verdict
+dry_run_verdict#008      tools/corpuscheck/checks/dry_run_verdict.py:187 held        invert     invert=verdict
+dry_run_verdict#009      tools/corpuscheck/checks/dry_run_verdict.py:190 held        invert     invert=verdict
+dry_run_verdict#010      tools/corpuscheck/checks/dry_run_verdict.py:201 unheld      invert     invert=green
+dry_run_verdict#011      tools/corpuscheck/checks/dry_run_verdict.py:205 held        invert     invert=verdict
+dry_run_verdict#012      tools/corpuscheck/checks/dry_run_verdict.py:207 held        invert     invert=verdict
+findings_numbering#000   tools/corpuscheck/checks/findings_numbering.py:31 held        invert     invert=verdict
+findings_numbering#001   tools/corpuscheck/checks/findings_numbering.py:39 held        invert     invert=verdict
+findings_numbering#002   tools/corpuscheck/checks/findings_numbering.py:47 held        invert     invert=verdict
+findings_numbering#003   tools/corpuscheck/checks/findings_numbering.py:63 held        invert     invert=verdict
+findings_numbering#004   tools/corpuscheck/checks/findings_numbering.py:65 held        invert     invert=verdict
+findings_numbering#005   tools/corpuscheck/checks/findings_numbering.py:82 held        invert     invert=verdict
+findings_numbering#006   tools/corpuscheck/checks/findings_numbering.py:86 held        invert     invert=verdict
+identifiers#000          tools/corpuscheck/checks/identifiers.py:61     held        invert     invert=verdict
+identifiers#001          tools/corpuscheck/checks/identifiers.py:65     unheld      and-false  invert=raised or-true=raised and-false=green
+identifiers#002          tools/corpuscheck/checks/identifiers.py:70     held        and-false  invert=raised or-true=raised and-false=verdict
+identifiers#003          tools/corpuscheck/checks/identifiers.py:74     held        invert     invert=verdict
+identifiers#004          tools/corpuscheck/checks/identifiers.py:76     held        invert     invert=verdict
+identifiers#005          tools/corpuscheck/checks/identifiers.py:82     held        and-false  invert=raised or-true=raised and-false=verdict
+identifiers#006          tools/corpuscheck/checks/identifiers.py:105    held        invert     invert=verdict
+identifiers#007          tools/corpuscheck/checks/identifiers.py:119    held        invert     invert=verdict
+identifiers#008          tools/corpuscheck/checks/identifiers.py:124    held        invert     invert=verdict
+identifiers#009          tools/corpuscheck/checks/identifiers.py:148    unheld      or-true    invert=raised or-true=green
+identifiers#010          tools/corpuscheck/checks/identifiers.py:151    unheld      or-true    invert=raised or-true=green
+identifiers#011          tools/corpuscheck/checks/identifiers.py:152    held        invert     invert=verdict
+identifiers#012          tools/corpuscheck/checks/identifiers.py:157    held        invert     invert=verdict
+identifiers#013          tools/corpuscheck/checks/identifiers.py:159    held        invert     invert=verdict
+identifiers#014          tools/corpuscheck/checks/identifiers.py:160    held        invert     invert=verdict
+identifiers#015          tools/corpuscheck/checks/identifiers.py:163    held        invert     invert=verdict
+inventory#000            tools/corpuscheck/checks/inventory.py:114      held        and-false  invert=raised or-true=raised and-false=verdict
+inventory#001            tools/corpuscheck/checks/inventory.py:124      held        invert     invert=verdict
+inventory#002            tools/corpuscheck/checks/inventory.py:126      held        invert     invert=verdict
+inventory#003            tools/corpuscheck/checks/inventory.py:129      held        invert     invert=verdict
+inventory#004            tools/corpuscheck/checks/inventory.py:144      held        invert     invert=verdict
+inventory#005            tools/corpuscheck/checks/inventory.py:146      unheld      and-false  invert=raised or-true=raised and-false=green
+inventory#006            tools/corpuscheck/checks/inventory.py:163      held        invert     invert=verdict
+inventory#007            tools/corpuscheck/checks/inventory.py:166      held        invert     invert=verdict
+inventory#008            tools/corpuscheck/checks/inventory.py:171      held        invert     invert=verdict
+inventory#009            tools/corpuscheck/checks/inventory.py:173      held        invert     invert=verdict
+inventory#010            tools/corpuscheck/checks/inventory.py:179      held        invert     invert=verdict
+inventory#011            tools/corpuscheck/checks/inventory.py:193      unheld      invert     invert=green
+inventory#012            tools/corpuscheck/checks/inventory.py:199      unheld      invert     invert=green
+lifecycle_taxonomy#000   tools/corpuscheck/checks/lifecycle_taxonomy.py:165 held        and-false  invert=raised or-true=raised and-false=verdict
+lifecycle_taxonomy#001   tools/corpuscheck/checks/lifecycle_taxonomy.py:168 held        and-false  invert=raised or-true=raised and-false=verdict
+lifecycle_taxonomy#002   tools/corpuscheck/checks/lifecycle_taxonomy.py:174 held        invert     invert=verdict
+lifecycle_taxonomy#003   tools/corpuscheck/checks/lifecycle_taxonomy.py:175 held        invert     invert=verdict
+lifecycle_taxonomy#004   tools/corpuscheck/checks/lifecycle_taxonomy.py:179 held        and-false  invert=raised or-true=raised and-false=verdict
+lifecycle_taxonomy#005   tools/corpuscheck/checks/lifecycle_taxonomy.py:188 held        and-false  invert=raised or-true=raised and-false=verdict
+lifecycle_taxonomy#006   tools/corpuscheck/checks/lifecycle_taxonomy.py:190 held        invert     invert=verdict
+lifecycle_taxonomy#007   tools/corpuscheck/checks/lifecycle_taxonomy.py:193 held        invert     invert=verdict
+lifecycle_taxonomy#008   tools/corpuscheck/checks/lifecycle_taxonomy.py:209 held        invert     invert=verdict
+lifecycle_taxonomy#009   tools/corpuscheck/checks/lifecycle_taxonomy.py:213 held        or-true    invert=raised or-true=verdict
+lifecycle_taxonomy#010   tools/corpuscheck/checks/lifecycle_taxonomy.py:218 held        invert     invert=verdict
+lifecycle_taxonomy#011   tools/corpuscheck/checks/lifecycle_taxonomy.py:219 held        or-true    invert=raised or-true=verdict
+lifecycle_taxonomy#012   tools/corpuscheck/checks/lifecycle_taxonomy.py:226 held        invert     invert=verdict
+lifecycle_taxonomy#013   tools/corpuscheck/checks/lifecycle_taxonomy.py:230 held        invert     invert=verdict
+lifecycle_taxonomy#014   tools/corpuscheck/checks/lifecycle_taxonomy.py:250 held        invert     invert=verdict
+lifecycle_taxonomy#015   tools/corpuscheck/checks/lifecycle_taxonomy.py:260 held        invert     invert=verdict
+lifecycle_taxonomy#016   tools/corpuscheck/checks/lifecycle_taxonomy.py:262 held        invert     invert=verdict
+lifecycle_taxonomy#017   tools/corpuscheck/checks/lifecycle_taxonomy.py:271 held        invert     invert=verdict
+lifecycle_taxonomy#018   tools/corpuscheck/checks/lifecycle_taxonomy.py:291 held        or-true    invert=raised or-true=verdict
+lifecycle_taxonomy#019   tools/corpuscheck/checks/lifecycle_taxonomy.py:299 held        invert     invert=verdict
+lifecycle_taxonomy#020   tools/corpuscheck/checks/lifecycle_taxonomy.py:323 held        invert     invert=verdict
+lifecycle_taxonomy#021   tools/corpuscheck/checks/lifecycle_taxonomy.py:345 held        invert     invert=verdict
+lifecycle_taxonomy#022   tools/corpuscheck/checks/lifecycle_taxonomy.py:361 held        invert     invert=verdict
+lifecycle_taxonomy#023   tools/corpuscheck/checks/lifecycle_taxonomy.py:378 held        invert     invert=verdict
+lifecycle_taxonomy#024   tools/corpuscheck/checks/lifecycle_taxonomy.py:396 held        invert     invert=verdict
+numeric_provenance#000   tools/corpuscheck/checks/numeric_provenance.py:160 unheld      invert     invert=green
+numeric_provenance#001   tools/corpuscheck/checks/numeric_provenance.py:162 unheld      invert     invert=green
+numeric_provenance#002   tools/corpuscheck/checks/numeric_provenance.py:175 unheld      invert     invert=green
+numeric_provenance#003   tools/corpuscheck/checks/numeric_provenance.py:178 unheld      invert     invert=green
+numeric_provenance#004   tools/corpuscheck/checks/numeric_provenance.py:181 unheld      invert     invert=green
+numeric_provenance#005   tools/corpuscheck/checks/numeric_provenance.py:270 held        and-false  invert=raised or-true=raised and-false=verdict
+numeric_provenance#006   tools/corpuscheck/checks/numeric_provenance.py:276 held        invert     invert=verdict
+numeric_provenance#007   tools/corpuscheck/checks/numeric_provenance.py:279 held        invert     invert=verdict
+numeric_provenance#008   tools/corpuscheck/checks/numeric_provenance.py:281 held        invert     invert=verdict
+numeric_provenance#009   tools/corpuscheck/checks/numeric_provenance.py:285 held        invert     invert=verdict
+numeric_provenance#010   tools/corpuscheck/checks/numeric_provenance.py:291 unheld      invert     invert=green
+numeric_provenance#011   tools/corpuscheck/checks/numeric_provenance.py:293 unheld      invert     invert=green
+numeric_provenance#012   tools/corpuscheck/checks/numeric_provenance.py:306 held        invert     invert=verdict
+numeric_provenance#013   tools/corpuscheck/checks/numeric_provenance.py:324 held        invert     invert=verdict
+numeric_provenance#014   tools/corpuscheck/checks/numeric_provenance.py:331 held        invert     invert=verdict
+numeric_provenance#015   tools/corpuscheck/checks/numeric_provenance.py:333 held        invert     invert=verdict
+numeric_provenance#016   tools/corpuscheck/checks/numeric_provenance.py:335 held        invert     invert=verdict
+numeric_provenance#017   tools/corpuscheck/checks/numeric_provenance.py:337 held        invert     invert=verdict
+numeric_provenance#018   tools/corpuscheck/checks/numeric_provenance.py:345 held        invert     invert=verdict
+numeric_provenance#019   tools/corpuscheck/checks/numeric_provenance.py:347 held        invert     invert=verdict
+numeric_provenance#020   tools/corpuscheck/checks/numeric_provenance.py:356 held        invert     invert=verdict
+numeric_provenance#021   tools/corpuscheck/checks/numeric_provenance.py:360 held        invert     invert=verdict
+numeric_provenance#022   tools/corpuscheck/checks/numeric_provenance.py:366 unheld      invert     invert=green
+preserved_evidence#000   tools/corpuscheck/checks/preserved_evidence.py:119 held        invert     invert=verdict
+preserved_evidence#001   tools/corpuscheck/checks/preserved_evidence.py:131 held        invert     invert=verdict
+preserved_evidence#002   tools/corpuscheck/checks/preserved_evidence.py:132 held        invert     invert=verdict
+preserved_evidence#003   tools/corpuscheck/checks/preserved_evidence.py:162 held        invert     invert=verdict
+ratio_arithmetic#000     tools/corpuscheck/checks/ratio_arithmetic.py:66 held        invert     invert=verdict
+ratio_arithmetic#001     tools/corpuscheck/checks/ratio_arithmetic.py:73 held        invert     invert=verdict
+ratio_arithmetic#002     tools/corpuscheck/checks/ratio_arithmetic.py:77 held        invert     invert=verdict
+ratio_arithmetic#003     tools/corpuscheck/checks/ratio_arithmetic.py:81 held        invert     invert=verdict
+ratio_arithmetic#004     tools/corpuscheck/checks/ratio_arithmetic.py:82 held        invert     invert=verdict
+ratio_arithmetic#005     tools/corpuscheck/checks/ratio_arithmetic.py:85 held        invert     invert=verdict
+ratio_arithmetic#006     tools/corpuscheck/checks/ratio_arithmetic.py:96 held        invert     invert=verdict
+ratio_arithmetic#007     tools/corpuscheck/checks/ratio_arithmetic.py:105 unscorable  -          invert=raised or-true=raised and-false=raised
+ratio_arithmetic#008     tools/corpuscheck/checks/ratio_arithmetic.py:110 held        invert     invert=verdict
+register_ranges#000      tools/corpuscheck/checks/register_ranges.py:54 unheld      invert     invert=green
+register_ranges#001      tools/corpuscheck/checks/register_ranges.py:60 held        or-true    invert=raised or-true=verdict
+register_ranges#002      tools/corpuscheck/checks/register_ranges.py:67 held        invert     invert=verdict
+register_ranges#003      tools/corpuscheck/checks/register_ranges.py:76 held        or-true    invert=raised or-true=verdict
+register_ranges#004      tools/corpuscheck/checks/register_ranges.py:79 held        invert     invert=verdict
+register_ranges#005      tools/corpuscheck/checks/register_ranges.py:81 held        invert     invert=verdict
+register_ranges#006      tools/corpuscheck/checks/register_ranges.py:84 held        invert     invert=verdict
+register_ranges#007      tools/corpuscheck/checks/register_ranges.py:99 unheld      invert     invert=green
+register_ranges#008      tools/corpuscheck/checks/register_ranges.py:118 held        invert     invert=verdict
+register_ranges#009      tools/corpuscheck/checks/register_ranges.py:120 held        invert     invert=verdict
+sum_arithmetic#000       tools/corpuscheck/checks/sum_arithmetic.py:27  held        invert     invert=verdict
+tables#000               tools/corpuscheck/checks/tables.py:50          held        invert     invert=verdict
+tables#001               tools/corpuscheck/checks/tables.py:66          held        invert     invert=verdict
+tables#002               tools/corpuscheck/checks/tables.py:67          held        invert     invert=verdict
+tables#003               tools/corpuscheck/checks/tables.py:73          held        invert     invert=verdict
+tables#004               tools/corpuscheck/checks/tables.py:77          held        invert     invert=verdict
+tables#005               tools/corpuscheck/checks/tables.py:79          held        invert     invert=verdict
+tables#006               tools/corpuscheck/checks/tables.py:81          held        invert     invert=verdict
+tables#007               tools/corpuscheck/checks/tables.py:96          held        invert     invert=verdict
+tables#008               tools/corpuscheck/checks/tables.py:101         held        invert     invert=verdict
+tables#009               tools/corpuscheck/checks/tables.py:105         held        invert     invert=verdict
+tables#010               tools/corpuscheck/checks/tables.py:136         held        invert     invert=verdict
+tables#011               tools/corpuscheck/checks/tables.py:139         held        invert     invert=verdict
+tables#012               tools/corpuscheck/checks/tables.py:157         unheld      invert     invert=green
+toc#000                  tools/corpuscheck/checks/toc.py:50             held        invert     invert=verdict
+toc#001                  tools/corpuscheck/checks/toc.py:53             unheld      invert     invert=green
+toc#002                  tools/corpuscheck/checks/toc.py:56             held        or-true    invert=raised or-true=verdict
+toc#003                  tools/corpuscheck/checks/toc.py:63             held        invert     invert=verdict
+toc#004                  tools/corpuscheck/checks/toc.py:64             held        invert     invert=verdict
+toc#005                  tools/corpuscheck/checks/toc.py:66             held        invert     invert=verdict
+toc#006                  tools/corpuscheck/checks/toc.py:71             held        invert     invert=verdict
+toc#007                  tools/corpuscheck/checks/toc.py:75             held        invert     invert=verdict
+toc#008                  tools/corpuscheck/checks/toc.py:78             held        or-true    invert=raised or-true=verdict
+toc#009                  tools/corpuscheck/checks/toc.py:81             held        invert     invert=verdict
+toc#010                  tools/corpuscheck/checks/toc.py:84             held        invert     invert=verdict
+corpus#000               tools/corpuscheck/corpus.py:46                 unheld      invert     invert=green
+corpus#001               tools/corpuscheck/corpus.py:91                 held        and-false  invert=raised or-true=raised and-false=verdict
+corpus#002               tools/corpuscheck/corpus.py:96                 held        invert     invert=verdict
+corpus#003               tools/corpuscheck/corpus.py:99                 held        invert     invert=verdict
+corpus#004               tools/corpuscheck/corpus.py:104                held        invert     invert=verdict
+corpus#005               tools/corpuscheck/corpus.py:106                unheld      invert     invert=green
+corpus#006               tools/corpuscheck/corpus.py:112                unheld      invert     invert=green
+corpus#007               tools/corpuscheck/corpus.py:114                unheld      or-true    invert=raised or-true=green
+corpus#008               tools/corpuscheck/corpus.py:117                unheld      invert     invert=green
+corpus#009               tools/corpuscheck/corpus.py:140                held        invert     invert=verdict
+corpus#010               tools/corpuscheck/corpus.py:143                held        invert     invert=verdict
+corpus#011               tools/corpuscheck/corpus.py:153                held        invert     invert=verdict
+corpus#012               tools/corpuscheck/corpus.py:155                held        invert     invert=verdict
+corpus#013               tools/corpuscheck/corpus.py:159                unheld      and-false  invert=timeout or-true=timeout and-false=green
+corpus#014               tools/corpuscheck/corpus.py:161                unscorable  -          invert=timeout or-true=timeout and-false=timeout
+corpus#015               tools/corpuscheck/corpus.py:164                unheld      invert     invert=green
+corpus#016               tools/corpuscheck/corpus.py:166                held        invert     invert=verdict
+corpus#017               tools/corpuscheck/corpus.py:171                held        invert     invert=verdict
+corpus#018               tools/corpuscheck/corpus.py:182                held        invert     invert=verdict
+corpus#019               tools/corpuscheck/corpus.py:184                held        invert     invert=verdict
+corpus#020               tools/corpuscheck/corpus.py:192                held        or-true    invert=raised or-true=verdict
+corpus#021               tools/corpuscheck/corpus.py:202                held        or-true    invert=raised or-true=verdict
+corpus#022               tools/corpuscheck/corpus.py:227                held        invert     invert=verdict
+corpus#023               tools/corpuscheck/corpus.py:307                held        invert     invert=verdict
+corpus#024               tools/corpuscheck/corpus.py:318                held        invert     invert=verdict
+corpus#025               tools/corpuscheck/corpus.py:321                held        invert     invert=verdict
+corpus#026               tools/corpuscheck/corpus.py:322                held        invert     invert=verdict
+corpus#027               tools/corpuscheck/corpus.py:326                unheld      invert     invert=green
+corpus#028               tools/corpuscheck/corpus.py:350                held        invert     invert=verdict
+corpus#029               tools/corpuscheck/corpus.py:353                held        invert     invert=verdict
+corpus#030               tools/corpuscheck/corpus.py:356                held        invert     invert=verdict
+corpus#031               tools/corpuscheck/corpus.py:362                held        invert     invert=verdict
+corpus#032               tools/corpuscheck/corpus.py:369                held        invert     invert=verdict
+corpus#033               tools/corpuscheck/corpus.py:371                held        invert     invert=verdict
+corpus#034               tools/corpuscheck/corpus.py:378                held        invert     invert=verdict
+corpus#035               tools/corpuscheck/corpus.py:380                held        invert     invert=verdict
+corpus#036               tools/corpuscheck/corpus.py:382                unheld      invert     invert=green
+figures#000              tools/corpuscheck/figures.py:181               unheld      invert     invert=green
+figures#001              tools/corpuscheck/figures.py:228               held        invert     invert=verdict
+figures#002              tools/corpuscheck/figures.py:241               held        invert     invert=verdict
+figures#003              tools/corpuscheck/figures.py:246               held        invert     invert=verdict
+figures#004              tools/corpuscheck/figures.py:248               held        invert     invert=verdict
+figures#005              tools/corpuscheck/figures.py:253               held        invert     invert=verdict
+figures#006              tools/corpuscheck/figures.py:258               unheld      invert     invert=green
+figures#007              tools/corpuscheck/figures.py:263               held        invert     invert=verdict
+figures#008              tools/corpuscheck/figures.py:298               unheld      invert     invert=green
+figures#009              tools/corpuscheck/figures.py:305               unheld      invert     invert=green
+figures#010              tools/corpuscheck/figures.py:307               unheld      invert     invert=green
+figures#011              tools/corpuscheck/figures.py:322               unheld      invert     invert=green
+figures#012              tools/corpuscheck/figures.py:329               unheld      invert     invert=green
+figures#013              tools/corpuscheck/figures.py:357               held        invert     invert=verdict
+figures#014              tools/corpuscheck/figures.py:390               held        invert     invert=verdict
+figures#015              tools/corpuscheck/figures.py:395               held        invert     invert=verdict
+figures#016              tools/corpuscheck/figures.py:414               held        invert     invert=verdict
+figures#017              tools/corpuscheck/figures.py:438               unheld      invert     invert=green
+figures#018              tools/corpuscheck/figures.py:441               unheld      invert     invert=green
+figures#019              tools/corpuscheck/figures.py:445               unheld      invert     invert=green
+search#000               tools/corpuscheck/search.py:23                 held        invert     invert=verdict
+search#001               tools/corpuscheck/search.py:27                 unheld      invert     invert=green
+search#002               tools/corpuscheck/search.py:39                 unheld      invert     invert=green
+search#003               tools/corpuscheck/search.py:50                 held        invert     invert=verdict
+search#004               tools/corpuscheck/search.py:50                 held        invert     invert=verdict
+search#005               tools/corpuscheck/search.py:52                 held        invert     invert=verdict
+search#006               tools/corpuscheck/search.py:55                 held        invert     invert=verdict
+----------------------------------------------------------------------------------------------------------------------
+precedence      222 held / 55 unheld / 2 unscorable
+first-non-zero  234 held / 44 unheld / 1 unscorable   (the rejected rule, as a control)
+the two differ on 12 branches:
+  crossrefs#010            tools/corpuscheck/checks/crossrefs.py:120  unheld -> held
+  crossrefs#023            tools/corpuscheck/checks/crossrefs.py:188  unheld -> held
+  definition_counts#002    tools/corpuscheck/checks/definition_counts.py:152  unheld -> held
+  definition_counts#005    tools/corpuscheck/checks/definition_counts.py:166  unheld -> held
+  definition_counts#013    tools/corpuscheck/checks/definition_counts.py:227  unheld -> held
+  dry_run_verdict#002      tools/corpuscheck/checks/dry_run_verdict.py:138  unheld -> held
+  identifiers#001          tools/corpuscheck/checks/identifiers.py:65  unheld -> held
+  identifiers#009          tools/corpuscheck/checks/identifiers.py:148  unheld -> held
+  identifiers#010          tools/corpuscheck/checks/identifiers.py:151  unheld -> held
+  inventory#005            tools/corpuscheck/checks/inventory.py:146  unheld -> held
+  ratio_arithmetic#007     tools/corpuscheck/checks/ratio_arithmetic.py:105  unscorable -> held
+  corpus#007               tools/corpuscheck/corpus.py:114  unheld -> held

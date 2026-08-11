@@ -110,6 +110,31 @@ Neutralisation was attempted in three forms, in this order, and the form used is
 | `or True` | the test forced true | the branch's false arm is never taken |
 | `and False` | the test forced false | the branch's true arm is never taken |
 
+> ### The record that clause promises exists as of 2026-08-11, and until then it did not
+>
+> **Added 2026-08-11.** *"the form used is recorded per branch"* was true of the sweep and
+> false of this repository. The sweep knew each branch's form — it had to, to apply the
+> precedence below — but it was never committed, so **nothing in the tree carried the record**
+> and no reader could check one of the 279 against it. The clause is **discharged rather than
+> struck**: the record is now committed, at
+> [`harness/branch-hold-sweep/results/`](../harness/branch-hold-sweep/results/), one entry per
+> branch carrying the form its verdict was taken on, every arm's outcome, and the exception
+> text where an arm raised. Of the 279, **241** were scored on `invert`, **17** on `or True`
+> and **19** on `and False`; **2** carry no form, because for those no form produced a runnable
+> tree.
+>
+> **What the record does not do is corroborate this document.** It was produced by
+> [`branch_hold_sweep.py`](../harness/branch-hold-sweep/branch_hold_sweep.py), a
+> reimplementation built from this section's prose after the original sweep was lost, and it
+> reproduced §2.3's triple and all nineteen per-module counts on its first full run with
+> nothing tuned between deriving the population and reading the verdicts. **At the commit that
+> lands both, that agreement is a cross-check** between two independently written classifiers,
+> one of which had no access to the other. **Afterwards it is a regression guard on the harness
+> and nothing more**, because from then on both sides of the comparison are the same
+> instrument. This is stated here as well as in the harness README because a record and the
+> document it appears to confirm, committed together, read as self-certifying unless something
+> says otherwise — which is the objection the archive-as-exhibit ruling was decided on.
+
 Inversion was preferred because it is the only one of the three that fails when *either* direction
 of a branch is unheld. The forcing forms were used only where inversion crashed the check outright
 or hung it, which is a property of the branch rather than of the method — a loop guard inverted
@@ -191,9 +216,13 @@ unmutated self and every branch then scores held.
 > **Run 2026-08-11.** The box above repaired the `held` test from an exit code to a reported verdict
 > and then argued, from §1's form precedence, that no recorded verdict could move under it. This is
 > that argument run instead of made. It was worth running rather than accepting, because the
-> precedence is a property of how the sweep chose a form and **the sweep is not in this repository** —
-> it was never committed, so §1's prose is the only surviving record of it, and prose is not a
-> classifier.
+> precedence is a property of how the sweep chose a form and ~~**the sweep is not in this
+> repository** — it was never committed, so §1's prose is the only surviving record of it, and
+> prose is not a classifier.~~ **Superseded 2026-08-11 — the sweep is now in this repository**,
+> at [`harness/branch-hold-sweep/`](../harness/branch-hold-sweep/), and the box after §1's
+> forms table records what committing it does and does not establish. The struck clause was
+> true when written and is the whole reason this re-sweep was worth running rather than
+> reasoning from the precedence, so it is superseded rather than deleted.
 >
 > **The number, which is the point of the exercise.** Of the **222** branches recorded `held`, **none
 > was scored on a form that raised**. It is zero, and it is recorded as a reading rather than left as
@@ -641,7 +670,14 @@ audit**, and that cost is the argument for appending rather than inserting.
 
 ## 5. The verdict: the instrument is declined, on composition
 
-**The rate is reported and the sweep is not built.** The reasoning is the composition of the unheld
+~~**The rate is reported and the sweep is not built.**~~ **Superseded 2026-08-11 in the second
+clause, and the verdict is untouched.** The rate is reported and **the gate is not built**. A
+sweep was committed on 2026-08-11 at
+[`harness/branch-hold-sweep/`](../harness/branch-hold-sweep/), because §2's figures otherwise
+rested on an instrument that was not in the tree at all; it runs on demand, gates nothing, and
+is wired into no CI job and no census. **What this section declines is a gate over this
+population**, and committing an instrument that *can* be run is not building it. §6's box
+carries the distinction. The reasoning is the composition of the unheld
 set rather than the cost of running it, and the costs are recorded second because they are real but
 they are not what decides it.
 
@@ -693,10 +729,38 @@ as the 25 get fixtured.
 Recorded because the natural move is the wrong one. The harness is worth reusing and the shape is
 not.
 
-**Reuse the harness.** `threshold_probe.py` already carries the pieces this sweep needed and
+~~**Reuse the harness.** `threshold_probe.py` already carries the pieces this sweep needed and
 rebuilt: the `__pycache__` purge between edits, the edit-restore loop with restoration verified
 rather than assumed, and the `MUST_BREAK` / `MAY_HOLD` vocabulary for saying what an arm is entitled
-to conclude. All three transfer unchanged.
+to conclude. All three transfer unchanged.~~
+
+**Superseded 2026-08-11 in one of the three, by the sweep this section imagines being built.**
+Two transfer unchanged: the edit-restore loop with restoration verified rather than assumed,
+and the `MUST_BREAK` / `MAY_HOLD` vocabulary for saying what an arm is entitled to conclude.
+**The `__pycache__` purge does not transfer, and recommending it here was the error.** §1's box
+measures the mechanism: nothing orders a purge against the next interpreter's write, so the
+purge races the arms, and because every `invert` mutation of a module has the same length the
+cache a purge misses serves the *previous arm's mutation* rather than the unmutated module.
+What actually transfers is `threshold_probe.py`'s other two defences, which it already applies
+alongside the purge and which are the ones that hold: `PYTHONDONTWRITEBYTECODE=1` in the child
+environment and `-B` on its command line. **Forbidding the write is not a race.** A purge is
+not merely insufficient here, it is the reassuring half of a pair whose other half is doing the
+work.
+
+> ### The sibling exists as of 2026-08-11, and it is not the gate §5 declines
+>
+> **Added 2026-08-11.** [`harness/branch-hold-sweep/`](../harness/branch-hold-sweep/) is the
+> sweep behind every figure in §2, committed because those figures otherwise rested on an
+> instrument absent from the tree and every re-sweep was a fresh reimplementation from this
+> document's prose. It is a sibling in exactly the sense this section argues for — its own
+> entry point rather than a flag on `threshold_probe.py` — and it is wired into **nothing**: no
+> CI job, no entry in `tools/instruments.py`, ~145 seconds on demand.
+>
+> **§5's declination is untouched and is not reopened here.** What §5 declines is a gate over
+> this population, on the composition of the unheld set and on the 55 accepted exceptions such
+> a gate would need from its first day. Neither argument is weakened by an instrument that
+> nothing runs automatically. What has changed is narrower and worth saying exactly: re-taking
+> this measurement no longer requires rewriting the classifier from prose first.
 
 **Do not reuse the declared table.** `threshold_probe.py` names its constants in a table, which is
 correct for constants because a constant is added deliberately and rarely. A branch population
