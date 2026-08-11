@@ -1,5 +1,13 @@
 # E8 viability after the corpus-packaging defect
 
+> **⚠️ RENUMBERED: this document's `E8` is the experiment now called `E19`.** The identifier `E8`
+> named two experiments until 2026-08-11, when [`plan.md` **OD-31**](./plan.md#od-31--the-verifier-vs-judge-experiment-is-renumbered-e19-and-the-stage-d-synthesis-experiment-keeps-e8-the-renumber-reaches-live-prose-only-and-the-committed-run-directories-the-fingerprinted-harness-files-and-the-dated-assessments-keep-the-name-they-were-recorded-under)
+> assigned `E8` to the Stage-D synthesis experiment and `E19` to the verifier-vs-judge experiment
+> this document assesses. **Nothing below is rewritten, and the filename is unchanged.** This is a dated assessment cited
+> as a source by findings 015 and 018; the house convention supersedes rather than overwrites, and a strike inside a heading
+> corrupts its anchor. **Read every `E8` below as `E19`.** No figure, denominator, population or
+> verdict is affected by the renumber.
+
 **Date**: 2026-08-03. **Status**: assessment, written after `harness/verifier-vs-judge/adjudication/REPORT.md`
 and before any judge call. **Scope**: read-only over the committed artifacts. Nothing in
 `harness/` was modified.

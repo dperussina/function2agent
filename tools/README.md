@@ -96,7 +96,7 @@ the author may have made deliberately.
 | `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
 | `findings-numbering` | error / warning | Duplicate numeric prefixes in `findings/` (**error**), a citation of a finding number that does not exist (**error**), and a gap in the sequence (**warning**). |
 | `register-range` | warning | A prose summary of a register — `(D-01 … D-19)` — that stops short of the register's real last entry. **`gen_claims.py` now writes the standalone ones**; this rule is what fires when it has not been run, and is the *only* mechanism at the narrated sites the generator refuses. |
-| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again. A rule whose subject is not in the tree at all declares that as a `precondition` and announces being out of scope rather than disabled — see [the `vendored-repos` disposition](#vendored-repos-is-out-of-scope-in-ci-by-construction-and-says-so-rather-than-reporting-an-incident). |
+| `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no live site in **any** revision of its scope until 2026-08-11, when the corpus-wide total arrived in the repository map. ~~The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again.~~ **Corrected 2026-08-11, and it was false in both halves.** No rule's pattern has ever contained a comma, in any revision, and the pattern as written matches `15 findings and an index` — replayed against the rule's own masking over all 266 revisions of `README.md` and `research/README.md`, it read nothing in every one of them, so there was no 2026-08-03 site to lose. Widening its `files` to the findings index was measured and declined: see [the sweep](#every-rule-measured-against-its-own-scope). A rule whose subject is not in the tree at all declares that as a `precondition` and announces being out of scope rather than disabled — see [the `vendored-repos` disposition](#vendored-repos-is-out-of-scope-in-ci-by-construction-and-says-so-rather-than-reporting-an-incident). |
 | `definition-count` | error / warning | A prose count of a *register* — "58 functional requirements" — against the definitions in the specification it describes. **error** when the target yields zero definitions, unconditionally; **warning** on an ordinary mismatch, because a deliberately historical figure is a real case and the strike convention is its escape. See [Why zero definitions is an error](#why-zero-definitions-is-an-error-and-not-a-comparison). |
 | `catalog-line-count` | warning | A `Lines` column, or an inline `(N lines)`, that has drifted from the file it describes. **`gen_claims.py` writes these**; this rule is what fires when it has not been run. Exact since 2026-08-03 — the previous ±2 tolerance was concealing a live 2-line drift. |
 | `toc-coverage` | warning | A `##` section missing from its document's own table of contents, and therefore unreachable from the top of an 800-line file. |
@@ -561,6 +561,15 @@ run by a human, and it is one command per namespace.
 
 #### The first collision to arrive is outside the residue as written, and it widens it
 
+> **The collision was adjudicated 2026-08-11 by `plan.md` **OD-31** and no longer exists: Stage D
+> keeps `E8` and the verifier-vs-judge experiment is `E19`.** **This section is left as measured and
+> is not renumbered**, because every sentence in it is a dated statement about a state the corpus was
+> in, and rewriting `E8` to `E19` here would turn a true measurement into a false one — the whole
+> subject is an identifier that named two things, and after OD-31 neither identifier does. **What
+> survives the adjudication is the part that was never about this experiment**: a heading can hand
+> out a taken number, the declined first-cell guard fires zero times on that case, and the human
+> search is still the only instrument that would have caught it. **The residue is unchanged.**
+
 **Measured 2026-08-10 at `6f55897`.** The identifier `E8` names two different
 experiments: the Stage-D synthesis experiment defined in
 [`plan.md`](../specs/001-discovery-validation/plan.md), which the experiment
@@ -621,12 +630,29 @@ The three are not one defect, and the difference decides the response.
   carried the rule after it. Its number words also stopped at `ten` against a
   directory count of thirteen, so the spelled-out true count could not have
   matched had anyone written it.
-* **`findings` never had one, twice.** It matched nothing until 2026-08-03
-  because its pattern required a trailing comma, was repaired pointwise, and
-  matches nothing again because the scoped documents state no total. Twenty-one
-  phrases of its shape sit elsewhere in the corpus and every one of them is
-  prose about conclusions rather than a count of documents, which is why the
-  scope is right and the rule is nonetheless empty.
+* **`findings` had never had one at all, and the reason recorded here was
+  invented.** ~~It matched nothing until 2026-08-03 because its pattern required
+  a trailing comma, was repaired pointwise, and matches nothing again because the
+  scoped documents state no total. Twenty-one phrases of its shape sit elsewhere
+  in the corpus.~~ **Corrected 2026-08-11 by replay.** Run against the rule's own
+  masking over all `266` revisions of `README.md` and `research/README.md`, the
+  rule read nothing in **every** revision: there was no comma in any version of
+  any of the six patterns, `15 findings and an index` matches the pattern as
+  written, and the scoped documents never stated a total to stop stating. The
+  phrase count outside the rule's scope is `23` rather than twenty-one. **The
+  claim that every one of them is prose about conclusions rather than a count of
+  documents does not survive reading them either**, and the true shape is a better
+  argument than the one it replaces: `five` state a document count explicitly and
+  correctly for a population narrower than the glob's — two over the experiment
+  ladder (`twelve findings` across nine positions, and `Six of the twelve`),
+  `four findings` enumerated by link at E7, `seventeen findings` over one feature's
+  directory at a past date, and `Sixteen findings` over `cite_advisor`'s surface.
+  Widening the scope would not merely add noise; it would demand that five correct
+  scoped counts be rewritten to a corpus-wide total none of them was making. One
+  further match is not a count at all: `Feature 002 findings` is the findings
+  index's own H1, where `002` names the feature and parses as `2`. The rule has a
+  live site as of 2026-08-11 — the repository map states the corpus-wide total,
+  `37` across the two `findings/` directories, and the rule reads it there.
 * **`gate-state` had never fired anywhere, including the fixture.** Alone among
   the seven dry-run patterns it appeared in neither the corpus nor
   `known-bad`, so nothing had ever shown it capable of matching. The other four
@@ -657,20 +683,32 @@ drawn that line, announcing a skip per rule that matches nothing and declining
 to fail the run; `inventory-count` now does the same, and the announcement names
 the glob and its count so the reader can see what was not compared.
 
-That answers the question a pointwise repair leaves open. Fixing `findings`'
+That answers the question a pointwise repair leaves open. ~~Fixing `findings`'
 comma in 2026-08-03 fixed a rule and not the class, and the class recurred in
 the same check within a week — twice, in two different ways, neither of which a
-pattern edit would have prevented. **A rule that cannot fire is a defect in the
-instrument rather than in the corpus, so the instrument is where it is now
-reported.**
+pattern edit would have prevented.~~ **Corrected 2026-08-11: no comma was ever
+fixed, because no pattern ever had one.** The class argument survives its
+example. `committed-harnesses` really did lose a site to a claim being re-stated
+somewhere the rule did not look, and `findings` really did run silent through
+every green gate — for its whole life rather than for a week — so a rule that
+reads nothing goes unnoticed either way. **A rule that cannot fire is a defect in
+the instrument rather than in the corpus, so the instrument is where it is now
+reported.** The invented comma is itself an instance of the harm: a pointwise
+repair was recorded for a rule that had never been repaired, and the record then
+supplied a false history to two later passes.
 
 The sweep itself has a residue worth naming. It measures whether a rule *reads*
 something, not whether what it reads is worth reading: a rule with one live site
-is one edit from zero, and three of the six inventory rules stand there —
-`research-documents`, `project-skills` and `speckit-phase-prompts`, each resting
-on a single cell of `README.md`'s repository-map table. Nothing proposes to
-duplicate those claims to buy redundancy, because a second copy of a count is
-another thing to rot; the floor is what makes their loss audible.
+is one edit from zero, and ~~three~~ **four** of the six inventory rules stand
+there — `research-documents`, `project-skills`, `speckit-phase-prompts` and, since
+2026-08-11, `findings`, each resting on a single cell of `README.md`'s
+repository-map table. **`committed-harnesses` rests on a single site too**, at
+`specs/001-discovery-validation/harness/README.md`, so the count of one-site rules
+is five and only four of them sit in that one table — the qualifier is doing work
+and dropping it turns a filtered population into a total. `vendored-repos` is the
+one rule with two, and both are prose sentences rather than table cells. Nothing
+proposes to duplicate those claims to buy redundancy, because a second copy of a
+count is another thing to rot; the floor is what makes their loss audible.
 
 ### `vendored-repos` is out of scope in CI by construction, and says so rather than reporting an incident
 

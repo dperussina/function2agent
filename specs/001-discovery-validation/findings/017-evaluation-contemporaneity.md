@@ -1,5 +1,13 @@
 # Finding 017 — Three evaluations were scored against artifacts that postdate the defect they were detecting; a survey of where else it may have happened
 
+> **⚠️ RENUMBERED: this finding's `E8` is the experiment now called `E19`.** The identifier `E8`
+> named two experiments until 2026-08-11, when [`plan.md` **OD-31**](../plan.md#od-31--the-verifier-vs-judge-experiment-is-renumbered-e19-and-the-stage-d-synthesis-experiment-keeps-e8-the-renumber-reaches-live-prose-only-and-the-committed-run-directories-the-fingerprinted-harness-files-and-the-dated-assessments-keep-the-name-they-were-recorded-under)
+> assigned `E8` to the Stage-D synthesis experiment and `E19` to the verifier-vs-judge experiment
+> this finding is about. **Nothing below is rewritten.** This is an authority document and a dated
+> record; the house convention supersedes rather than overwrites, and a strike inside a heading
+> corrupts its anchor. **Read every `E8` below as `E19`.** No figure, denominator, population or
+> verdict is affected by the renumber.
+
 **Date**: 2026-08-03
 **User Story**: methodological — this finding measures no system behaviour. It measures how this
 corpus's own instruments were validated, and it is filed here because it changes how several
