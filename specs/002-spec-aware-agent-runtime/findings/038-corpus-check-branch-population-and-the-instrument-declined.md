@@ -115,6 +115,28 @@ that was never touched, which would produce a number in the confident direction.
 Between edits `__pycache__` was purged, because a stale `.pyc` makes a mutated module run as its
 unmutated self and every branch then scores held.
 
+### 1.1 The prior question, and how the blindness was established
+
+**The branch census only means something once you know which instrument is doing the holding**, so
+that was measured first, by a coarser mutation than any single branch. Every one of the eighteen
+`check(ctx)` entry points under `tools/corpuscheck/checks/` had its body replaced with a bare
+`return` — no violations, no skips, no reads — and the two instruments were run against the result.
+`pytest tests -q` reported **1745 passed, 83 skipped** and exited 0. `tools/selftest.py` exited 1.
+
+**That asymmetry is the reason this document exists**, and it is stronger evidence than a coverage
+percentage would have been: coverage measures which lines execute under the suite, and eighteen
+functions that execute and then return nothing would still have read as covered. Stubbing the return
+value asks the question coverage cannot — whether anything downstream *depends* on what the check
+found — and the answer across 1745 tests is no.
+
+**The `1745` is a dated reading of a moving number and the argument does not rest on it.** The same
+command at `39a67a2` reports **1752 passed, 83 skipped**, seven higher, because a concurrent pass
+added `tests/unit/test_preserved_evidence_scope.py` and it was committed at `4118950` between the
+measurement and this document. What the figure is doing here is establishing that a large suite moves
+by *zero* under the mutation, so the total's exact value is incidental and its stability under
+stubbing is the finding. A reader re-running against a later tree should expect a different total and
+the same delta of nothing.
+
 ## 2. The rate, both populations, and the split
 
 ### 2.1 The eighteen checks
