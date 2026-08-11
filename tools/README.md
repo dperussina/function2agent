@@ -3171,6 +3171,34 @@ known to undercount** — `numeric-provenance` is absent from it and was
 nevertheless observed firing here, so the plant is the measurement and the
 instrumented read is not.
 
+**One further check reads this file and reaches none of it, and that belongs
+beside the supersession rather than in a commit message.** `register-range` walks
+`doc.masked_lines`, and the range this file quotes in
+[the check set](#the-check-set) sits inside a code span, which the masker blanks
+to spaces before the rule ever sees it. So the rule is inert at that site while
+the register has run past the stated end, and a reader arriving with the news
+that this file became gated could reasonably take that range for a checked one.
+It is not checked. An unmasked one would be.
+
+**Both directions were planted rather than read off the source, on 2026-08-11**,
+in a clean detached worktree at `1cd79f6`. As committed, the range is absent from
+`masked_lines` and the run reports `0 error(s), 0 warning(s)`. With the two
+backticks removed and nothing else touched, the same run reports one warning at
+`tools/README.md:98:65` — `found: D-01 … D-19`, `expected: D-01 … D-22`, hint
+`the D register defines 22 entries and runs to D-22; this range under-counts it`
+— so the quoted range under-counts the register by three entries. Restoring the
+backticks returned the tree to `0 error(s), 0 warning(s)`.
+
+The accepting set is worth enumerating rather than described by its complement,
+because "parenthesised" is narrower than the rule and a classifier stated as a
+complement is a failure this directory already records. A range is read as a
+whole-register claim when it starts at entry `01` **and** either the line carries
+ranges from two or more distinct registers, or the text immediately before it —
+once trailing spaces, `*`, `~` and `_` are stripped — ends with one of `(`, `[`,
+`—`, `–` or `:`. A struck range is skipped, as is a register holding fewer than
+three definitions. Nothing outside that set is a site, which is what leaves the
+deliberately partial ranges quoted elsewhere in this document unflagged.
+
 Two consequences cut against what this section used to argue. The prose under
 `tools/` is now held to the standard `research/` and `specs/` are held to, so a
 stale count here fails a gate rather than merely misinforming a reader. And the
@@ -3200,9 +3228,41 @@ of them plus the census check, in this order, and the order is the argument:
 | step | why it is where it is |
 |---|---|
 | `selftest.py` | **First.** A validator whose regex stopped matching passes everything, so `check_corpus.py` going green proves nothing until something has shown the checks still fire. This runs the whole set against a corpus where every check must fire and one where none may. |
-| `threshold_probe.py` | A green self-test shows each check *fires*, not that the constant it fires at is the right one — `catalog-line-count` carried `TOLERANCE = 2` for its whole life and the self-test could not tell it from `0`. Wired **because it was measured**: 34 perturbations, 5.2 s. A sweep that costs five seconds does not need a schedule. |
+| `threshold_probe.py` | A green self-test shows each check *fires*, not that the constant it fires at is the right one — `catalog-line-count` carried `TOLERANCE = 2` for its whole life and the self-test could not tell it from `0`. Wired **because it was measured**: 34 perturbations, and the cost is two dated readings — 5.2 s as first recorded at `71a0836` and 5.53 s re-measured there, against 11.29 s at `1cd79f6` — under the conditions stated below this table. ~~A sweep that costs five seconds does not need a schedule.~~ **A sweep measured in seconds does not need a schedule, which held at both readings.** |
 | `check_corpus.py` | Errors only. `--warnings-as-errors` is deliberately not set — the warning classes that actually fire are line counts and register ranges, which go stale for the minutes between an edit and `gen_claims.py`. A gate that flaps gets worked around. A second step prints the full report, warnings included, to the run page and cannot fail. |
 | `gen_claims.py --check` | The only thing that notices that window. |
+
+The probe's cost is two dated readings rather than one figure, and the older one
+was recoverable only by re-running it. 5.2 s entered this table at `71a0836` on
+2026-08-04 carrying no conditions: none in the commit message, none in any
+`findings/` document, and no second occurrence of the string anywhere in the
+repository. It named no platform, no architecture, no privilege and no
+interpreter, which is the labelling standard every other figure in this
+repository is held to. It nonetheless survived being re-run at its own commit, so
+it is kept beside the newer reading rather than replaced by it.
+
+Both readings were taken on macOS `26.2` `arm64`, at euid `501`, on CPython
+`3.12.11`, in a clean detached worktree holding no `examples/`.
+
+* At `71a0836`, the commit that introduced the figure: 5.53 s median of three
+  draws, 5.32 s lowest and 5.68 s highest. The original digit sits inside that
+  spread.
+* At `1cd79f6`, the same 34 perturbations: 11.29 s median of five draws, 11.15 s
+  lowest and 13.09 s highest.
+
+The host is held constant across the pair, so what moved is the tree rather than
+the machine, and the cost is roughly double. What moved in the tree is not
+isolated to one cause — the check set went from sixteen to eighteen over that
+span and the corpus include list gained `tools` — so the doubling is recorded and
+not attributed. Neither median is offered as a tail: five draws is not the forty
+a `med`/`p90`/`max` row is built from.
+
+The cache was cold at every draw and could not have been otherwise.
+`threshold_probe.py` deletes every `__pycache__` under `tools/` before each child
+interpreter starts and runs it with `-B` and `PYTHONDONTWRITEBYTECODE=1`, so a
+cold cache is a property of the instrument rather than a condition its caller
+supplies. The row's argument is untouched by the larger figure: eleven seconds is
+still seconds, and a sweep measured in seconds needs no schedule.
 
 `cite_advisor.py` is **not** wired, and leaving it out is the decision rather
 than an oversight. It has no threshold and no finding it makes changes its exit
