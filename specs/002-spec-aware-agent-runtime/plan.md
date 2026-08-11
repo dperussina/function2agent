@@ -8,7 +8,7 @@ criteria** *(recounted 2026-08-04 against the document; the struck figures were 
 FR-058 was added)*, five user stories, four deviation records)
 
 **Constitution**: ~~v1.2.0~~ **v1.3.0** *(amended 2026-08-03 by **OD-22**; Principle VI restated over a
-tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ ~~**OD-21**~~ ~~**OD-25**~~ ~~**OD-28**~~ ~~**OD-29**~~ **OD-30**
+tier-relative traced unit — see the Constitution Check below)* | **Inherited decisions**: **OD-01** through ~~**OD-14**~~ ~~**OD-17**~~ ~~**OD-21**~~ ~~**OD-25**~~ ~~**OD-28**~~ ~~**OD-29**~~ ~~**OD-30**~~ **OD-31**
 *(extended 2026-08-03 after the owner reviewed this gate — see the banner under Summary — and
 extended again the same day: **OD-18** through **OD-21** were taken at the specification's clarify
 session and recorded retroactively, and this plan already relies on two of them, at FR-002's

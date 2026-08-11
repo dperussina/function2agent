@@ -13,7 +13,7 @@ deliberately did not: the specification names no language, framework, library or
 its own quality checklist scored that as a deliberate pass.
 
 Most of the stack is **not** decided here. It was decided in feature 001 and recorded as owner
-decisions **OD-01** through ~~**OD-14**~~ ~~**OD-21**~~ ~~**OD-25**~~ **OD-28** in that feature's
+decisions **OD-01** through ~~**OD-14**~~ ~~**OD-21**~~ ~~**OD-25**~~ ~~**OD-28**~~ **OD-31** in that feature's
 [`plan.md`](../001-discovery-validation/plan.md), which is the authority for the register's extent.
 *(**Range corrected 2026-08-03**, and the reasoning is recorded because a prior pass deliberately
 left it alone. The sentence was read as a claim about **provenance** — which decisions came out of
@@ -59,7 +59,25 @@ operator-declared model rate as a second provenance rather than a second row; an
 `SessionTable` → `Repository` migration deferred and routes the shape to `tasks.md` T016's note
 rather than re-litigating it.** **None of the three changes anything decided in this document** —
 OD-26 and OD-27 bear on the production specification and its code, and OD-28 schedules no work at
-all.)* §1 records how each binding one is honoured, and —
+all.
+**Range advanced again 2026-08-11 to OD-31, three entries behind for a third time** — OD-29 on
+2026-08-08, OD-30 on 2026-08-10 and OD-31 on 2026-08-11, none of the three propagated here when it
+landed. The guard note above has now come true four times, and the interval is again the only
+evidence of how long this site drifts unnoticed. The provenance sentence extends the same way:
+**OD-29 answers the single question OD-24's re-examination left open, permitting the supervisor
+`CAP_SETUID` and `CAP_SETGID` in the initial user namespace and retiring OD-24's replacement second
+ground while leaving its deferral standing; OD-30 makes CI the authoritative environment for T101's
+overhead figure and declines the `workflow_dispatch` recording route; and OD-31 renumbers the
+verifier-vs-judge experiment **E19**, leaves **E8** with the Stage-D synthesis experiment, and rules
+that the committed run directories keep the name they were recorded under.** **None of the three
+changes anything decided in this document** — OD-29 and OD-30 bear on the production specification's
+implementation and its measurement record, and OD-31 is a naming adjudication over feature 001's own
+artifacts. *(Two sites carrying this construction are **not** advanced with it and are frozen on
+purpose: [`checklists/requirements.md`](./checklists/requirements.md) stays at OD-14 because it
+records what a dated validation run read, and
+[`findings/023-user-namespace-privilege-model.md`](./findings/023-user-namespace-privilege-model.md)
+stays at OD-23 because it records what a dated pass observed. Each says so where it stands.)*)*
+§1 records how each binding one is honoured, and —
 *(**Updated 2026-08-03.** The owner has since answered every question in §5, and three answers became
 **OD-15**, **OD-16** and **OD-17**. OD-15 partially reverses OD-01 and is annotated at §1.1, T-01,
 T-02, T-03, T-04, T-06 and T-08. Nothing below is deleted and no measurement is amended.)* —

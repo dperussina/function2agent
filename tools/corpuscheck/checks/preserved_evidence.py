@@ -36,7 +36,38 @@ Five kinds are reported and never merged, because they are different events:
   removed       an attested file, or the whole tree, is gone.
   unratified    the attestation's own bytes do not match the pin. Somebody
                 rebuilt it and no human has ratified the rebuild yet.
-  malformed     the attestation disagrees with itself, or cannot be read.
+  malformed     the attestation disagrees with itself, cannot be read, or is
+                not there at all.
+
+A sixth, `undeclared`, is reported against `config.json` rather than against any
+tree, because it is a defect in the unit list and not in a body of evidence.
+
+## Which root a unit belongs to is declared, not inferred
+
+Every unit names a `root.marker`, a path that is neither its `tree` nor its
+`attestation`, and a unit is judged in exactly the roots where that path exists.
+The declaration is what this check was missing, and its absence had reproduced
+the failure the check exists to close, one layer up and inside the guard.
+
+Scope was first keyed on `tree`, and deleting the protected directory took the
+check to `skipped` while it announced itself disabled. Scope was keyed on
+`attestation` next, and that filter merged two states that are not the same
+event: a unit whose witness is *missing or mis-pathed*, and a fixture unit that
+legitimately *lives under another root*. One list of units spans this repository
+and the two fixture corpora, so most of it is out of scope in any given root and
+the filter had to tolerate absence — which meant a real unit with a typo'd
+`attestation` was dropped from the run and reported nothing. The check printed
+`0 error(s), 0 warning(s)` and, because the per-check skip fired only when *no*
+unit survived the filter, no skip line either. That is what a fully attested tree
+prints. Somebody could hold a tree they believed was attested while nothing read
+it, which is the exact class this guard was built to close.
+
+Two consequences of the declaration, both of them the point:
+
+* the `malformed` branch of `..attest.verify` that reports a missing attestation
+  became reachable from the check, having been dead code under the old filter;
+* a unit that declares no marker is a violation rather than a silent pass, since
+  a unit that cannot be placed in a root cannot be judged in one.
 
 ## The ratification split, which is the point rather than an inconvenience
 
@@ -99,6 +130,13 @@ _HINTS = {
         "the attestation cannot be used to judge anything in this state. Rebuild it "
         "with `python3 tools/check_corpus.py --reattest \"why\"` and ratify the result"
     ),
+    "undeclared": (
+        "a unit that names no `root.marker` cannot be placed in a root, so it cannot "
+        "be judged in one. Give it a marker path that is present wherever the unit "
+        "belongs and is neither its `tree` nor its `attestation` — without one the "
+        "unit is carried in the list and read by nothing, which is the silence this "
+        "check exists to refuse"
+    ),
 }
 
 _EXPECTED = {
@@ -107,7 +145,12 @@ _EXPECTED = {
     "removed": "the attested file, present",
     "unratified": "the attestation digest pinned in config.json",
     "malformed": "an attestation that agrees with itself",
+    "undeclared": "a `root.marker` naming the root this unit expects",
 }
+
+#: Where an `undeclared` unit is reported. The unit list is the subject, so the
+#: violation points at the file that carries it rather than at a tree.
+_CONFIG_REL = "tools/corpuscheck/config.json"
 
 
 @check(
@@ -120,28 +163,61 @@ def run(corpus, ctx: dict) -> list[Violation]:
         ctx["skip"]("preserved-evidence", "no `preserved_evidence` block in config.json")
         return []
 
-    # Scope is keyed on the attestation, never on the tree. Keying it on the tree
-    # is the first thing this was written with and it was wrong: a check that goes
-    # out of scope when the thing it protects is absent is disabled by deleting
-    # that thing, and on 2026-08-11 deleting all 59 records took this check to
-    # `skipped` while it announced itself disabled. The attestation is committed
-    # beside the tree it covers, so its presence is what says the unit belongs to
-    # this root, and an absent tree is then the `removed` violation rather than
-    # silence.
-    units = [u for u in spec["units"] if (corpus.root / u["attestation"]).is_file()]
-    if not units:
-        # Announced once for the whole check rather than per absent unit: the
-        # unit list spans this repository and the two fixture corpora, so in
-        # every real root most of it is legitimately elsewhere and a skip line
-        # per unit would be noise that trains a reader to ignore skip lines.
-        ctx["skip"](
-            "preserved-evidence",
-            "disabled: no attestation present — looked for "
-            + ", ".join(u["attestation"] for u in spec["units"]),
-        )
-        return []
-
     out: list[Violation] = []
+
+    # Scope is keyed on a declared marker, never on the tree and no longer on the
+    # attestation. Both of those key the check on something whose absence is the
+    # very thing being guarded against, and each was defeated in turn: keyed on
+    # the tree, deleting all 59 records took the check to `skipped`; keyed on the
+    # attestation, a unit with a missing or mis-typed `attestation` was filtered
+    # out and reported nothing at all, which is indistinguishable from a fixture
+    # unit that legitimately lives under another root. The marker separates those
+    # two states, which is the whole of this fix: marker present and witness
+    # absent is a `malformed` violation, and marker absent is another root's unit.
+    units: list[dict] = []
+    elsewhere: list[dict] = []
+    for unit in spec["units"]:
+        marker = (unit.get("root") or {}).get("marker")
+        if not marker:
+            out.append(
+                Violation(
+                    check="preserved-evidence",
+                    severity=ERROR,
+                    path=_CONFIG_REL,
+                    line=1,
+                    found=f"unit {unit['name']} declares no `root.marker`  (undeclared)",
+                    expected=_EXPECTED["undeclared"],
+                    hint=_HINTS["undeclared"],
+                )
+            )
+        elif (corpus.root / marker).exists():
+            units.append(unit)
+        else:
+            elsewhere.append(unit)
+
+    if not units:
+        # Announced once for the whole check rather than per out-of-scope unit:
+        # the unit list spans this repository and the two fixture corpora, so in
+        # every real root most of it is legitimately elsewhere and a skip line
+        # per unit would be noise that trains a reader to ignore skip lines. The
+        # word is `out of scope` and not `disabled`, which the older message
+        # used: every unit here declared a root and none of those roots is this
+        # one, so nothing is broken.
+        #
+        # Guarded on `elsewhere` because a list whose every unit is `undeclared`
+        # leaves nothing to have looked for, and announcing a skip that names no
+        # unit would report an absence nobody declared. That case is the error
+        # above, and `out` is returned rather than `[]` so this silence cannot
+        # swallow it.
+        if elsewhere:
+            ctx["skip"](
+                "preserved-evidence",
+                "every unit is out of scope in this tree, as declared and not as a "
+                "fault — looked for "
+                + ", ".join(f"{u['name']} at {u['root']['marker']}" for u in elsewhere),
+            )
+        return out
+
     for unit in units:
         for kind, path, found, expected in verify(corpus.root, unit):
             # `malformed` and a whole-tree loss both carry an expectation only the

@@ -13,7 +13,7 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ **thirty** owner decisions
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ **thirty-one** owner decisions
 (OD-01 through OD-31, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
@@ -65,7 +65,16 @@ prompted by a measurement or an artifact — OD-24 named the condition, this ent
 nothing was probed to get here. It is also the first entry that **retires one of a predecessor's
 grounds while explicitly leaving that predecessor's deferral standing**, which is the distinction it
 spends a banner on, because the natural misreading of an answered question is that the thing it
-gated may now proceed.)*
+gated may now proceed. **Extended 2026-08-10 with OD-30 and 2026-08-11 with OD-31**, and the count
+word above stopped moving at both of them while the parenthesised range beside it did not.
+**Corrected 2026-08-11 from thirty to thirty-one, and the two halves of that line drifted apart
+because only one of them is maintained by a machine**: `gen_claims.py` owns the range and advanced
+it to OD-31 on the day the entry landed, and the spelled count is prose that a reader has to notice,
+so the header contradicted itself two lines apart across two entries. Thirty-one is the right word
+because the register is **contiguous** — the headings run OD-01 to OD-31 with no gap and no
+duplicate, so the bound and the count are the same number, and a gap would have made *thirty*
+correct. `register-range` cannot see the pairing, and the direction here is the opposite of the one
+it guards: the range is current and the narrative count is stale.)*
 ~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ **The last twenty
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by

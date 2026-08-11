@@ -76,6 +76,18 @@ repository calls it. `neutralise_decision.py` — the tool that legitimately
 edits these artifacts — does not import this module. Editing the evidence and
 ratifying the edit are two acts by construction, not by convention.
 
+A third, `malformed`, covers a record that cannot be used to judge anything: it
+disagrees with its own summary, it does not decode, or it is **not there**. That
+last case was dead code from the day it was written and until 2026-08-11. The
+`preserved-evidence` check filtered its units on the attestation being a file, so
+`verify` was never called for a unit whose witness was absent, and the branch
+below that reports it could not be reached from the only caller. What the filter
+merged was two different events — a unit whose witness is missing or mis-pathed,
+and a fixture unit that legitimately belongs to another root — and the merge made
+a mis-typed `attestation` silent. Units now declare a `root.marker`, so the
+branch is reachable, `known-bad` holds a unit that fires it, and a witness that
+should be present and is not is reported instead of filtered away.
+
 ## What this cannot do
 
 It cannot stop an author who edits a record, rebuilds the attestation and moves

@@ -250,6 +250,47 @@ hide — so a single unit spanning both would have to be rooted at
 `verifier-vs-judge/` and would sweep in the live harness that legitimately
 changes.
 
+**Which root a unit belongs to is declared, and the two earlier keyings were each
+defeated by the thing they keyed on going missing.** One list of units spans this
+repository and the two fixture corpora, so in any given root most of the list is
+legitimately elsewhere and the scope filter has to tolerate absence. That is the
+whole difficulty, and it was got wrong twice.
+
+Keyed on `tree`, the check went out of scope when the directory it protects was
+deleted: removing all **59** attested records took it to `skipped` while it
+announced itself disabled. Keyed on `attestation` instead, it acquired a quieter
+version of the same defect. A unit whose witness was missing — deleted, never
+built, or named with a typo — was dropped from the run and reported **nothing**:
+`--check preserved-evidence` printed `0 error(s), 0 warning(s)` and, because the
+per-check skip fired only when *no* unit survived the filter, no skip line
+either. That is byte-for-byte what a fully attested tree prints. A real unit with
+a mis-typed path was **indistinguishable from a fixture unit living under another
+root**, so somebody could hold a tree they believed was attested while nothing
+read it. **That is the class this guard was built to close, reproduced one layer
+up and inside the guard.** It was found by planting the typo, not by reading the
+code, which is the same instrument OD-31 used on the evidence itself.
+
+Each unit now declares a `root.marker`: a path that is present wherever the unit
+belongs and is **neither its `tree` nor its `attestation`**, so it cannot be
+removed by the act being guarded against. A marker that is present and a witness
+that is absent is a `malformed` violation naming the path that was looked for; a
+marker that is absent is another root's unit, announced as out of scope rather
+than as disabled. Two consequences are the point rather than side effects. The
+`malformed` branch of `attest.verify` that reports a missing attestation had been
+**unreachable from the check since the day it was written**, and is now reached by
+a `known-bad` unit that fires it. And a unit declaring no marker at all is an
+error against `config.json` rather than a silent pass, since a unit that cannot be
+placed in a root cannot be judged in one — that kind is the one failure here no
+fixture root can hold, because all three roots share one `config.json` and a unit
+with no marker is in scope in every one of them, so it is held by
+`tests/unit/test_preserved_evidence_scope.py` instead.
+
+The residue is worth stating rather than leaving to be found. Deleting a unit's
+entire marker directory — witness, tree and all — still takes the unit out of
+scope silently. For the two real units the marker is the harness directory that
+holds the live experiment code, so that act removes the experiment; for the
+fixtures it removes a fixture the self-test then requires and does not find.
+
 **`--reattest` takes `--unit` for a reason, and the bare form is a wider act than
 it looks.** With no `--unit` it rebuilds every unit whose tree is present, and a
 rebuild is never byte-identical to what it replaces because `generation`,
@@ -757,13 +798,20 @@ each had been silent through every green gate since it stopped.
 population is left as it stood on 2026-08-10 and is not restated**: it is a dated
 measurement of the rules that existed when it ran, and the six units added after
 it were not among them. The new set reached the same silence failure this section
-is about and was corrected the same day, which is recorded rather than smoothed
-over: scope was first keyed on each unit's tree, so removing an attested tree took
-the unit out of scope instead of into violation, and deleting all `59` attested
+is about **twice**, and both corrections are recorded rather than smoothed over.
+Scope was first keyed on each unit's tree, so removing an attested tree took the
+unit out of scope instead of into violation, and deleting all `59` attested
 records took the whole check to `skipped` with a line announcing itself disabled.
-Scope is now keyed on the attestation, which is committed beside the tree it
-covers, and an absent tree is a violation naming the tree. `known-bad` holds a
-unit per failure kind, so a rule that stops reading takes the self-test with it.)*
+~~Scope is now keyed on the attestation, which is committed beside the tree it
+covers, and an absent tree is a violation naming the tree.~~ **Superseded
+2026-08-11: keying it on the attestation carried the defect rather than removing
+it.** A unit whose witness was missing or mis-pathed was filtered out and reported
+nothing — `0 error(s), 0 warning(s)` with no skip line, which is what a fully
+attested tree prints — so it was indistinguishable from a fixture unit belonging
+to another root. Scope is now keyed on a declared `root.marker` that is neither
+the tree nor the witness; an absent tree remains a violation naming the tree, and
+an absent witness under a present marker became one. `known-bad` holds a unit per
+failure kind, so a rule that stops reading takes the self-test with it.)*
 
 The three are not one defect, and the difference decides the response.
 
@@ -2762,16 +2810,35 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   alone on that reading. **`checklists/requirements.md` is deliberately frozen at
   the fourteenth entry**, because it records what a dated validation run read and
   advancing it would claim coverage that run did not have. So of the corpus's ~~five~~
-  **seven** OD-range sites, ~~**four are current**~~ **six are current**, one is
+  ~~**seven**~~ **eight** OD-range sites, ~~**four are current**~~ ~~**six are current**~~
+  **six are current**, ~~one is
   deliberately frozen, and none is
-  stale — the residue is a hole, not a live defect.
+  stale — the residue is a hole, not a live defect.~~ **two are deliberately frozen,
+  and the claim that none is stale did not survive 2026-08-11.**
+
+  **Recounted a second time 2026-08-11, and this entry was wrong in both halves.**
+  The eighth site is
+  `specs/002-spec-aware-agent-runtime/findings/023-user-namespace-privilege-model.md`,
+  which writes *the whole sequence OD-01 through OD-23* in the same construction and
+  is the **second** frozen site: a dated note beneath it records that the register ran
+  to OD-23 when that pass read it and declines to amend the sentence, because it
+  records what a dated pass observed. So the frozen population is two and not one —
+  `checklists/requirements.md` freezes what a dated *validation run* read, and this
+  one freezes what a *pass* saw. And *none is stale* was true when written and false
+  when re-read: OD-31 landed on 2026-08-11 and **five** of the six current sites sat
+  at OD-30 or OD-28 while the register ran to OD-31, so the residue this entry calls a
+  hole had become a live defect at five sites at once. All five were advanced the same
+  day. **The lesson is the one this entry already states about undercounting, arriving
+  a second time**: a census of an unguarded surface goes stale by the same mechanism
+  the surface does, and nothing reads either.
   **Recounted 2026-08-04, and the undercount was this entry's own.** It missed
   `docs/spec-kit-workflow.md:137` and
   `specs/002-spec-aware-agent-runtime/plan.md:11`, both of which carry the same
-  struck-and-advanced range as the three it did name. The full seven are
+  struck-and-advanced range as the three it did name. The full ~~seven~~ **eight** are
   `docs/spec-kit-workflow.md`, `specs/002/spec.md` **twice**, `specs/002/plan.md`,
-  `specs/002/research.md`, `specs/002/checklists/requirements.md` (the frozen one),
-  and `specs/001-discovery-validation/plan.md`. **Undercounting matters more here
+  `specs/002/research.md`, `specs/002/checklists/requirements.md` (a frozen one),
+  `specs/002/findings/023-user-namespace-privilege-model.md` (the other, added by the
+  2026-08-11 recount), and `specs/001-discovery-validation/plan.md`. **Undercounting matters more here
   than anywhere else in this file**, for the reason under the next paragraph: this
   entry is the corpus's only record of how wide the unguarded surface is, so a
   count that is short understates the residue by exactly the sites it forgot.
@@ -2783,28 +2850,39 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   markup sitting between them breaks it** — `~~` at the advanced sites, `**` at the
   frozen one. The whole-register test is never reached at any of the six, so an
   earlier reading of this entry that attributed the frozen site to that test was
-  wrong. The one site that *is* read is `plan.md`'s parenthesised
-  `(OD-01 through OD-25, …)` *(advanced from `OD-21` as the register grew; the
-  generator writes this one)*, which matches and is judged a whole-register claim —
+  wrong. *(That run covered seven lines because the eighth site was not yet known.
+  Measured 2026-08-11, it is unread too and **by a third mechanism**: its range is
+  split by the hard wrap — `OD-01 through` ends one line and `OD-23` begins the
+  next — and `register_ranges` scans `doc.masked_lines` one line at a time, so
+  `_RANGE` matches neither half. Joined across the break it matches once, which is
+  what makes the wrap and not the markup the thing hiding it.)* The one site that
+  *is* read is `plan.md`'s parenthesised
+  `(OD-01 through OD-31, …)` *(advanced from `OD-21` through `OD-25` as the
+  register grew; the generator writes this one)*, which matches and is judged a
+  whole-register claim —
   which is why the OD register is guarded at all. A future site written as plain
   prose, unparenthesised and with no markup between the bounds, would be caught by
   neither the regex path nor the guard. Dropping the parenthesised-or-listed
   requirement was measured — it reports nothing on the current corpus — but it is
   free only because that U-01 counterexample happens to be struck.
 
-  **These six sites are hand-maintained by decision, not by oversight, and this
+  **These ~~six~~ seven sites are hand-maintained by decision, not by oversight, and this
   entry is the only place that says so.** The owner has settled that
   `register-range` stays as it is rather than being widened to read them, on
   measured grounds: relaxing `_RANGE` to tolerate markup between the bounds catches
-  **zero** stale sites on the current corpus — all six are already advanced or
-  deliberately frozen — while false-positiving on the one site that must stay
-  frozen, `checklists/requirements.md`, which records what a dated validation run
-  read and whose whole point is that it does not advance. So the regex change buys
-  nothing and costs a permanent false alarm at the one place a false alarm would be
+  **zero** stale sites on the current corpus — all ~~six~~ **seven** are already advanced or
+  deliberately frozen — while false-positiving on ~~the one site~~ **both sites** that must stay
+  frozen, `checklists/requirements.md` and `findings/023`, which record what a dated validation run
+  read and what a dated pass observed and whose whole point is that they do not advance. So the regex change buys
+  nothing and costs a permanent false alarm at the ~~one place~~ **two places** a false alarm would be
   most misleading. **The consequence is a standing obligation on a human**: when the
-  OD register grows, six sites advance by hand and nothing anywhere will say if one
+  OD register grows, ~~six sites advance~~ **five sites advance** by hand, two stay frozen,
+  and nothing anywhere will say if one
   is missed. That is the residue, it is accepted rather than unnoticed, and the
-  count above is how wide it is.
+  count above is how wide it is. **The obligation was measured against itself on
+  2026-08-11 and it had already been missed**: OD-31 landed and all five advancing
+  sites stayed where they were, which is what a residue accepted on a human's
+  attention looks like when the attention is spent elsewhere.
 - **An `unconstructible` claim that has outlived its scope.** Two findings once
   asserted opposite things about the same refusal cell — one saying an LSM refusal
   could not be built on any available surface, the other having since built it —
@@ -2939,11 +3017,22 @@ def run(corpus, ctx):
    each of its five reported kinds, and a probe that stubbed each branch in turn
    still found one that survived with the self-test green: its two
    self-consistency rules shared a single fixture, so deleting one left the other
-   satisfying the row. The fixture now violates both and the probe catches all
-   five. **A row count equal to the kind count is not coverage**; the arm that
-   proves coverage is deleting the branch and requiring the self-test to break,
-   which is what `threshold_probe.py` does for constants and what nothing does
-   automatically for branches.
+   satisfying the row. The fixture now violates both. **A row count equal to the
+   kind count is not coverage**; the arm that proves coverage is deleting the
+   branch and requiring the self-test to break, which is what
+   `threshold_probe.py` does for constants and what nothing does automatically
+   for branches.
+
+   ~~The fixture now violates both and the probe catches all five.~~ **Corrected
+   2026-08-11: a later probe of the same check found a branch the self-test
+   cannot reach at all.** The scope filter's `undeclared` kind — a unit naming no
+   `root.marker` — is in scope in every root by construction, because this
+   repository and both fixture corpora read one `config.json`, so a `known-bad`
+   unit holding it would turn the real gate red. Six branches were neutralised in
+   turn: two broke the self-test, and four were held only by
+   `tests/unit/test_preserved_evidence_scope.py`. **A fixture is the idiom and not
+   the whole of the floor**, and where a kind cannot be scoped to a fixture root
+   the arm that holds it says so rather than being left to the count.
 
 Before adding a check, ask whether the claim should be **generated** instead.
 If the fact is machine-readable from an artifact in the repository and the
@@ -2979,8 +3068,13 @@ touches an unrelated file.
 
 `python3 tools/instruments.py` prints every instrument in the repository: what
 it checks, whether a non-zero exit fails anything, which CI job runs it, and
-what to type to run it by hand. Twenty-six entries at the time of writing —
-nineteen gates, five advisories, two libraries.
+what to type to run it by hand. ~~Twenty-six entries at the time of writing —
+nineteen gates, five advisories, two libraries.~~ **Twenty-seven entries as of
+2026-08-11 — nineteen gates, six advisories, two libraries**, which is
+`19 + 6 + 2` and is read off `instruments.py --check` rather than counted by
+hand. *(The struck figure was a hedged count and went stale anyway, in a section
+whose own first line says to read it before quoting a list of gates. The
+advisory population is the limb that moved.)*
 
 It exists because of a defect this directory had no name for. For a week every
 pass was briefed with a five-item list of gates — `pytest`, `check_corpus.py`,

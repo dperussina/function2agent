@@ -13,7 +13,7 @@
 This is the production specification. It follows feature 001, which planned fifteen numbered
 experiments, reached nine ladder positions, ran eight of them, and closed with a verdict
 ([`VERDICT.md`](../001-discovery-validation/VERDICT.md)). Its binding scope decisions are the owner
-decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ ~~OD-21~~ ~~OD-25~~ ~~OD-28~~ **OD-30** in [`plan.md`](../001-discovery-validation/plan.md)
+decision log OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-20~~ ~~OD-21~~ ~~OD-25~~ ~~OD-28~~ ~~OD-30~~ **OD-31** in [`plan.md`](../001-discovery-validation/plan.md)
 *(extended 2026-08-03: **OD-15** drops ADK for v1 and partially reverses OD-01, **OD-16** removes
 `litellm` from the shipped product, and **OD-17** makes Linux the only supported platform. None of
 the three changes a requirement in this document; all three change what the plan builds against)*.
@@ -2526,7 +2526,7 @@ above depends on each of them.
   `/speckit-implement` for any feature that adds a permission tier, and this feature adds one
   (FR-008 through FR-012).
 - **Feature 001's record.** [`VERDICT.md`](../001-discovery-validation/VERDICT.md) for what was
-  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-21~~ ~~OD-25~~ ~~OD-28~~ **OD-30**, and
+  measured, [`plan.md`](../001-discovery-validation/plan.md) for OD-01 through ~~OD-14~~ ~~OD-17~~ ~~OD-21~~ ~~OD-25~~ ~~OD-28~~ ~~OD-30~~ **OD-31**, and
   [`research/14-architecture-synthesis.md`](../../research/14-architecture-synthesis.md) for the
   decision, contradiction and uncertainty registers.
 - **A reference application** that is real, data-driven, seedable and publishes its operations, for

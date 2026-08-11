@@ -134,7 +134,7 @@ specify workflow run speckit --input spec="<description>" --input integration=cu
 
 | Feature | State |
 |---|---|
-| **001 — discovery and validation** | **Closed.** Fifteen numbered experiments, nine ladder positions reached, eight run. The adjudication is [`../specs/001-discovery-validation/VERDICT.md`](../specs/001-discovery-validation/VERDICT.md); the binding scope decisions are **OD-01** through ~~**OD-14**~~ ~~**OD-20**~~ ~~**OD-21**~~ ~~**OD-25**~~ ~~**OD-28**~~ **OD-30** in [`../specs/001-discovery-validation/plan.md`](../specs/001-discovery-validation/plan.md) |
+| **001 — discovery and validation** | **Closed.** Fifteen numbered experiments, nine ladder positions reached, eight run. The adjudication is [`../specs/001-discovery-validation/VERDICT.md`](../specs/001-discovery-validation/VERDICT.md); the binding scope decisions are **OD-01** through ~~**OD-14**~~ ~~**OD-20**~~ ~~**OD-21**~~ ~~**OD-25**~~ ~~**OD-28**~~ ~~**OD-30**~~ **OD-31** in [`../specs/001-discovery-validation/plan.md`](../specs/001-discovery-validation/plan.md) |
 | **002 — spec-aware agent runtime** | ~~**Specify phase complete.**~~ **Clarify and plan phases complete.** [`../specs/002-spec-aware-agent-runtime/spec.md`](../specs/002-spec-aware-agent-runtime/spec.md), its quality checklist, and [`plan.md`](../specs/002-spec-aware-agent-runtime/plan.md) with its research, data model, contracts and quickstart. ~~Three `[NEEDS CLARIFICATION]` markers await the owner~~ |
 
 > **Both rows corrected 2026-08-03 — stale, not wrong when written.** The OD range

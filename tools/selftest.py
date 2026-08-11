@@ -336,6 +336,31 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
         1,
         "2 attested file(s)",
     ),
+    # The witness itself absent, which is a different event from every kind above
+    # and was **unreportable** until the unit list gained a declared root. Scope
+    # was keyed on `attestation.is_file()`, so a unit whose witness was missing or
+    # whose path carried a typo was filtered out of the run and produced nothing:
+    # `0 error(s), 0 warning(s)` and, because the per-check skip fires only when no
+    # unit survives the filter, no skip line either. That is what a fully attested
+    # tree prints, so a tree could be believed attested while nothing read it —
+    # the class this whole check exists to close, reproduced inside the check. Key
+    # scope back onto the witness and this row goes quiet.
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-witnessgone/attestation.json",
+        1,
+        "the attestation is missing",
+    ),
+    # And the expectation beside it, because the arm above does not hold this
+    # field. A missing witness states the tree it should have covered; restore the
+    # per-kind sentence for it and a reader is told to look for `an attestation
+    # that agrees with itself` when there is no attestation to agree with anything.
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-witnessgone/attestation.json",
+        1,
+        "a committed attestation over specs/001-fixture/harness/attested-witnessgone/records",
+    ),
 ]
 
 

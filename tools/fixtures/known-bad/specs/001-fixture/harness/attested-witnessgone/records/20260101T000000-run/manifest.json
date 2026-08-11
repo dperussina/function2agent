@@ -1,0 +1,6 @@
+{
+ "_fixture": "This tree is a closed record and there is NO attestation beside it. The unit declares a `root.marker` that is present here, so it is judged rather than filtered, and the only kind that may fire is `malformed` naming the absent witness. Before the marker existed the scope filter dropped this unit on `attestation.is_file()` and the check printed `0 error(s), 0 warning(s)` with no skip line, which is what a fully attested tree prints — a tree could be believed attested while nothing read it. If this row goes quiet the filter has been keyed back onto the witness and the guard has restored its own false green.",
+ "run_id": "20260101T000000-run",
+ "experiment": "F4 fixture",
+ "records": 2
+}

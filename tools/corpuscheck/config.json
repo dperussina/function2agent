@@ -214,13 +214,17 @@
     "specs/*/data-model.md"
   ],
 
-  "_comment_preserved_evidence": "Bytes-level attestation over trees of preserved evidence — dated records of runs that already happened, which OD-31 rules are kept rather than rewritten. `attestation` is a witness held OUTSIDE `tree`, because a digest stored beside the bytes it covers is the self-report that let an E8->E19 rewrite through every green gate. `attestation_sha256` pins the witness's own bytes and is the half a human ratifies: `tools/check_corpus.py --reattest` writes the record and prints this digest, and never writes it here. That split is the mechanism — an attestation a tool can refresh attests nothing — so wiring a rebuild into anything that edits these artifacts, `neutralise_decision.py` above all, reproduces the vacuity one layer down. Scope is keyed on `attestation` being present under the root, never on `tree`: keying it on the tree is what the check was written with first, and it was defeated by deleting the protected directory, which took the check to `skipped` while it announced itself disabled. An absent `tree` is now the `removed` violation instead, confirmed for each unit by deleting it. The attestation's presence is also what lets the two fixture corpora and this repository share one list.",
+  "_comment_preserved_evidence": "Bytes-level attestation over trees of preserved evidence — dated records of runs that already happened, which OD-31 rules are kept rather than rewritten. `attestation` is a witness held OUTSIDE `tree`, because a digest stored beside the bytes it covers is the self-report that let an E8->E19 rewrite through every green gate. `attestation_sha256` pins the witness's own bytes and is the half a human ratifies: `tools/check_corpus.py --reattest` writes the record and prints this digest, and never writes it here. That split is the mechanism — an attestation a tool can refresh attests nothing — so wiring a rebuild into anything that edits these artifacts, `neutralise_decision.py` above all, reproduces the vacuity one layer down. Scope is keyed on `root.marker`, a path each unit declares and which is neither its `tree` nor its `attestation`. Two earlier keyings were each defeated by the thing they were keyed on going missing. Keyed on `tree`, deleting the protected directory took the check to `skipped` while it announced itself disabled; an absent `tree` is now the `removed` violation, confirmed for each unit by deleting it. Keyed on `attestation`, a unit whose witness was missing or whose path was mis-typed was dropped from the run and reported nothing — `0 error(s), 0 warning(s)` with no skip line, which is also what a fully attested tree prints — so the guard reproduced, one layer up and inside itself, the silent-attestation failure it was built to close. A declared marker separates the two states the filter had merged: marker present and witness absent is `malformed`, and marker absent is a unit belonging to another root. That is also what lets the two fixture corpora and this repository share one list, and it is what a mis-typed `attestation` now fails on rather than passing through.",
   "preserved_evidence": {
     "units": [
       {
         "name": "verifier-vs-judge-results",
         "tree": "specs/001-discovery-validation/harness/verifier-vs-judge/results",
         "attestation": "tools/preserved_evidence.json",
+        "root": {
+          "marker": "specs/001-discovery-validation/harness/verifier-vs-judge",
+          "why": "The harness this evidence belongs to. It holds live experiment code beside the two attested trees, so it survives the deletion of either of them and an absent `tree` stays a `removed` violation rather than going out of scope."
+        },
         "attestation_sha256": "ba9ca6c2afae54f560c6a154c60cd7deb92d1404b1c39d12322ff23f9367be4a"
       },
       {
@@ -228,18 +232,30 @@
         "tree": "specs/001-discovery-validation/harness/verifier-vs-judge/adjudication",
         "attestation": "tools/preserved_evidence_adjudication.json",
         "_why": "The blind adjudication study, preserved on the same OD-31 ruling as the run directories beside it and attested as a SECOND unit rather than folded into the first. One unit per tree is what keeps a correction's blast radius equal to its subject: with the two trees merged under one pin, ratifying a correction to a run directory would also ratify, in the same digest and without saying so, whatever had moved under this tree in the same window. Split, `--reattest` prints `the pinned digest already matches; nothing to ratify` for the tree that did not move, so the ratifier is told which body of evidence changed. The merge is also unavailable mechanically: `attest.measure` walks one tree recursively and unfiltered on purpose, so a single unit spanning both would have to be rooted at `verifier-vs-judge/`, sweeping in the live harness that legitimately changes.",
+        "root": {
+          "marker": "specs/001-discovery-validation/harness/verifier-vs-judge",
+          "why": "The same harness as the unit above, and the same reasoning: it is neither of the attested trees, so losing one of them is reported rather than tolerated."
+        },
         "attestation_sha256": "1d1c1ea7d152f043610288d646fa28e0326180481b6ff35b993ea6903580cc2d"
       },
       {
         "name": "fixture-intact",
         "tree": "specs/001-fixture/harness/attested-intact/records",
         "attestation": "specs/001-fixture/harness/attested-intact/attestation.json",
+        "root": {
+          "marker": "specs/001-fixture/harness/attested-intact",
+          "why": "The known-good corpus is the only root that carries this directory, which is what takes this unit out of scope in the other two without anything having to be absent by accident."
+        },
         "attestation_sha256": "e09fac3c5fc8bf63b18950fdbf4657404be8e47daaa63c63b16e55e7772cd9b1"
       },
       {
         "name": "fixture-edited",
         "tree": "specs/001-fixture/harness/attested-edited/records",
         "attestation": "specs/001-fixture/harness/attested-edited/attestation.json",
+        "root": {
+          "marker": "specs/001-fixture/harness/attested-edited",
+          "why": "Present in the known-bad corpus alone."
+        },
         "attestation_sha256": "2fd59f4852738df4fafcc2eedb7c3112da3615de911f01617a69a0da4f8af5b5"
       },
       {
@@ -247,6 +263,10 @@
         "tree": "specs/001-fixture/harness/attested-unratified/records",
         "attestation": "specs/001-fixture/harness/attested-unratified/attestation.json",
         "_why": "The pin below is deliberately not the digest of that attestation. It is the state a rebuild leaves behind, and this unit is the only thing holding the rule that a rebuild does not clear the gate on its own.",
+        "root": {
+          "marker": "specs/001-fixture/harness/attested-unratified",
+          "why": "Present in the known-bad corpus alone."
+        },
         "attestation_sha256": "26a59e5a7bdfd141b150889da0b0168bfc504802ba556743f44124afa8545efc"
       },
       {
@@ -254,6 +274,10 @@
         "tree": "specs/001-fixture/harness/attested-malformed/records",
         "attestation": "specs/001-fixture/harness/attested-malformed/attestation.json",
         "_why": "The pin below DOES match its attestation, and the tree matches too. What fails is the attestation's own internal arithmetic, so this unit holds the rule that a summary is reconciled against the entries beneath it rather than trusted.",
+        "root": {
+          "marker": "specs/001-fixture/harness/attested-malformed",
+          "why": "Present in the known-bad corpus alone."
+        },
         "attestation_sha256": "6d84f479c5d194a2a971692bcbf916f5270ddcd67e00c411219ab527307ede58"
       },
       {
@@ -261,7 +285,21 @@
         "tree": "specs/001-fixture/harness/attested-treegone/records",
         "attestation": "specs/001-fixture/harness/attested-treegone/attestation.json",
         "_why": "This unit's attestation is intact, ratified and self-consistent, and the tree it attests does not exist. It reports the loss once against the tree rather than once per attested file. A probe on 2026-08-11 stubbed each branch of attest.verify in turn and found this the only one the other four fixtures left standing, so it is fixtured here rather than trusted.",
+        "root": {
+          "marker": "specs/001-fixture/harness/attested-treegone",
+          "why": "Present in the known-bad corpus alone. The marker is the unit's own directory rather than its `tree`, which is the point of this fixture: the tree is absent and the unit stays in scope."
+        },
         "attestation_sha256": "5d2ad5972673ef4760c23a6606b0f6924cad753039b531558450fb8692ca72a4"
+      },
+      {
+        "name": "fixture-witnessgone",
+        "tree": "specs/001-fixture/harness/attested-witnessgone/records",
+        "attestation": "specs/001-fixture/harness/attested-witnessgone/attestation.json",
+        "_why": "The unit whose witness is absent, and the fixture for the failure kind this schema exists to make visible. Before the `root` marker, a unit whose `attestation` was missing or mis-typed was dropped by the scope filter and reported nothing at all: `--check preserved-evidence` printed `0 error(s), 0 warning(s)` and no skip line, which is what a fully attested tree prints. That is the class this check was built to close, reproduced inside the check. This unit declares a root that is present, so it is judged rather than filtered, and the `malformed` branch of `attest.verify` that reports a missing attestation is reachable from the check for the first time. There is no `attestation_sha256` because there are no bytes to pin.",
+        "root": {
+          "marker": "specs/001-fixture/harness/attested-witnessgone",
+          "why": "Present in the known-bad corpus alone. The directory holds the attested `records/` tree and no attestation, so the marker survives in git while the witness it should sit beside does not exist."
+        }
       }
     ]
   }
