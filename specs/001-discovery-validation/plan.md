@@ -88,8 +88,15 @@ in OD-15's entry and is not a member. What is stale is the **enumeration**, not 
 OD-31 are absent from it, and both are also the two entries at which line 16's count stopped moving,
 so one mechanism left two marks. Extending the list means writing what those two decisions say, which
 is an authoring act rather than an arithmetic one, and it is **left for the owner**. Advancing the
-count alone to twenty-two would make it disagree with the members it introduces.)*
-~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ **The last twenty
+count alone to twenty-two would make it disagree with the members it introduces. **Superseded
+2026-08-11: the owner commissioned the authoring act, OD-30 and OD-31 are enumerated below, and the
+count moved to twenty-two with them rather than ahead of them.** The paragraph above stands as the
+record of why the count could not move earlier rather than as a live account of the sentence; the
+enumeration now runs OD-10 through OD-31, contiguous, and the two halves agree again. **Both entries
+were tested against the sentence's own claim rather than assumed into it**: OD-30 settles an
+environment question belonging to feature 002's T101 and OD-31 assigns identifiers, so each
+post-dates the closure recorded at OD-07 and neither re-opens what that closure adjudicated.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ ~~**The last twenty**~~ **The last twenty-two
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -133,7 +140,13 @@ the initial user namespace, and writes the uid map directly rather than through 
 that needs `CAP_SYS_ADMIN` and is therefore the highest-authority of the three routes rather than the
 lowest. Because no posture binds only one of the two constraints, one answer retires both — and it
 retires OD-24's *replacement second ground* only. **Ground ① is untouched and the 13–20 day build is
-still deferred**, which is the reading the entry exists to protect.**
+still deferred**, which is the reading the entry exists to protect.** **OD-30 makes CI the
+authoritative environment for T101's overhead figure, published per arm against the same run's
+measured control with pooling forbidden, and declines the `workflow_dispatch` recording route
+because the artifact route it would have built already exists**, and **OD-31 renumbers the
+verifier-vs-judge experiment E19 and leaves E8 with the Stage-D synthesis experiment, reaching live
+prose only while the fingerprinted harness files, the committed run directories and the dated
+assessments keep the name they were recorded under**.
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who

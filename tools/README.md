@@ -79,7 +79,7 @@ threshold** before you write any edit-and-restore loop of your own.
 
 ## The check set
 
-Eighteen checks in eleven families. Severity is **error** when the finding is
+Nineteen checks in eleven families. Severity is **error** when the finding is
 almost certainly a defect, **warning** when it is a defect *or* a judgement call
 the author may have made deliberately.
 
@@ -793,8 +793,8 @@ one-command-per-namespace form above does not do.
 
 ## Every rule, measured against its own scope
 
-~~Six~~ **Seven** of this tool's ~~seventeen~~ **eighteen** checks are driven by
-rules in `config.json` rather
+~~Six~~ ~~**Seven**~~ **Eight** of this tool's ~~seventeen~~ ~~**eighteen**~~ **nineteen** checks are
+driven by rules in `config.json` rather
 than by code, which makes a rule cheap to add and cheap to lose. A rule that
 matches nothing contributes no violations, and no violations is what a correct
 corpus also contributes. Swept on 2026-08-10 over every rule in every
@@ -804,7 +804,8 @@ seven `dry_run.verdict_patterns` — **three were reading nothing at all**, and
 each had been silent through every green gate since it stopped.
 
 *(Counts advanced 2026-08-11 with `preserved-evidence`, whose
-`preserved_evidence.units` are the seventh rule-driven set. **The sweep's
+`preserved_evidence.units` are the seventh rule-driven set, and again the same day
+with `count-versus-range`, whose `count_range_rules` are the eighth. **The sweep's
 population is left as it stood on 2026-08-10 and is not restated**: it is a dated
 measurement of the rules that existed when it ran, and the six units added after
 it were not among them. The new set reached the same silence failure this section
@@ -1657,6 +1658,47 @@ reporting an error.
 you did not create.** If there are any, a concurrent pass is mid-commit and the index is not yours to
 edit. This is cheap, it is the only signal available, and no gate can supply it — a hook runs after
 the damage is staged, and by then the two halves of the rename are already separated.
+
+### The entry above is exact about the index and silent about the tree, and on 2026-08-11 it was the tree that fired
+
+**The index hazard above is real and still holds; it is incomplete, and the missing half is where the
+damage came from.** On 2026-08-11 two passes shared this working tree. `git status` was read for
+staged entries nobody created at every point the entry above prescribes it, and **the index was
+unheld every single time it was checked**. Twice that day a concurrent pass's write to this file
+silently reverted an edit another pass had already made, and **nothing reported an error** — not a
+gate, not a hook, not `git` itself. One push then carried a commit its author had never gated.
+
+**`git add <path>` is a statement about the working tree, so a defence built on it inherits whatever
+the tree happens to hold at that instant.** Staging explicit paths keeps another pass's *index* out
+of your commit and does nothing whatever about another pass's *writes* to the file you are about to
+stage. The two hazards share a name and not a mechanism, and closing the first leaves the second
+exactly as wide as it was.
+
+**The tell, and it is the reason no instrument caught this: a reverted edit and an unmade edit are
+indistinguishable in a working tree.** Re-reading the file shows text without your change in it, and
+that is what the file looks like both when your edit was overwritten and when you never made it.
+This is the [emptiness-test
+inversion](#the-emptiness-test-inversion--git-diff-cannot-tell-unchanged-from-changed-back) one level
+up. There an emptiness test over a diff could not separate *unchanged* from *changed back*; here a
+read of the tree cannot separate *never written* from *written and reverted*, and both are satisfied
+identically by the state that means the work is gone.
+
+**So the practice that holds is index-only, and every step of it is a presence test.** Intended
+content is built from `git show HEAD:<path>` rather than from the shared tree, because a blob at a
+commit is a baseline no concurrent writer can reach — the same re-anchoring [finding
+038](../specs/002-spec-aware-agent-runtime/findings/038-corpus-check-branch-population-and-the-instrument-declined.md)
+§8 had to make after its own sweep took a contaminated baseline from the tree it was mutating. Every
+edit is located **by search rather than by line number**, because a concurrent write moves lines and
+a span located by number then rewrites something that was never read. The resulting diff is applied
+with `git apply --cached`, which writes the index and never the tree. And the result is verified **by
+presence at the commit** — `git show <sha>:<path>` for a string only the edit contains — rather than
+by an empty `git diff`, which is the inverted test arriving one more time.
+
+**What the arrangement buys is that a pass cannot absorb a hunk it never read.** The commit carries
+what that pass built from `HEAD` plus its own edits, and a concurrent pass overwriting the file
+underneath it changes what is in the tree without changing what was staged. This entry sits beside
+the one above rather than replacing it: the index hazard is real, `git status` is still the read that
+finds it, and a tree shared with a live writer is a second hazard that read cannot see.
 
 ### "Use a detached worktree" names no path, so two passes share one, and the collision is silent in the direction that matters
 
@@ -3170,16 +3212,20 @@ the old claim has to be told what replaced it, and a deletion tells them nothing
 **What is gated here was established by planting the case rather than by reading
 the config.** Three checks were observed firing against this file at `4118950`. A
 relative link to a file that does not exist is `link-target`. A fragment with no
-matching heading in this document is `link-anchor`. A four-decimal ratio or a
-dollar amount that occurs in no `specs/*/findings/*.md` is `numeric-provenance`,
+matching heading in this document is `link-anchor`. A four-decimal ratio, a dollar
+amount or a multiplier — the three kinds `numeric_kinds` enables in `config.json` —
+that occurs in no `specs/*/findings/*.md` is `numeric-provenance`,
 which is the one that changes how this file is written: it treats a
 measurement-shaped figure as a quotation needing a source, so **a figure derived
 in this document states its operands**, and a figure that states none either
 matches a findings document or turns the `corpus` job red. An instrumented run
-reports fifteen of the eighteen checks touching this file, and **that reading is
+reported fifteen of the eighteen checks then registered as touching this file, and
+**that reading is
 known to undercount** — `numeric-provenance` is absent from it and was
 nevertheless observed firing here, so the plant is the measurement and the
-instrumented read is not.
+instrumented read is not. **The reading is left as it was taken rather than
+advanced**: it is a dated observation over the check set of the day it ran, and the
+set has since reached nineteen.
 
 **One further check reads this file and reaches none of it, and that belongs
 beside the supersession rather than in a commit message.** `register-range` walks

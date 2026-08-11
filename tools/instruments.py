@@ -174,7 +174,7 @@ INSTRUMENTS: list[Instrument] = [
     Instrument(
         name="corpus check",
         kind=GATE,
-        checks="Eighteen consistency checks over the document corpus. Errors "
+        checks="Nineteen consistency checks over the document corpus. Errors "
                "only — warnings are printed by a separate step that cannot "
                "fail, because a gate that flaps gets worked around.",
         job="corpus",

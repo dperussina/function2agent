@@ -144,6 +144,24 @@ the same delta of nothing.
 The eighteen checks live in fifteen files under `tools/corpuscheck/checks/`, and the branch counts
 are per file:
 
+> **A nineteenth check landed after this census and is not in its population.** `count-versus-range`
+> was registered on 2026-08-11, after the sweep ran at `aaa329b`. It was never neutralised and never
+> scored, so every branch figure in this section, in §2.3 and in §7 is a **dated reading over the
+> eighteen checks that existed when the sweep ran**, and it stays exactly true of those eighteen.
+> **No figure here is advanced to cover it.** Advancing a count or a rate to include a branch nobody
+> probed would publish a measurement that was never taken, which is a worse defect than a stale
+> denominator and is the one this repository keeps catching; the stale denominator is visible to a
+> reader who checks, and the fabricated figure is not.
+>
+> **It would be probeable by the same method**, which is the part a reader deciding whether the rate
+> transfers needs. The method wants two things and the nineteenth has both: its module carries
+> decision branches of the kinds §1 defines, so an `ast` walk derives a population from it exactly as
+> it did for the other fifteen files, and `tools/selftest.py` already exercises the check — it pins
+> rows against `specs/001-fixture/plan.md` in the known-bad corpus — so a neutralised branch has an
+> instrument that can notice. The nineteenth is **like** the eighteen rather than unlike them, and a
+> later sweep extends the population without changing the method. What that sweep would report about
+> it is unmeasured here.
+
 | module | branches | unheld |
 |---|---|---|
 | `catalog.py` | 13 | 0 |
