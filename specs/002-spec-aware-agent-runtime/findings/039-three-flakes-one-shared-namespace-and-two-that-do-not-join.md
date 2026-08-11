@@ -1,4 +1,4 @@
-# Finding 039 — three non-reproducing failures were asked whether they share a cause. **They do not.** One of them — today's lease-revocation flake — is not a race at all once planted: it is a **machine-wide process-table namespace keyed on a constant string**, and it fails **10 of 10** on demand with a decoy process carrying that string. Both halves are established by planting: a concurrent run's supervisor makes this test **fail**, and this test **SIGKILLs a concurrent run's supervisor**. The other two are not joined to it and are not closed by it: one carries two candidate mechanisms on the record, neither bound to the sweep that produced it, and the other **predates `e4ef6e6` by 67 minutes**, which bounds the shared-basetemp story off it entirely
+# Finding 039 — three non-reproducing failures were asked whether they share a cause. **They do not.** One of them — today's lease-revocation flake — is not a race at all once planted: it is a **machine-wide process-table namespace keyed on a constant string**, and it fails **10 of 10** on demand with a decoy process carrying that string. Both halves are established by planting: a concurrent run's supervisor makes this test **fail**, and this test **SIGKILLs a concurrent run's supervisor**. The other two are not joined to it and are not closed by it: one carries two candidate mechanisms on the record, neither bound to the sweep that produced it — and §9 now **measures one of them and rules it out at 3 arms against 58** — and the other **predates `e4ef6e6` by 67 minutes**, which bounds the shared-basetemp story off it entirely
 
 **Date**: 2026-08-11
 **Feature**: 002. Measures
@@ -8,7 +8,8 @@ incidents against commit `e4ef6e6`.
 **Reports. Repairs nothing.** No source was changed. The defect in §3 is left standing
 deliberately — see §7 for why a repair is owed an owner and not this pass. **Superseded in
 part: §8 records the repair landing later the same day, and corrects two things §3 and §7
-got wrong.**
+got wrong. §9 measures one of incident 2's two candidates and rules it out, and confirms a
+work-tree baseline floor that neither candidate names.**
 **User Story**: none. Prompted by a brief asking whether three separately-recorded
 non-reproducing failures share a mechanism.
 **Owner decision**: **none is minted here and no register was edited.** §7 states the one
@@ -243,3 +244,123 @@ find nothing satisfies the negative arm alone. Against the same plant this findi
 unrepaired file run beside it under the identical harness — same signature, `assert 'ALIVE'
 == 'DEAD'`. The pre-existing proof for the crash arm still reports `proved`, which is the
 positive control that the read half still finds its own child.
+
+## 9. Amendment — incident 2's candidate A is measured and **ruled out**, and a third baseline dirtier is confirmed that neither recorded candidate names
+
+**Date**: 2026-08-11, later the same day. §5 ranked incident 2 as *"two candidate
+mechanisms, neither bound to the sweep"*. One of the two has now been **measured**, and its
+cost is bound: **3 arms and 14 outcomes**, against the 58 arms and 234 outcomes it would
+have to reach. §5's conclusion does not move; it now rests on a count instead of on a
+reading. **Repairs nothing** — the defect in §9.3 is left standing and §9.5 states the
+options rather than taking one.
+
+**Platform**: `macOS-26.2-arm64`, euid `501`, CPython `3.12.11` from
+`/Users/djperussina/Code/function2agent/.venv/bin/python3`. Measurements were taken in
+`mktemp -d` work trees built the way the harness builds its own, never in the shared tree;
+the shared tree's `tests/removal_proofs.sh` was **not modified** for either condition.
+
+### 9.1 Why this cost two pytest runs and not two sweeps
+
+Both quantities the candidate must reach are fixed by the **baseline**, which the harness
+takes before any tamper. `_py_failed` is a count over the baseline text. An UNUSABLE arm is
+decided by a lookup in `report_unrunnable` that returns **before** `apply_tamper` and before
+the arm's own pytest invocation — so UNUSABLE arms are the *cheapest* arms in a sweep, not
+the dearest. The sound measurement is therefore **one full-suite pytest run per condition**.
+Each took ~65s and produced **1879 Python outcomes**.
+
+The UNUSABLE counts in §9.2 are **derived from those two measured baselines using the
+harness's own scorer**, not from a reimplementation of its rule: `_escape` and `baseline_py`
+were extracted verbatim from `tests/removal_proofs.sh` and run under `bash` against each of
+the **336 Python arms** (346 declared, 10 of them Go). **No sweep was completed, and this is
+a derivation over a measured baseline rather than an observed sweep total.** Its fidelity has
+one independent check: it reports **13 SKIPPED**, which is the `"skipped": 13` every
+committed post-guard summary record carries.
+
+### 9.2 Pre-registered against measured
+
+The predictions were written before any measurement, in `/tmp/specsprobe-prereg.md`. They
+are reported here unadjusted.
+
+| Condition | Quantity | Pre-registered | Measured | |
+|---|---|---|---|---|
+| intact control | Python outcomes not passing | 1 | **2** | miss |
+| broken run | Python outcomes not passing | 12 | **14** | miss |
+| broken run | UNUSABLE arms | 3 | **3** | hit |
+| intact control | UNUSABLE arms | 0 | **0** | hit |
+
+**Both misses are the same `+1`, twice.** The broken run's 14 decompose as: **10**
+`test_egress_policy.py` tests that call `_contract()` — exactly the 10 the pre-registration
+enumerated; **1** retroactive-copy-list guard, as predicted; **2** for the floor in §9.3
+where 1 was predicted; and **1** the pre-registration did not derive at all —
+`test_every_declared_removal_proof_still_names_a_live_site_and_a_live_test`, because one
+arm's **tamper target** is `specs/002-spec-aware-agent-runtime/contracts/egress-policy.md`.
+The pre-registration enumerated every test that *reads* `specs/` and did not ask which arms
+*write* there.
+
+**Candidate A is ruled out as the cause of the 234/58 sweep.** 3 arms against 58 and 14
+outcomes against 234 — one and a half to two orders of magnitude short in both dimensions,
+in the direction that cannot be closed by a larger tree. This is also the prediction
+`f3f1c89` already constrained: it attaches the `specs/` omission to *"three more of the
+same"*, and the three arms measured here are exactly the three the pre-registration named.
+**Incident 2's cause remains undetermined**, and this amendment does not reach for a third
+mechanism for it.
+
+### 9.3 A deterministic work-tree floor, confirmed on two platforms
+
+**Every intact sweep has a baseline-failure floor of 2, and the verdict does not show it.**
+Two tests resolve a repository root from `__file__`'s ancestors, which under the harness
+resolves to the **work tree** and not to the repository:
+
+| Test | Reads | Why it fails in `$WORK` |
+|---|---|---|
+| `test_removal_proof_scoring.py::test_the_two_path_lists_between_them_account_for_this_tree` | `_unlisted(REPO)` | `$WORK` holds `.summary-records` and `.baseline-pytest.txt`, in neither path list; `$WORK` is no repository, so `git check-ignore` exits **128** (measured) and `&& continue` is not taken, so both are **named** |
+| `test_seccomp_overhead_record.py::test_the_durable_record_is_the_tracked_one_and_the_latest_is_not` | `REPO / ".gitignore"` | `.gitignore` is in `NOT_NEEDED_PATHS`, so it is never copied — `FileNotFoundError` |
+
+Both dotfiles do exist when the baseline runs: `.summary-records` is truncated well before
+it, and `.baseline-pytest.txt` is the baseline's own redirect target — **measured, not
+assumed**, by having a process list its own working directory through the same redirect
+shape and finding the target already present. `.baseline-go.txt` is created *after* the
+Python baseline and so is not part of this floor. The assertion names **2** paths and costs
+**1** outcome; the second row costs the other.
+
+**Confirmed independently on CI.** The `removal proofs` job at `5fa07bb` printed `baseline
+1879 python outcomes (2 not passing), 226 go outcomes (0 not passing)` and then `346 proved,
+0 unproven`, and the job concluded **success**. Same total and same count as the local
+control, on Linux rather than macOS, which is what a floor built out of `mktemp -d` and a
+`NOT_NEEDED_PATHS` entry should do. *(The harness does not name its baseline failures, so
+that CI's two are these two is inferred from the identical count and platform-independent
+mechanisms, not observed.)*
+
+**Why it is invisible, in two independent ways.** No proof arm names either test — verified
+by extracting all 346 declarations and searching their test selectors — so the floor
+produces baseline failures with **zero UNUSABLE arms**. And the tail block that would
+surface `_py_failed` to a reader is gated on `[ "$UNUSABLE" -gt 0 ] && [ "$_py_failed" -gt 0
+]`, so with `UNUSABLE=0` it never prints. The count appears once, mid-run, on the `baseline`
+line, and nowhere in the verdict.
+
+### 9.4 What the floor is **not** evidence for
+
+**It cannot explain the 234.** The guard that produces the first row and the record of the
+234 sweep **arrived in the same commit**, `f3f1c89` (`2026-08-10 08:00:14 −0600`); the test
+did not exist while that sweep ran. The second row's test is later still — `73e9af3`,
+`2026-08-10 16:47:20 −0600`, *after* the last committed summary record. So the floor is a
+fourth condition presenting through the baseline, not a candidate for incident 2, and must
+not be written up as one.
+
+**One thing it leaves open.** The four committed post-guard summary records read
+`python_not_passing` **1, 1, 2, 2** — and the two 2s are timestamped `10:17:54` and
+`10:29:15`, both **before** `73e9af3`. So the second failure in those two sweeps is *not*
+the `.gitignore` row and is **not established here**.
+
+### 9.5 The repair is owed an owner, and this pass did not take it
+
+Two rows, and the cheap fix reaches only one of them, which is why none was taken.
+
+| Row | Options |
+|---|---|
+| partition test | (a) add the harness's own scratch dotfiles to `NOT_NEEDED_PATHS` — one line, but it teaches the guard to ignore names in the repository root too; (b) have the harness keep its scratch files **outside** `$WORK`, which is where they belong and is not one line; (c) assert against the repository root rather than `__file__`'s ancestor, which changes what the guard covers |
+| `.gitignore` row | (a) move `.gitignore` into `REQUIRED_PATHS`, which changes the copy list the guard exists to police; (b) have the test decline when the file is absent, which weakens it in the shared tree too |
+
+Option (a) on the first row alone would leave the floor at 1 and the headline unchanged — a
+green verdict over a non-zero baseline-failure count — so a partial repair here buys
+nothing and hides half the evidence for the other half.
