@@ -151,8 +151,8 @@ than an index edit, so the row stands and this sentence is what a reader meets f
 
 ## Index
 
-The table below carries one row per finding filed in this directory. There are eighteen; the
-corpus-wide total across both namespaces is stated in the root
+The table below carries one row per finding filed in this directory. ~~There are eighteen~~ **there
+are nineteen, from 2026-08-11**; the corpus-wide total across both namespaces is stated in the root
 [`README.md`](../../../README.md), which is where `inventory-count`'s `findings` rule reads it.
 
 **The sequence skips `031` and that is not a gap in this index.** Finding 031 was minted from the
@@ -164,7 +164,10 @@ why the number never identified a feature.
 ~~**Six of the eighteen carry a dated in-place supersession, and two of those six supersede their own
 headline.**~~ **Eight of the eighteen carry a dated in-place supersession, and two of the eight
 supersede their own headline** *(recounted 2026-08-11 over the eighteen documents this directory then
-held; the earlier six was low by two)*. A row that restated an original claim where the document has
+held; the earlier six was low by two)*. **The denominator moved to nineteen later the same day and
+the numerator did not**: [finding 038](./038-corpus-check-branch-population-and-the-instrument-declined.md)
+carries no in-place supersession, so the eight are unchanged and the sentence above is a dated
+reading of eighteen documents rather than a live proportion. A row that restated an original claim where the document has
 since struck it would
 propagate a retracted claim out of an authority namespace, so where the two disagree the row below
 states the current text and says that it superseded something. `019` and `030` are the two: `019`'s
@@ -200,3 +203,4 @@ one line at a time reports seven rather than eight.
 | [035](./035-orphaned-supervisor-children-and-the-reaper-that-was-never-the-mechanism.md) | The orphans came from **one unguarded spawn site**, not from `LeaseRenewer` and not from the basetemp reaper. Two of the three relayed consequences are **false, measured** — a live orphan does not make its tree unreapable, and it cannot write into a recycled live run's directory. The third, that nothing was looking, is **true**, and was the only one worth a repair | `$0.0000` |
 | [036](./036-the-instrument-absent-from-the-list-of-instruments.md) | The sixth gate was **not** invisible to CI: CI ran it, CI failed on it, and CI failed on nothing else for three consecutive runs while every pass reported "all five gates green". The briefing's premise that CI was green is **false, measured**. What was missing was the *list* — nothing in the repository had the job of noticing that the list and the set had come apart | `$0.0000` |
 | [037](./037-the-contract-stage-with-no-gate-stage.md) | The egress contract numbers **eight** request-pipeline stages and the enforcement point registers **six gate stages and one final stage**. The stage with no counterpart is stage 4, the address class, and its absence is **sound only because FR-016 pins exactly one address** — a conditional nobody had written down, so a future widening of FR-016 would open a hole no test named | `$0.0000` |
+| [038](./038-corpus-check-branch-population-and-the-instrument-declined.md) | `pytest` is **blind to the entire corpus checker** — all eighteen checks stubbed to return nothing still gives `1745 passed, 83 skipped` — so `tools/selftest.py` is the sole instrument, and against it **55 of 279 (19.7%)** of the checker's decision branches can be neutralised with the self-test still green. Three unheld branches are live defects, each an arm passing for the wrong reason. The sweep is **declined** on the composition of the unheld set rather than its cost: 25 of 32 are one fixture each, and a gate would need 55 accepted exceptions on day one. Records that its own harness took a contaminated baseline from the working tree, and that **unreachable-as-written is not defective-as-written** | `$0.0000` |
