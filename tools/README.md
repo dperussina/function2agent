@@ -1700,6 +1700,48 @@ underneath it changes what is in the tree without changing what was staged. This
 the one above rather than replacing it: the index hazard is real, `git status` is still the read that
 finds it, and a tree shared with a live writer is a second hazard that read cannot see.
 
+**The route has a residue, and on 2026-08-11 it fired within the hour of the route being written
+down.** An index-only pass never writes the working tree, so a commit built and pushed this way
+leaves the shared tree holding exactly the content the commit replaced. `b9760cd` is 89 insertions
+and 12 deletions over four paths, and the reading taken after it was pushed had those same four
+paths at ` M` with a working-tree diff of 12 insertions and 89 deletions — the commit's exact
+mirror, which is the shape this residue always takes.
+
+**The direction is the whole of it: the tree is *behind* the commit rather than ahead of it, and
+`git status` renders the two identically.** A path reports ` M` when it holds work nobody has
+committed and when it holds content a pushed commit has already superseded. From there a `git add`
+or a `git commit -a` over those paths stages a revert of published work — planted rather than
+reasoned, with an index-only commit carrying a needle, `git add` on the path, and a staged blob
+holding no needle at all. By the tell this entry already states, that revert arrives looking like an
+ordinary edit, so the practice adopted to stop passes absorbing each other's hunks leaves behind a
+state in which the next routine command silently undoes a pushed commit.
+
+**What separates *behind* from *ahead* is the diff, and never the status.** Both directions were
+planted over one file. Where the tree was behind, the working-tree diff was the commit's exact
+inverse: a commit of 3 insertions and 1 deletion left a tree diff of 1 insertion and 3 deletions.
+Where the tree was ahead by a single uncommitted line, the same comparison read 1 insertion and 0
+deletions against that same commit — not an inverse, and not discardable. `git status` printed ` M`
+in both cases. A tree that is genuinely ahead is somebody's uncommitted work, and the inverse check
+is the only thing standing between reading that work and destroying it.
+
+**So the remedy belongs beside the practice and it runs after the push: `git checkout HEAD --` over
+the paths the pass wrote, once the tree diff has been confirmed to be the commit's inverse and to
+carry nothing of its own.** That verb is the repair here rather than the hazard, because the index
+already holds the committed content — and it is the repair in that one direction only.
+
+**Its verification is by presence, and a ` M` that cannot report its own direction is the third
+instrument this file records as blind in the same way.** An empty `git diff` after the checkout is
+satisfied by the tree matching whatever `HEAD` holds, including a `HEAD` that never carried the edit
+— a push that failed, a ref that moved underneath. What answers is a string only the edit contains,
+read back twice: out of the commit with `git show`, and out of the working tree with a grep. The
+[emptiness-test inversion](#the-emptiness-test-inversion--git-diff-cannot-tell-unchanged-from-changed-back)
+is the first rung, where an emptiness test over a diff cannot separate *unchanged* from *changed
+back*; the paragraphs above are the second, where a read of the tree cannot separate *never written*
+from *written and reverted*; this is the third. The count is over instruments rather than over
+mentions of that entry, of which this file carries two more — one applying its presence remedy to a
+planted tamper needle, and one explicitly declining membership as complementary rather than
+duplicate.
+
 ### "Use a detached worktree" names no path, so two passes share one, and the collision is silent in the direction that matters
 
 **On 2026-08-10 two concurrent passes were each told to measure in a detached worktree, and both
