@@ -739,6 +739,38 @@ the rule could not have seen. What the rule guards is the two index claims, both
 of which are currently correct at nine; what the `research/12` case demonstrates
 is the narrowness of the scope, not the value of the check.
 
+**Widening that scope was measured on 2026-08-10 and declined.** The question the
+correction above leaves open is whether the rule should reach `research/12` and
+documents like it, and the corpus answers it in one reading. Moving `files` from
+the two index documents to `research/*.md` adds **exactly one site**, at
+`research/12-examples-as-corpus.md:34`; putting every walked document in reach
+adds none beyond it, because the phrase this rule matches occurs in `README.md`
+line `157`, in `research/README.md` line `191`, and on that one line. The widened
+rule reads `nine` there against a directory count of `9`, so the firing count is
+**zero at every scope tried** — two sites read at the shipped scope, three at
+`research/*.md`, three again corpus-wide.
+
+**Zero firings is the argument against the widening rather than for it, because
+of what the third site is.** The sentence at `:34` is a *quotation of the task
+description* this document was written from — it records that the task said one
+number and then listed another — and the block beneath it declares the reading a
+dated observation of what that pass saw on 2026-08-02 and marks only the scope
+claim superseded. The digits agree with the filesystem today because the tree
+caught up to the quotation, not because the sentence tracks the tree, and the
+sentence is frozen by content: it records what was described, so it may not be
+advanced when the directory count next moves. **A rule holding it in scope fires
+on a correctly-superseded record the moment a tenth repository is vendored**,
+which is the permanent false positive the `unconstructib*` candidate under
+[what this cannot catch](#what-this-cannot-catch) was declined over, and it fires
+here on a record that is correct rather than merely unhelpful.
+
+**The claim that prompted the question is unreachable at every scope, which is a
+second and independent ground.** *"`ls examples/` returns eight directories"*
+contains no occurrence of the phrase this rule's pattern requires, so no `files`
+setting reaches it and the widening would not have caught it at the time it was
+stale. The scope is narrow, and the narrowness turns out not to license widening
+it.
+
 ## When a figure may be a live total, and when it must be dated
 
 Three rulings in this tree say the same thing from different directions. `gen_claims.py`
@@ -1566,6 +1598,42 @@ The two `tests` warnings are
 `link-label` on `tests/conformance/cassettes/README.md`, where both labels are correct: the check
 compares the label against the **unresolved** target string, so a repo-relative label beside a
 document-relative target reads as a mismatch.
+
+#### The two `search_roots` rows are not free, and re-measuring them found the cost
+
+**Both rows read `no — it buys nothing`, and that phrasing understates what was measured**
+*(re-measured 2026-08-10, and both stay declined)*. A widening that buys nothing is a candidate
+for installation the next time someone wants the coverage; a widening that costs something is
+not. Three readings separate the two, and the third is the one the table did not carry.
+
+**One check consults the index, and not several.** `search.build` is called once in `runner.py`
+and the result is handed to every check as `ctx["search"]`, which reads as a shared input.
+`numeric-provenance` is the only check that touches it. So `search_roots` is not a noise floor
+across the check set; its entire blast radius is one rule's choice of severity.
+
+**That rule uses the index for severity alone**, which is why the zero-error, zero-warning
+readings above are what the mechanism predicts rather than evidence the roots are inert. The
+violation is appended either way: a non-empty `elsewhere` selects `warning` and the hint
+`also in: …`, an empty one selects `error` and the hint `appears nowhere else in the corpus`.
+Widening the index can never add a firing, and can only ever remove the `error` severity that
+separates a transcription error from a propagated claim.
+
+**The cost is that downgrade, and it lands on the checker's own negative controls.** A probe
+document carrying `0.8965`, `0.7734`, `$41.03` and `1.76x` — four figures in no findings
+document — reports **four errors** under the shipped roots and **four warnings** once `tests`
+and `tools` are added, taking provenance from `tools/selftest.py`, `tools/corpuscheck/figures.py`
+and `tests/batteries/test_seccomp_overhead.py`. `0.8965` is the sharpest of the four: it is a
+planted digit-neighbour of the measured `0.8961`, written into `figures.py` to prove the lookup
+is exact, and under the widening it answers *does this figure appear anywhere at all* with
+`also in: tools/README.md, tools/corpuscheck/figures.py`. **The fixture that exists to catch a
+transcription error would supply that error its provenance.**
+
+**The surface is `62` figure keys, which is the number to weigh rather than the four in the
+probe.** The shipped roots index `488` files carrying `410` distinct extractable figure keys;
+`tests` and `tools` add `288` files and `62` keys, each one a value that stops reading as
+absent. **`src` was measured alongside them and is declined on a weaker ground**: it adds `80`
+files and a single key, so it neither helps nor costs, and a root that changes one key is not
+worth the standing invitation to widen the other two beside it.
 
 #### The underscore, settled against a renderer
 
