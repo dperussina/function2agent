@@ -2260,7 +2260,8 @@ cost nothing.** The price, and the further price the documented remedy exacts on
 [recorded once under nothing detects the split
 itself](#nothing-detects-the-split-itself-and-the-corpus-is-safe-by-coincidence) and deliberately not
 restated here. *(The refutation sat in that subsection while this sentence went on asserting the
-opposite at its own site, which is the shape that cost this repository a day over `--reattest`.)*
+opposite at its own site — the same shape this file corrected over `--reattest`, where the false
+clause stood from `5029e1e` to `19aadbf` with its refutation far below it in the same entry.)*
 The example already sat inside a backtick code span, which is the documented escape; the span opened
 on one source line and closed on the next, and `build_masked` masks line by line, so
 `_INLINE_CODE_RE` — which needs its opening and closing runs in one string — matched neither half and
