@@ -6,7 +6,9 @@
 against [`tests/conftest.py`](../../../tests/conftest.py), and dates three recorded
 incidents against commit `e4ef6e6`.
 **Reports. Repairs nothing.** No source was changed. The defect in §3 is left standing
-deliberately — see §7 for why a repair is owed an owner and not this pass.
+deliberately — see §7 for why a repair is owed an owner and not this pass. **Superseded in
+part: §8 records the repair landing later the same day, and corrects two things §3 and §7
+got wrong.**
 **User Story**: none. Prompted by a brief asking whether three separately-recorded
 non-reproducing failures share a mechanism.
 **Owner decision**: **none is minted here and no register was edited.** §7 states the one
@@ -202,3 +204,42 @@ running the full suite will fail another pass's `test_the_crash_arms_child_...` 
 windows overlap, and will SIGKILL that pass's supervisor child.** A green full-suite run
 taken beside a concurrent one is, for this test, not evidence; and a red one may be
 somebody else's run rather than a defect.
+
+## 8. Amendment — the repair landed, and §7's prescription for it was wrong
+
+**Date**: 2026-08-11, later the same day. Both scans are now scoped and the operational
+consequence in §7 no longer holds. Two things this document got wrong are corrected here
+rather than edited away, because the second one would have produced a vacuous green.
+
+**§7 prescribed "scope both scans to descendants of the current process, as `conftest.py`
+already does". That is wrong twice.** `tests/conftest.py` scopes to *direct children*
+(`parent != mine`), not to descendants — the sentence misreads the file it cites. And a
+descendant test is the wrong instrument at one of the two sites, for a reason that is
+measured rather than argued:
+
+| Site | Vantage point | What the child is from there | Scope used |
+|---|---|---|---|
+| read half | inside the nested `pytest`, while it runs | **direct child** — `Popen` from the test function, no shell, no re-exec | `ppid == os.getpid()` |
+| kill half | this process, after the nested `pytest` returned | **orphan, reparented to init** — no ancestry left to test | this run's `tmp_path`, which the child carries in its argv |
+
+An ancestry test at the kill site matches nothing, kills nothing, and says nothing — the
+scan switched off while still reporting success, which is worse than the noisy red it
+replaces. That is why the two sites are scoped on different things.
+
+**A third measured fact §3 did not have.** On an ordinary run the kill half has **nothing
+of its own to kill**: the nested run's own `tests/conftest.py` sweep reaps the child before
+that process exits, which was observed directly in its terminal output. So every one of the
+10 decoy kills §4 records was **purely collateral** — the scan's entire observed effect was
+on other people's processes. What remains for it to catch is a nested run that died before
+reaching its own sweep, and that is exactly the case with no ancestry.
+
+**A stale quotation in this document.** §3 calls `ps -eo state=,command=` *"the observer's
+exact query"*. It was, and is not any more: the read half now asks for `ppid` as well.
+
+**The repair, and how it was proved.** Both halves carry a committed arm and a removal
+proof, and each negative arm is paired with a positive one, because a scope tight enough to
+find nothing satisfies the negative arm alone. Against the same plant this finding used:
+**10 of 10 passed and 10 of 10 decoys survived**, against **0 of 3 and 0 of 3** for the
+unrepaired file run beside it under the identical harness — same signature, `assert 'ALIVE'
+== 'DEAD'`. The pre-existing proof for the crash arm still reports `proved`, which is the
+positive control that the read half still finds its own child.

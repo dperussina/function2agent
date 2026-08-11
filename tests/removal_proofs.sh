@@ -2846,6 +2846,28 @@ proof "orphaned crash children — a failed arm leaves its supervisor running" \
   "tests/integration/test_lease_revocation.py::test_the_crash_arms_child_does_not_outlive_a_failing_test" \
   's = s.replace("    finally:\n        if child.poll() is None:  # pragma: no cover — only on an assert above\n            child.kill()\n\n    # Nothing ran on the way down.", "    finally:\n        pass\n\n    # Nothing ran on the way down.")'
 
+# The two scopes on those scans, which finding 039 established are what stands
+# between this file and every other checkout on the host. The marker they match
+# on is an ordinary construction, and `ps -e` does not stop at a tree boundary,
+# so unscoped the read reports a concurrent pass's supervisor as this run's leak
+# — 10 failures in 10 with a decoy alive — and the kill SIGKILLs it, 10 in 10.
+#
+# These are expressible here only because the arms plant their own decoy. A
+# tamper that widens the scan changes nothing on a quiet host, so a proof over
+# an arm that merely *ran* the scan would report UNPROVEN and read as the scope
+# being unnecessary. The decoy is what makes the widened scan wrong on purpose.
+proof "crash-child read — the observer scans the whole machine again" \
+  tests/integration/test_lease_revocation.py \
+  "tests/integration/test_lease_revocation.py::test_the_leak_read_ignores_another_runs_supervisor" \
+  's = s.replace("            if parent != mine or fields[2].startswith(\x22Z\x22):", "            if fields[2].startswith(\x22Z\x22):")'
+
+# The destructive half, and the one worth more than the arm above: this does
+# not hand another pass a false red, it ends that pass'"'"'s supervisor child.
+proof "crash-child kill — the sweep reaches outside this run again" \
+  tests/integration/test_lease_revocation.py \
+  "tests/integration/test_lease_revocation.py::test_the_kill_leaves_another_runs_supervisor_alone" \
+  's = s.replace("        if marker not in fields[2] or scope not in fields[2]:", "        if marker not in fields[2]:")'
+
 # The sweep's own call site. Every other arm here calls the sweep directly, so
 # all of them stay green with this deleted — the mechanism intact, never
 # invoked, and invisible. That is the shape the rest of this file exists for.

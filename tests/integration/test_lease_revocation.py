@@ -646,12 +646,20 @@ def test_a_sigkilled_holder_closes_the_listener_instantly(tmp_path, killer) -> N
 # the test's own `finally`, which is exactly the boundary the wrapping moves.
 
 #: What the crash arm's child looks like in `ps`. Its own argv, not a name this
-#: file chose: nothing else in the tree constructs `LeaseTerms` in a subprocess.
+#: file chose — and **not unique**, which is the whole reason both scans below
+#: carry a second condition. It is an ordinary construction that ordinary source
+#: may contain, and `ps -e` does not stop at a tree boundary, so on a host
+#: running several checkouts at once this string alone names other people's
+#: processes as readily as it names this run's. Finding 039 measured that: with
+#: a decoy holding it alive the arm below failed 10 times out of 10 and SIGKILLed
+#: the decoy 10 times out of 10. The marker says *what shape* to look for; the
+#: scope beside it says *whose*.
 _CRASH_CHILD_MARKER = "LeaseTerms('s-crash'"
 
 _LEAK_OBSERVER = textwrap.dedent(
     '''
     """Fail the arm where its predecessor failed, then look for the child."""
+    import os
     import subprocess
 
     MARKER = {marker!r}
@@ -668,24 +676,60 @@ _LEAK_OBSERVER = textwrap.dedent(
 
 
     def pytest_runtest_logfinish(nodeid, location):
-        listing = subprocess.run(["ps", "-eo", "state=,command="],
+        # Scoped to this process's own children, which is what
+        # `tests/conftest.py` does for its own sweep and what this did not do.
+        # Unscoped, a concurrent checkout's supervisor is reported as this
+        # run's leak.
+        #
+        # Direct parentage and not a descendant walk, because the crash arm's
+        # child is a direct child of this process — `Popen` from inside the
+        # test function, no shell and no re-exec. That was measured rather
+        # than read off the spawn, because the failure mode of guessing it is
+        # a scan that finds nothing, writes DEAD, and passes over a mechanism
+        # that never ran. The committed removal proof for this arm is what
+        # keeps that honest: it requires this read to *find* a live child.
+        mine = os.getpid()
+        listing = subprocess.run(["ps", "-eo", "pid=,ppid=,state=,command="],
                                  capture_output=True, text=True).stdout
         alive = []
         for line in listing.splitlines():
-            fields = line.split(maxsplit=1)
+            fields = line.split(maxsplit=3)
+            if len(fields) != 4:
+                continue
+            try:
+                parent = int(fields[1])
+            except ValueError:
+                continue
             # A killed child is a zombie until its parent reaps it, and a
             # zombie is not a process that is still renewing anything.
-            if len(fields) == 2 and not fields[0].startswith("Z"):
-                if MARKER in fields[1]:
-                    alive.append(fields[1])
+            if parent != mine or fields[2].startswith("Z"):
+                continue
+            if MARKER in fields[3]:
+                alive.append(fields[3])
         with open(VERDICT, "w") as handle:
             handle.write("ALIVE" if alive else "DEAD")
     '''
 )
 
 
-def _kill_children_matching(marker: str) -> list[str]:
-    """Kill every live process whose command line contains `marker`."""
+def _kill_children_matching(marker: str, scope: str) -> list[str]:
+    """Kill every live process carrying `marker` **and** `scope` in its argv.
+
+    `scope` is the calling test's own `tmp_path`. The child carries it without
+    being asked to: its store is created under the nested run's `--basetemp`,
+    which is a directory inside that `tmp_path`, so the path is already in the
+    argv `ps` reports. That makes the match this run's by construction rather
+    than by the marker happening to be unique, which it is not.
+
+    **Parentage is not the discriminator here, and a descendant walk would be
+    vacuous.** By the time this runs the nested pytest has returned, so
+    anything it left behind is an orphan reparented to init and has no
+    ancestry left to test. On an ordinary run there is nothing here to find at
+    all — the nested run's own `tests/conftest.py` sweep reaps the child
+    before that process exits, which was measured. What is left for this to
+    catch is the nested run that died without reaching its own sweep, and that
+    is exactly the case where the ancestry is gone.
+    """
     listing = subprocess.run(["ps", "-eo", "pid=,state=,command="],
                              capture_output=True, text=True).stdout
     killed = []
@@ -693,7 +737,7 @@ def _kill_children_matching(marker: str) -> list[str]:
         fields = line.split(maxsplit=2)
         if len(fields) < 3 or fields[1].startswith("Z"):
             continue
-        if marker not in fields[2]:
+        if marker not in fields[2] or scope not in fields[2]:
             continue
         killed.append(fields[2])
         try:
@@ -757,7 +801,214 @@ def test_the_crash_arms_child_does_not_outlive_a_failing_test(tmp_path) -> None:
         # Unconditional and silent. On the tampered run the child *is* alive,
         # and an assertion here would replace the one above — which names what
         # went wrong — with one that only says it happened.
-        _kill_children_matching(_CRASH_CHILD_MARKER)
+        #
+        # `tmp_path` is the scope: the nested run's basetemp is inside it, so
+        # this run's child carries it and nobody else's does.
+        _kill_children_matching(_CRASH_CHILD_MARKER, str(tmp_path))
+
+
+# --- the two scans, scoped, and both halves of each ------------------------
+#
+# The marker above is a construction ordinary source contains, and `ps -e` does
+# not stop at a tree boundary, so before these arms both scans reached every
+# checkout on the host. Finding 039 established that by planting: with a decoy
+# holding the marker alive the arm above failed **10 of 10**, and its `finally`
+# **SIGKILLed the decoy 10 of 10**. The read half hands another pass a false
+# red; the kill half kills that pass's supervisor.
+#
+# **Each scan gets both arms, and the second is the one that matters.** A scope
+# that excludes other people's processes by excluding everything is not a
+# repair — it makes the read report DEAD over a live child and the kill reap
+# nothing, which is a green over a mechanism that never ran. So every negative
+# arm below is paired with a positive one that requires the scan to still find
+# its own, and neither is worth anything without the other.
+#
+# The two scans are scoped on *different* things, because they run at different
+# vantage points and the answer is not the same at both:
+#
+#   read half  runs inside the nested pytest while that process is alive, and
+#              the child is a direct child of it — measured, not assumed — so
+#              `ppid == mine` is available and is what `tests/conftest.py`
+#              already uses.
+#   kill half  runs in this process after the nested pytest has returned, so
+#              anything left is an orphan with no ancestry to test. It is
+#              scoped on `tmp_path`, which the child carries in its argv.
+
+#: A process holding the marker in its argv and nothing else. The comment is
+#: the payload: it puts the marker in the command line `ps` reports without the
+#: process importing anything from `src/`, which is what a *concurrent
+#: checkout's* supervisor looks like from here.
+_DECOY = "import time  # {marker}, decoy)\nwhile True: time.sleep(0.05)\n"
+
+
+def _is_running(pid: int) -> bool:
+    """Alive and not a zombie. Absent from `ps` entirely reads as gone."""
+    state = subprocess.run(["ps", "-o", "state=", "-p", str(pid)],
+                           capture_output=True, text=True).stdout.strip()
+    return bool(state) and not state.startswith("Z")
+
+
+def _spawn_decoy(code: str) -> int:
+    """Start a marker-bearing process that is **not** a child of this one.
+
+    A direct child would be excluded by the read half's scope for the wrong
+    reason and would be swept by `tests/conftest.py` at the end of the run. The
+    launcher exits immediately, so the decoy is reparented to init — which is
+    exactly what another checkout's supervisor looks like from this process.
+    """
+    # The decoy's own streams go to `/dev/null`. Inheriting the launcher's
+    # captured pipe would keep its write end open after the launcher exits, so
+    # the `subprocess.run` below would wait for EOF from a process written
+    # never to end and time out instead of returning a pid.
+    launcher = (
+        "import subprocess, sys\n"
+        f"child = subprocess.Popen([sys.executable, '-c', {code!r}],\n"
+        "    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,\n"
+        "    stdin=subprocess.DEVNULL)\n"
+        "print(child.pid, flush=True)\n"
+    )
+    started = subprocess.run([sys.executable, "-c", launcher],
+                             capture_output=True, text=True, timeout=30)
+    assert started.returncode == 0, f"the decoy launcher failed: {started.stderr}"
+    pid = int(started.stdout.strip())
+    deadline = time.time() + 10
+    while time.time() < deadline and not _is_running(pid):
+        time.sleep(0.01)
+    assert _is_running(pid), (
+        f"the decoy ({pid}) never came up, so any arm about it is vacuous")
+    return pid
+
+
+def _reap(pid: int) -> None:
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
+
+
+def _observer_verdict(tmp_path: Path) -> str:
+    """Run the real observer's hook here and return what it wrote.
+
+    The template is rendered and executed rather than reimplemented, so these
+    arms are about the text that actually ships to the nested run. Only
+    `pytest_runtest_logfinish` is called: `pytest_configure` monkeypatches
+    `SessionTable.resolve` for the whole process and belongs to the nested run
+    alone.
+    """
+    verdict = tmp_path / "observer-verdict.txt"
+    namespace: dict = {}
+    exec(_LEAK_OBSERVER.format(marker=_CRASH_CHILD_MARKER,
+                               verdict=str(verdict)), namespace)
+    namespace["pytest_runtest_logfinish"]("nodeid", "location")
+    return verdict.read_text()
+
+
+def test_the_leak_read_ignores_another_runs_supervisor(tmp_path) -> None:
+    """The read half's negative arm — the false red, planted.
+
+    Unscoped, this is the failure finding 039 reproduced 10 times in 10: a
+    marker-bearing process belonging to *somebody else's* checkout is reported
+    as this run's leaked child, and the arm above fails with
+    `assert 'ALIVE' == 'DEAD'` over a run that leaked nothing.
+    """
+    decoy = _spawn_decoy(_DECOY.format(marker=_CRASH_CHILD_MARKER))
+    try:
+        assert _observer_verdict(tmp_path) == "DEAD", (
+            f"the observer reported a live marker-bearing process ({decoy}) "
+            "that is not this process's child as this run's leaked child. "
+            "That is a red handed to whichever pass happens to be running "
+            "beside this one, for a leak that did not happen"
+        )
+    finally:
+        _reap(decoy)
+
+
+def test_the_leak_read_still_finds_its_own_supervisor(tmp_path) -> None:
+    """The read half's positive arm, **without which the one above is free.**
+
+    A scope tight enough to find nothing satisfies the arm above and reports
+    `DEAD` over a child that is still running — the vacuous green this
+    repository keeps having to undo. This requires the scan to still see its
+    own, so the two arms together pin the scope from both sides.
+    """
+    child = subprocess.Popen(
+        [sys.executable, "-c", _DECOY.format(marker=_CRASH_CHILD_MARKER)])
+    try:
+        deadline = time.time() + 10
+        while time.time() < deadline and not _is_running(child.pid):
+            time.sleep(0.01)
+        assert _is_running(child.pid), (
+            f"the child ({child.pid}) never came up, so this arm is vacuous")
+
+        assert _observer_verdict(tmp_path) == "ALIVE", (
+            f"the observer did not see its own live child ({child.pid}). The "
+            "scope excludes the thing it exists to find, so the nested run "
+            "would report DEAD over a supervisor that is still renewing a "
+            "lease — a pass over a mechanism that never ran"
+        )
+    finally:
+        child.kill()
+        child.wait(timeout=10)
+
+
+def test_the_kill_leaves_another_runs_supervisor_alone(tmp_path) -> None:
+    """The kill half's negative arm — **the destructive one.**
+
+    This is the half that does damage rather than reporting it. Unscoped, the
+    `finally` above SIGKILLs every marker-bearing process on the host, which
+    finding 039 measured at 10 decoys killed in 10 trials. The victim is
+    another pass's supervisor child, and that pass then sees a crash it did
+    not cause.
+    """
+    decoy = _spawn_decoy(_DECOY.format(marker=_CRASH_CHILD_MARKER))
+    try:
+        killed = _kill_children_matching(_CRASH_CHILD_MARKER, str(tmp_path))
+
+        assert not any(str(decoy) in line or "decoy" in line
+                       for line in killed), (
+            f"the sweep reported killing the decoy ({decoy}): {killed}")
+        time.sleep(0.10)
+        assert _is_running(decoy), (
+            f"the decoy ({decoy}) was SIGKILLed. It carries the marker and "
+            "nothing of this run, so it stands for a concurrent checkout's "
+            "supervisor — and killing it is this test reaching outside its "
+            "own run to end somebody else's process"
+        )
+    finally:
+        _reap(decoy)
+
+
+def test_the_kill_still_reaps_its_own_supervisor(tmp_path) -> None:
+    """The kill half's positive arm, and the reason the scope is a path.
+
+    Scoping the kill by parentage would pass the arm above and reap nothing
+    ever: by the time the `finally` runs the nested pytest has returned, so
+    what it left is an orphan. The scope is therefore the one thing the child
+    carries that is this run's — `tmp_path`, which its store sits under — and
+    this arm is what stops that from being a string nothing matches.
+    """
+    mine = _spawn_decoy(
+        f"import time  # SessionTable('{tmp_path}/basetemp/x/sessions.db')\n"
+        f"# {_CRASH_CHILD_MARKER}, 0.2)\n"
+        "while True: time.sleep(0.05)\n")
+    try:
+        killed = _kill_children_matching(_CRASH_CHILD_MARKER, str(tmp_path))
+
+        assert killed, (
+            "the sweep found nothing to kill against a process carrying both "
+            f"the marker and this run's tmp_path ({tmp_path}). The scope "
+            "matches nothing the child actually has, so the sweep is switched "
+            "off and says so nowhere"
+        )
+        deadline = time.time() + 10
+        while time.time() < deadline and _is_running(mine):
+            time.sleep(0.02)
+        assert not _is_running(mine), (
+            f"the sweep named {mine} and left it running, so the `finally` "
+            "describes a leak rather than ending one"
+        )
+    finally:
+        _reap(mine)
 
 
 # --- SC-024: the replay fixture, both arms --------------------------------
