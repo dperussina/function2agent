@@ -4095,9 +4095,14 @@ decision was taken.** Measured 2026-08-11 at `c9e42ad`, the identifier occurs **
 **70** files — the note's own hardening pass added sites after the note was written, and the note's
 sweep did not reach `.cursor/skills/`, which holds three more files. The structural counts it gave
 hold exactly: seventeen harness source files, twelve committed run directories, and a manifest in
-each naming the experiment inside a hashed record. **Of the 194, seventy-four are preserved** —
-every one of them under `harness/verifier-vs-judge/` — **and the remainder is live and has been
-renumbered**, apart from the nine that correctly name Stage D and are untouched by construction.
+each naming the experiment inside a hashed record. **Of the 194, sixty-three renumbered and one
+hundred and thirty-one did not.** Nine of the preserved sites are Stage D's own and were correct as
+written, so the decision preserved **122** sites it could have rewritten and rewrote **63**. The
+preserved sites divide three ways: **74** under `harness/verifier-vs-judge/`, whose bytes a verifying
+hash attests; **47** across the three findings and [`E8-VIABILITY.md`](./E8-VIABILITY.md), which are
+dated assessments carrying a masthead instead; and **1** in the namespace-collision section of
+[`tools/README.md`](../../tools/README.md), which is a dated measurement of the collision itself.
+**The renumber is the minority of the radius, and that is the shape a frozen-sites ruling produces.**
 
 **Where the line falls, and it is drawn mechanically rather than by taste.** A site is preserved if
 **a hash that currently verifies attests its bytes**, or if it is **a dated record whose subject is
