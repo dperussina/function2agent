@@ -64,6 +64,22 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     # was an alias. Every alias must be lossless.
     ("numeric-provenance", "README.md", 36, "0.8964"),
     ("numeric-provenance", "README.md", 36, "appears nowhere else"),
+    # The near-neighbour hint, which turns "this number is unsupported" into
+    # "this number is probably 0.8961 mistyped". Both plants below were already
+    # here and no needle read them, so a 2026-08-11 census found all three of
+    # `figures.digit_neighbours`'s decision branches removable with every row
+    # green — the two rows above stay satisfied by the hint's prefix. One row per
+    # loop: a single substitution, and a transposition of adjacent digits, which
+    # no substitution reaches. They also hold the wiring, which is two further
+    # branches that census found unheld: `_nearest`'s kind guard and the `if
+    # near` that appends the clause.
+    ("numeric-provenance", "README.md", 36, "nearest authoritative figure(s): 0.8961"),
+    (
+        "numeric-provenance",
+        "research/01-fixture-metrics.md",
+        6,
+        "nearest authoritative figure(s): 0.7681",
+    ),
     # Multipliers. The lookup for this kind cannot be exact — `2.9×` is
     # legitimately quoted from a finding writing `2.94×`, and `known-good`
     # carries that case — so all three of these are about *where* the looseness
