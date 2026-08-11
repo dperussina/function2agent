@@ -2,7 +2,7 @@
 
 Self-test. No provider, no network, $0.00.
 
-E8's harness shipped with 95 self-tests and its dry run found three defects in the
+E19's harness shipped with 95 self-tests and its dry run found three defects in the
 harness before any money was spent. That is the standard this file is written to.
 Four of the defects this suite now pins were found the same way here — an inline arm
 projected past the context window, a corpus size the config asserted and the

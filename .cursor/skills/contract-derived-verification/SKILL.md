@@ -88,9 +88,9 @@ Sources: `research/03-graph-and-loop-architecture.md` §3, §7.1, §11.1–11.3;
 > independent source* — rests on the shape of the failure c2 caught, not on the width of the
 > denominator it was clean over.
 >
-> **One design constraint this skill must now carry, and it is ~~the most transferable thing E8
-> produced~~ the most transferable thing E8 produced *about verifiers*** *(narrowed 2026-08-03, not
-> withdrawn — the most transferable thing E8 produced is not about verifiers at all: see
+> **One design constraint this skill must now carry, and it is ~~the most transferable thing E19
+> produced~~ the most transferable thing E19 produced *about verifiers*** *(narrowed 2026-08-03, not
+> withdrawn — the most transferable thing E19 produced is not about verifiers at all: see
 > [U-47](#freeze-the-questions-not-only-the-files) under Evaluation rules)*. The failure that matters
 > was **schema-conformant end to end** — the request was
 > schema-valid, the response was schema-valid, and the answer matched the application's own reported
@@ -270,7 +270,7 @@ Run this on every derived verifier, before it is emitted or relied on.
    [finding 018](../../../specs/001-discovery-validation/findings/018-verifier-false-alarm-attested-denominator.md)
    (**U-49**). A derived verifier that can return `unverifiable` has a third outcome, and a
    record it declined **cannot enter a false-alarm numerator** — so counting it in the denominator
-   tightens the interval while supplying no evidence. E8's headline figure carried 45 such records in
+   tightens the interval while supplying no evidence. E19's headline figure carried 45 such records in
    a denominator of 220: `0 of 220` is a true statement and the rate is 0 of 175 compared. Two rules
    follow, and the second is the one that hides inside a well-formed sentence.
    - **Print the compared count beside the denominator on every rate the verifier produces.** Where
@@ -279,14 +279,14 @@ Run this on every derived verifier, before it is emitted or relied on.
    - **A detection numerator and a false-alarm denominator drawn from different populations are two
      measurements, not one.** *"Detects every value error with zero false alarms across N clean
      positives"* reads as a single result over a single population and is not; restate both sides over
-     one population, or label each side explicitly. On E8's attested population both sides do share a
+     one population, or label each side explicitly. On E19's attested population both sides do share a
      denominator, and the detection count is 2 rather than 10 — because the failures the verifier
      exists to catch concentrate in exactly the records whose provenance is weakest, which is the
      general shape and not an accident of this corpus.
 
    ~~**Note the direction of the correction, because it decides how hard to fight for it.**~~
    **Amended 2026-08-04 — direction decides nothing, and reading it as a signal is the trap.** Neither
-   rule made E8's verifier look worse: the narrow attested rate is also zero. What they change is how
+   rule made E19's verifier look worse: the narrow attested rate is also zero. What they change is how
    much comparison the number represents and how many claims it licenses, and both are cheap to state
    at the time and expensive to retrofit once the figure has propagated. **What the struck sentence
    got wrong is treating the direction as informative.** A third instance of the same defect

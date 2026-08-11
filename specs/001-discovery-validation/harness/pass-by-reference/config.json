@@ -60,7 +60,7 @@
     "id": "claude-sonnet-4-5-20250929",
     "temperature": 0.0,
     "price_usd_per_mtok": { "input": 3.0, "output": 15.0 },
-    "_id_note": "The same dated snapshot and the same list prices already pinned by E8's config for its arm (b). Reusing it means the projection is comparable to a projection this corpus has already authorized and settled, and means no price in this harness was invented by the harness."
+    "_id_note": "The same dated snapshot and the same list prices already pinned by E19's config for its arm (b). Reusing it means the projection is comparable to a projection this corpus has already authorized and settled, and means no price in this harness was invented by the harness."
   },
 
   "cost": {
@@ -68,7 +68,7 @@
     "context_window_tokens": 200000,
     "cap_sensitivity": [2000, 8000, 32000],
     "_context_window_note": "The model's context window, recorded so the harness can refuse rather than discover. Any projected run whose accumulated input exceeds it is a run that cannot happen; cost.py checks every projected task against it and names the offenders instead of quietly projecting a price for an impossible transcript.",
-    "_bytes_per_token_note": "E8's divisor, reused so the two projections are on one basis. It is an estimate, not a tokenizer. The live accumulator bills measured usage off the API response and never the estimate; using an estimation divisor to bill would launder an estimate into an accounting figure.",
+    "_bytes_per_token_note": "E19's divisor, reused so the two projections are on one basis. It is an estimate, not a tokenizer. The live accumulator bills measured usage off the API response and never the estimate; using an estimation divisor to bill would launder an estimate into an accounting figure.",
     "contingency_policy": "one_stage1_retune",
     "_contingency_note": "The contingency is ONE STAGE 1, not a percentage. A percentage is a number about how nervous the author was; the retune is the one thing this design is actually likely to need, its price is known exactly, and turn_budget._retune_rule is the only thing it may be spent on. Anything else is a new authorization.",
     "arm_a_hard_ceiling_usd": 16.0,

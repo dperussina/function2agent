@@ -1,6 +1,6 @@
 """dry-run-verdict — a run that called no model may not publish an outcome.
 
-The failure this catches, stated as it actually happened. Experiment E8 was
+The failure this catches, stated as it actually happened. Experiment E19 was
 built, self-tested and dry-run at $0.00 against `judge.StubJudge`, a
 deterministic hash of the trace key. Twelve run directories were committed.
 Every one of them carried a decision table whose first row read

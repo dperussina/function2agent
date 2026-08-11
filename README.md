@@ -261,7 +261,7 @@ against Principle IV rather than inheriting it (OD-07, C-15). One synthesis
 constraint is licensed and worth more than the headline: **tools that return answers
 help; tools that return records do not.**
 
-**Decided by building the E8 harness and then declining to run it (OD-14,
+**Decided by building the E19 harness and then declining to run it (OD-14,
 2026-08-03).** The verifier's *mechanism* is demonstrated and was not fitted — the
 postcondition arm detects all 9 numeric value errors including all 3 sub-1%
 near-misses in the eligible population, ~~with **zero false alarms across 220 clean
@@ -362,7 +362,7 @@ one measurable error shape, a side-effecting endpoint reached by a safe method.
    layer of the stack has been shown to enforce one (U-30) — **instrumentation for the
    verifier's margin against a shadow judge on real traffic (OD-14), and a verifier
    specified as recomputation against an *independent source* rather than as
-   schema-conformance checking, which is the one design constraint E8 produced at
+   schema-conformance checking, which is the one design constraint E19 produced at
    zero cost**.
 3. **Decide what a schema-free catalogue is allowed to promise.** E15 returned:
    taking the schema away costs nothing in path-level accuracy, but no schema-free

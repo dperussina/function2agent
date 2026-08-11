@@ -324,9 +324,9 @@ The analysed set is 18 primary tasks × 3 replicates = **54 pairs**.
 ## 10. Cost — arm A, arithmetic shown
 
 Model `anthropic/claude-sonnet-4-5-20250929` at **$3.00/M input, $15.00/M output** —
-the same dated snapshot and the same list prices already pinned by E8's config, so no
+the same dated snapshot and the same list prices already pinned by E19's config, so no
 price in this harness was invented by it. Token estimation divides measured bytes by
-**4.0 bytes/token**, E8's divisor, reused so the two projections sit on one basis.
+**4.0 bytes/token**, E19's divisor, reused so the two projections sit on one basis.
 
 Bulk sizes are **measured**, not assumed: `measure.py` generates the corpus, runs
 every plan step and counts the bytes, at $0.00.

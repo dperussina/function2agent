@@ -700,7 +700,7 @@ successor feature rather than stretching this one. It runs only if E7 clears.
 >
 > **What this section defines** is the Stage-D synthesis experiment described below: three arms on the ceiling test's battery, deferred to feature `002`, never built and never run. The `clears` edge out of the gate in the ladder above reaches *this* experiment, and the Stage D row of the [budget table](#budget-and-the-feature-split) prices *this* experiment.
 >
-> **What it does not define** is the verifier-vs-judge experiment, which carries the same identifier from OD-14 onward and is a different experiment entirely: a contract-derived verifier against a general-purpose LLM judge, with its own harness directory, its own preregistration, its own viability document at [`E8-VIABILITY.md`](./E8-VIABILITY.md), and findings 015, 017 and 018. That one was built, self-tested, dry-run and deliberately not executed. **It is closed. This one is deferred. They are different states of different experiments, and the closure recorded under OD-14 does not close this section.**
+> **What it does not define** is the verifier-vs-judge experiment, which is **E19** and is a different experiment entirely: a contract-derived verifier against a general-purpose LLM judge, with its own harness directory, its own preregistration, its own viability document at [`E8-VIABILITY.md`](./E8-VIABILITY.md) — filed under the name that experiment carried until 2026-08-11 — and findings 015, 017 and 018. That one was built, self-tested, dry-run and deliberately not executed. **It is closed. This one is deferred. They are different states of different experiments, and the closure recorded under OD-14 does not close this section.** *(Until 2026-08-11 both experiments carried this identifier; **OD-31** assigned `E8` to this section and `E19` to the other.)*
 
 **Question.** Do tools generated from the code graph, with an LLM authoring the semantic layer,
 recover the advantage that hand-written ideal tools demonstrated?
@@ -1459,7 +1459,7 @@ FR-012, and the D-16 line in §7); `research/README.md`; and
 > firing above 2 overturns in 40. **That pass was never performed.** No verdict in the harness has
 > been human-checked, and OD-14 does not discharge it — OD-14 declines to *run the comparison*, which
 > is a different act from declining to *audit the oracle*. The oracle is the same artifact E7's
-> per-family verdicts rest on, so the audit has value with or without E8. It is **deferred, not
+> per-family verdicts rest on, so the audit has value with or without E19. It is **deferred, not
 > superseded**, and it belongs to whoever next touches that corpus.
 >
 > **Read the strike precisely.** OD-11 was not a mistake. It was the correct call on the information
@@ -1790,12 +1790,25 @@ next artifact again.
 
 **The decision.** The **marginal detection of a contract-derived verifier over a general-purpose LLM
 judge is UNMEASURED**, and will remain so until it is measured against real traffic in production.
-~~Experiment **E8** is closed~~ **The verifier-vs-judge experiment is closed** as a null on *power*, not on **H2**: it does not report that the verifier
+~~Experiment **E8** is closed~~ **The verifier-vs-judge experiment — `E19` since 2026-08-11 — is closed** as a null on *power*, not on **H2**: it does not report that the verifier
 lacks a margin, it reports that this corpus cannot tell. The production specification proceeds.
-*(Named rather than numbered, 2026-08-10: the identifier struck here also names the Stage-D
-synthesis experiment, which this decision does not close — see the collision note below.)*
+*(Named rather than numbered, 2026-08-10: the identifier struck here also named the Stage-D
+synthesis experiment, which this decision does not close. **Numbered again 2026-08-11 under OD-31**,
+which assigned `E8` to Stage D and `E19` to this experiment — see the superseded collision note below.)*
 
-> ## ⚠️ THE IDENTIFIER CLOSED ABOVE NAMES A SECOND, DIFFERENT EXPERIMENT IN THIS SAME DOCUMENT
+> ## ✅ RESOLVED — THE IDENTIFIER CLOSED ABOVE ONCE NAMED A SECOND, DIFFERENT EXPERIMENT IN THIS SAME DOCUMENT
+>
+> **SUPERSEDED 2026-08-11 by [OD-31](#od-31--the-verifier-vs-judge-experiment-is-renumbered-e19-and-the-stage-d-synthesis-experiment-keeps-e8-the-renumber-reaches-live-prose-only-and-the-committed-run-directories-the-fingerprinted-harness-files-and-the-dated-assessments-keep-the-name-they-were-recorded-under),
+> which answered the question this note put to an owner. **Stage D keeps `E8`; the verifier-vs-judge
+> experiment is `E19`.** The note is kept rather than deleted because it records a real state the
+> corpus was in for one day, and because its option table is the measurement the decision was taken
+> on. **Two things in it are now out of date and are corrected rather than rewritten**: its radius
+> figures for option A are stale — the true figure at `c9e42ad` is **194** occurrences across **70**
+> files, not `128` across `52`, the note's sweep having missed `.cursor/skills/` and its own
+> hardening pass having added sites afterwards — and its contiguity objection to `E19` applied to
+> option **B** only, since the experiment that actually took the number is not a ladder node.
+>
+> **Read everything below as the state on 2026-08-10.**
 >
 > **Opened 2026-08-10. Nothing is renumbered, and the decision is the owner's.** Two experiments in
 > this plan carry the identifier `E8`, and a reader tracing the experiment ladder arrives at a
@@ -1834,9 +1847,9 @@ synthesis experiment, which this decision does not close — see the collision n
 > identifier in this corpus is ambiguous by meaning while resolving correctly by construction, and
 > that is the state this notice exists to make visible rather than to resolve.
 
-**Why the corpus cannot answer it.** E8 was pre-registered, built, self-tested and dry-run at
+**Why the corpus cannot answer it.** E19 was pre-registered, built, self-tested and dry-run at
 **$0.00** — no judge call was ever billed — and stopped before its first paid call, for four reasons
-that are structural rather than budgetary. They are set out at [`E8-VIABILITY.md`](./E8-VIABILITY.md)
+that are structural rather than budgetary. They are set out at [`E8-VIABILITY.md`](./E8-VIABILITY.md) — filed under the experiment's former name —
 and summarised here only so this decision is legible on its own:
 
 1. **The surviving discriminative sample is two traces.** Restricting the frozen 246 traces to those
@@ -1950,7 +1963,7 @@ decision — only its measurement is relocated.**
 > collapses them into "the verifier is validated" has overstated the claim. Both readings have
 > already been made in this corpus.
 
-**One thing E8 produced at zero cost that is worth more than the number it was going to print, and
+**One thing E19 produced at zero cost that is worth more than the number it was going to print, and
 it is a design constraint rather than a result.** The failure that matters is the one where the
 request was schema-conformant, the response was schema-conformant, and the answer matched the
 application's own reported total. **A schema-derived verifier cannot see that class of failure at
@@ -1964,7 +1977,7 @@ unmeasured comparison.
 **What this decision does not license.**
 - **Not** a claim that the verifier beats a judge. That is the unmeasured quantity, and OD-14 exists
   to name it as unmeasured rather than to resolve it.
-- **Not** a claim that E8 refutes **H2**. It is a null on power. A future measurement is unprejudiced
+- **Not** a claim that E19 refutes **H2**. It is a null on power. A future measurement is unprejudiced
   by this.
 - **Not** relief from the pre-registered gate. The gate — *≥ 10 pp → headline feature; < 10 pp → CI
   detail; judge AUROC < 0.5 → constitutional ban on LLM judges in the success path* — travels
@@ -1983,7 +1996,7 @@ that consolidated statement lives at
 box, current state, next actions); `research/14-architecture-synthesis.md` (TL;DR 18 amended and 21
 added, §6 "What to do Monday", P-07, P-09, D-21); `research/11-validation-plan.md` §8 Phase 2 row;
 `research/README.md`; and `.cursor/skills/contract-derived-verification/SKILL.md` with the roster
-note in `.cursor/skills/README.md`. **A finding on E8's structural results is being written
+note in `.cursor/skills/README.md`. **A finding on E19's structural results is being written
 concurrently and is referenced here as forthcoming; this decision cites no identifier from it.**
 
 ### OD-15 — ADK is dropped for v1; we own the loop, the lifecycle and the serving surface directly
@@ -4078,11 +4091,13 @@ convention applied once more.
 
 **The radius that was in front of the owner, and the radius that was actually there.** The collision
 note priced option A at `128` occurrences across `52` files. **That figure was stale when this
-decision was taken.** Measured 2026-08-11 at `c9e42ad`, the identifier occurs **187** times across
+decision was taken.** Measured 2026-08-11 at `c9e42ad`, the identifier occurs **194** times across
 **70** files — the note's own hardening pass added sites after the note was written, and the note's
 sweep did not reach `.cursor/skills/`, which holds three more files. The structural counts it gave
 hold exactly: seventeen harness source files, twelve committed run directories, and a manifest in
-each naming the experiment inside a hashed record.
+each naming the experiment inside a hashed record. **Of the 194, seventy-four are preserved** —
+every one of them under `harness/verifier-vs-judge/` — **and the remainder is live and has been
+renumbered**, apart from the nine that correctly name Stage D and are untouched by construction.
 
 **Where the line falls, and it is drawn mechanically rather than by taste.** A site is preserved if
 **a hash that currently verifies attests its bytes**, or if it is **a dated record whose subject is
@@ -4097,7 +4112,8 @@ still matches.
 
 | Disposition | What it covers | Why |
 |---|---|---|
-| **Renumbered** | live prose in this document, `VERDICT.md`, the root `README.md`, four research documents, the harness index, the checklist, three project skills, two files under `tools/`, and the verifier harness's own `README.md` | a reader uses these to understand the present state, nothing attests their bytes, and an ambiguous identifier in them is the defect this entry closes |
+| **Renumbered** | live prose in this document, `VERDICT.md`, the root `README.md`, four research documents, the harness index, three project skills, two files under `tools/`, three cross-references in the `pass-by-reference` harness, and the verifier harness's own `README.md` | a reader uses these to understand the present state, nothing attests their bytes, and an ambiguous identifier in them is the defect this entry closes |
+| **Left standing as a dated measurement** | the namespace-collision section of [`tools/README.md`](../../tools/README.md) | its entire subject is an identifier that named two things. Renumbering it would turn a true measurement into a false one, since after this entry neither identifier names two things. It gains a resolution notice and keeps its text |
 | **Preserved with a dated masthead** | findings 015, 017 and 018, and [`E8-VIABILITY.md`](./E8-VIABILITY.md) | dated authority documents. The house convention for an authority document is strike-and-supersede rather than overwrite, and a strike inside a heading corrupts its anchor, so each gains a masthead naming `E19` and no sentence beneath it is rewritten |
 | **Untouched** | every file under `harness/verifier-vs-judge/` except its `README.md` | fifteen are fingerprinted, twelve manifests and ten run reports are dated records of runs that happened under the old name, the adjudication tree is a completed blind study, and `NEUTRALISATION.md` is a dated correction record |
 

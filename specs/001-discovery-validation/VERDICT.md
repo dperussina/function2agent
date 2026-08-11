@@ -24,7 +24,7 @@ findings, ~~**$24.82 ($24.73 + $0.09 + $0.0003)**~~ **$35.17 ($35.0817 + $0.09 +
 so the total is mixed-basis and is quoted to the cent it can support. **Restated 2026-08-03 —
 superseded, not wrong: $24.82 was correct for the four E7 sessions this document covered, and two
 more ran afterwards.** The two bases and the six-cent gap between them are set out in §6. No single
-finding reports the total, because it spans several — the components are the citable figures. E8 cost
+finding reports the total, because it spans several — the components are the citable figures. E19 cost
 **$0.00** and adds nothing: it was dry-run only, and every `spent_usd` in its committed results is
 `0.0`.)*
 **What this document is**: the adjudication of [`spec.md`](./spec.md) against what was measured. It
@@ -161,7 +161,7 @@ Stated before the adjudication tables, because everything below inherits it.
 > |---|---|---|---|
 > | **Drift detection** | everything. No detection rate, no false-alarm rate, no latency to detect, on either of its two clocks | scheduled for [11](../../research/11-validation-plan.md) §7 **Phase 5** (H6); **that phase never ran**, and E13 never had a deployment-drift arm. It was promoted from fourth of four to half the product **by subtraction**, when the other half of the product was cut | O-04; `plan.md` OD-09 |
 > | **The write gate's effect-classification precision** | the precision of the verb→tier mapping, against anything | never scheduled and never sampled. **This is why v1 is read-only**: because the classifier has never been scored, the interception point denies everything it cannot resolve as a read, and U-43 became the *exit condition* from read-only rather than a risk being carried | **D-22**, **U-43**; `plan.md` OD-10 |
-> | **The verifier's margin over an LLM judge** | whether a general-purpose LLM judge catches the same failures. The verifier's *mechanism* is demonstrated — see below — but its *marginal* value is not | scheduled for §8 **Phase 2**, which never ran; then pre-registered as E8, built, self-tested and dry-run at **$0.00**, then **not executed** because its corpus cannot answer the question at any price this feature would pay | `plan.md` **OD-14**; forthcoming finding on E8's structural results |
+> | **The verifier's margin over an LLM judge** | whether a general-purpose LLM judge catches the same failures. The verifier's *mechanism* is demonstrated — see below — but its *marginal* value is not | scheduled for §8 **Phase 2**, which never ran; then pre-registered as E19 — `E8` until 2026-08-11, OD-31 — built, self-tested and dry-run at **$0.00**, then **not executed** because its corpus cannot answer the question at any price this feature would pay | `plan.md` **OD-14**; forthcoming finding on E19's structural results |
 >
 > **One of the three is sharper than it looks and one is softer, and the difference matters.**
 >
@@ -641,7 +641,7 @@ full battery was never spent and OD-07 declines it.
 > **The whole-feature figure adds the only two other experiments that cost anything:** E5 at
 > **≈ $0.09** ([finding 003](./findings/003-runtime-provider-agnosticism.md)) and E6 at **$0.0003**
 > ([finding 006](./findings/006-graph-loop-primitives.md)). $35.081672 + $0.09 + $0.0003 =
-> **$35.171972 → ≈ $35.17**. Every other experiment in the table above is $0.00, and **E8 is $0.00
+> **$35.171972 → ≈ $35.17**. Every other experiment in the table above is $0.00, and **E19 is $0.00
 > too** — it was dry-run only and every `spent_usd` in `harness/verifier-vs-judge/results/*` is `0.0`.
 >
 > **The total is mixed-basis and says so.** E5's and E6's figures were read from provider usage after

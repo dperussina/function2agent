@@ -106,7 +106,7 @@
       {
         "name": "superiority",
         "pattern": "\\b(?:materially|significantly|substantially|clearly)\\s+(?:better|worse|higher|lower|stronger|more\\s+accurate)\\b",
-        "why": "a comparative verdict; E8's own target for the verifier is the phrase 'materially better'"
+        "why": "a comparative verdict; E19's own target for the verifier is the phrase 'materially better'"
       },
       {
         "name": "significance",
@@ -151,6 +151,7 @@
       "glob": "research/[0-9]*.md"
     },
     {
+      "_comment": "This rule read nothing from its creation until 2026-08-11, established by replaying it over all 266 revisions of the two documents in its default scope rather than by reading its history: it matched in none of them. The site it has now is `README.md`'s repository-map cell, which states the corpus-wide total across both `findings/` directories — the scope this glob actually spans, and the reason the claim belongs in a corpus-wide document rather than in either feature's index. `files` is left at the default rather than widened, and the two candidate widenings were measured before the choice. Whole-corpus `files` fires 23 times, on prose of the shape `Three findings converge on X`, with zero real defects — the same disposition as the `unconstructib*` candidate under *What this cannot catch*, declined on numbers. Widening `files` to `specs/*/findings/README.md` fires once and permanently: that index's own H1 reads `Feature 002 findings`, and `002` parses as the count `2` against an actual of 37, so the only ways to take that widening are rewriting a correct title or growing the pattern. Both scope changes cost a false positive and buy no site the repository map does not already give.",
       "name": "findings",
       "pattern": "(\\b[0-9]+|\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\\s+findings\\s*(?:documents?)?\\b",
       "glob": "specs/*/findings/[0-9]*.md"

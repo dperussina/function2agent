@@ -160,7 +160,7 @@ permission to continue.
 
 **Rows 2 and 3 are well-formed and *neither branch of either ever evaluated* — note this, because it
 is a failure mode pre-registration does not protect against.** Added 2026-08-03. The experiment that
-would have read them, E8, was pre-registered, built, self-tested and dry-run at **$0.00**, and then
+would have read them, E19, was pre-registered, built, self-tested and dry-run at **$0.00**, and then
 deliberately **not executed** by owner decision (`plan.md` OD-14). Both rows read a quantity defined
 over judge verdicts, **no judge verdict exists anywhere**, and three independent blockers — each
 sufficient alone, **all computable before the first call** — made the corpus unable to answer at any
