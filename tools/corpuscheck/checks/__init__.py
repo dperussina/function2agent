@@ -7,6 +7,7 @@ the tool needs to change.
 
 from . import (  # noqa: F401
     catalog,
+    count_vs_range,
     crossrefs,
     definition_counts,
     dry_run_verdict,

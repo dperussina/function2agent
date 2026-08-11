@@ -99,21 +99,110 @@ import re
 from ..corpus import Corpus
 from ..figures import inside_spans, struck_spans
 from ..registry import check
-from ..report import WARNING, Violation
+from ..report import ERROR, WARNING, Violation
 
-_WORDS = {
+_UNITS = {
     "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
     "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
     "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18,
-    "nineteen": 19, "twenty": 20, "twenty-one": 21, "twenty-two": 22,
+    "nineteen": 19,
+}
+
+_TENS = {
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+    "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
 }
 
 
+def _vocabulary() -> dict[str, int]:
+    words = dict(_UNITS)
+    for tens_word, tens in _TENS.items():
+        words[tens_word] = tens
+        for unit_word, unit in _UNITS.items():
+            if unit < 10:
+                words[f"{tens_word}-{unit_word}"] = tens + unit
+    return words
+
+
+#: Every English number word below one hundred, generated rather than typed.
+#: The bound is the grammar's and not this corpus's: at one hundred the token
+#: shape changes from a single hyphenated compound to a phrase with a scale word
+#: and an "and", which is a different parse rather than a longer table. Picking
+#: the bound where the grammar changes is what stops it being re-picked each time
+#: a register grows.
+_WORDS = _vocabulary()
+
+#: The largest count a claim may state and still be verified — ninety-nine.
+CEILING = max(_WORDS.values())
+
+
 def _to_int(token: str) -> int | None:
-    t = token.strip().lower().replace(",", "")
+    t = " ".join(token.strip().lower().replace(",", "").split())
     if t.isdigit():
         return int(t)
     return _WORDS.get(t)
+
+
+#: A spelled count at or above `CEILING` + 1, matched so that it can be refused
+#: out loud. Without it the pattern simply fails and the site disappears: no
+#: match, no parse, no announcement, and a report that reads exactly like a
+#: verified count. Matching the shape and refusing to resolve it is what makes
+#: the ceiling audible.
+_ABOVE_CEILING = (
+    r"(?:[a-z]+(?:-[a-z]+)?\s+)?(?:hundred|thousand|million|billion)"
+    r"(?:\s+and\s+[a-z]+(?:-[a-z]+)?)?"
+)
+
+#: The one spelled-number alternation every count rule shares, longest word
+#: first so `twenty-one` wins over `twenty`. A rule writes `{{COUNT}}` in its
+#: pattern and gets this; before that placeholder existed each rule carried its
+#: own alternation and each stopped somewhere different — at ten, at twelve, at
+#: twenty, at twenty-two — so the ceiling that bound was whichever rule was
+#: being read rather than the one this module documents.
+COUNT = (
+    r"\b(?:"
+    + "|".join(
+        [r"[0-9][0-9,]*", _ABOVE_CEILING]
+        + sorted(_WORDS, key=len, reverse=True)
+    )
+    + r")"
+)
+
+_PLACEHOLDER = "{{COUNT}}"
+
+
+def expand_pattern(pattern: str) -> str:
+    """Substitute the shared count alternation into a configured pattern."""
+    return pattern.replace(_PLACEHOLDER, COUNT)
+
+
+def unparseable(check_name: str, relpath: str, lineno: int, literal: str,
+                token: str, rule_name: str, col: int | None = None) -> Violation:
+    """The violation raised where a count matched but did not resolve.
+
+    An `error`, on the split this repository already applies. A mismatch is a
+    `warning` because it can be a deliberate historical claim and the strike
+    convention is its escape — and the strike test runs before this one, so a
+    count deliberately left in history never arrives here. An unresolved count
+    has no such reading: the document stated a number, the check did not read
+    it, and the run reports success. That is the same false green as a blind
+    extractor returning `0`, which is already an error here, and it is the shape
+    this checker exists to catch rather than to produce.
+    """
+    return Violation(
+        check=check_name,
+        severity=ERROR,
+        path=relpath,
+        line=lineno,
+        col=col,
+        found=f"{literal!r}: the count {token!r} is above the "
+        f"{CEILING} this parser resolves",
+        expected=f"a count at or below {CEILING}, or the vocabulary in "
+        "tools/corpuscheck/checks/inventory.py extended past it",
+        hint=f"rule {rule_name}; this is the instrument's limit and not the "
+        "document's defect — the claim was read and left unverified, which "
+        "reports identically to a verified one unless it is said out loud",
+    )
 
 
 def _count(root, glob: str, glob_exclude: str | None) -> int:
@@ -157,7 +246,7 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
                 )
             continue
         scope = rule.get("files", default_files)
-        rx = re.compile(rule["pattern"], re.IGNORECASE)
+        rx = re.compile(expand_pattern(rule["pattern"]), re.IGNORECASE)
         sites = 0
         for doc in corpus.markdown():
             if not any(fnmatch.fnmatch(doc.relpath, p) for p in scope):
@@ -167,15 +256,29 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
                     continue
                 struck = struck_spans(masked)
                 for m in rx.finditer(masked):
-                    claimed = _to_int(m.group(1))
-                    if claimed is None:
-                        continue
+                    # Struck first, and the order is load-bearing. The parse can
+                    # now refuse a count out loud, and the corpus supersedes by
+                    # striking rather than deleting — `plan.md`'s OD header
+                    # carries fourteen struck counts on one line — so refusing
+                    # before reading struck-ness would announce against the
+                    # convention at every superseded figure in the corpus.
                     if inside_spans(struck, m.start(), m.end()):
                         continue
                     # Counted before the comparison: a claim that agrees with the
                     # filesystem is the case this check exists to keep true, and
-                    # it is evidence the rule is reading something.
+                    # it is evidence the rule is reading something. A claim that
+                    # did not resolve is evidence of the same thing.
                     sites += 1
+                    claimed = _to_int(m.group(1))
+                    if claimed is None:
+                        out.append(
+                            unparseable(
+                                "inventory-count", doc.relpath, lineno,
+                                m.group(0).strip(), m.group(1).strip(),
+                                rule["name"], col=m.start() + 1,
+                            )
+                        )
+                        continue
                     if claimed == actual:
                         continue
                     out.append(

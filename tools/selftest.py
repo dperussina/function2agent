@@ -182,6 +182,12 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     # from the outside.
     ("definition-count", "specs/001-fixture/tasks.md", 17, "no FR definition was found"),
     ("definition-count", "specs/001-fixture/tasks.md", 17, "means 'not found', not 'none exist'"),
+    # A register's stated size against the range quoted beside it. Two rows,
+    # because the pair is what the check reads and either half alone is already
+    # guarded: `register-range` reads the range against the register and passes
+    # here, and `definition-count` has no rule for owner decisions at all.
+    ("count-versus-range", "specs/001-fixture/plan.md", 3, "three owner decisions"),
+    ("count-versus-range", "specs/001-fixture/plan.md", 3, "the number of OD entries in OD-01 through OD-04"),
     # The lifecycle against the taxonomy, one row per branch of the check so
     # that removing any branch takes exactly one row away. The two markings are
     # the important pair: both are checked in the *forbidding* direction, and a
@@ -401,7 +407,15 @@ GEN_EXPECTED: list[tuple[str, str, int, str, str, str]] = [
 #: Sites in known-good that must be found and must be reported clean. The
 #: hedged `(~57 lines)` is here because a `~` is accepted in the text and
 #: ignored in the arithmetic; `(3 sections)` must not be found at all.
-GEN_GOOD_SITES = 3
+#:
+#: Moved 3 → 5 on 2026-08-11, read off this guard's own message rather than
+#: computed from a baseline and a delta. The two new ones are in
+#: `specs/001-fixture/plan.md`, which arrived with the `count-versus-range`
+#: unit: that check needs a fixture where a count and a range *agree* and a set
+#: where each naive misreading would disagree, and two of those ranges are
+#: whole-register claims this generator owns. Both are found and both are
+#: clean, which is the state this arm asserts.
+GEN_GOOD_SITES = 5
 
 _DIGITS = re.compile(r"\d+")
 
@@ -699,7 +713,7 @@ def _lifecycle_floor_selftest(verbose: bool) -> list[str]:
 # What is recomputed is how many of them claim that provenance. `RENDERED_IDS`
 # below is the `EXPECTED_PROOFS` pattern at sample scale: the count was prose
 # reading "the two marked RENDERED" while six carried the label, stale by four
-# and read by none of the eighteen corpus checks, because this is Python and
+# and read by none of the nineteen corpus checks, because this is Python and
 # they read markdown.
 SLUG_ROLES = [
     # (heading, expected slug, what the case pins)

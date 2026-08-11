@@ -74,7 +74,21 @@ so the header contradicted itself two lines apart across two entries. Thirty-one
 because the register is **contiguous** — the headings run OD-01 to OD-31 with no gap and no
 duplicate, so the bound and the count are the same number, and a gap would have made *thirty*
 correct. `register-range` cannot see the pairing, and the direction here is the opposite of the one
-it guards: the range is current and the narrative count is stale.)*
+it guards: the range is current and the narrative count is stale. **The pairing is read as of
+2026-08-11 by `count-versus-range`**, which compares this count against this range and would have
+reported *thirty* against `OD-01 through OD-31` on the day it was live; it is the only check that
+looks at both halves.)*
+
+*(**The count in the sentence below was resolved 2026-08-11 by counting its own members, and it did
+not move.** Three passes read it as arithmetic in doubt, because the anchor was inferred from the
+strike series and three readings of that series gave three numbers. The sentence names its members,
+so no anchor has to be inferred: the enumeration runs **OD-10 through OD-29, contiguous, twenty
+entries**, and `twenty` is what the sentence says. OD-01 appears inside it only as a back-reference
+in OD-15's entry and is not a member. What is stale is the **enumeration**, not the count — OD-30 and
+OD-31 are absent from it, and both are also the two entries at which line 16's count stopped moving,
+so one mechanism left two marks. Extending the list means writing what those two decisions say, which
+is an authoring act rather than an arithmetic one, and it is **left for the owner**. Advancing the
+count alone to twenty-two would make it disagree with the members it introduces.)*
 ~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ **The last twenty
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by

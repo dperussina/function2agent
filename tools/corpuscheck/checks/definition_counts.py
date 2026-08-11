@@ -110,7 +110,7 @@ from ..figures import inside_spans, struck_spans
 from ..registry import check
 from ..report import ERROR, WARNING, Violation
 from .identifiers import _namespaces, definitions_in
-from .inventory import _to_int
+from .inventory import _to_int, expand_pattern, unparseable
 
 #: The first two path components of a document under `specs/`, which is where
 #: its feature's specification sits.
@@ -134,12 +134,16 @@ def _target_of(relpath: str, target_name: str) -> str | None:
 
 
 def _sites(doc, rx: re.Pattern):
-    """Yield `(lineno, claimed, literal)` for each live claim on this document.
+    """Yield `(lineno, claimed, literal, token)` for each live claim here.
 
     Scanned over a two-line window, because the phrase is long enough that the
     corpus's hard wrap splits it and the split site is a real one. A match is
     owned by the line its *number* starts on, so scanning every line as the head
     of its own window never double-counts.
+
+    `claimed` is `None` where the count did not resolve, and that case is
+    yielded rather than dropped. Dropping it made an unreadable count and a
+    correct one produce the same report, which is the failure this check is for.
     """
     masked = doc.masked_lines
     n = len(masked)
@@ -168,10 +172,12 @@ def _sites(doc, rx: re.Pattern):
                 struck = window_struck
             if inside_spans(struck, m.start(), m.end()):
                 continue
-            claimed = _to_int(m.group(1))
-            if claimed is None:
-                continue
-            yield i + 1, claimed, " ".join(m.group(0).split())
+            yield (
+                i + 1,
+                _to_int(m.group(1)),
+                " ".join(m.group(0).split()),
+                " ".join(m.group(1).split()),
+            )
 
 
 @check(
@@ -205,7 +211,9 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
                 "is not in identifier_namespaces",
             )
             continue
-        compiled.append((rule, re.compile(rule["pattern"], re.IGNORECASE)))
+        compiled.append(
+            (rule, re.compile(expand_pattern(rule["pattern"]), re.IGNORECASE))
+        )
 
     seen = {rule["name"]: 0 for rule, _ in compiled}
     out: list[Violation] = []
@@ -231,7 +239,7 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
         for rule, rx in compiled:
             ns = rule["namespace"]
             what = rule.get("what", config["identifier_namespaces"][ns]["what"])
-            for lineno, claimed, literal in _sites(doc, rx):
+            for lineno, claimed, literal, token in _sites(doc, rx):
                 seen[rule["name"]] += 1
                 actual = len(defined.get(ns, set()))
 
@@ -256,6 +264,19 @@ def run(corpus: Corpus, ctx: dict) -> list[Violation]:
                             f"{ns} is defined by a bold-lead bullet, a heading, or a "
                             f"register table's first cell ({what}), so this usually "
                             "means the definitions changed shape or the document moved",
+                        )
+                    )
+                    continue
+
+                # The second floor, beneath the first and for the same reason.
+                # A count the parser cannot resolve is a claim this check read
+                # and did not verify, and a bare `continue` here reported it as
+                # indistinguishable from a count that agreed.
+                if claimed is None:
+                    out.append(
+                        unparseable(
+                            "definition-count", doc.relpath, lineno,
+                            literal, token, rule["name"],
                         )
                     )
                     continue
