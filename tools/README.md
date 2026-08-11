@@ -250,10 +250,20 @@ across the two units, being the 59 under `results/` plus the 10 under
 to its subject.** Merged under one pin, a correction to a run directory would
 produce one new digest, and the human moving that pin would also ratify —
 silently, in the same digest — anything that had moved under the adjudication tree
-in the same window. Split, the pins are independent, and `--reattest` reports
+in the same window. Split, the pins are independent, ~~and `--reattest` reports
 `the pinned digest already matches; nothing to ratify` for the tree that did not
-move, so the ratifier is told which body of evidence changed rather than having to
-work it out. The cost is the honest one: two pins and two ratifications. The
+move,~~ so the ratifier is told which body of evidence changed rather than having
+to work it out. **Corrected 2026-08-11: the struck clause named a line that could
+not fire on a plain rebuild and no longer carries those words. The mechanism is
+set out below in this entry and is not restated here, so that there is one
+account of it to keep current rather than two.** What a rebuild prints for the
+tree that did *not* move is `the attested tree has not moved since the ratified
+attestation`, compared on `tree_sha256`; the tree that *did* move prints **no
+corresponding line at all**, so the changed body of evidence is identified by
+that line's absence rather than by a sentence of its own. Pin independence
+predates the repair and is untouched by it, and it discriminates only when the
+correction names its `--unit` — a bare `--reattest` moves both digests, as the
+paragraph below on `--unit` sets out. The cost is the honest one: two pins and two ratifications. The
 merge is in any case unavailable mechanically, since `attest.measure` walks one
 tree recursively and unfiltered on purpose — a filter is a place for a file to
 hide — so a single unit spanning both would have to be rooted at
@@ -317,10 +327,21 @@ one:
     python3 tools/check_corpus.py --reattest "why"   # writes the record
     # then a human moves attestation_sha256 in corpuscheck/config.json
 
-`--reattest` prints the digest to ratify and **never writes the pin**. Nothing in
-this repository calls `attest.build`, and `neutralise_decision.py` — the tool that
+`--reattest` prints the digest to ratify and **never writes the pin**. ~~Nothing
+in this repository calls `attest.build`,~~ **Corrected 2026-08-11: it has 17 call
+sites, counted at `ebff21a` — one in `cli.reattest` itself, 14 in
+`tests/unit/test_attest_build.py` and 2 in
+`tests/unit/test_preserved_evidence_scope.py`. The scoped claim is the one that
+was meant, and it is the one that carries the two-act argument: no tool *other
+than* `--reattest` calls it, so nothing that edits these artifacts can refresh
+their attestation. This sentence's ancestor in
+`tools/corpuscheck/checks/preserved_evidence.py` reads *"Nothing **else** in the
+repository calls `attest.build`"*, and dropping that `else` made the claim false
+about `cli.py` first of all — the tests are a further counterexample rather than
+the only one.** And `neutralise_decision.py` — the tool that
 legitimately rewrites these artifacts, and which touches `analysis.json` and
-`report.md` and no manifest at all — does not import it. A rebuild alone leaves
+`report.md` and no manifest at all — does not import it: re-read at `ebff21a`,
+its imports are `argparse`, `json`, `re`, `sys` and `pathlib` and nothing else. A rebuild alone leaves
 the gate **red**, reported as `unratified` rather than as an edit, so an agent
 that refreshes without ratifying leaves a failing gate rather than no trace.
 
