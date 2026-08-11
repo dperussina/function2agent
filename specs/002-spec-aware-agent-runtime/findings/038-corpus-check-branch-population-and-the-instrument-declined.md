@@ -257,9 +257,22 @@ unmutated self and every branch then scores held.
 > **Cost, because §5's estimate is the one a later pass will reach for.** **338** `selftest.py` runs
 > and **145 seconds**, and a second full sweep returned identical verdicts for all 279 branches.
 > §5's *"about 100 seconds"* is the right order and slightly low: most branches cost one run, the
-> fallback forms add 59, and the three hanging arms spend 36 seconds on the cap. This is minutes. The
+> fallback forms add 59, and ~~the three hanging arms spend 36 seconds on the cap~~ **the hanging
+> arms spend 60 seconds on the cap — corrected 2026-08-11, and the count was five rather than
+> three**. This is minutes. The
 > figure sometimes quoted against a 279-branch re-score — several hours — is the **gate-set** cost of
 > §2.2.1's every-instrument sweep and does not describe a `selftest.py`-only re-sweep.
+>
+> **The corrected figure, measured 2026-08-11 by the committed sweep.** The paragraph above
+> counts *branches* where it needed to count *arms*, and the sentence before it supplies the
+> arithmetic it contradicts: `corpus.py:161` hangs under **all three** forms and `corpus.py:159`
+> under **two**, which is **five** hanging arms and **60 seconds**, not three and 36. The
+> record at [`harness/branch-hold-sweep/results/`](../harness/branch-hold-sweep/results/) carries
+> all five with their measured durations. **The total is what shows the error was in the
+> breakdown and not in the 145**: 338 runs less five capped arms leaves 333 that cost about a
+> quarter-second each, so 60 seconds of cap reaches 145 and 36 would leave the sweep finishing in
+> about 120. The **338** and the **59** are both exactly right and are untouched, as is §5's
+> *"about 100 seconds"*, which is a dated estimate over a different reading and stays standing.
 >
 > **`__pycache__` is a sharper hazard than the note above states, and this run measured it.** The
 > note is right that a stale `.pyc` scores branches held, but the mechanism deserves recording,
