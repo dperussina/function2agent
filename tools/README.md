@@ -263,12 +263,12 @@ corresponding line at all**, so the changed body of evidence is identified by
 that line's absence rather than by a sentence of its own. Pin independence
 predates the repair and is untouched by it, and it discriminates only when the
 correction names its `--unit` — a bare `--reattest` moves both digests, as the
-paragraph below on `--unit` sets out. The cost is the honest one: two pins and two ratifications. The
-merge is in any case unavailable mechanically, since `attest.measure` walks one
-tree recursively and unfiltered on purpose — a filter is a place for a file to
-hide — so a single unit spanning both would have to be rooted at
-`verifier-vs-judge/` and would sweep in the live harness that legitimately
-changes.
+paragraph below on `--unit` sets out. The cost is the honest one: two pins and
+two ratifications. The merge is in any case unavailable mechanically, since
+`attest.measure` walks one tree recursively and unfiltered on purpose — a filter
+is a place for a file to hide — so a single unit spanning both would have to be
+rooted at `verifier-vs-judge/` and would sweep in the live harness that
+legitimately changes.
 
 **Which root a unit belongs to is declared, and the two earlier keyings were each
 defeated by the thing they keyed on going missing.** One list of units spans this
@@ -338,12 +338,13 @@ their attestation. This sentence's ancestor in
 `tools/corpuscheck/checks/preserved_evidence.py` reads *"Nothing **else** in the
 repository calls `attest.build`"*, and dropping that `else` made the claim false
 about `cli.py` first of all — the tests are a further counterexample rather than
-the only one.** And `neutralise_decision.py` — the tool that
-legitimately rewrites these artifacts, and which touches `analysis.json` and
-`report.md` and no manifest at all — does not import it: re-read at `ebff21a`,
-its imports are `argparse`, `json`, `re`, `sys` and `pathlib` and nothing else. A rebuild alone leaves
-the gate **red**, reported as `unratified` rather than as an edit, so an agent
-that refreshes without ratifying leaves a failing gate rather than no trace.
+the only one.** And `neutralise_decision.py` — the tool that legitimately
+rewrites these artifacts, and which touches `analysis.json` and `report.md` and
+no manifest at all — does not import it: re-read at `ebff21a`, its imports are
+`argparse`, `json`, `re`, `sys` and `pathlib` and nothing else. A rebuild alone
+leaves the gate **red**, reported as `unratified` rather than as an edit, so an
+agent that refreshes without ratifying leaves a failing gate rather than no
+trace.
 
 **`--reattest` could not report that nothing had changed, because the field it
 compared moves on every rebuild.** Recorded as the defect's history rather than as
