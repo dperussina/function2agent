@@ -612,8 +612,8 @@ confirmed against `_RANGE` and `_is_whole_register_claim` on 2026-08-03:
 
 - **Two or more different registers on one line.** `in_list` is
   `len({namespace}) >= 2`, so `D-01 … D-22, C-01 … C-15` makes *every* range on
-  that line a site — including a third, deliberately-partial `OD-01 through
-  OD-14` sitting in the same sentence for a different purpose.
+  that line a site — including a third, deliberately-partial
+  `OD-01 through OD-14` sitting in the same sentence for a different purpose.
 - **A single range introduced by punctuation.** A range starting at entry 01
   whose preceding text ends in `(`, `[`, `:`, an em dash or an en dash — after
   `*~_` and spaces are stripped — is a site on its own. A provenance sentence of
@@ -732,6 +732,23 @@ a rule reads. Wiring it therefore means landing 46 repairs first, and the
 question is whether a hazard whose entire measured cost is one corrupted worked
 example in this file is worth that. **Recorded rather than closed on the
 measuring pass's own authority.**
+
+**Declined by the product owner on 2026-08-11: no rule is to be wired for this
+condition, and the ground is not the one the neighbouring declines rest on.**
+The 46 are **true instances**. Each really is a span the masker cannot see, so
+a rule would be right every time it fired, and CommonMark joins the lines of a
+paragraph, so each already renders as its author meant it to. The wiring
+therefore buys no change in what any document says, against 46 repairs to reach
+green, and it is that ratio rather than any doubt about the condition that
+closes it.
+
+**Name that ground whenever this decline is cited.** The declines standing
+nearest it were all settled on measured **false positives** — the
+duplicate-definition guard on false alarms it could not shed, the
+[`unconstructib*` candidate](#what-this-cannot-catch) on firings that were
+false at every window width tried, and `_RANGE`'s relaxation on the same
+footing. A reader who carries that ground across will conclude this condition
+is not real. It is real, it is counted, and it is left alone on cost.
 
 ### Finding the next free register number — and the two searches that get it wrong
 
@@ -1562,6 +1579,79 @@ Two defences, and the first is free:
 - **verify by presence, not absence** — `git status --short` on a tree you expect to be *dirty*, or a
   grep for a string only your own work contains.
 
+### A stale `.pyc` makes two mutation arms one measurement, and restoring the source cannot see it
+
+**Read this before running a mutation sweep whose edits are all the same length.** Established by the
+branch-hold sweep at `0d8b2e4`, whose code and long-form record are committed under
+`specs/002-spec-aware-agent-runtime/harness/branch-hold-sweep/`. It sits beside the inversion above
+for one reason: the integrity check the harness was trusting is *structurally* unable to see the
+fault, so the run reads clean exactly where it is wrong.
+
+CPython validates a cached `.pyc` against its source's *(mtime truncated to whole seconds, size)*. A
+sweep whose mutation inserts a **constant number of characters** — the `invert` arm wraps a condition
+in `not (` and `)`, the same six for every branch in the module — makes every variant of that module
+**identical in size**. Two arms on one module inside the same second are then indistinguishable to
+that validator, and the stale state it serves is **the previous arm's mutation** rather than the
+unmutated module, so the sweep scores one branch on another branch's bytecode. What it produced was
+not an error but a confidently wrong verdict set, on a first run.
+
+**Restoration cannot catch it, and that is the property worth carrying forward.** A harness whose
+integrity check is "the files are back" verifies the *source*, and under this fault the source is
+correct at every single point in the run — only the cache is stale. Restoration has no opinion about
+bytecode at all. That is the empty diff above in a second mechanism: a check satisfied by the very
+state it exists to detect.
+
+**Purging between arms races the arms; forbidding the write does not.** A purge and the next
+interpreter's write are not ordered with respect to each other. So the purge is the *reassuring* half
+of a pair whose other half does the work: `threshold_probe.py` deletes every `__pycache__` under
+`tools/` **and** runs each child with `PYTHONDONTWRITEBYTECODE=1` and `-B`, and it is the second and
+third of those that make its battery sound. Reading the purge as the defence is how the
+recommendation travelled.
+
+**The transferable rule, whose precondition is checkable rather than argued.** Forbid the write — in
+the child's environment, on its command line, and with the cache prefix left unset so neither can be
+routed around. Then **assert that none was written**, before the first arm and after the last, which
+is what turns "we forbade it" into "none was written". Then **void the run** if one was. Not purge and
+retry: once two arms may have shared a cache, no arm's verdict is known good, so a retry has nothing
+to preserve.
+
+The edit-and-restore form of the same fault is under [the stale-`.pyc` trap](#the-stale-pyc-trap),
+and finding 038 §6 carries a superseded paragraph recommending the purge — superseded by the sweep's
+own record rather than by this entry.
+
+### A process scan must select on this run, and prove it still finds its own
+
+**Asked for by the pass that closed the class, at `5fa07bb`, so the next one is caught at review.**
+Two machine-wide process-table scans in `tests/integration/test_lease_revocation.py` were scoped
+there. The class is closed in this tree: the only consumers of a machine-wide process listing were
+`tests/conftest.py` and those two sites, all three are scoped now, and every other `ps` call in
+`tests/` is `-p <pid>`.
+
+**The obvious form of the rule is wrong, and it is wrong twice.** Finding 039 prescribed scoping to
+*descendants of the current process, as `conftest.py` already does*, and neither half holds.
+`conftest.py` scopes to **direct children** — it compares each row's ppid against `os.getpid()` — not
+to descendants. And at the destructive site the child is an **orphan reparented to init**: the nested
+run's own sweep reaps it before that process exits, so a descendant walk there finds nothing, kills
+nothing and says nothing. That is a **vacuous green**, and it is worse than the noisy red it replaced.
+What had to carry the scope instead was a path unique to the run — the calling test's own `tmp_path`,
+which the child carries in its argv without being asked to, because its store lives under a
+`--basetemp` inside it.
+
+**So the rule is not "scope by ancestry."** A scan that selects processes by a string must select on
+something unique to **this run**. Ancestry is one such thing and a good one while it lasts, but it is
+unavailable the moment the child is orphaned, and orphaning is the normal case for anything worth
+sweeping up after. A path, a nonce or an argv marker minted by this run are the others.
+
+**And any such scope needs a positive control proving the scan still finds its own.** A scope tight
+enough to find nothing satisfies the negative arm by itself, so "nothing of ours was left running"
+and "the scan is broken" are the same output. Both scopes here carry an arm that fails when the scan
+comes back empty, which is the only thing separating those two readings.
+
+**The sharpest measured consequence, because it states the defect better than the mechanism does.**
+Since the nested run's sweep reaps the child first, there was nothing of this run's for the unscoped
+kill to find — so every one of the ten decoy kills finding 039 recorded was **pure collateral**. The
+scan's entire observed effect was on other passes' processes.
+
 ### Reading an instrument is not measuring it — plant the case instead
 
 **A claim about what one of these checks *would* do is worth nothing until something has done it.**
@@ -2165,11 +2255,17 @@ independent authorings across two files, and was **not** verified against a rend
 **It is verified against a renderer as of 2026-08-10 and the underscore is kept — see below.** The
 one warning was `register-range` firing at line 375 on `OD-01 through OD-14`, this file's own worked
 example of the sentence shape that rule exists to catch. **Its mechanism was the masking and not the
-self-reference, and that is why it turned out to cost nothing.** The example already sat inside a
-backtick code span, which is the documented escape; the span opened on one source line and closed on
-the next, and `build_masked` masks line by line, so `_INLINE_CODE_RE` — which needs its opening and
-closing runs in one string — matched neither half and the span was never recognised as a span at
-all. Reflowing it onto a single line masks it and clears the warning, at no semantic cost. Nothing
+self-reference.** ~~That is why it turned out to cost nothing.~~ **Corrected 2026-08-11: it does not
+cost nothing.** The price, and the further price the documented remedy exacts on top of it, is
+[recorded once under nothing detects the split
+itself](#nothing-detects-the-split-itself-and-the-corpus-is-safe-by-coincidence) and deliberately not
+restated here. *(The refutation sat in that subsection while this sentence went on asserting the
+opposite at its own site, which is the shape that cost this repository a day over `--reattest`.)*
+The example already sat inside a backtick code span, which is the documented escape; the span opened
+on one source line and closed on the next, and `build_masked` masks line by line, so
+`_INLINE_CODE_RE` — which needs its opening and closing runs in one string — matched neither half and
+the span was never recognised as a span at all. Reflowing it onto a single line masks it and clears
+the warning, at no semantic cost. Nothing
 about the containment tests in `figures.inside_spans` is involved; those govern struck spans, and a
 partially-contained *code* span is not a containment failure but a span the masker cannot see.
 The two `tests` warnings are
@@ -3005,6 +3101,13 @@ trustworthy:
 
 Do not remove these because the runs look fast enough without them.
 
+**The first of the three is the weakest, and a later measurement says so.** A
+purge races the write it is trying to pre-empt, so the two below it are what
+make this battery sound. The mutation-sweep form of the same fault, where a
+purge between arms is actively misleading, is under [a stale `.pyc` makes two
+mutation arms one
+measurement](#a-stale-pyc-makes-two-mutation-arms-one-measurement-and-restoring-the-source-cannot-see-it).
+
 ### One bound, two call sites
 
 The per-unit window read as unpinnable until the probe was taught that a single
@@ -3493,6 +3596,28 @@ python3 tools/check_corpus.py || {
 Warnings do not fail the build. Add `--warnings-as-errors` once the current
 warning set is cleared, or the hook will be bypassed on the first commit that
 touches an unrelated file.
+
+**The corpus reading is tree-dependent, so quote the tree with it.** Taken at
+`5fa07bb` on one commit, in both trees, minutes apart:
+
+| tree | reading |
+| --- | --- |
+| the shared checkout | `0 error(s), 0 warning(s)`, **no skip** |
+| a clean detached worktree | `0 error(s), 0 warning(s)`, **one skip** |
+
+The skip is emitted by the check **`inventory-count`**, and what it names is the
+*rule* **`vendored-repos`**, as out of scope in this tree. There is no check
+called `vendored-repos`, and calling it one is how this reading gets misfiled.
+The rule reads `examples/`, which is git-ignored, so a fresh worktree does not
+carry it and the rule's declared precondition fails; the shared checkout does
+carry it beside the corpus, the precondition is met, the rule reads a live claim
+and announces nothing. Full disposition under [the `vendored-repos`
+disposition](#vendored-repos-is-out-of-scope-in-ci-by-construction-and-says-so-rather-than-reporting-an-incident).
+
+**So the one-skip figure is a detached-worktree baseline and not *the*
+baseline.** A pass gating in the shared tree and comparing against it sees a
+one-skip discrepancy that is not one, and a pass gating in a fresh worktree
+against a shared-tree number sees the same thing mirrored. Say which tree.
 
 ## The census — `instruments.py`
 
