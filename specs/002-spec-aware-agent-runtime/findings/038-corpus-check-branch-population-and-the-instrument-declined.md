@@ -164,13 +164,19 @@ The verdict for each branch is one of three, and the third is not a rounding of 
 > already meant. **A crash is not a detection**: the instrument did not catch the branch's removal,
 > it became unable to answer.
 >
-> **This repairs the definition and no verdict, and no branch's verdict was re-derived under it.**
+> ~~**This repairs the definition and no verdict, and no branch's verdict was re-derived under it.**
 > The repaired test differs from the old one only where a neutralisation raises, and a raise is what
 > put a branch in the unscorable class rather than in `held` — so every branch this document records
 > as held was scored on a run that reported a verdict, and every figure in §2 stands exactly as
-> taken. Re-stating 279 verdicts against a repaired definition without re-running them would publish
-> a measurement never taken, which is the defect §8 records this document's own harness committing
-> one level up. What the repair changes is what a *later* sweep may conclude, and the count in §5.
+> taken.~~ **Superseded 2026-08-11 — the argument was right and is no longer the grounds.** All 279
+> verdicts have since been re-derived under the repaired definition and not one moved: **of the 222
+> branches recorded `held`, none was scored on a form that raised**. The reasoning struck above was
+> sound, but it argued from the form precedence §1 states rather than from a run, and the box after
+> §1's method notes replaces it with the run. Re-stating 279 verdicts against a repaired definition
+> without re-running them would publish a measurement never taken, which is the defect §8 records
+> this document's own harness committing one level up — **which is why the sweep was re-run rather
+> than the digits restated**. What the repair changes for a *later* sweep, and the count in §5, are
+> unaffected either way.
 
 **The edit was verified against the recorded text before it was made.** Each span carries the source
 of its own test, and the neutralisation asserted the bytes at the span matched that text before
@@ -179,6 +185,67 @@ that was never touched, which would produce a number in the confident direction.
 
 Between edits `__pycache__` was purged, because a stale `.pyc` makes a mutated module run as its
 unmutated self and every branch then scores held.
+
+> ### The re-sweep the repaired definition implied: all 279 re-derived, and none of the 222 held on a raise
+>
+> **Run 2026-08-11.** The box above repaired the `held` test from an exit code to a reported verdict
+> and then argued, from §1's form precedence, that no recorded verdict could move under it. This is
+> that argument run instead of made. It was worth running rather than accepting, because the
+> precedence is a property of how the sweep chose a form and **the sweep is not in this repository** —
+> it was never committed, so §1's prose is the only surviving record of it, and prose is not a
+> classifier.
+>
+> **The number, which is the point of the exercise.** Of the **222** branches recorded `held`, **none
+> was scored on a form that raised**. It is zero, and it is recorded as a reading rather than left as
+> a corollary of the paragraph above.
+>
+> **The tree and the instrument.** A clean detached worktree at **`aaa329b`**, the commit the 279
+> verdicts are over — deliberately *not* `HEAD`, because §9's caveat has since come true: `HEAD`
+> carries a nineteenth check module and four grown ones, so its population is a different one and
+> sweeping it would answer a different question. The population was re-derived by `ast` from
+> `git show aaa329b:<path>`, never from a working tree, and it reproduces §2.1's and §2.2's branch
+> counts **exactly, in all nineteen modules** — which is what establishes that this is the same
+> population and not merely a similar one. The instrument is `tools/selftest.py` alone, the same one
+> §2.1 and §2.2 were taken with, so nothing here adds an instrument and §2.2.1's separation of the
+> one re-scored module from the rest is untouched.
+>
+> **It reproduces the record, and that is what makes the zero informative rather than circular.**
+> Scoring every branch by §1's stated precedence — inversion first, a forcing form only where the
+> previous one raised or hung — returns **222 held, 55 unheld, 2 unscorable**, with no per-module
+> disagreement anywhere in the nineteen. **The test could have failed.** Scoring the same arms by the
+> rule the repair rejected, under which the first non-zero exit wins, returns **234 held, 44 unheld,
+> 1 unscorable**: **36** branches would be scored on a raising form, and **12** of them would change
+> verdict — eleven from `unheld` to `held`, and `ratio_arithmetic.py:105` from `unscorable` to
+> `held`. The two rules are nowhere near observationally equivalent on this population, so a sweep
+> that had taken the first non-zero exit could not have produced §2.3's figures. The reproduction is
+> therefore evidence about the classifier that produced them.
+>
+> **A hang is scored as itself.** Two branches have a hanging arm — `corpus.py:161` under all three
+> forms and `corpus.py:159` under two — and each is recorded `timeout`, never folded into a non-zero
+> exit. Every arm was capped at **12 seconds** against a clean `selftest.py` measured at **0.95
+> seconds** in the same worktree.
+>
+> **Cost, because §5's estimate is the one a later pass will reach for.** **338** `selftest.py` runs
+> and **145 seconds**, and a second full sweep returned identical verdicts for all 279 branches.
+> §5's *"about 100 seconds"* is the right order and slightly low: most branches cost one run, the
+> fallback forms add 59, and the three hanging arms spend 36 seconds on the cap. This is minutes. The
+> figure sometimes quoted against a 279-branch re-score — several hours — is the **gate-set** cost of
+> §2.2.1's every-instrument sweep and does not describe a `selftest.py`-only re-sweep.
+>
+> **`__pycache__` is a sharper hazard than the note above states, and this run measured it.** The
+> note is right that a stale `.pyc` scores branches held, but the mechanism deserves recording,
+> because the first attempt at this re-sweep hit it and returned **235 held, 43 unheld, 1
+> unscorable** — a wrong answer in the confident direction that would have moved every figure in §2.
+> Python validates a cached `.pyc` against the source's *(mtime truncated to whole seconds, size)*,
+> and **every `invert` mutation of a module has the same length as every other**, so two arms on one
+> module inside the same second are indistinguishable to that validator. The stale state is then the
+> **previous arm's mutation** rather than the unmutated module: measured directly, `ratio_arithmetic`
+> `#007` ran `#006`'s bytecode and reported a verdict at a branch that raises. Purging between edits
+> is necessary and not sufficient, since the purge races the arms; the arms must also be forbidden to
+> write bytecode at all. **What caught it was the reproduction check** — the contaminated run failed
+> to match §2.1's and §2.2's per-module counts. Nothing in the tree would have caught it, and the
+> restoration check could not: the source file is correct at every point, and only the cache is
+> stale.
 
 ### 1.1 The prior question, and how the blindness was established
 
@@ -254,7 +321,11 @@ are per file:
 | `toc.py` | 11 | 1 |
 | **TOTAL** | **203** | **32** |
 
-**170 held, 32 unheld, 1 unscorable**, so the unheld rate over `checks/` **against `tools/selftest.py`** is **32 of 203 (15.8%)**. No other instrument was run against this population.
+**170 held, 32 unheld, 1 unscorable**, so the unheld rate over `checks/` **against
+`tools/selftest.py`** is **32 of 203 (15.8%)**. No other instrument was run against this population.
+**Every verdict in this table was taken under the superseded `held` definition and re-derived
+unchanged under the repaired one** on 2026-08-11 — §1's second box records that re-sweep, and states
+which definition each figure here rests on.
 
 **Five checks hold every branch they have**: `catalog-line-count`, `lifecycle-taxonomy`,
 `findings-numbering`, `preserved-evidence` and `sum-arithmetic`. That is worth stating beside the
@@ -272,7 +343,9 @@ call into adds **76 (12 + 20 + 37 + 7)** branches:
 
 Every verdict in the table is `tools/selftest.py`'s, and `figures.py`'s row is the one row a later
 pass re-scored against more instruments — see §2.2.1, which leaves this row standing and adds the
-other readings beside it rather than replacing it.
+other readings beside it rather than replacing it. As in §2.1, every verdict here was **taken under
+the superseded `held` definition and re-derived unchanged under the repaired one**, per §1's second
+box.
 
 | module | branches | held | unheld | unscorable | instrument |
 |---|---|---|---|---|---|
@@ -361,7 +434,9 @@ re-scoring would report about them is unmeasured, and §7 says which direction i
 ### 2.3 The combined figure, and the denominator that has to be stated
 
 Combining the two populations gives **279 (203 + 76)** branches: **222 held, 55 unheld, 2
-unscorable**.
+unscorable**. **All three were taken against `tools/selftest.py` under the superseded `held`
+definition, and all three were re-derived unchanged under the repaired one** on 2026-08-11; §1's
+second box records the re-sweep and reports that none of the 222 was scored on a raising form.
 
 > **The two unscorable branches are a property of the three forms tried, not of the branches, and
 > one of them has since been scored.** `corpus.py:161` is the inner backtick-run scanner's
@@ -384,7 +459,10 @@ excluding the two unscorable branches because they carry no verdict either way, 
 **55 of 277 (19.9%)**. Both are written out here because the two figures differ by a rounding step
 and a sentence quoting one of them without its operands is unresolvable — the difference is whether
 the two unscorable branches sit in the denominator, and nothing about the phrase "the unheld rate"
-says which.
+says which. **Both rates carry the same definition as their operands**: taken under the superseded
+`held` definition and re-derived unchanged under the repaired one, against `tools/selftest.py`. A
+rate is only as dated as the verdicts under it, and §1's box repaired a definition after these were
+first written down, so which definition they rest on is stated here rather than inferred.
 
 ### 2.4 The three-way split of the 32
 
