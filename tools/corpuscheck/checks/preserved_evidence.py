@@ -88,6 +88,15 @@ repository calls `attest.build`, and in particular `neutralise_decision.py` does
 not: a tool that edited the evidence and refreshed its own attestation would
 reproduce, one layer down, exactly the vacuity this check exists to close.
 
+There is one state in which a rebuild alone leaves this check green, and it is not
+a hole in the split: a rebuild that reproduces a ratified record **byte for byte**
+pins nothing new, because the bytes a human signed off are the bytes on disk
+again. It is reachable when the witness was corrupt or absent over an unmoved
+tree — `attest.build` restarts `generation` at 1 there — and `--reattest` names
+the state of the record it replaced rather than reporting the match alone, which
+until 2026-08-11 was the only thing it said. `attest.NO_BASELINE` and
+`tests/unit/test_attest_build.py` hold that.
+
 ## What it does not claim
 
 That the attested bytes are *correct*. It claims only that they are the bytes a

@@ -51,7 +51,12 @@ several. Two trees under this harness are preserved evidence on the same ruling 
 each has its own attestation and its own pin. Merged, a correction to either would
 produce one digest, and ratifying it would silently ratify whatever had moved in
 the other tree in the same window; split, `cli.reattest` reports the unmoved unit
-as already matching, so the ratifier is told which body of evidence changed. The
+as unmoved — its `tree_sha256` is unchanged since the ratified attestation, which
+is the one field a rebuild does not move — so the ratifier is told which body of
+evidence changed. Until 2026-08-11 this sentence read "reports the unmoved unit as
+already matching", which described an arm comparing the *rebuilt bytes* to the pin
+rather than the tree to its baseline; see *What the count restarting hides* below
+for what that arm could and could not reach. The
 merge is also unavailable mechanically: `measure` walks one tree, recursively and
 unfiltered, so one unit over both would have to be rooted at the harness directory
 and would cover the live code beside them.
@@ -87,6 +92,32 @@ and a fixture unit that legitimately belongs to another root — and the merge m
 a mis-typed `attestation` silent. Units now declare a `root.marker`, so the
 branch is reachable, `known-bad` holds a unit that fires it, and a witness that
 should be present and is not is reported instead of filtered away.
+
+## What the count restarting hides, and the field that holds still
+
+`build` sets `generation` to the stored generation plus one, and falls back to 1
+when the record it is replacing cannot be read. `generation` is **inside** the
+digested document, so a rebuild always moves the digest — which is what made
+`cli.reattest`'s reassurance arm, a comparison of the rebuilt bytes against the
+pin, unreachable on a plain rebuild and reachable on a corrupted one. Measured on
+2026-08-11 over `verifier-vs-judge-results`: a plain rebuild with the pinned
+record's own reason and date produced generation 2 and a digest unequal to the
+pin; the same rebuild with the record first made unreadable produced generation 1
+and **the pinned digest exactly**. A deleted witness and a record that decodes
+without a usable `generation` reach it the same way, and a readable predecessor
+sitting one generation below the pin reaches it legitimately.
+
+So the arm answered "are the rebuilt bytes the pinned bytes" and was read as "did
+the tree move". Those are the same question only when nothing else in the document
+moves, and three things always do. The field that **does** hold still across a
+rebuild of an unmoved tree is `tree_sha256`, which is a function of the file set
+alone — so that is what `predecessor` reads out of the record being replaced, and
+only out of a record whose own bytes are the pinned ones and whose summary
+reconciles against its entries. A baseline taken from a record nobody ratified
+would report agreement with an unratified intermediate; a baseline taken from a
+record whose summary does not cover its entries would report agreement with
+arithmetic. Both are refused by returning no baseline at all, which is the state
+in which the caller must say so rather than reassure.
 
 ## What this cannot do
 
@@ -254,6 +285,78 @@ def verify(root: Path, unit: dict) -> list[tuple[str, str, str, str]]:
     return out
 
 
+#: The predecessor states in which `build` silently restarts `generation` at 1.
+#: That restart is the whole route by which a rebuild can reproduce the pinned
+#: bytes: `generation` is inside the digested document, so a rebuild over a record
+#: that could be read always moves the digest, and a rebuild over one that could
+#: not may land exactly on a generation-1 pin.
+RESTARTS_THE_COUNT = ("absent", "unreadable", "uncounted")
+
+#: The predecessor states in which no baseline can be read out of the record a
+#: rebuild is about to replace, and in which the tool must therefore report the
+#: state rather than report agreement. `inconsistent` is here and not above: its
+#: `generation` reads fine and its `tree_sha256` is not a function of the entries
+#: beside it, so it restarts nothing and still supplies no baseline. Nothing in
+#: this package may report "nothing to ratify" while the predecessor is in one of
+#: these states; `tests/unit/test_attest_build.py` asserts that over all four, and
+#: a later change that reintroduces the silence has to delete the assertion first.
+NO_BASELINE = RESTARTS_THE_COUNT + ("inconsistent",)
+
+
+def predecessor(root: Path, unit: dict) -> tuple[str, str | None]:
+    """`(state, baseline)` for the record a rebuild is about to replace.
+
+    Called **before** `build`, which overwrites the record this reads. `state` is
+    one of:
+
+      absent        no file at `attestation`. `generation` restarts at 1.
+      unreadable    bytes that do not decode into an object carrying the fields
+                    `verify` needs. `generation` restarts at 1.
+      uncounted     decodes, and carries no `generation` that reads as an int, so
+                    the count restarts at 1 while the record itself looks fine.
+      inconsistent  decodes and counts, and its own summary does not cover its
+                    entries — the `malformed` state, whose `tree_sha256` is not a
+                    baseline because it is not a function of the entries beside it.
+      unratified    a usable record whose own bytes are not the pinned digest.
+                    Somebody rebuilt and nobody ratified; its tree digest is a
+                    real measurement of a tree, and not of the ratified tree.
+      ratified      a usable record whose own bytes are the pinned digest.
+
+    `baseline` is the predecessor's `tree_sha256`, recomputed from its entries
+    rather than read off its summary, and is non-`None` in the `ratified` state
+    only. That is the only state in which "the attested tree has not moved" is a
+    statement about the tree a human signed off.
+    """
+    att_path = root / unit["attestation"]
+    if not att_path.is_file():
+        return "absent", None
+
+    raw = att_path.read_bytes()
+    try:
+        doc = json.loads(raw.decode("utf-8"))
+        files: dict[str, str] = doc["files"]
+        recorded_tree = doc["tree_sha256"]
+        recorded_count = doc["file_count"]
+        computed = tree_digest(files)
+    except (UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError,
+            AttributeError):
+        return "unreadable", None
+
+    try:
+        int(doc["generation"])
+    except (KeyError, TypeError, ValueError):
+        # `build` reads a missing or unparseable generation as 0 and writes 1, so
+        # this is the count restarting without the record looking damaged.
+        return "uncounted", None
+
+    if computed != recorded_tree or len(files) != recorded_count:
+        return "inconsistent", None
+
+    if sha256_bytes(raw) != unit.get("attestation_sha256"):
+        return "unratified", None
+    return "ratified", computed
+
+
 def build(root: Path, unit: dict, *, reason: str, attested_at: str) -> tuple[str, str]:
     """Write the attestation for `unit` and return `(text, its own digest)`.
 
@@ -270,7 +373,17 @@ def build(root: Path, unit: dict, *, reason: str, attested_at: str) -> tuple[str
     if att_path.is_file():
         try:
             generation = int(load(att_path).get("generation", 0)) + 1
-        except (json.JSONDecodeError, TypeError, ValueError):
+        except (json.JSONDecodeError, TypeError, ValueError, AttributeError):
+            # `AttributeError` was added on 2026-08-11. A witness holding valid
+            # JSON that is not an object — `[1,2,3]`, `null`, a bare number, a
+            # quoted string — reached `.get` on a non-mapping and raised out of
+            # `build` instead of restarting the count; all four shapes were
+            # measured raising before the change. That is the state this fallback
+            # exists for, since a writer that cannot run against a corrupted
+            # record leaves a hand edit as the only route out of one. Undecodable
+            # bytes were already covered: `UnicodeDecodeError` is a `ValueError`,
+            # as is `json.JSONDecodeError`, so the two named here are the same
+            # arm twice and are kept for the reader.
             generation = 1
 
     text = document(

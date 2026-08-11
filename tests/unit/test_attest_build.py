@@ -23,6 +23,19 @@ The strongest arm is `test_a_rebuild_does_not_clear_the_gate_on_its_own`. It is 
 two-act rule stated mechanically rather than in prose, and it fails if `build` ever
 grows the one line that would make the whole check vacuous.
 
+**What 2026-08-11 added, and what it left alone.** The section *The reassurance*
+holds `cli.reattest`'s reporting after the repair to its one reassurance arm, which
+was reachable only from a record that could not be read. None of the four
+properties this file landed with moved: `build` still reports a digest it does not
+record, a rebuild still leaves the unit `unratified`, a rebuild under a live plant
+still reclassifies rather than clears, and `generation` still counts rebuilds with
+an unreadable predecessor restarting the count at 1. The repair changed what is
+*reported* about a rebuild and nothing about what a rebuild *does*, so the fourth
+arm is unedited and carries a note saying so.
+`test_reporting_an_unmoved_tree_does_not_ratify_it` is the two-act rule asserted
+again at the new report, in the one state where a tool might be tempted to treat a
+provably unmoved tree as needing no pin.
+
 **Why unit tests and not fixture rows.** A fixture cannot reach this code at all.
 `check_corpus.py` calls `verify` and never `build`, so no state of a fixture corpus
 exercises the writer. Worse, `DEFAULT_CONFIG` resolves beside the module, so both
@@ -39,6 +52,7 @@ import io
 import json
 import sys
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import date
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
@@ -154,6 +168,12 @@ def test_an_unreadable_predecessor_restarts_the_count_rather_than_failing(tmp_pa
 
     The alternative is a writer that cannot run against a corrupted record, which
     would leave the only route out of a corrupted witness a hand edit.
+
+    **This behaviour did not change on 2026-08-11 and this arm is unedited.** What
+    changed is that the restart is now reported: it is the whole route by which a
+    rebuild can reproduce the pinned bytes, since `generation` is inside the
+    digested document, and `cli.reattest` used to say nothing about it. The arms
+    under *The reassurance* below are about the reporting and not about the count.
     """
     _evidence(tmp_path, "evidence/records")
     unit = _unit("u", tree="evidence/records", witness="witness.json")
@@ -162,6 +182,29 @@ def test_an_unreadable_predecessor_restarts_the_count_rather_than_failing(tmp_pa
 
     text, _digest = attest.build(tmp_path, unit, reason="r", attested_at=STAMP)
     assert json.loads(text)["generation"] == 1
+
+
+def test_a_witness_that_is_not_an_object_restarts_the_count_rather_than_raising(
+    tmp_path,
+) -> None:
+    """Valid JSON that is not a mapping, which used to raise out of `build`.
+
+    `build` read the stored generation with `load(att_path).get(...)` under an
+    `except (json.JSONDecodeError, TypeError, ValueError)`, and a witness holding
+    `[1, 2, 3]`, `null`, `17` or a quoted string decodes fine and then reaches
+    `.get` on a non-mapping. All four were measured raising `AttributeError` out
+    of `--reattest` on 2026-08-11 — the state the arm above exists to prevent,
+    reached by a corruption that happens to be well-formed JSON. Undecodable
+    bytes were never in this class: `UnicodeDecodeError` is a `ValueError`.
+    """
+    _evidence(tmp_path, "evidence/records")
+    unit = _unit("u", tree="evidence/records", witness="witness.json")
+    attest.build(tmp_path, unit, reason="r", attested_at=STAMP)
+
+    for body in ("[1, 2, 3]\n", "null\n", "17\n", '"a string"\n'):
+        (tmp_path / "witness.json").write_text(body, encoding="utf-8")
+        text, _digest = attest.build(tmp_path, unit, reason="r", attested_at=STAMP)
+        assert json.loads(text)["generation"] == 1, body
 
 
 def test_an_absent_tree_is_refused_and_writes_nothing(tmp_path) -> None:
@@ -272,3 +315,261 @@ def test_a_unit_that_is_not_present_is_refused_rather_than_invented(tmp_path) ->
     with redirect_stdout(out), redirect_stderr(err):
         assert reattest(tmp_path, {}, "r", None) == 2
     assert "no `preserved_evidence` block" in err.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# The reassurance, which used to be reachable only from a corrupted record.
+#
+# `cli.reattest` carried one arm reading `the pinned digest already matches;
+# nothing to ratify`, guarded on the rebuilt bytes equalling the pin. That guard
+# is a statement about the pin and was read as a statement about the tree, and the
+# two coincide only when nothing else in the document moves. Three things always
+# do — `generation`, `attested_at`, `reason` — and `generation` is inside the
+# digested document, so a plain rebuild never reaches the arm. What does reach it
+# is `generation` restarting at 1, which happens when the record being replaced is
+# absent, undecodable, or decodes without a usable `generation`; and, legitimately,
+# a readable predecessor sitting one generation below the pin.
+#
+# Measured on 2026-08-11 over the committed `verifier-vs-judge-results` unit: a
+# plain rebuild carrying the pinned record's own reason and date produced
+# generation 2 and a digest unequal to the pin; the same rebuild with the record
+# first made unreadable produced generation 1 and the pinned digest exactly.
+#
+# So the reporting is split in two. `tree_sha256` is the one field a rebuild does
+# not move, and it is compared against the record the pin covers — reachable on an
+# ordinary rebuild, and true. The pin-matching arm is kept, because reproducing a
+# ratified record is a real state worth naming, and it is suppressed wherever the
+# predecessor was in `attest.NO_BASELINE`.
+# ---------------------------------------------------------------------------
+
+_UNMOVED = "the attested tree has not moved"
+_REASSURED = "nothing to ratify"
+_REPLACED = "the record this replaced was"
+
+#: `cli.reattest` stamps the record with `date.today()` and takes no override, so a
+#: precondition that has to line up with what the command will write cannot use the
+#: frozen `STAMP`. Building it against today is what keeps the arms below from
+#: going quietly vacuous on any day but the one they were written.
+TODAY = date.today().isoformat()
+
+
+def _ratified(root: Path, *, reason: str, stamp: str = STAMP,
+              tree: str = "evidence/records", witness: str = "witness.json"):
+    """A unit whose witness is present, self-consistent and pinned to its bytes."""
+    _evidence(root, tree)
+    unit = _unit("u", tree=tree, witness=witness)
+    text, digest = attest.build(root, unit, reason=reason, attested_at=stamp)
+    unit["attestation_sha256"] = digest
+    assert attest.verify(root, unit) == [], "the precondition was not attested"
+    return unit, text
+
+
+def test_no_corrupt_predecessor_produces_a_reassurance(tmp_path) -> None:
+    """THE BINDING PROPERTY. Delete this and the defect comes straight back.
+
+    There must be no state in which the tool reports nothing to ratify while the
+    record it just replaced was corrupt. Every state in `attest.NO_BASELINE` is
+    exercised, and the three that restart the count are built so the rebuilt bytes
+    **do** equal the pin — which is the state the old arm fired in, and the only
+    state in which suppressing the reassurance is doing any work at all.
+
+    **That precondition is asserted rather than assumed, because the first draft of
+    this test did not reach it and passed anyway.** It built the pinned record with
+    one reason and re-ran the command with another, so the rebuilt bytes never
+    equalled the pin, the arm was unreachable for a reason having nothing to do
+    with the repair, and removing the guard under test changed no outcome. A plant
+    caught it. The reason and the stamp now match by construction and
+    `reached_the_arm` fails if they ever stop matching.
+
+    `inconsistent` cannot be arranged to match the pin, because its `generation`
+    reads fine and therefore moves; that is asserted too rather than left implied.
+    Its load-bearing assertion is the other one: the record is pinned and its
+    entries do match the tree, so an implementation that read `tree_sha256` off the
+    summary rather than recomputing it from the entries beside it would report the
+    tree unmoved on the authority of a record the gate calls `malformed`.
+    """
+    reason = "the reason both acts carry"
+    seen = set()
+    for index, (label, corrupt) in enumerate((
+        ("absent", lambda p: p.unlink()),
+        ("unreadable", lambda p: p.write_text("this is not json\n", encoding="utf-8")),
+        ("uncounted", lambda p: _rewrite(p, drop="generation")),
+        ("inconsistent", lambda p: _rewrite(p, file_count=99)),
+        ("inconsistent", lambda p: _rewrite(p, tree_sha256="f" * 64)),
+    )):
+        root = tmp_path / f"{index}-{label}"
+        root.mkdir(parents=True)
+        # Same reason, same stamp `cli.reattest` will use, so the rebuild reproduces
+        # the pinned document byte for byte once the count restarts at 1.
+        unit, _text = _ratified(root, reason=reason, stamp=TODAY)
+        witness = root / "witness.json"
+        corrupt(witness)
+        if label == "inconsistent":
+            # Keep the doctored record pinned, so the only thing standing between
+            # this and a report of an unmoved tree is the reconciliation.
+            unit["attestation_sha256"] = attest.sha256_bytes(witness.read_bytes())
+
+        state, baseline = attest.predecessor(root, unit)
+        assert state == label, f"{label}: classified as {state}"
+        assert baseline is None, f"{label}: a baseline was read out of a {state} record"
+
+        _code, out, _err = _reattest(root, [unit], reason, None)
+
+        rebuilt = attest.sha256_bytes(witness.read_bytes())
+        reached_the_arm = rebuilt == unit["attestation_sha256"]
+        if state in attest.RESTARTS_THE_COUNT:
+            assert reached_the_arm, (
+                f"{label}: the rebuild did not reproduce the pin, so the arm this "
+                f"test exists to keep silent was unreachable and every assertion "
+                f"below would pass over a tool that had never been repaired"
+            )
+        else:
+            assert not reached_the_arm, (
+                f"{label}: the count did not restart, so the pin cannot be "
+                f"reproduced — if it was, `RESTARTS_THE_COUNT` is wrong"
+            )
+
+        assert _REASSURED not in out, (
+            f"{label}: reassurance over a {state} record\n{out}"
+        )
+        assert _UNMOVED not in out, (
+            f"{label}: the tree was called unmoved on a {state} record\n{out}"
+        )
+        assert _REPLACED in out and state in out, (
+            f"{label}: the state was not reported\n{out}"
+        )
+        seen.add(state)
+
+    assert seen == set(attest.NO_BASELINE), (
+        f"a state in attest.NO_BASELINE went unexercised: "
+        f"{set(attest.NO_BASELINE) - seen}"
+    )
+
+
+def _rewrite(path: Path, *, drop: str | None = None, **fields) -> None:
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    if drop is not None:
+        doc.pop(drop)
+    doc.update(fields)
+    path.write_text(json.dumps(doc, indent=1, sort_keys=False) + "\n", encoding="utf-8")
+
+
+def test_an_unmoved_tree_is_reported_as_unmoved(tmp_path) -> None:
+    """The other direction, and the capability the old arm could not deliver.
+
+    A test that only checked the corrupt case would pass over a tool that had
+    simply deleted the arm and now says nothing in any state.
+    """
+    unit, _text = _ratified(tmp_path, reason="the first attestation")
+
+    _code, out, _err = _reattest(
+        tmp_path, [unit], "a correction to something else", None
+    )
+
+    assert _UNMOVED in out, out
+    assert _REPLACED not in out, "a ratified predecessor was reported as unusable"
+
+
+def test_a_moved_tree_is_not_reported_as_unmoved(tmp_path) -> None:
+    """The negative control, without which the arm above passes on a constant."""
+    unit, _text = _ratified(tmp_path, reason="the first attestation")
+    (tmp_path / "evidence" / "records" / "manifest.json").write_text(
+        '{"run_id": "rewritten"}\n', encoding="utf-8"
+    )
+
+    _code, out, _err = _reattest(tmp_path, [unit], "the correction", None)
+
+    assert _UNMOVED not in out, out
+    assert _REASSURED not in out
+
+
+def test_reporting_an_unmoved_tree_does_not_ratify_it(tmp_path) -> None:
+    """Act one still cannot satisfy act two, asserted at the new report.
+
+    The whole value of the split is that a rebuild leaves the gate red until a
+    human moves the pin. This is the arm that fails if the tree-unmoved report ever
+    grows into a reason to skip the pin, and it is the same property as
+    `test_a_rebuild_does_not_clear_the_gate_on_its_own` asserted in the one state
+    where a tool might be tempted to take a shortcut: the tree is provably unmoved.
+    """
+    unit, _text = _ratified(tmp_path, reason="the first attestation")
+    pinned_before = unit["attestation_sha256"]
+
+    _code, out, _err = _reattest(tmp_path, [unit], "a correction", None)
+
+    assert _UNMOVED in out, "the precondition was not the unmoved-tree report"
+    assert unit["attestation_sha256"] == pinned_before, "reattest moved the pin"
+    assert _kinds(attest.verify(tmp_path, unit)) == ["unratified"], (
+        "an unmoved tree cleared the gate without a human, which is act one "
+        "satisfying act two"
+    )
+    assert "NOT ratified" in out
+
+
+def test_reproducing_a_ratified_record_is_still_reported(tmp_path) -> None:
+    """The capability that removing the arm outright would have cost.
+
+    A predecessor one generation below the pin is an unratified intermediate: a
+    rebuild over it lands back on the ratified bytes, and there is then genuinely
+    nothing to ratify. Nothing is corrupt in this state, so the reassurance is
+    kept — which is why the repair gates the arm on the predecessor rather than
+    deleting it.
+    """
+    _evidence(tmp_path, "evidence/records")
+    unit = _unit("u", tree="evidence/records", witness="witness.json")
+    built = [
+        attest.build(tmp_path, unit, reason="r", attested_at=STAMP) for _ in range(3)
+    ]
+    unit["attestation_sha256"] = built[2][1]
+    (tmp_path / "witness.json").write_text(built[1][0], encoding="utf-8")
+
+    state, baseline = attest.predecessor(tmp_path, unit)
+    assert (state, baseline) == ("unratified", None)
+
+    _code, out, _err = _reattest(tmp_path, [unit], "r", None)
+
+    assert _REASSURED in out, out
+    assert _REPLACED not in out
+    assert attest.verify(tmp_path, unit) == [], (
+        "reproducing the pinned bytes should leave the unit attested"
+    )
+    # And the trailer stops claiming the gate is red for a unit that is green.
+    assert "Except for: u" in out
+
+
+def test_a_baseline_is_never_taken_from_a_record_that_is_not_the_pinned_one(
+    tmp_path,
+) -> None:
+    """`unratified` supplies no baseline, even with the tree provably unmoved.
+
+    A baseline from a record nobody ratified would report agreement with whatever
+    the last rebuild happened to measure, which is a different claim wearing the
+    same words.
+    """
+    unit, _text = _ratified(tmp_path, reason="the first attestation")
+    # A rebuild nobody ratified, over a tree that has not moved.
+    attest.build(tmp_path, unit, reason="an unratified rebuild", attested_at=STAMP)
+
+    state, baseline = attest.predecessor(tmp_path, unit)
+    assert (state, baseline) == ("unratified", None)
+
+    _code, out, _err = _reattest(tmp_path, [unit], "the next rebuild", None)
+    assert _UNMOVED not in out, out
+
+
+def test_predecessor_reads_the_record_before_the_rebuild_replaces_it(tmp_path) -> None:
+    """The ordering, which is the whole reason the state was unreportable.
+
+    After `build` returns there is nothing left to ask, because the record that
+    was corrupt has been overwritten. Asserted by classifying the same witness on
+    both sides of a rebuild.
+    """
+    unit, _text = _ratified(tmp_path, reason="the first attestation")
+    (tmp_path / "witness.json").write_text("this is not json\n", encoding="utf-8")
+
+    assert attest.predecessor(tmp_path, unit)[0] == "unreadable"
+    attest.build(tmp_path, unit, reason="r", attested_at=STAMP)
+    assert attest.predecessor(tmp_path, unit)[0] == "unratified", (
+        "the corruption is unreadable from after the rebuild, which is why "
+        "cli.reattest classifies before it"
+    )

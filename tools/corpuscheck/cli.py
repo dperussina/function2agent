@@ -97,6 +97,33 @@ def reattest(root: Path, config: dict, reason: str, unit_name: str | None) -> in
     deliberately incomplete: it stops one step short of green. The step it does
     not take is the one that carries the human decision, so an agent that
     rebuilds without ratifying leaves the gate red rather than leaving no trace.
+
+    Three things are reported per unit besides the digest, and which of them fires
+    is decided by `attest.predecessor`, read **before** `build` overwrites the
+    record it describes:
+
+    * the state of the record being replaced, whenever that state is one in which
+      no baseline can be read from it. Until 2026-08-11 this was silent, and the
+      silence was the defect: the only line this function printed in that state
+      was `the pinned digest already matches; nothing to ratify`, which is a true
+      statement about the pin and reads as a statement about the tree. It was
+      reachable *only* from a corrupted or absent record plus a generation-1 pin,
+      or from a readable predecessor sitting one generation below the pin — never
+      from a plain rebuild, because `generation` is inside the digested document
+      and moves every time.
+    * whether the attested tree has moved, by comparing `tree_sha256` against the
+      same field in the record the pin covers. That is the one field a rebuild
+      does not move, so this is the report the arm above was misread as making,
+      and it is reachable on an ordinary rebuild.
+    * that the pin needs no edit, when the bytes written are the pinned bytes —
+      which is a real state after a rebuild that lands back on a ratified record,
+      and is suppressed when the predecessor was in `attest.NO_BASELINE`, because
+      there the sentence would be reassurance emitted over a record that had just
+      been found corrupt.
+
+    None of the three writes a pin, and the tree-unmoved line in particular does
+    not make act one satisfy act two: the record it describes is new bytes, so
+    `preserved-evidence` reports `unratified` until a human moves the digest.
     """
     from . import attest
 
@@ -117,24 +144,55 @@ def reattest(root: Path, config: dict, reason: str, unit_name: str | None) -> in
         return 2
 
     stamp = date.today().isoformat()
+    matched: list[str] = []
     for u in units:
+        # Read the outgoing record before it is overwritten. Afterwards there is
+        # nothing left to ask what state it was in, which is how the state came to
+        # be unreported in the first place.
+        state, baseline = attest.predecessor(root, u)
         _text, digest = attest.build(root, u, reason=reason, attested_at=stamp)
         doc = attest.load(root / u["attestation"])
         print(
             f"{u['name']}: wrote {u['attestation']} "
             f"(generation {doc['generation']}, {doc['file_count']} file(s))"
         )
+        if state in attest.NO_BASELINE:
+            print(f"  WARNING: the record this replaced was {state}, so no baseline")
+            print("  could be read out of it and whether the attested tree moved is")
+            print("  not known from here")
+            if state in attest.RESTARTS_THE_COUNT:
+                print("  WARNING: and the generation above restarted at 1 rather than")
+                print("  counting on from the record that is now gone")
         print(f'  ratify by setting  "attestation_sha256": "{digest}"')
+        print(f"  currently pinned    {u.get('attestation_sha256')}")
+        if baseline is not None and baseline == doc["tree_sha256"]:
+            print("  the attested tree has not moved since the ratified attestation;")
+            print("  this record differs from it in generation, date and reason only")
         if digest == u.get("attestation_sha256"):
-            print("  the pinned digest already matches; nothing to ratify")
-        else:
-            print(f"  currently pinned    {u.get('attestation_sha256')}")
+            matched.append(u["name"])
+            if state not in attest.NO_BASELINE:
+                print("  these bytes are the pinned bytes; nothing to ratify")
     print(
         "\nThe attestation is written and NOT ratified. `preserved-evidence` stays\n"
         "red until the digest above is pinned in tools/corpuscheck/config.json by\n"
         "hand, in the same commit as the edit it covers. Rebuilding and ratifying\n"
         "are two acts on purpose: an attestation a tool can refresh attests nothing."
     )
+    if matched:
+        # The paragraph above is false for these units and was printed anyway. A
+        # rebuild reaches this state only by reproducing a ratified record byte for
+        # byte, which asserts nothing a human has not already signed off — so the
+        # gate going green with nobody acting is not the two-act rule failing. It
+        # is still the one case where the sentence above does not apply, and saying
+        # so is the difference between reporting it and being quiet about it.
+        print(
+            "\nExcept for: " + ", ".join(matched) + "\n"
+            "The bytes written for that unit ARE the pinned bytes, so it is green\n"
+            "with nobody having ratified anything — which is only reachable by\n"
+            "reproducing a record a human already ratified. Where a line above\n"
+            "names the record that was replaced, that is what happened: a corrupt\n"
+            "witness over an unmoved tree, restored rather than re-attested."
+        )
     return 0
 
 
