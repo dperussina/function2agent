@@ -2516,6 +2516,37 @@ Stated plainly, because knowing the residue is worth more than a coverage claim.
   **parses rather than imports** because `--root` may point at a fixture tree
   and a corpus checker that executes what it checks has a failure mode no regex
   does.
+
+  **A docstring narrating why a rule went quiet is the sharp case, and it has now
+  produced three wrong histories in one file.** `checks/inventory.py`'s docstring
+  explains the silence of two `inventory-count` rules. Replay against the git log
+  found `3` narrated claims wrong: that the `findings` pattern once required a
+  trailing comma, when no pattern in the check has ever contained one and that
+  pattern is byte-identical from the initial commit; that the rule went silent
+  because its scoped documents stopped stating a total, when a replay over `266`
+  revisions of the two documents in scope matched in none of them and they never
+  stated one; and that `committed-harnesses`'s site was struck on `2026-08-02`,
+  when `deea4f3` — the initial commit of that date — holds three files and
+  `VERDICT.md` is not among them. That third one is the instructive one, because
+  the date was not conjured. The phrase enters the corpus at `cee7ff8` on
+  `2026-08-03` **already struck**, and the strike wraps prose reading *"Corrected
+  2026-08-02"* — a date the document records about its own editing. The docstring
+  read a document's account of itself as a fact about the log, which is the same
+  move that produced the other two.
+
+  **The class, stated so it transfers.** An explanatory claim in source is
+  evidence-shaped, is quoted downstream as though it had been established, and is
+  read by nothing here — `lifecycle-taxonomy`'s one file for one fact is the only
+  source any check reads, and it reads a `TAXONOMY` tuple rather than prose. The
+  cost asymmetry is the whole of it: narrating a history is one sentence and
+  replaying one is a script, so the unchecked path is also the cheap path. Of the
+  three claims above, `2` were relayed into briefs as fact on the corpus's
+  authority before anyone replayed them. **No check is proposed**, because the
+  population is unmeasured — nobody has counted how many evidential claims sit in
+  this repository's docstrings, and a rule over prose in source has no fixture set
+  and no measured false-positive rate. What is cheap and was not being done is the
+  replay itself: `28` file-revisions across the `4` paths that have ever matched
+  `committed-harnesses`'s scope settled the third claim in one pass.
 - **A wrong verdict in a run that paid for it.** `dry-run-verdict` keys entirely
   off the `dry_run` marker. A live run may publish any conclusion it likes,
   however unsupported, and nothing here objects. The check catches *evidence

@@ -21,14 +21,40 @@ one `definition-count` already carries, and it is here for the same reason: a
 count check's clean output and its blind output are the same output. Measured
 2026-08-10 over all six rules, two were reporting on nothing — `findings` and
 `committed-harnesses` — and both had been silent through every green run.
-`committed-harnesses`'s only in-scope site was struck on 2026-08-02 and re-stated
-without a count on 2026-08-03. **`findings` was recorded here as a rule whose
+~~`committed-harnesses`'s only in-scope site was struck on 2026-08-02 and re-stated
+without a count on 2026-08-03.~~ **Corrected 2026-08-11 by replay — that sentence
+is wrong on its date and stale on "only", and it is the third invented history
+this docstring has produced.** Replayed through this module's own masking and its
+own `struck_spans` over all 28 revisions of the four paths that have ever fallen
+inside the rule's `files` scope: the phrase appears in **no** in-scope document on
+2026-08-02, because `specs/001-discovery-validation/VERDICT.md` did not exist —
+`deea4f3`, the initial commit of that date, holds `.gitignore`, `LICENSE` and
+`README.md` and nothing else. Its first appearance anywhere in scope is
+`cee7ff8`, that document's own first revision, dated 2026-08-03, and it is
+**already struck in the revision that introduces it**. It was never live. What is
+dated 2026-08-02 is the prose *inside* the strike — `**Corrected 2026-08-02:**` —
+an editorial date the document records about itself, which this docstring read as
+a commit. The re-statement without a count is the same paragraph's unstruck
+parenthetical and is correctly dated 2026-08-03. **"Only" was true at the
+2026-08-10 measurement and is not true now**: `specs/*/harness/README.md` entered
+scope in that same pass, and `specs/001-discovery-validation/harness/README.md`
+has carried a live `thirteen committed harnesses` since `3adf935` on 2026-08-10,
+against a glob that counts thirteen directories.
+
+**`findings` was recorded here as a rule whose
 scoped documents "stopped stating a total", and that was wrong: they never stated
 one.** Replayed on 2026-08-11 against this module's own masking over all 266
 revisions of `README.md` and `research/README.md`, the rule matched nothing in
 every revision — it had no live site for its whole life, not a lost one. It has
 one now: the repository map states the corpus-wide total across both `findings/`
 directories, which is the scope this rule's glob actually spans.
+
+**Three narrated histories in one docstring, two invented and one stale, is a
+pattern rather than three slips, and the pattern is recorded where the checker's
+limits are rather than here.** See `tools/README.md` § *What this cannot catch*,
+under *Anything outside markdown*: a docstring explaining why a rule went quiet
+is read by no check, quoted by briefs as though it were, and cheaper to invent
+than to replay. This paragraph is itself unread, which is the point.
 
 The announcement is a skip and not an error, which is where this parts company
 with `gen_claims.py`'s floor of one. A generator that matches nothing is dead by

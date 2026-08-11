@@ -351,7 +351,20 @@ reproduction of the `go` job is therefore **strictly weaker than CI's**, which r
   build-time arm it depends on still runs only where somebody builds an image.
 - **It says nothing about branch protection.** `main` remains unprotected with empty rulesets, and
   §3 is a re-verification of that, not a change to it.
-- **The findings index is stale and was not repaired here.** `README.md` in this directory carries a
-  one-row index against seventeen findings. Nothing checks it, which makes it another artifact of
-  exactly the class this document is about — noted rather than fixed, because fixing it is not this
-  change.
+- ~~**The findings index is stale and was not repaired here.** `README.md` in this directory carries a
+  one-row index against seventeen findings.~~ **Nothing checks it**, ~~which makes it~~ **and it is**
+  another artifact of exactly the class this document is about — ~~noted rather than fixed, because
+  fixing it is not this change.~~
+
+  > **Superseded in part 2026-08-11, and the two halves went opposite ways.** The staleness was real
+  > when this was written and the sentence is struck as a dated record rather than overwritten:
+  > `README.md` in this directory now carries one row per finding, and a mirror index was built for
+  > [feature 001's directory](../../001-discovery-validation/findings/README.md) on the same day.
+  >
+  > **What closed is the staleness. What stands is "Nothing checks it", and it stands unchanged.**
+  > `inventory-count`'s `findings` rule reads its claim from `README.md` and `research/README.md`
+  > only, and its live site is the root repository map's corpus-wide total across both `findings/`
+  > directories. Neither index is in that scope, so both are now correct and both are still
+  > unguarded — which leaves this bullet an instance of its own class rather than a discharged one.
+  > A reading that took the whole paragraph as closed would be worse than the stale figure was,
+  > because it would retire the half that is still true.
