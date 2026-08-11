@@ -15,6 +15,18 @@
 > `results/20260803T092721-final-verify/manifest.json`, reproduces from this directory as it stands.
 > **Reading `E8` anywhere beneath this file means this experiment.** Nothing else in the repository
 > named `E8` has a harness.
+>
+> **Since 2026-08-11 a gate holds `results/` rather than a ruling alone.** OD-31 recorded that
+> nothing mechanical stopped an `E8`→`E19` rewrite of a committed manifest, and established it by
+> planting one. The `preserved-evidence` check in [`tools/check_corpus.py`](../../../../tools/check_corpus.py)
+> now attests every file under [`results/`](./results/) by SHA-256, from a witness held outside this
+> directory at `tools/preserved_evidence.json` — outside because a digest stored beside the bytes it
+> covers is the same self-report `harness_fingerprint` already was. **Nothing under `results/` was
+> added, renamed or edited to install it, and `harness_fingerprint` is unmoved.** A deliberate
+> correction — the next neutralisation is the named case — is two acts rather than one: `--reattest`
+> writes a new record and a human ratifies its digest, because an attestation the editing tool
+> refreshes attests nothing. See
+> [the rationale](../../../../tools/README.md#why-the-attestation-is-not-refreshed-by-the-tool-that-edits-the-evidence).
 
 **Does a contract-derived verifier catch real failures that an LLM judge misses?** That is
 hypothesis **H2** from `research/11-validation-plan.md`, and it is the row that document calls

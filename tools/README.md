@@ -79,7 +79,7 @@ threshold** before you write any edit-and-restore loop of your own.
 
 ## The check set
 
-Seventeen checks in ten families. Severity is **error** when the finding is
+Eighteen checks in eleven families. Severity is **error** when the finding is
 almost certainly a defect, **warning** when it is a defect *or* a judgement call
 the author may have made deliberately.
 
@@ -102,6 +102,7 @@ the author may have made deliberately.
 | `toc-coverage` | warning | A `##` section missing from its document's own table of contents, and therefore unreachable from the top of an 800-line file. |
 | `lifecycle-taxonomy` | error | `data-model.md` §2.1's declared terminal states are not exactly the members of `TAXONOMY` in `src/contracts/terminal.py`, in **either** direction. The only check whose other side is source: the taxonomy is parsed with `ast`, never imported, because `--root` may point at a fixture tree. Added 2026-08-05 under **OD-26**, after the two artifacts had diverged in both directions at once — three members absent from the diagram, two diagram labels that were not members, and a bare `completed` where the member is `terminated.completed` — while the other sixteen checks ran at 0 errors, because none of them reads Python. See [Why the lifecycle is a table now](#why-the-lifecycle-is-a-table-now). |
 | `dry-run-verdict` | error | An outcome claim inside a run directory whose own manifest says `dry_run: true`: a gate cleared, a hypothesis confirmed, one method materially better than another, a line labelled `VERDICT:`. A run that called no model produced no evidence, so every such claim was computed against stub output. See below for why the disclosure has to be on the same line. |
+| `preserved-evidence` | error | A committed record of a run whose **bytes** no longer match a SHA-256 attested outside the tree that holds it. The eleventh family, and the only check here that reads no content at all: every other rule asks whether an artifact *says* something defensible, and this one asks only whether it is the artifact a human ratified. Added 2026-08-11 after **OD-31** established, by planting the edit rather than by reading the code, that nothing mechanical held the twelve `verifier-vs-judge` run directories — an `E8`→`E19` rewrite in a committed manifest left `freeze.py --verify` reading *intact*, `neutralise_decision.py --check` passing and every gate in this repository green. See [Why the attestation is not refreshed by the tool that edits the evidence](#why-the-attestation-is-not-refreshed-by-the-tool-that-edits-the-evidence). |
 
 Four of these name failure classes nobody had named before: `register-range`,
 `inventory-count`, `catalog-line-count` and `definition-count`. All four share
@@ -192,6 +193,65 @@ the lowercased line, which opened two holes and both are now closed:
   confirmed'" — is 27 characters and keeps working; `known-bad` carries the
   same sentence with an unrelated `VERDICT:` bolted onto the end of it.
 
+### Why the attestation is not refreshed by the tool that edits the evidence
+
+**`preserved-evidence` closes a hole that three existing mechanisms each looked
+like they should have closed, and the reason none of them did is the same reason
+this one is shaped the way it is.** OD-31 rules twelve committed run directories
+under `harness/verifier-vs-judge/results/` to be preserved evidence, and records
+that the ruling was the whole of what protected them. The demonstration was a
+plant, not a reading: an `E8`→`E19` rewrite in
+`results/20260803T092721-final-verify/manifest.json` left `freeze.py --verify`
+reading *intact*, `neutralise_decision.py --check` passing, `check_corpus.py` at
+zero errors, `tools/selftest.py` green and `pytest` at its full complement.
+
+Each near-miss failed differently, and the three failures are worth separating:
+
+- a manifest **records** a `harness_fingerprint`, which is a self-report. No hash
+  anywhere covered a manifest's own bytes.
+- `corpus_freeze.json` pins eleven `ceiling-test` run directories that live under
+  a **different harness** and hold none of this experiment's output. It was never
+  pointed at this tree.
+- `dry-run-verdict` reads what an artifact **claims**. A rewrite that changes no
+  claim is invisible to it, and widening it would not help: the two checks ask
+  different questions of the same files.
+
+**The witness lives outside the tree it attests, and that placement is the
+mechanism rather than a filing preference.** `tools/preserved_evidence.json`
+carries a SHA-256 per file for all **59** files under `results/` — the 58 in the
+twelve run directories plus `NEUTRALISATION.md`, which is a dated correction
+record and preserved on the same ruling. Nothing under `results/` is added,
+renamed or edited to install it, because a digest stored beside the bytes it
+covers is the same self-report the manifest already was.
+
+**The trap this design exists to avoid.** If the tool that edits the evidence
+also refreshes the attestation, the attestation attests nothing — the vacuity
+reappears one layer down, and the gate goes green over exactly the edit it was
+built to announce. So a correction is **two acts** and they cannot collapse into
+one:
+
+    python3 tools/check_corpus.py --reattest "why"   # writes the record
+    # then a human moves attestation_sha256 in corpuscheck/config.json
+
+`--reattest` prints the digest to ratify and **never writes the pin**. Nothing in
+this repository calls `attest.build`, and `neutralise_decision.py` — the tool that
+legitimately rewrites these artifacts, and which touches `analysis.json` and
+`report.md` and no manifest at all — does not import it. A rebuild alone leaves
+the gate **red**, reported as `unratified` rather than as an edit, so an agent
+that refreshes without ratifying leaves a failing gate rather than no trace.
+
+**What it cannot do, stated plainly rather than left to be discovered.** It
+cannot stop an author who edits a record, rebuilds the attestation and moves the
+pin in one commit. Nothing in a repository can: the pin is text and the author
+has write access. What it converts is a **silent** edit into a **visible** one —
+three files in three trees, one of them a guard's own configuration, all moving
+together and all in the diff. That is the standard OD-30 accepted for the
+measurement record, and OD-31's residual asked for nothing stronger.
+
+It also has no opinion about whether the attested bytes are *right*. A wrong
+figure committed before the attestation was built is attested wrongness, and this
+check will defend it as faithfully as it defends anything else.
+
 ### Why the lifecycle is a table now
 
 **The diagram could not be reconciled by anything, and that is why it drifted.**
@@ -244,7 +304,7 @@ invisible to the check that reconciles it.
 
 ## Generated claims — `gen_claims.py`
 
-Two of the seventeen checks were guarding **hand-written summaries of facts that
+Two of the eighteen checks were guarding **hand-written summaries of facts that
 are machine-readable from an artifact sitting right beside them.** Guarding is
 the wrong shape of solution for a fact nobody should be transcribing, and the
 catch history says so: `catalog-line-count` has been tripped and hand-repaired
@@ -612,7 +672,8 @@ one-command-per-namespace form above does not do.
 
 ## Every rule, measured against its own scope
 
-Six of this tool's seventeen checks are driven by rules in `config.json` rather
+~~Six~~ **Seven** of this tool's ~~seventeen~~ **eighteen** checks are driven by
+rules in `config.json` rather
 than by code, which makes a rule cheap to add and cheap to lose. A rule that
 matches nothing contributes no violations, and no violations is what a correct
 corpus also contributes. Swept on 2026-08-10 over every rule in every
@@ -620,6 +681,15 @@ rule-driven check — the six `inventory_rules`, the two `definition_count_rules
 the nine `identifier_namespaces`, the three enabled `numeric_kinds`, and the
 seven `dry_run.verdict_patterns` — **three were reading nothing at all**, and
 each had been silent through every green gate since it stopped.
+
+*(Counts advanced 2026-08-11 with `preserved-evidence`, whose
+`preserved_evidence.units` are the seventh rule-driven set. **The sweep's
+population is left as it stood on 2026-08-10 and is not restated**: it is a dated
+measurement of the rules that existed when it ran, and the five units added after
+it were not among them. The new set does not have the silence failure this
+section is about — a unit whose tree is absent is skipped by name rather than
+passing quietly, and `known-bad` holds one unit per failure kind, so a rule that
+stopped reading takes the self-test with it.)*
 
 The three are not one defect, and the difference decides the response.
 
@@ -2745,6 +2815,16 @@ def run(corpus, ctx):
 4. **Plant a defect in `fixtures/known-bad/` and the correct form in
    `fixtures/known-good/`**, then add a row to `EXPECTED` in `selftest.py`. A
    check with no fixture case is not finished.
+5. **One `EXPECTED` row per branch, not per check** — and probe it rather than
+   trusting the count. `preserved-evidence` was added 2026-08-11 with a row for
+   each of its five reported kinds, and a probe that stubbed each branch in turn
+   still found one that survived with the self-test green: its two
+   self-consistency rules shared a single fixture, so deleting one left the other
+   satisfying the row. The fixture now violates both and the probe catches all
+   five. **A row count equal to the kind count is not coverage**; the arm that
+   proves coverage is deleting the branch and requiring the self-test to break,
+   which is what `threshold_probe.py` does for constants and what nothing does
+   automatically for branches.
 
 Before adding a check, ask whether the claim should be **generated** instead.
 If the fact is machine-readable from an artifact in the repository and the

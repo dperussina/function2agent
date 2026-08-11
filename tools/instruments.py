@@ -36,7 +36,12 @@ each closes a different way the two drift apart:
 What it does **not** claim: that any instrument is correct, that the set is
 sufficient, or that a green `--run` means anything about the repository. It is
 a census, not a verdict. Direction 3 in particular forces a *classification*,
-not an endorsement — `library` is a real answer and four files use it.
+not an endorsement — `library` is a real answer and ~~four~~ **two** files use it.
+*(Count corrected 2026-08-11: `--check` reports `2 library` and has for as long as
+the reconciliation has been run. The stale figure was found while counting the
+sites an eighteenth corpus check moved, and it is corrected rather than struck
+silently because a census whose own prose miscounts its classes is the defect
+this file is named after, one level in.)*
 
 ## What is deliberately not here
 
@@ -169,7 +174,7 @@ INSTRUMENTS: list[Instrument] = [
     Instrument(
         name="corpus check",
         kind=GATE,
-        checks="Seventeen consistency checks over the document corpus. Errors "
+        checks="Eighteen consistency checks over the document corpus. Errors "
                "only — warnings are printed by a separate step that cannot "
                "fail, because a gate that flaps gets worked around.",
         job="corpus",

@@ -1,0 +1,6 @@
+{
+ "_fixture": "The tree here is intact and so is the pin. The attestation beside it disagrees with ITSELF: its `file_count` and `tree_sha256` do not describe the entries it lists. A checker that trusted the summary would read a per-file comparison the record had been rewritten to satisfy, so the record is required to reconcile before it is used to judge anything.",
+ "run_id": "20260101T000000-run",
+ "experiment": "F4 fixture",
+ "records": 4
+}

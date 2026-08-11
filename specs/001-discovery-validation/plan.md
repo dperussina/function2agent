@@ -4234,8 +4234,30 @@ dated notice stating that every artifact beneath it records the earlier name.
   unmeasured:** **U-44**, whether the target's safe-method operations can induce outbound requests.
   That is a per-target property with a zero-model-spend measurement and a fail-closed default, and it
   is the one thing the mechanism cannot settle for itself.
-- **The twelve `verifier-vs-judge` run directories are held by ruling alone, and nothing mechanical
-  holds them.** Discovered 2026-08-11 while taking **OD-31**, and established by planting the edit
+- ~~**The twelve `verifier-vs-judge` run directories are held by ruling alone, and nothing mechanical
+  holds them.**~~ ✅ **RESOLVED 2026-08-11, later the same day — the owner ruled that the pinning cost
+  named at the end of this bullet is the feature rather than the objection, and a bytes-level
+  attestation now holds them.** The `preserved-evidence` check in `tools/check_corpus.py` attests all
+  **59** files under `results/` — the 58 in the twelve run directories plus `NEUTRALISATION.md` — by
+  SHA-256, from `tools/preserved_evidence.json`, a witness held **outside** the tree it attests
+  because a digest stored beside its own bytes is the self-report this bullet is about. **The same
+  plant this bullet reports now fails**: the `E8`→`E19` rewrite in
+  `results/20260803T092721-final-verify/manifest.json` is reported as `edited` and named by path,
+  where before it left every gate green. **Nothing under `results/` or `adjudication/` was added,
+  renamed or edited to install it**, and `harness_fingerprint` still reads `6c58910ec3fd9c36`, which
+  was verified rather than reasoned about: `FINGERPRINT_FILES` is a closed sixteen-name tuple and not
+  a glob, so a file arriving beside the unit cannot enter it.
+  **The residual, stated rather than closed:** the guard makes a second edit **visible**, not
+  impossible. An author who edits a record, rebuilds the attestation and moves the pin in one commit
+  passes, and nothing in a repository can prevent that. What it forbids is the *silent* case, and it
+  forbids it in two acts that cannot collapse into one — `--reattest` writes the record and prints
+  the digest, a human pins it, and `neutralise_decision.py` does not import either half. An
+  attestation the editing tool refreshes attests nothing, which is this bullet's own defect one layer
+  down. **`adjudication/` is deliberately not attested**: the ruling in front of the owner priced
+  twelve directories, and the ten files of the completed blind study were not in it. That gap is
+  named below.
+  *(Read the rest of this bullet as the state on 2026-08-11 before the ruling.)*
+  Discovered 2026-08-11 while taking **OD-31**, and established by planting the edit
   rather than by reading the code: an identifier rewrite in
   `results/20260803T092721-final-verify/manifest.json` left `freeze.py --verify` reading *intact*,
   `neutralise_decision.py --check` passing and `check_corpus.py` at zero errors. A manifest **records**
@@ -4248,3 +4270,14 @@ dated notice stating that every artifact beneath it records the earlier name.
   Whether that boundary should also carry a bytes-level attestation over `results/` is an owner call
   with a real cost: it pins twelve directories against every future correction, including the next
   neutralisation.
+- **NEW 2026-08-11 — `adjudication/` is preserved evidence on the same ruling and is not attested.**
+  The bullet above names `harness/verifier-vs-judge/adjudication/` alongside `results/` in what OD-31
+  does not license, and its ten files are a completed blind study — `blind/verdicts.md`,
+  `sealed/key.json`, `comparison.json` and the scripts that produced them. **The attestation built
+  under that bullet's resolution covers `results/` and stops there**, because the cost the owner
+  priced was twelve run directories and the blind study was not in front of them. Extending it is
+  mechanically free: one more unit in `preserved_evidence.units`, ten more digests, no new code and no
+  new failure mode, since a unit whose tree is absent is already skipped by name. What is **not** free
+  is the same pinning cost applied to a tree nobody ruled on, and a guard installed over an artifact
+  its owner never priced is the shape this plan declines twice above. **It is an owner call and it is
+  cheap either way.**

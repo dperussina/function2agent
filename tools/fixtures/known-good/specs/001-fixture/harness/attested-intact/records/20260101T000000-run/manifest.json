@@ -1,0 +1,7 @@
+{
+ "_fixture": "A preserved record whose bytes match their attestation. The positive case: this unit must produce no violation, so that `preserved-evidence` firing anywhere is evidence of a real mismatch rather than of the check firing on everything.",
+ "run_id": "20260101T000000-run",
+ "experiment": "F1 fixture",
+ "harness_fingerprint": "0000000000000000",
+ "records": 4
+}

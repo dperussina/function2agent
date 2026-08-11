@@ -1,0 +1,6 @@
+{
+ "_fixture": "This tree matches its attestation exactly. What does not match is the attestation's OWN bytes against the digest pinned in config.json, which is the state a rebuild leaves behind before a human ratifies it. Only the `unratified` kind may fire here — if `edited` also fires, the two failures have been conflated.",
+ "run_id": "20260101T000000-run",
+ "experiment": "F3 fixture",
+ "records": 4
+}

@@ -259,6 +259,56 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
         28,
         "VERDICT:",
     ),
+    # Bytes-level attestation over preserved evidence. One row per kind, because
+    # the five are different events with different remedies and a single smoke
+    # test would let four of them rot. The two that matter most are the last
+    # two: `unratified` is the rule that a rebuild does not clear the gate on
+    # its own, which is the whole thing standing between this check and the
+    # vacuity it was built to close, and `malformed` is the rule that the
+    # record reconciles with itself before it is used to judge anything.
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-edited/records/20260101T000000-run/manifest.json",
+        1,
+        "(edited)",
+    ),
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-edited/records/20260101T000000-run/records.jsonl",
+        1,
+        "(removed)",
+    ),
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-edited/records/20260101T000000-run/traces.jsonl",
+        1,
+        "(added)",
+    ),
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-unratified/attestation.json",
+        1,
+        "(unratified)",
+    ),
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-malformed/attestation.json",
+        1,
+        "declares 2 file(s), lists 1",
+    ),
+    # The second `malformed` branch, and it is here because a probe found it
+    # removable with everything else still green. `file_count` alone covered one
+    # of the two self-consistency rules, so deleting the summary-digest rule left
+    # the self-test passing over a checker that would accept a hand-ratified
+    # attestation disagreeing with its own entries — the sloppy-correction case,
+    # which is the one `unratified` cannot see because the pin was moved on
+    # purpose.
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-malformed/attestation.json",
+        1,
+        "tree_sha256 does not cover the entries beside it",
+    ),
 ]
 
 
@@ -565,7 +615,7 @@ def _lifecycle_floor_selftest(verbose: bool) -> list[str]:
 # What is recomputed is how many of them claim that provenance. `RENDERED_IDS`
 # below is the `EXPECTED_PROOFS` pattern at sample scale: the count was prose
 # reading "the two marked RENDERED" while six carried the label, stale by four
-# and read by none of the seventeen corpus checks, because this is Python and
+# and read by none of the eighteen corpus checks, because this is Python and
 # they read markdown.
 SLUG_ROLES = [
     # (heading, expected slug, what the case pins)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 
 from .registry import all_checks
@@ -72,7 +73,69 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--no-hints", action="store_true", help="omit the hint line")
     p.add_argument("--list-checks", action="store_true", help="print the check set and exit")
+    p.add_argument(
+        "--reattest",
+        metavar="REASON",
+        default=None,
+        help="rewrite the preserved-evidence attestation and print the digest to "
+        "ratify. Writes no pin: `preserved-evidence` stays red until a human "
+        "moves attestation_sha256 in config.json.",
+    )
+    p.add_argument(
+        "--unit",
+        default=None,
+        metavar="NAME",
+        help="restrict --reattest to one preserved_evidence unit",
+    )
     return p
+
+
+def reattest(root: Path, config: dict, reason: str, unit_name: str | None) -> int:
+    """Write the attestation for each present unit and report the pin to move.
+
+    Deliberately a *separate act* from editing the records it covers, and
+    deliberately incomplete: it stops one step short of green. The step it does
+    not take is the one that carries the human decision, so an agent that
+    rebuilds without ratifying leaves the gate red rather than leaving no trace.
+    """
+    from . import attest
+
+    spec = config.get("preserved_evidence")
+    if not spec:
+        print("no `preserved_evidence` block in config.json", file=sys.stderr)
+        return 2
+
+    units = [u for u in spec["units"] if (root / u["tree"]).is_dir()]
+    if unit_name:
+        units = [u for u in units if u["name"] == unit_name]
+    if not units:
+        print(
+            "no preserved_evidence unit to rebuild"
+            + (f" named {unit_name!r}" if unit_name else " is present under this root"),
+            file=sys.stderr,
+        )
+        return 2
+
+    stamp = date.today().isoformat()
+    for u in units:
+        _text, digest = attest.build(root, u, reason=reason, attested_at=stamp)
+        doc = attest.load(root / u["attestation"])
+        print(
+            f"{u['name']}: wrote {u['attestation']} "
+            f"(generation {doc['generation']}, {doc['file_count']} file(s))"
+        )
+        print(f'  ratify by setting  "attestation_sha256": "{digest}"')
+        if digest == u.get("attestation_sha256"):
+            print("  the pinned digest already matches; nothing to ratify")
+        else:
+            print(f"  currently pinned    {u.get('attestation_sha256')}")
+    print(
+        "\nThe attestation is written and NOT ratified. `preserved-evidence` stays\n"
+        "red until the digest above is pinned in tools/corpuscheck/config.json by\n"
+        "hand, in the same commit as the edit it covers. Rebuilding and ratifying\n"
+        "are two acts on purpose: an attestation a tool can refresh attests nothing."
+    )
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -101,6 +164,13 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     config = load_config(args.config)
+
+    if args.reattest is not None:
+        if not args.reattest.strip():
+            print("--reattest needs a reason; the record carries it", file=sys.stderr)
+            return 2
+        return reattest(root, config, args.reattest.strip(), args.unit)
+
     result, _selected = run_checks(
         root,
         config=config,

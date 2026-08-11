@@ -1,0 +1,7 @@
+{
+ "_fixture": "The plant, frozen into a fixture. This file's bytes were changed AFTER its attestation was built and pinned, exactly as the E8->E19 rewrite changed a committed manifest. `experiment` below is the edited field. The attestation beside it is unmodified, so its own digest still matches the pin and only the `edited` kind may fire on this file.",
+ "run_id": "20260101T000000-run",
+ "experiment": "F2-RENAMED fixture",
+ "harness_fingerprint": "0000000000000000",
+ "records": 4
+}

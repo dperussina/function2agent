@@ -1,0 +1,13 @@
+{
+ "_comment": "Bytes-level attestation over a tree of preserved evidence. Written by tools/corpuscheck/attest.py and read by the `preserved-evidence` check. This file is NOT a record of a run and carries no measurement; it is a witness held outside the tree it attests. Rebuilding it does not restore a green gate on its own \u2014 `preserved_evidence.units[].attestation_sha256` in tools/corpuscheck/config.json pins these bytes and is edited by hand.",
+ "unit": "fixture-unratified",
+ "tree": "specs/001-fixture/harness/attested-unratified/records",
+ "generation": 2,
+ "attested_at": "2026-08-11",
+ "reason": "Fixture: a second rebuild, deliberately left unratified.",
+ "file_count": 1,
+ "tree_sha256": "cb6dc8ec07a03df8a786e5886df60f4bb417cdf8aadb7601810bb664133a2532",
+ "files": {
+  "20260101T000000-run/manifest.json": "33cf3a02419ab771d19d85c7ecac776296b0cff5acc30d0a301e4edbae58c808"
+ }
+}

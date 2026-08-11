@@ -212,5 +212,43 @@
   "lifecycle_taxonomy_source": "src/contracts/terminal.py",
   "lifecycle_taxonomy_files": [
     "specs/*/data-model.md"
-  ]
+  ],
+
+  "_comment_preserved_evidence": "Bytes-level attestation over trees of preserved evidence — dated records of runs that already happened, which OD-31 rules are kept rather than rewritten. `attestation` is a witness held OUTSIDE `tree`, because a digest stored beside the bytes it covers is the self-report that let an E8->E19 rewrite through every green gate. `attestation_sha256` pins the witness's own bytes and is the half a human ratifies: `tools/check_corpus.py --reattest` writes the record and prints this digest, and never writes it here. That split is the mechanism — an attestation a tool can refresh attests nothing — so wiring a rebuild into anything that edits these artifacts, `neutralise_decision.py` above all, reproduces the vacuity one layer down. A unit whose `tree` is absent from the root under scan is skipped, which is how the two fixture corpora and this repository share one list.",
+  "preserved_evidence": {
+    "units": [
+      {
+        "name": "verifier-vs-judge-results",
+        "tree": "specs/001-discovery-validation/harness/verifier-vs-judge/results",
+        "attestation": "tools/preserved_evidence.json",
+        "attestation_sha256": "ba9ca6c2afae54f560c6a154c60cd7deb92d1404b1c39d12322ff23f9367be4a"
+      },
+      {
+        "name": "fixture-intact",
+        "tree": "specs/001-fixture/harness/attested-intact/records",
+        "attestation": "specs/001-fixture/harness/attested-intact/attestation.json",
+        "attestation_sha256": "e09fac3c5fc8bf63b18950fdbf4657404be8e47daaa63c63b16e55e7772cd9b1"
+      },
+      {
+        "name": "fixture-edited",
+        "tree": "specs/001-fixture/harness/attested-edited/records",
+        "attestation": "specs/001-fixture/harness/attested-edited/attestation.json",
+        "attestation_sha256": "2fd59f4852738df4fafcc2eedb7c3112da3615de911f01617a69a0da4f8af5b5"
+      },
+      {
+        "name": "fixture-unratified",
+        "tree": "specs/001-fixture/harness/attested-unratified/records",
+        "attestation": "specs/001-fixture/harness/attested-unratified/attestation.json",
+        "_why": "The pin below is deliberately not the digest of that attestation. It is the state a rebuild leaves behind, and this unit is the only thing holding the rule that a rebuild does not clear the gate on its own.",
+        "attestation_sha256": "26a59e5a7bdfd141b150889da0b0168bfc504802ba556743f44124afa8545efc"
+      },
+      {
+        "name": "fixture-malformed",
+        "tree": "specs/001-fixture/harness/attested-malformed/records",
+        "attestation": "specs/001-fixture/harness/attested-malformed/attestation.json",
+        "_why": "The pin below DOES match its attestation, and the tree matches too. What fails is the attestation's own internal arithmetic, so this unit holds the rule that a summary is reconciled against the entries beneath it rather than trusted.",
+        "attestation_sha256": "6d84f479c5d194a2a971692bcbf916f5270ddcd67e00c411219ab527307ede58"
+      }
+    ]
+  }
 }

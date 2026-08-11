@@ -15,6 +15,7 @@ from . import (  # noqa: F401
     inventory,
     lifecycle_taxonomy,
     numeric_provenance,
+    preserved_evidence,
     ratio_arithmetic,
     register_ranges,
     sum_arithmetic,
