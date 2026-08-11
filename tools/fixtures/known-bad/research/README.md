@@ -12,7 +12,7 @@ column — the shape the skills roster uses, and the one that drifted unwatched:
 
 - [`01-fixture-metrics.md`](./01-fixture-metrics.md) (~40 lines) — a hedge is
   still a claim, and this one is wrong by more than the tolerance.
-- [`14-fixture-synthesis.md`](./14-fixture-synthesis.md) (56 lines) — wrong by
+- [`14-fixture-synthesis.md`](./14-fixture-synthesis.md) (64 lines) — wrong by
   one, which is the size that shipped. `catalog-line-count` carried
   `TOLERANCE = 2` while a catalog row claimed 804 lines for an 806-line
   document, and two is not greater than two. Every other planted drift in this

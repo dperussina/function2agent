@@ -55,3 +55,11 @@ blank line below it does, and nothing follows it that would make it a new table:
 
 
 | R2 | 24 |
+
+A self-link sits below the contents list rather than inside it, and it is here to
+hold `toc.py`'s TOC-locating branch:
+[3. A section the table of contents never learned about](#3-a-section-the-table-of-contents-never-learned-about).
+Inverted, that branch starts at the H1, sweeps to the next heading of the same or
+higher level, finds no second H1, and so collects this link as a contents entry —
+which silences the line 44 violation. Located correctly it stops at the H2 above
+and never reads this line, so the violation stands.

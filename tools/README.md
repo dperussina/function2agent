@@ -3142,17 +3142,53 @@ and make a four-minute instrument mandatory in a nine-second job.
 
 ### Where the authority lives, and why not here
 
-**This file is not read by `check_corpus.py`.** The corpus include list is
+~~**This file is not read by `check_corpus.py`.** The corpus include list is
 `README.md`, `research`, `docs`, `specs`, `.cursor/skills` and
 `.specify/memory`; `tools/` is never walked. So every link, count and figure in
-this README is ungated, including the ones in this section, and a census
+this README is ungated, including the ones in this section~~, and a census
 maintained *here* would have been a second folklore list with better prose.
 
-That is why the authoritative census is `instruments.py` itself — a Python
-table, reconciled by a gate that runs on every push — and why the only pointer
-outside it is in the top-level `README.md`, which *is* in the corpus include
-list and therefore has its link checked. This section is commentary on a
-mechanism that lives elsewhere. When the two disagree, the mechanism is right.
+**Superseded 2026-08-11 — every sentence in the struck passage is false, and the
+widening of the include list is what made them so.** `tools` sits in the include
+list in `corpuscheck/config.json`, `corpus.load` walks this file as one of the
+139 markdown documents it loaded at `4118950`, and it carries the `consumer`
+role. It is read, and what it says is gated. **The struck passage had been cited
+as standing residue for days and went false underneath the citation**, which is
+why it is superseded in place rather than deleted: a reader who arrives holding
+the old claim has to be told what replaced it, and a deletion tells them nothing.
+
+**What is gated here was established by planting the case rather than by reading
+the config.** Three checks were observed firing against this file at `4118950`. A
+relative link to a file that does not exist is `link-target`. A fragment with no
+matching heading in this document is `link-anchor`. A four-decimal ratio or a
+dollar amount that occurs in no `specs/*/findings/*.md` is `numeric-provenance`,
+which is the one that changes how this file is written: it treats a
+measurement-shaped figure as a quotation needing a source, so **a figure derived
+in this document states its operands**, and a figure that states none either
+matches a findings document or turns the `corpus` job red. An instrumented run
+reports fifteen of the eighteen checks touching this file, and **that reading is
+known to undercount** — `numeric-provenance` is absent from it and was
+nevertheless observed firing here, so the plant is the measurement and the
+instrumented read is not.
+
+Two consequences cut against what this section used to argue. The prose under
+`tools/` is now held to the standard `research/` and `specs/` are held to, so a
+stale count here fails a gate rather than merely misinforming a reader. And the
+top-level `README.md` is no longer distinguished by being the pointer whose link
+is checked — ~~the only pointer outside it is in the top-level `README.md`, which
+*is* in the corpus include list and therefore has its link checked~~ **this
+file's links are checked too, so the pointer's privilege was the first casualty
+of the widening**.
+
+That the authoritative census is `instruments.py` itself — a Python table,
+reconciled by a gate that runs on every push — is untouched by any of this, and
+the reason is worth separating from the gating question. Being walked by
+`check_corpus.py` buys this file link resolution, anchor resolution and figure
+provenance; it does not buy reconciliation of a prose list against the set the
+list describes, which is the only property that would make a census here
+trustworthy and the property `instruments.py --check` exists to supply. This
+section is commentary on a mechanism that lives elsewhere. When the two disagree,
+the mechanism is right.
 
 ## Which of these run in CI, and the one that deliberately does not
 

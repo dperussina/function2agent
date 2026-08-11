@@ -8,10 +8,11 @@ checks call into — [`tools/corpuscheck/attest.py`](../../../tools/corpuscheck/
 [`tools/corpuscheck/corpus.py`](../../../tools/corpuscheck/corpus.py) and
 [`tools/corpuscheck/search.py`](../../../tools/corpuscheck/search.py) — against
 [`tools/selftest.py`](../../../tools/selftest.py).
-**Reports. Repairs nothing in this document.** No check was changed and no branch was deleted. The
-three defects in §4 are self-test changes owed to `tools/selftest.py`, and that file was under
-another pass's uncommitted edits for the whole of this one, so they are recorded here and left
-unfixed. §4 states each one's reproduction so the repair does not depend on this pass.
+**Reports, and repairs the three defects in §4.** **No check was changed and no branch was deleted**
+— every repair is a self-test or fixture change, because in all three cases the check is right and
+the arm claiming to hold it was not. The three landed after the pass holding `tools/selftest.py`
+committed at `4118950` and released the file; until then they were recorded unfixed, and §4 keeps
+both states. The measurement itself repairs nothing: the rate in §2 stands as taken.
 **User Story**: none directly. Prompted by a census of the checker's decision branches, which was
 commissioned to find out whether the ad hoc practice of fixturing a branch when somebody remembers
 to had produced coverage or the appearance of it.
@@ -52,7 +53,9 @@ immediately before saving.
 > **76** branches and takes the total to **279 (203 + 76)**, of which **55 of 279 (19.7%)** are
 > unheld. `figures.py` is the worst single module at **10 of 20 (50.0%)**. Three unheld branches are
 > live defects rather than merely unfixtured, and each is a self-test that passes for the wrong
-> reason. **The instrument that would gate this rate is declined** — not because the sweep is slow,
+> reason; **all three are repaired here**, and each repair is probed by neutralising the branch it
+> now claims to hold rather than asserted. **The instrument that would gate this rate is declined** —
+> not because the sweep is slow,
 > though it is, but because 25 of the 32 unheld branches in `checks/` are one fixture each, which is
 > the existing practice working unevenly rather than an instrument's output, and a gate would need a
 > baseline of 55 accepted exceptions on its first day.
@@ -237,10 +240,25 @@ These are the 3 of the 4 mis-targeted branches that resolve to a named defect. E
 `tools/selftest.py` or its fixtures rather than to a check — in all three cases the check is right
 and the arm that claims to hold it does not.
 
-**All three are recorded unfixed.** `tools/selftest.py` carried another pass's uncommitted edits
+~~**All three are recorded unfixed.** `tools/selftest.py` carried another pass's uncommitted edits
 throughout this pass, at every reading from 09:06 onward, and editing around a live pass in a file
-whose whole content is a table of assertions is how a row gets absorbed and lost. Each subsection
-below carries the reproduction so the repair does not depend on this pass having done it.
+whose whole content is a table of assertions is how a row gets absorbed and lost.~~ **Repaired
+2026-08-11, after the holding pass committed at `4118950` and released the file.** All three are
+fixed and each fix is probed rather than asserted, which is the discipline whose absence produced
+two of the three. Each subsection below carries the reproduction and the probe.
+
+**The probe is a differential over one variable.** The same four neutralisations were run against a
+clean checkout of `4118950` without the fixes and against the same checkout with only the fixes
+applied. Before: all four leave `tools/selftest.py` at exit 0. After: all four take it to exit 1.
+The neutralisation was located by `ast`, verified against the recorded text of the branch before the
+edit, run with `__pycache__` purged, and the file restored from a byte copy and confirmed present.
+
+| branch | neutralisation | before the fix | after the fix |
+|---|---|---|---|
+| `inventory.py:199` | invert `sites == 0` | exit 0 — unheld | exit 1 — held |
+| `crossrefs.py:188` | branch never entered | exit 0 — unheld | exit 1 — held |
+| `crossrefs.py:190` | never violates | exit 0 — unheld | exit 1 — held |
+| `toc.py:53` | invert the TOC test | exit 0 — unheld | exit 1 — held |
 
 ### 4.1 `inventory.py:199` — a vacuity arm that passes as long as *any* rule announces
 
@@ -259,7 +277,13 @@ lines that appear when the check is stubbed entirely — one about the deleted `
 producing no skip, one about the surviving `research-documents` claim — are the arm's two halves,
 and only the second is doing work under this branch's neutralisation.
 
-The repair is a needle that names the rule, so the arm fails when the wrong rule answers.
+**Repaired**: the needle became `rule findings matched no live claim`, which is the prefix
+`inventory.py` writes for this rule and no other, in place of the bare word `findings`. The probe is
+the defect displayed: under the inverted branch the arm now fails, and the skip list it prints as
+evidence contains `rule research-documents matched no live claim in README.md, research/README.md
+(glob research/[0-9]*.md counts 2): its zero findings mean 'nothing read', not 'nothing wrong'` —
+a message that satisfies both of the old needles and neither of the new one. The wrong rule
+answering is now visible in the failure text rather than invisible in a pass.
 
 ### 4.2 `crossrefs.py:188` and `:190` — a branch dead under its own fixture, and a comment that says otherwise
 
@@ -283,12 +307,21 @@ that. What the row does not do is hold the numeric branch, and the two branches 
 apart in the same function under one comment. **A repair asserted rather than probed is what left
 this here**, which is the same shape as the other two defects in this section.
 
-The branch is reachable and the fixture is one line from correct: a link written
+The branch is reachable and the fixture was one line from correct: a link written
 `[01](research/14-fixture-synthesis.md)` has a two-digit label and a target whose basename does not
 begin `01-`, so it enters at 188 and violates at 190.
 
-Reproduction: delete both branches outright and run `tools/selftest.py`. Every row stays green,
-including `README.md:127`.
+Reproduction of the defect: delete both branches outright and run `tools/selftest.py`. Every row
+stayed green, including `README.md:127`.
+
+**Repaired**: that link was added to the known-bad `README.md` and a row
+`("link-label", "README.md", 133, "a filename beginning 01-")` was added beside the existing one.
+**The misleading comment was corrected rather than left to be re-read**: it now says which branch the
+`README.md:127` row holds and states that it does not hold the numeric branch eleven lines above it
+in the same function, which is the sentence that had to become true. Under either branch neutralised
+the new row fails with `expected link-label at README.md:133 matching 'a filename beginning 01-',
+not found`, and the `README.md:127` row is unaffected — the two rows now hold two branches instead of
+one row appearing to hold both.
 
 ### 4.3 `toc.py:53` — a TOC-locating branch that inverts with no effect
 
@@ -302,10 +335,27 @@ becomes that H1 at line 1; the sweep for the TOC's extent then runs to the next 
 or higher level and no other H1 stops it; so the sweep collects the same two entries it collected
 before, and the coverage comparison below reaches the same verdict.
 
-Reproduction: invert `toc.py:53` and run `tools/selftest.py`. It stays green.
+Reproduction of the defect: invert `toc.py:53` and run `tools/selftest.py`. It stayed green.
 
-The repair is a fixture whose document has a heading before its TOC that the inverted scan would
-seize on, so the two starting points select different entry sets.
+**Repaired, and not by the route that first suggested itself.** ~~The repair is a fixture whose
+document has a heading before its TOC that the inverted scan would seize on, so the two starting
+points select different entry sets.~~ A heading before the TOC changes nothing, because the inverted
+scan takes the *first* non-TOC heading and that is the H1 at line 1 whatever sits after it. What
+separates the two starting points is the **extent sweep**: located correctly it stops at the H2 below
+the contents list, and inverted it runs to the next heading of level 1 or higher, finds no second H1,
+and therefore collects every self-link in the document. So a self-link placed *below* the contents
+list is invisible to the correct scan and swallowed by the inverted one. One was appended to
+`14-fixture-synthesis.md` pointing at the section the `toc-coverage` row flags, and under inversion
+the check now produces nothing at all: the self-test fails with both `check toc-coverage produced
+nothing on known-bad` and the missing line 44 row.
+
+**It was appended at end of file on purpose.** An insertion beside line 44 moved every line below it
+and broke two `table-integrity` rows pinned at line 55 and two generated line-count claims; appending
+moved only the document's own length, which is one number in three places. Those places were two
+`GEN_EXPECTED` rows and the `catalog-line-count` drift row, and the fixture's own catalog claim moved
+from 56 to 64 so that the planted drift stays `+1` — the width that shipped past `TOLERANCE = 2`, and
+the whole reason that row exists. **Fixing a self-test by editing a fixture costs a line-number
+audit**, and that cost is the argument for appending rather than inserting.
 
 ## 5. The verdict: the instrument is declined, on composition
 

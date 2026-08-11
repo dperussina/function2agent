@@ -112,7 +112,22 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     # branch could have been deleted outright and Direction 1 would still have
     # been satisfied by the two `finding NNN` rows above. This row is what makes
     # resolving the target before comparing a change that can be checked.
+    #
+    # It holds the filename branch and it does **not** hold the numeric branch
+    # eleven lines above it in the same function, which a 2026-08-11 census found
+    # unheld in both of its decision points. This comment claimed otherwise by
+    # sitting alone over the pair. The label below is a backticked filename, so
+    # `_FILENAME_IN_TEXT` matches it and `_NUMERIC_TEXT` — which requires the label
+    # be exactly two digits — never can, and control never enters the numeric
+    # branch from this row. The row beneath it is the one that does.
     ("link-label", "README.md", 127, "research/01-fixture-metrics.md"),
+    # The numeric branch, whose two decision points were `crossrefs#023` and
+    # `crossrefs#024` in that census and were both removable with every row here
+    # still green — `#024` was never evaluated at all. A bare two-digit label
+    # enters at the first and violates at the second, because the target's
+    # basename begins `14-` and the label reads `01`. Delete either branch and
+    # this row goes quiet.
+    ("link-label", "README.md", 133, "a filename beginning 01-"),
     ("identifier-resolution", "research/14-fixture-synthesis.md", 16, "D-99"),
     ("identifier-gap", None, None, "D-03"),
     # 4 — findings numbering
@@ -182,7 +197,7 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     # Wrong by one — the size of the drift that shipped past `TOLERANCE = 2`.
     # Every other planted drift here is at least 26 lines, so without this row
     # the tolerance can be restored and the whole self-test still passes.
-    ("catalog-line-count", "research/README.md", 15, "listed at 56 lines"),
+    ("catalog-line-count", "research/README.md", 15, "listed at 64 lines"),
     ("catalog-line-count", "research/README.md", 15, "drift of +1"),
     ("toc-coverage", "research/14-fixture-synthesis.md", 44, "table of contents"),
     # Verdict-shaped claims in a run that called no model. One entry per pattern,
@@ -374,9 +389,13 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
 GEN_EXPECTED: list[tuple[str, str, int, str, str, str]] = [
     ("register-range", "README.md", 18, "02", "04", "STALE"),
     ("register-range", "README.md", 24, "03", "04", "MANUAL"),
-    ("line-count", "research/README.md", 8, "12", "57", "STALE"),
+    # The `57`s moved to `65` on 2026-08-11 when `14-fixture-synthesis.md` gained
+    # the self-link that holds `toc.py`'s TOC-locating branch. It was appended at
+    # end of file on purpose, so that line 44 and the two `table-integrity` rows
+    # at line 55 did not move and only the document's own length did.
+    ("line-count", "research/README.md", 8, "12", "65", "STALE"),
     ("line-count", "research/README.md", 13, "40", "14", "STALE"),
-    ("line-count", "research/README.md", 15, "56", "57", "STALE"),
+    ("line-count", "research/README.md", 15, "64", "65", "STALE"),
 ]
 
 #: Sites in known-good that must be found and must be reported clean. The
@@ -547,7 +566,20 @@ def _inventory_floor_selftest(verbose: bool) -> list[str]:
         readme.write_text(after, encoding="utf-8")
 
         report, _ = run_checks(root)
-        skips = [r for c, r in report.skipped if c == "inventory-count" and "findings" in r]
+        # The needle names the rule. `"findings" in r` was the earlier test and it
+        # did not hold this arm: every rule's vacuity message ends in the same
+        # boilerplate about zero findings meaning "nothing read" rather than
+        # "nothing wrong", so the word `findings` occurs in *any* rule's
+        # announcement. Under a neutralised `sites == 0` the `research-documents`
+        # rule announced instead, satisfied both needles, and this arm went green
+        # having never touched the rule it names — it asserted that something
+        # announced, which was not the claim. `rule findings matched no live claim`
+        # is the prefix `inventory.py` writes for this rule and no other.
+        skips = [
+            r
+            for c, r in report.skipped
+            if c == "inventory-count" and "rule findings matched no live claim" in r
+        ]
         announced = [r for r in skips if "nothing read" in r]
         fired = [v for v in report.violations if v.check == "inventory-count"]
 

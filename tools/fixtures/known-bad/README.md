@@ -125,3 +125,9 @@ The filename branch of `link-label` had no firing site in either fixture until
 2026-08-10 — every planted filename label agreed with its target, so the branch
 was held only in the direction that passes. This label names one document and
 the link goes to another: [`research/01-fixture-metrics.md`](research/14-fixture-synthesis.md).
+
+The **numeric** branch of `link-label` had no firing site either, and the row
+above never reached it: a two-digit label is matched by one pattern and a
+backticked filename by another, so the label above enters the filename branch and
+leaves the numeric branch unevaluated. A bare two-digit label whose target's
+basename begins with different digits is what enters it: [01](research/14-fixture-synthesis.md).
