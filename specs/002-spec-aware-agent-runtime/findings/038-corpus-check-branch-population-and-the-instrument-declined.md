@@ -117,12 +117,60 @@ becomes an infinite loop, and a `None` guard inverted dereferences the `None`.
 
 The verdict for each branch is one of three, and the third is not a rounding of the other two:
 
-- **held** — the neutralised tree makes `tools/selftest.py` exit non-zero. Removing the branch would
-  be caught.
+- ~~**held** — the neutralised tree makes `tools/selftest.py` exit non-zero. Removing the branch
+  would be caught.~~ **Superseded 2026-08-11 — the box below repairs this definition, and repairs
+  nothing else.**
+- **held** — the neutralised tree makes `tools/selftest.py` **report a failing arm**: a non-zero exit
+  that carries a verdict. Removing the branch would be caught. An uncaught exception is a non-zero
+  exit and is not a hold, because it reports nothing.
 - **unheld** — the neutralised tree leaves `tools/selftest.py` exit 0. Nothing in the repository
   would notice.
 - **unscorable** — no neutralisation form produced a runnable tree. All three either raised or hung,
-  so the branch has no verdict rather than a green one.
+  so the branch has no verdict rather than a green one. **A form that raises lands here and not in
+  `held`**, which is the precedence the box below supplies.
+
+> ### The `held` definition overlapped `unscorable` on the raised case, and the repair is to the definition
+>
+> **Corrected 2026-08-11.** `held`'s test as written above was an exit code, and `unscorable`'s was
+> whether any form produced a runnable tree. **A raise satisfies both**, because an uncaught
+> exception exits non-zero, and nothing above said which verdict wins. A reader applying the two
+> definitions mechanically therefore scores a *crashing* branch **held** — a false positive in the
+> coverage direction, which is the opposite of the direction §7 establishes this document's numbers
+> are safe in. The silence was not quite symmetric, and that is worth naming rather than
+> overstating: `unscorable`'s *"produced a runnable tree"* leans the right way, since a tree that
+> raises is not a runnable one. But `held`'s clause never mentioned runnability, so the lean was
+> available only to a reader who went looking for it.
+>
+> **The measurement, taken here rather than reasoned from the definitions.** The branch is
+> `ratio_arithmetic.py:105`, the `order == "count-first"` test that decides which regex group is the
+> count and which is the rate. Under all three of §1's forms it raises
+> `ValueError: invalid literal for int() with base 10` out of `_num`, because the swapped groups
+> hand a rate to the integer parser — and `tools/selftest.py` exits **1** under every one of them.
+> **No form hangs**, so §1's *"either raised or hung"* resolves to *raised* here, three times.
+> Measured 2026-08-11 at `19aadbf`, over a `ratio_arithmetic.py` byte-identical to `aaa329b`'s, so
+> it is the same branch this document scored. The nine branches were re-derived by `ast` from
+> `git show HEAD:<path>` and every span was verified against its recorded text before substitution,
+> which is §1's method unchanged.
+>
+> **A raise does not score `held`, and what settles it is what `selftest.py` printed rather than what
+> it returned.** Under the inverted form its standard output is **empty** — not one `PASS` line, no
+> arm named, no site — and the interpreter dies inside `main` at `run_checks(BAD)` before any arm is
+> evaluated. That exit 1 is the interpreter's, and it is indistinguishable from the exit 1 a missing
+> file or a malformed mutation produces, so it carries no information about the branch at all. Set
+> that beside the genuine hold §2.3 records for `corpus.py:161`, where `tools/selftest.py` and
+> `check_corpus.py` both exit 1 **with a verdict at a named site**. The old definition's second
+> sentence — *"Removing the branch would be caught"* — is the clause a raise fails, so its two
+> halves disagreed with each other and the repair makes the operational half say what the gloss
+> already meant. **A crash is not a detection**: the instrument did not catch the branch's removal,
+> it became unable to answer.
+>
+> **This repairs the definition and no verdict, and no branch's verdict was re-derived under it.**
+> The repaired test differs from the old one only where a neutralisation raises, and a raise is what
+> put a branch in the unscorable class rather than in `held` — so every branch this document records
+> as held was scored on a run that reported a verdict, and every figure in §2 stands exactly as
+> taken. Re-stating 279 verdicts against a repaired definition without re-running them would publish
+> a measurement never taken, which is the defect §8 records this document's own harness committing
+> one level up. What the repair changes is what a *later* sweep may conclude, and the count in §5.
 
 **The edit was verified against the recorded text before it was made.** Each span carries the source
 of its own test, and the neutralisation asserted the bytes at the span matched that text before
@@ -322,8 +370,11 @@ unscorable**.
 > loop making progress stalls the outer one. A fourth form — the termination bound kept as the left
 > conjunct and the right conjunct forced true — terminates, and under it `tools/selftest.py` and
 > `check_corpus.py` both exit 1, so the branch is **held**. Measured 2026-08-11 at `92143b9`, over a
-> `corpus.py` byte-identical to `aaa329b`'s, so it is the same branch this document scored. The other
-> unscorable branch was not re-examined and no claim is made about it.
+> `corpus.py` byte-identical to `aaa329b`'s, so it is the same branch this document scored.
+> ~~The other unscorable branch was not re-examined and no claim is made about it.~~
+> **Superseded 2026-08-11: the other unscorable branch is `ratio_arithmetic.py:105` and §1's box
+> examines it.** It raises under all three forms and stays unscorable under the repaired `held`,
+> so it is the one branch in this population that still carries no verdict.
 > **Neither figure below is advanced for this**, because the sweep that produced them tried three
 > forms and these are its numbers; what changes is what "unscorable" may be read as meaning, and
 > `tools/README.md` carries the generalisation.
@@ -533,10 +584,22 @@ Building this gate would open a second one.
 
 **The other costs, stated for completeness:**
 
-- **Three-valued results.** The verdict is held / unheld / unscorable, and a gate needs a bit. The
-  two unscorable branches have no verdict rather than a passing one, so the gate would have to
+- **Three-valued results.** The verdict is held / unheld / unscorable, and a gate needs a bit.
+  ~~The two unscorable branches have no verdict rather than a passing one, so the gate would have to
   either accept them as exceptions — growing the list — or report a green over a branch it could not
-  score, which is the failure mode findings 032 and 034 already record.
+  score, which is the failure mode findings 032 and 034 already record.~~
+  **Corrected 2026-08-11 — one unscorable branch, not two, and the argument survives at one.** §2.3
+  records `corpus.py:161` scored **held** under a fourth form, so the only branch left carrying no
+  verdict is `ratio_arithmetic.py:105`. A gate still faces the identical choice over it — accept it
+  as an exception, growing the list, or report a green over a branch it could not score, which is
+  the failure mode findings 032 and 034 already record — and that choice does not divide by the
+  count: one unscorable branch needs the same machinery two did, and a population derived by `ast`
+  can grow the class back at any commit. **The correction sharpens this cost rather than softening
+  it.** §1's box measures a third option the struck bullet did not name: a gate reading exit codes
+  mechanically scores this branch **held** and publishes a green *by crash*, which is worse than a
+  green over a branch it could not score, and this is the one branch in the population that
+  demonstrates it. **§2.3's figures are not advanced for any of this** — 222, 55 and 2 are the
+  three-form sweep's numbers over `aaa329b` and they stay as taken.
 - **Runtime.** A full sweep runs about 100 seconds against `threshold_probe.py`'s measured 5.2
   seconds, because each of 279 branches costs a `selftest.py` run. `threshold_probe.py` was wired
   into CI *because* it was measured at five seconds; a twenty-fold instrument does not inherit that
@@ -597,6 +660,65 @@ against what the branch does, which no sweep automates.
 The consequence for quoting this finding: the unheld rate is usable as a floor, and the held count
 is not usable as a coverage claim. `170 of 203` branches in `checks/` survive neutralisation
 detection; that sentence is true and it is not the sentence "83.7% of the checker is covered".
+
+### 7.1 A comparison no fixture can hold, whatever the corpus says
+
+**Measured 2026-08-11 at `19aadbf`, and recorded here because it existed nowhere in this corpus.** An
+earlier pass settled this question by planting and left the result in a transcript. The plant is cheap,
+so it was re-run for this subsection rather than transcribed from that record.
+
+§2.2.1 names `rate_columns`'s header test and `column_of`'s containment test among the four branches
+`check_corpus.py` holds, and says their hold rests on prose. **This is the sharper version of that
+observation**: for one comparison, no prose can hold them at all.
+
+`numeric-provenance`'s rate-column exemption is a single membership test, in
+`numeric_provenance.py`'s `run`:
+
+    column_of(masked, fig.col) in rates.get(i, ())
+
+**Both operands are ordinals out of `enumerate(table_cells(...))`, and that is the structural half.**
+`rate_columns` enumerates `table_cells(header)`; `column_of` enumerates `table_cells(line)`. The two
+calls are on different lines — a header and a body row — so they are the same enumerator applied
+twice rather than one shared call, and what matters is that the ordinals on both sides of `in` are
+produced by that one function. **In `tools/` it has exactly two readers, and they are those two
+functions**, which this search says and a count would not:
+
+    git grep -n 'table_cells' -- tools/ tests/
+
+Nothing else under `tools/` carries an independent opinion about which column is which. The only
+reader outside it is `tests/unit/test_figures_library.py`.
+
+**The plant, with its uniformity verified on both sides rather than assumed.** A sentinel cell was
+prepended to `table_cells`'s return value, after both of its pipe-stripping steps so that neither
+removes it again. For a header declaring `cost / call`, `rate_columns` moved from `[1]` to `[2]`; for
+the body row beneath it, `column_of` moved from `1` to `2`; and the membership test answered true
+before the shift and after it. Every ordinal on both sides moved by one, so the comparison cancels
+the shift and reaches the same verdict.
+
+**Of the twenty-five instruments, twenty-four are blind and one fires.** The population is the
+nineteen checks `check_corpus.py --list-checks` registers, all of which run inside `check_corpus.py`,
+plus the six other gate commands — and it is not `instruments.py --check`'s own `19 gate, 6 advisory`
+split, which counts a different thing and agrees by coincidence. Under the plant `check_corpus.py`
+read 0 errors and 0 warnings, `gen_claims.py --check` read 0 stale, `check_tampers.py` read 344
+proofs and 0 errors, `tools/selftest.py` passed, `instruments.py --check` reported the census OK, and
+`threshold_probe.py` reported all 34 perturbations behaving as declared. **`pytest` fired: four
+failures, every one of them in `tests/unit/test_figures_library.py`**, and every one an exact-offset
+assertion.
+
+**This is a check-design gap and not a coverage gap, and that distinction is the transferable part.**
+Every other member of this document's unheld family is a branch nobody fixtured, and one fixture each
+would hold it — that is the whole of §5's composition argument. This one differs in kind: because
+both operands come from the one enumeration, **no corpus content can ever produce a firing**, so it
+is outside the reach of the repair §5 declines to build an instrument for. `table-integrity` is the
+check a reader would expect to catch a spurious cell, and it cannot see this one at all — it counts
+cells through `corpus.split_row` and never calls `table_cells`, so the sentinel never reaches it.
+That is a stronger blindness than a shift it saw and cancelled.
+
+**Catching it needs an absolute reference, and the corpus supplies none.** Three exist: a hard-coded
+expected ordinal, which is exactly what those four unit tests are and why they were the only
+instrument that fired; an independent second implementation to diff the ordinals against; or an
+anchor on the header cell's **text** rather than on its position. **No check was built here and no
+rule was widened.** This subsection records the measured negative and stops there.
 
 ## 8. The harness had the defect it was hunting, one level up
 
