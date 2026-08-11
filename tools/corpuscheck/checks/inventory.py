@@ -43,11 +43,20 @@ against a glob that counts thirteen directories.
 
 **`findings` was recorded here as a rule whose
 scoped documents "stopped stating a total", and that was wrong: they never stated
-one.** Replayed on 2026-08-11 against this module's own masking over all 266
-revisions of `README.md` and `research/README.md`, the rule matched nothing in
-every revision — it had no live site for its whole life, not a lost one. It has
-one now: the repository map states the corpus-wide total across both `findings/`
-directories, which is the scope this rule's glob actually spans.
+one.** Replayed on 2026-08-11 against this module's own masking over ~~all 266
+revisions of~~ **all 14 revisions of** `README.md` and `research/README.md`, the
+rule matched nothing in every revision before its current site — it had no live
+site for its whole life, not a lost one. It has one now: the repository map
+states the corpus-wide total across both `findings/` directories, which is the
+scope this rule's glob actually spans.
+
+**The 266 is corrected 2026-08-11 and it is a fourth wrong figure in this
+docstring, of the same class as the three above.** The two documents have seven
+revisions each. 266 is the repository's *total commit count* at `c9e42ad`, the
+commit that wrote this rule's scope-widening comment — a commit count relabelled
+as a document-revision count, with the operands never stated. Re-replayed at 14
+file-revisions the conclusion is unchanged and is now checkable: zero live
+matches before `451725f`, one at it, which is the site the rule reads today.
 
 **Three narrated histories in one docstring, two invented and one stale, is a
 pattern rather than three slips, and the pattern is recorded where the checker's
