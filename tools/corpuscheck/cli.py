@@ -124,6 +124,36 @@ def reattest(root: Path, config: dict, reason: str, unit_name: str | None) -> in
     None of the three writes a pin, and the tree-unmoved line in particular does
     not make act one satisfy act two: the record it describes is new bytes, so
     `preserved-evidence` reports `unratified` until a human moves the digest.
+
+    **The asymmetry in the tree-moved bullet is deliberate. Ruled 2026-08-11: the
+    unmoved tree gets a line, the moved tree gets no counterpart, and that stays.**
+    What the line adds is not identification — the new digest and `currently
+    pinned` print in both states, so the two are already told apart — it is
+    *reassurance*, and the asymmetry runs in the fail-safe direction. Wrongly
+    **present**, the reassurance lets a human skip ratification of a tree that did
+    move, which is the false-reassurance defect `f7ade9f` closed and
+    `test_reporting_an_unmoved_tree_does_not_ratify_it` pins against. Wrongly
+    **absent**, it costs a ratification of a tree that had not moved: mildly
+    wasteful, and nothing is lost. **The general form is that a claim licensing a
+    reader to skip work must be earned and stated positively, and its absence must
+    mean do the work. Shaped the other way round — earned in order to *do* the
+    work — the same report fails open.**
+
+    `tools/README.md`'s emptiness-test inversion says to verify by presence and
+    never by absence, and a reader arriving here will reach for it as the reason to
+    add the line. **It is not this case.** There a check's silence could not
+    separate success from total destruction, so an absence carried no information
+    whatever. Here the digest separates the two states, and the only thing gated on
+    this line's presence is the shortcut.
+
+    No test prices adding it: `test_a_moved_tree_is_not_reported_as_unmoved`
+    asserts only the absence of `the attested tree has not moved` and of `nothing
+    to ratify`, and a distinct moved-tree line contains neither needle. **That cuts
+    the other way too — a bare `else` on the comparison below would be equally
+    unpriced, and it would be wrong.** `baseline` is `None` for every
+    `attest.NO_BASELINE` state and for `unratified`, so an `else` would report a
+    moved tree in exactly the states where the WARNING above says whether the tree
+    moved is not known from here.
     """
     from . import attest
 

@@ -83,10 +83,21 @@ and a rebuild never reproduces the bytes it replaces — `generation`, `attested
 and `reason` all move — so correcting one tree without it leaves the other tree
 red as `unratified` for no edit of its own.
 
-`--reattest` prints the new digest and never writes the pin. Nothing else in the
-repository calls `attest.build`, and in particular `neutralise_decision.py` does
-not: a tool that edited the evidence and refreshed its own attestation would
-reproduce, one layer down, exactly the vacuity this check exists to close.
+`--reattest` prints the new digest and never writes the pin. ~~Nothing else in the
+repository calls `attest.build`,~~ **Corrected 2026-08-11: the `else` excludes only
+`--reattest` itself, and it does not rescue the claim. Re-counted at `6f71c48`
+there are 17 invocations of `attest.build` — one in `cli.reattest`, 14 in
+`tests/unit/test_attest_build.py` and 2 in
+`tests/unit/test_preserved_evidence_scope.py` — so 16 of them lie outside the
+`else`, and no aliasing import or dynamic lookup reaches the function by another
+name. The claim that was meant is the one scoped to tools, which is what
+`tools/README.md` now carries: no tool other than `--reattest` calls
+`attest.build`, so nothing that edits these artifacts can refresh their own
+attestation. The 16 exercise the writer rather than editing the evidence, so they
+fall outside the scoped claim instead of refuting it.** And in particular
+`neutralise_decision.py` does not: a tool that edited the evidence and refreshed
+its own attestation would reproduce, one layer down, exactly the vacuity this
+check exists to close.
 
 There is one state in which a rebuild alone leaves this check green, and it is not
 a hole in the split: a rebuild that reproduces a ratified record **byte for byte**
