@@ -4131,13 +4131,25 @@ throughout and its index says why.
 
 **What this decision does not license.**
 - **Not** a licence to edit any artifact under `harness/verifier-vs-judge/results/` or
-  `harness/verifier-vs-judge/adjudication/`. Those runs happened when the experiment was called `E8`;
-  rewriting them would falsify a record and break the fingerprints that make them self-verifying.
-  This is the frozen-sites ruling applied, not a new exception to it.
-- **Not** a licence to edit any fingerprinted harness file, including `corpus_freeze.json`. The freeze
-  refuses to start on a change to the corpus files it pins, and separately its own bytes are hashed
-  into `harness_fingerprint`; the second of those is the binding one here and it is the one the
-  neutralisation of 2026-08-03 already respected when it declined to edit `analyze.py`.
+  `harness/verifier-vs-judge/adjudication/`. Those runs happened when the experiment was called `E8`,
+  and rewriting them would falsify a record. **Nothing mechanical would stop it**, which was
+  established by trying it rather than by reading the code: an `E8`→`E19` edit planted in
+  `results/20260803T092721-final-verify/manifest.json` left `freeze.py --verify` reading *intact*,
+  `neutralise_decision.py --check` passing, and `check_corpus.py` at zero errors. A manifest
+  **records** `harness_fingerprint`; no hash covers the manifest's own bytes. **These twelve
+  directories are held by the frozen-sites ruling alone**, and that is the whole of what holds them.
+  This is that ruling applied, not a new exception to it. The residual is named under
+  [Open items](#open-items-this-plan-does-not-resolve).
+- **Not** a licence to edit any fingerprinted harness file, including `corpus_freeze.json`. Two
+  distinct mechanisms are in play and only one of them binds here. The freeze refuses to start on a
+  change to the corpus it pins — **eleven `ceiling-test` run directories, which live under a
+  different harness entirely** and contain none of this experiment's output — while
+  `corpus_freeze.json`'s own bytes are hashed into `harness_fingerprint`. **The second is the binding
+  one**, demonstrated by planting the identifier edit: `freeze.py --verify` still read *intact* and
+  the fingerprint moved from `6c58910ec3fd9c36` to `6455304208664976`. Fifteen of the sixteen
+  fingerprinted files carry the identifier; only `c2_derivations.json` does not. This is the
+  constraint the neutralisation of 2026-08-03 already respected when it declined to edit
+  `analyze.py`.
 - **Not** a re-opening of **OD-14**. The verifier's margin over an LLM judge stays **UNMEASURED** and
   deferred to production traffic. This entry renames an experiment and changes no figure, no
   denominator, no verdict and no state.
@@ -4222,3 +4234,17 @@ dated notice stating that every artifact beneath it records the earlier name.
   unmeasured:** **U-44**, whether the target's safe-method operations can induce outbound requests.
   That is a per-target property with a zero-model-spend measurement and a fail-closed default, and it
   is the one thing the mechanism cannot settle for itself.
+- **The twelve `verifier-vs-judge` run directories are held by ruling alone, and nothing mechanical
+  holds them.** Discovered 2026-08-11 while taking **OD-31**, and established by planting the edit
+  rather than by reading the code: an identifier rewrite in
+  `results/20260803T092721-final-verify/manifest.json` left `freeze.py --verify` reading *intact*,
+  `neutralise_decision.py --check` passing and `check_corpus.py` at zero errors. A manifest **records**
+  `harness_fingerprint`; **no hash covers a manifest's own bytes**, and `corpus_freeze.json` pins the
+  `ceiling-test` corpus under a different harness rather than anything under `results/`. The three
+  earlier occasions the frozen-sites ruling protected a historical observation all held for the same
+  reason this one does — a convention that a careful reader honours. **The exposure is a future agent
+  editing a dated record silently and no gate saying so**, which is precisely the failure mode
+  `dry-run-verdict` was built at the repository boundary to catch for a different class of defect.
+  Whether that boundary should also carry a bytes-level attestation over `results/` is an owner call
+  with a real cost: it pins twelve directories against every future correction, including the next
+  neutralisation.
