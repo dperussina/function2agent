@@ -1847,10 +1847,9 @@ pass's `git status` clean. The proximate cause is the brief, so the remedy belon
 
 **Amended 2026-08-11: the convention above is the form a brief quotes, and quoted with the other
 standing rule about `PATH` it supplies no interpreter at all.** The companion rule reads
-*"`export PATH="$PWD/.venv/bin:$PATH"` before any gate"*. `.venv/` is git-ignored at
-`.gitignore:5`, so a clean detached worktree has no `.venv`, `$PWD/.venv/bin` is an empty path
-element, and the rule resolves to nothing. The two rules cannot both be followed, and they have
-been quoted together in
+*"`export PATH="$PWD/.venv/bin:$PATH"` before any gate"*. `.venv/` is git-ignored at `.gitignore:5`,
+so a clean detached worktree has no `.venv`, `$PWD/.venv/bin` is an empty path element, and the rule
+resolves to nothing. The two rules cannot both be followed, and they have been quoted together in
 every brief for a long time; what has been happening instead is that each pass silently pointed
 `PATH` at the **shared tree's** `.venv/bin`, which is obvious enough that nobody filed it. **What a
 bare `python3` gets there is not a smaller environment, it is a different interpreter:**
