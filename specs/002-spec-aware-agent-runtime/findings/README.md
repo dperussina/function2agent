@@ -114,6 +114,41 @@ feature 001's validation work, and the reverse. Nothing in the tooling will noti
 the citation convention above — quote a finding by number **and** link it, so a reader can see which
 namespace the number came from even where the checker cannot.
 
+## Supersession here is visible from inside the document it supersedes, so the kind is not named
+
+[Feature 001's index](../../001-discovery-validation/findings/README.md) names, for each superseded
+finding, whether it was **overtaken by later work** or **self-corrected by its own author**. That
+split earns its place there because feature 001 holds a case nothing else reaches:
+[finding 016](../../001-discovery-validation/findings/016-provider-sdk-roundtrip.md) carries no
+strike, no correction and no forward reference, while
+[finding 030](./030-provider-state-chain-derived-not-measured.md) records that its arms have no
+persistence boundary at all and
+[finding 031](../../001-discovery-validation/findings/031-provider-state-chain-measured.md) measured
+the question it was read as answering. A reader inside 016 cannot tell.
+
+**This directory holds no counterpart, measured 2026-08-11 over the eighteen documents it then held,
+and the split is declined here on that measurement rather than on taste.** Every supersession that
+reaches a feature 002 finding is disclosed in the finding itself. The eight carriers above disclose in
+place by construction, and each supersession arriving from outside is recorded at its target: `024`'s
+derived pair cells by a dated note naming
+[finding 025](./025-preflight-unshare-pair-measured.md), `030`'s load-bearing negative by a
+`SUPERSEDED IN PART` banner naming finding 031, `027`'s §5 platform ambiguity by the note
+[finding 034](./034-removal-proof-skip-collapse-and-toolchain-degradation.md) amended into it, and
+`019`'s headline rate by the strike under its own `## The headline` that
+[finding 020](./020-phase-2-defect-density-adjudicated.md) adjudicated. The ten documents carrying no
+in-place marker carry no inbound supersession either;
+[033](./033-session-table-wal-race-unreachable-and-owed-to-migration.md) is the nearest case and
+records the later owner ruling **as confirming it**, unstruck and on purpose. So naming the kind here
+would add a column that changes no reader's reach, which is the whole of what feature 001's split
+buys.
+
+**One row is a live instance of the harm the paragraph under `## Index` names, and it is recorded here
+rather than repaired.** `029`'s row states *"FR-005's wall-clock ceiling does not fire"* and *"The
+ceiling is reachable **only by crashing**"*. Both were true on 2026-08-05 and both were discharged the
+same day by that document's own block: the numerator landed, and 7 of 7 arms now terminate on the
+dimension where 3 of 7 did. Restating a finding's current authority in a row is an owner call rather
+than an index edit, so the row stands and this sentence is what a reader meets first.
+
 ## Index
 
 The table below carries one row per finding filed in this directory. There are eighteen; the
@@ -126,13 +161,24 @@ files a measurement by what it is *of* — see
 [Numbering](#numbering-this-namespace-continues-feature-001s-sequence-rather-than-restarting) for
 why the number never identified a feature.
 
-**Six of the eighteen carry a dated in-place supersession, and two of those six supersede their own
-headline.** A row that restated an original claim where the document has since struck it would
+~~**Six of the eighteen carry a dated in-place supersession, and two of those six supersede their own
+headline.**~~ **Eight of the eighteen carry a dated in-place supersession, and two of the eight
+supersede their own headline** *(recounted 2026-08-11 over the eighteen documents this directory then
+held; the earlier six was low by two)*. A row that restated an original claim where the document has
+since struck it would
 propagate a retracted claim out of an authority namespace, so where the two disagree the row below
 states the current text and says that it superseded something. `019` and `030` are the two: `019`'s
 headline is struck under its own `## The headline`, and `030`'s load-bearing negative is marked
 DISCHARGED. **`019`'s own title still states the superseded rate**, which is the sharpest reason not
 to build an index out of titles.
+
+**The eight are `019`, `023`, `024`, `026`, `027`, `029`, `030` and `036`, and the two the earlier
+count missed were missed for one reason: neither strikes the words it supersedes.** `029` carries a
+dated `⚠️ BOTH DISCHARGED 2026-08-05` block that retracts its own premise for asking
+[§8](./029-wall-clock-ceiling-unenforced.md)'s first question and rescopes §6's framing of the
+crash-only route, and `036` carries a `Superseded in part 2026-08-11` note beneath a struck
+limitation. `027`'s marker is a strike spanning a line boundary, so a reading of this directory taken
+one line at a time reports seven rather than eight.
 
 | Finding | Subject | Spend |
 |---|---|---|
