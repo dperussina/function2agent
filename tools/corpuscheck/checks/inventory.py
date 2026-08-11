@@ -19,10 +19,16 @@ indistinguishable from a rule that passes**, which is why the tail of this
 function announces one rather than contributing a silent zero. The floor is the
 one `definition-count` already carries, and it is here for the same reason: a
 count check's clean output and its blind output are the same output. Measured
-2026-08-10 over all six rules, two were reporting on nothing — `findings`, whose
-scoped documents stopped stating a total, and `committed-harnesses`, whose only
-in-scope site was struck on 2026-08-02 and re-stated without a count on
-2026-08-03. Both had been silent through every green run since.
+2026-08-10 over all six rules, two were reporting on nothing — `findings` and
+`committed-harnesses` — and both had been silent through every green run.
+`committed-harnesses`'s only in-scope site was struck on 2026-08-02 and re-stated
+without a count on 2026-08-03. **`findings` was recorded here as a rule whose
+scoped documents "stopped stating a total", and that was wrong: they never stated
+one.** Replayed on 2026-08-11 against this module's own masking over all 266
+revisions of `README.md` and `research/README.md`, the rule matched nothing in
+every revision — it had no live site for its whole life, not a lost one. It has
+one now: the repository map states the corpus-wide total across both `findings/`
+directories, which is the scope this rule's glob actually spans.
 
 The announcement is a skip and not an error, which is where this parts company
 with `gen_claims.py`'s floor of one. A generator that matches nothing is dead by
