@@ -1,4 +1,20 @@
-# E8 — verifier vs judge
+# E19 — verifier vs judge
+
+> ## ⚠️ THIS EXPERIMENT WAS CALLED `E8` WHEN EVERY ARTIFACT BELOW IT WAS RECORDED
+>
+> **Renumbered to `E19` on 2026-08-11 by `plan.md` OD-31.** The identifier `E8` named two different
+> experiments: this one, and the Stage-D synthesis experiment in the experiment ladder. **Stage D
+> keeps `E8`. This experiment is `E19`.**
+>
+> **Every artifact in this directory still says `E8`, and that is deliberate.** Twelve committed run
+> directories, their manifests, the adjudication study and
+> [`results/NEUTRALISATION.md`](./results/NEUTRALISATION.md) are dated records of runs that happened
+> under the old name. Fifteen of the sixteen files hashed into `harness_fingerprint` carry the name
+> too, `corpus_freeze.json` among them, so editing any of them would break a fingerprint that a
+> committed manifest still matches — `6c58910ec3fd9c36`, recorded by
+> `results/20260803T092721-final-verify/manifest.json`, reproduces from this directory as it stands.
+> **Reading `E8` anywhere beneath this file means this experiment.** Nothing else in the repository
+> named `E8` has a harness.
 
 **Does a contract-derived verifier catch real failures that an LLM judge misses?** That is
 hypothesis **H2** from `research/11-validation-plan.md`, and it is the row that document calls
@@ -15,7 +31,7 @@ has been silently applied.
 > This is spike code. It is not a product prototype, nothing in `src/` may import from it, and
 > it is scheduled for deletion after 2026-11-30.
 
-> ## ⛔ E8 is CLOSED. It was built and then deliberately **not run**. Arm (c1) is QUARANTINED.
+> ## ⛔ E19 is CLOSED. It was built and then deliberately **not run**. Arm (c1) is QUARANTINED.
 >
 > **Status: built, dry-run at $0.00, and retired by owner decision on 2026-08-03 without a
 > single model call.** Not "not run yet" — *not run*, because the corpus cannot answer the
@@ -186,7 +202,7 @@ existed. With the walk resolving `$ref`s transitively, c1 detects **0 of 9**, as
 > defect is in the set-typed one: clause C1.5 fires 3 times corpus-wide and is wrong all 3 times,
 > which no numeric-class control can see. **A control aimed at one failure class certifies
 > nothing about the others** — and this one certified an arm whose only non-trivial output was
-> fabricated. Recorded because that lesson outlives E8. B5.1, B5.2, and finding 015.)*
+> fabricated. Recorded because that lesson outlives E19. B5.1, B5.2, and finding 015.)*
 
 ### 4. Frozen corpus scope
 
@@ -456,7 +472,7 @@ catch it: no recorded trace contains a users listing. With it corrected, all 44 
    (N, NM, R3, W1), taking the whole `protocol` negative class with them, and no policy
    setting recovers them — every record of every lost family lives in a cross-battery run
    (B4.4). And `UNV_c1` is 92.0%, with every marginal c1 detection coming from its one
-   non-schema clause: **E8 has one verifier arm that can make a claim, not two** (B4.6).
+   non-schema clause: **E19 has one verifier arm that can make a claim, not two** (B4.6).
    The 9 numeric false successes are all clean, so the central claim is unaffected.
 5. **Run the §4.1 oracle adjudication**: a human pass over all 20 negatives and a random 20 of
    the 226 positives. Not implemented here; it costs no model tokens, and >2/40 overturns is
@@ -466,7 +482,7 @@ catch it: no recorded trace contains a users listing. With it corrected, all 44 
    [`adjudication/REPORT.md`](adjudication/REPORT.md) and it states in its own §0 that it was
    performed by a **model**, not a human. §4.1 requires a human and S1's >2/40 threshold is
    defined over that human pass. **The requirement was never satisfied at any n**, which caps
-   what E8 could have claimed independently of sample size. B5.4.)*
+   what E19 could have claimed independently of sample size. B5.4.)*
 5. **Review interpretation 4** (the leak-assertion scoping) and disagreement 3 (the contingency
    reading). Both are judgement calls this build made and recorded; both are cheaper to
    overturn now than after the spend.

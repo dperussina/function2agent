@@ -14,7 +14,7 @@ were appended after the ladder was first written, numbered rather than inserted 
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
 adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ **thirty** owner decisions
-(OD-01 through OD-30, all of them taken) were recorded during execution and are set out below.
+(OD-01 through OD-31, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -4050,6 +4050,93 @@ which is what the paragraphs say, in each entry's own terms and for each entry's
 no mechanism, and a proof asserting that deleting prose breaks a test is the vacuous kind
 [finding 032](../002-spec-aware-agent-runtime/findings/032-removal-proof-signal-fabrication.md)
 exists to keep out of this corpus.
+
+### OD-31 — the verifier-vs-judge experiment is renumbered **E19** and the Stage-D synthesis experiment keeps **E8**; the renumber reaches live prose only, and the committed run directories, the fingerprinted harness files and the dated assessments keep the name they were recorded under
+
+**Decided 2026-08-11**, answering the one question the collision note opened on 2026-08-10 and
+deliberately declined to answer: **which experiment keeps `E8`.** That note priced both options so
+the decision could be taken on numbers, and recorded that until it was taken every occurrence of the
+identifier was *ambiguous by meaning while resolving correctly by construction*. It is taken here,
+and the option with the larger radius is the one selected.
+
+**The decision.** The **Stage-D synthesis experiment keeps `E8`.** It is the node
+[Stage D](#e8--does-synthesis-reach-the-ceiling) defines, the target of the ladder's `clears` edge,
+and the row the [budget table](#budget-and-the-feature-split) prices; it was never built and is
+deferred to feature `002`. **The verifier-vs-judge experiment becomes `E19`**, defined at its harness
+index [`harness/verifier-vs-judge/README.md`](./harness/verifier-vs-judge/README.md). This is the
+collision note's option **A**, and it is the more expensive of the two.
+
+**Why the number is `E19`, and it satisfies both readings of the register's convention rather than
+one.** It is the lowest free member — the register runs unbroken from `E1` to `E18` — and taking it
+leaves the register contiguous, which is what `identifier-gap` enforces. The contiguity objection the
+collision note raised against `E19` was an objection to option **B**: renumbering *the ladder node*
+would have stopped the ladder running in its own dependency order. **That objection does not transfer
+to option A**, because the verifier-vs-judge experiment is not a ladder node and never was. The
+register already numbers its non-ladder experiments this way: `E16`, `E17` and `E18` are each defined
+by their own harness index rather than by a stage, and each took the next free number. `E19` is that
+convention applied once more.
+
+**The radius that was in front of the owner, and the radius that was actually there.** The collision
+note priced option A at `128` occurrences across `52` files. **That figure was stale when this
+decision was taken.** Measured 2026-08-11 at `c9e42ad`, the identifier occurs **187** times across
+**70** files — the note's own hardening pass added sites after the note was written, and the note's
+sweep did not reach `.cursor/skills/`, which holds three more files. The structural counts it gave
+hold exactly: seventeen harness source files, twelve committed run directories, and a manifest in
+each naming the experiment inside a hashed record.
+
+**Where the line falls, and it is drawn mechanically rather than by taste.** A site is preserved if
+**a hash that currently verifies attests its bytes**, or if it is **a dated record whose subject is
+the run or the assessment itself**. Everything else is live and renumbers. Five hash chains were
+re-run at `c9e42ad` before the line was drawn, and all five reproduce: the final run's
+`harness_fingerprint` `6c58910ec3fd9c36`, which covers sixteen files including `corpus_freeze.json`;
+`preregistration_sha256` `9c9b1fcfdbd08cf5`; `judge_prompt_sha256_16` `442967d39382be76`, recorded by
+all twelve runs; `derivation_rules_sha256_16` `ca7f499d96c2af4f`; and `c2_derivations_sha256_16`
+`ab4d8b534cd98c72`, also recorded by all twelve. **Fifteen of the sixteen fingerprinted files carry
+the identifier**, so editing any one of them would break a fingerprint that a committed manifest
+still matches.
+
+| Disposition | What it covers | Why |
+|---|---|---|
+| **Renumbered** | live prose in this document, `VERDICT.md`, the root `README.md`, four research documents, the harness index, the checklist, three project skills, two files under `tools/`, and the verifier harness's own `README.md` | a reader uses these to understand the present state, nothing attests their bytes, and an ambiguous identifier in them is the defect this entry closes |
+| **Preserved with a dated masthead** | findings 015, 017 and 018, and [`E8-VIABILITY.md`](./E8-VIABILITY.md) | dated authority documents. The house convention for an authority document is strike-and-supersede rather than overwrite, and a strike inside a heading corrupts its anchor, so each gains a masthead naming `E19` and no sentence beneath it is rewritten |
+| **Untouched** | every file under `harness/verifier-vs-judge/` except its `README.md` | fifteen are fingerprinted, twelve manifests and ten run reports are dated records of runs that happened under the old name, the adjudication tree is a completed blind study, and `NEUTRALISATION.md` is a dated correction record |
+
+**The banner in the harness source is uniform, and that is why the directory moves as one unit.**
+Nearly every occurrence inside it is the same line — `SPIKE - E8 verifier-vs-judge. Delete after
+2026-11-30.` — carried identically by the fingerprinted files and the four that are not fingerprinted.
+Renumbering only the four would leave one banner reading two ways according to whether a file happened
+to be hashed, which reads as an error rather than as a decision. The directory keeps one name
+throughout and its index says why.
+
+**What this decision does not license.**
+- **Not** a licence to edit any artifact under `harness/verifier-vs-judge/results/` or
+  `harness/verifier-vs-judge/adjudication/`. Those runs happened when the experiment was called `E8`;
+  rewriting them would falsify a record and break the fingerprints that make them self-verifying.
+  This is the frozen-sites ruling applied, not a new exception to it.
+- **Not** a licence to edit any fingerprinted harness file, including `corpus_freeze.json`. The freeze
+  refuses to start on a change to the corpus files it pins, and separately its own bytes are hashed
+  into `harness_fingerprint`; the second of those is the binding one here and it is the one the
+  neutralisation of 2026-08-03 already respected when it declined to edit `analyze.py`.
+- **Not** a re-opening of **OD-14**. The verifier's margin over an LLM judge stays **UNMEASURED** and
+  deferred to production traffic. This entry renames an experiment and changes no figure, no
+  denominator, no verdict and no state.
+- **Not** a finding that the identifier ever resolved wrongly. `identifier-resolution` passed
+  throughout and was right to: the collision was a definition and a use, not two definitions.
+- **Not** a precedent that a filename follows its subject. `E8-VIABILITY.md` keeps its name because
+  three authority documents cite it under that name, and rewriting their provenance rows to chase a
+  rename is the cost this entry declines to pay.
+
+**Authorises no code, no requirement text and no new task.** No figure moves, no threshold moves, no
+artifact under `results/` is touched, and `EXPECTED_PROOFS` is unaffected. What it authorises is a
+**name** and the disposition of the sites that carry it.
+
+**Propagated to** the collision note above, which is superseded in place with this entry named rather
+than deleted, because it records a real state that this entry resolves; the closure sentence under
+**OD-14**, which named its experiment rather than numbering it precisely so that this decision could
+number it later; [`VERDICT.md`](./VERDICT.md), the root [`README.md`](../../README.md), the harness
+index, and the research documents that cite the experiment. **A reader who meets `E8` inside a frozen
+record reaches the answer in one hop**: the harness index names `E19` in its own title and carries a
+dated notice stating that every artifact beneath it records the earlier name.
 
 ## Open items this plan does not resolve
 
