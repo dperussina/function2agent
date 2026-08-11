@@ -43,7 +43,10 @@ HERE = Path(__file__).resolve().parent
 BAD = HERE / "fixtures" / "known-bad"
 GOOD = HERE / "fixtures" / "known-good"
 
-#: (check, path, line, substring that must appear in `found` or `hint`).
+#: (check, path, line, substring that must appear in `found`, `expected` or
+#: `hint`). `expected` was omitted here while `_matches` had always read it, which
+#: hid that a needle could hold a violation's expectation and not only its finding;
+#: corrected 2026-08-11 when `preserved-evidence` needed exactly that.
 #: line=None means "anywhere in that file".
 EXPECTED: list[tuple[str, str, int | None, str]] = [
     # 1 — numeric claim provenance
@@ -320,6 +323,18 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
         "specs/001-fixture/harness/attested-treegone/records",
         1,
         "the attested tree is absent",
+    ),
+    # Matched against `expected` rather than `found`, and here because the arm
+    # above does not hold the field it reads. A tree-level loss states how many
+    # records the absent directory held; every other `removed` states the sentence
+    # about a single file. Without this the per-kind sentence could be restored for
+    # both and a deleted directory would again read "the attested file, present"
+    # while pointing at a directory, with the self-test green.
+    (
+        "preserved-evidence",
+        "specs/001-fixture/harness/attested-treegone/records",
+        1,
+        "2 attested file(s)",
     ),
 ]
 

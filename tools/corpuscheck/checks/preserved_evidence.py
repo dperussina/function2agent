@@ -131,6 +131,14 @@ def run(corpus, ctx: dict) -> list[Violation]:
     out: list[Violation] = []
     for unit in units:
         for kind, path, found, expected in verify(corpus.root, unit):
+            # `malformed` and a whole-tree loss both carry an expectation only the
+            # attestation knows — the digest its entries add up to, or how many
+            # records the absent directory held. The per-kind sentence is right for
+            # the rest and better than showing a reader a bare digest. Naming the
+            # unit's own tree is what distinguishes the tree-level event: without
+            # this, a deleted directory read "expected: the attested file, present"
+            # while pointing at a directory.
+            speaks_for_itself = kind == "malformed" or path == unit["tree"]
             out.append(
                 Violation(
                     check="preserved-evidence",
@@ -138,7 +146,7 @@ def run(corpus, ctx: dict) -> list[Violation]:
                     path=path,
                     line=1,
                     found=f"{found}  ({kind})",
-                    expected=_EXPECTED[kind] if kind != "malformed" else expected,
+                    expected=expected if speaks_for_itself else _EXPECTED[kind],
                     hint=_HINTS[kind],
                 )
             )
