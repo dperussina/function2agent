@@ -22,6 +22,13 @@ by SHA-256, against the digests in `attestation` — a witness held outside the
 tree, because a digest stored beside the bytes it covers is the same self-report
 the manifest already was. See `..attest` for why the placement is the mechanism.
 
+Two units in this repository are real evidence rather than fixtures, and they are
+two rather than one so that a correction's blast radius equals its subject:
+`verifier-vs-judge-results` over the twelve run directories, and
+`verifier-vs-judge-adjudication` over the blind study beside them, which the first
+version of this guard did not cover because its cost was priced over the run
+directories alone. Each carries its own pin. `..attest` argues the split.
+
 Five kinds are reported and never merged, because they are different events:
 
   edited        a file's bytes moved. This is the plant.
@@ -37,8 +44,13 @@ A legitimate correction — the next neutralisation is the named example, and th
 records were already edited once under one — proceeds in two acts that cannot
 collapse into one:
 
-    python3 tools/check_corpus.py --reattest "why"   # writes the record
-    # then a human moves `attestation_sha256` in config.json
+    python3 tools/check_corpus.py --reattest "why" --unit NAME   # writes the record
+    # then a human moves that unit's `attestation_sha256` in config.json
+
+`--unit` is named because the bare form rebuilds every unit whose tree is present,
+and a rebuild never reproduces the bytes it replaces — `generation`, `attested_at`
+and `reason` all move — so correcting one tree without it leaves the other tree
+red as `unratified` for no edit of its own.
 
 `--reattest` prints the new digest and never writes the pin. Nothing else in the
 repository calls `attest.build`, and in particular `neutralise_decision.py` does
@@ -64,9 +76,10 @@ _HINTS = {
     "edited": (
         "this file is preserved evidence — a dated record of a run — and its bytes "
         "moved. If the edit is wrong, restore the file. If it is a deliberate "
-        "correction, run `python3 tools/check_corpus.py --reattest \"why\"` and then "
-        "move `attestation_sha256` in tools/corpuscheck/config.json by hand; the "
-        "rebuild alone does not clear this"
+        "correction, run `python3 tools/check_corpus.py --reattest \"why\" --unit "
+        "NAME` and then move that unit's `attestation_sha256` in "
+        "tools/corpuscheck/config.json by hand; the rebuild alone does not clear "
+        "this, and omitting --unit rebuilds every other unit too"
     ),
     "added": (
         "the attested tree is closed and a file appeared in it. Adding to a record "

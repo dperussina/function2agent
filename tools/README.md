@@ -224,6 +224,39 @@ record and preserved on the same ruling. Nothing under `results/` is added,
 renamed or edited to install it, because a digest stored beside the bytes it
 covers is the same self-report the manifest already was.
 
+**The blind adjudication study is attested too, and as a second unit rather than
+as a widening of the first.** `tools/preserved_evidence_adjudication.json` carries
+a SHA-256 per file for all **10** files under
+`harness/verifier-vs-judge/adjudication/` — seven at its root, two under `blind/`
+and one under `sealed/`. It is preserved evidence on the same OD-31 ruling as the
+run directories beside it, and the first version of this guard did not cover it:
+the cost was priced over the twelve run directories and the adjudication set was
+not in scope when the ruling was made. That omission was an oversight rather than
+a decision, so closing it needed no new ruling. The attested total is **69** files
+across the two units, being the 59 under `results/` plus the 10 under
+`adjudication/`.
+
+**One unit per tree, because that is what keeps a correction's blast radius equal
+to its subject.** Merged under one pin, a correction to a run directory would
+produce one new digest, and the human moving that pin would also ratify —
+silently, in the same digest — anything that had moved under the adjudication tree
+in the same window. Split, the pins are independent, and `--reattest` reports
+`the pinned digest already matches; nothing to ratify` for the tree that did not
+move, so the ratifier is told which body of evidence changed rather than having to
+work it out. The cost is the honest one: two pins and two ratifications. The
+merge is in any case unavailable mechanically, since `attest.measure` walks one
+tree recursively and unfiltered on purpose — a filter is a place for a file to
+hide — so a single unit spanning both would have to be rooted at
+`verifier-vs-judge/` and would sweep in the live harness that legitimately
+changes.
+
+**`--reattest` takes `--unit` for a reason, and the bare form is a wider act than
+it looks.** With no `--unit` it rebuilds every unit whose tree is present, and a
+rebuild is never byte-identical to what it replaces because `generation`,
+`attested_at` and `reason` all move. So a bare `--reattest` run to correct one
+tree leaves the *other* tree's gate red as `unratified` as well, for no
+corresponding edit. Correcting one unit names that unit.
+
 **The trap this design exists to avoid.** If the tool that edits the evidence
 also refreshes the attestation, the attestation attests nothing — the vacuity
 reappears one layer down, and the gate goes green over exactly the edit it was
@@ -251,6 +284,43 @@ measurement record, and OD-31's residual asked for nothing stronger.
 It also has no opinion about whether the attested bytes are *right*. A wrong
 figure committed before the attestation was built is attested wrongness, and this
 check will defend it as faithfully as it defends anything else.
+
+**The proof-history archive is not a precedent for this, and it was cited as one.**
+`tests/batteries/results/removal-proofs-history/` names each record by content
+digest as well as by clock, and that scheme was offered as the model this guard
+should follow. It is worth being exact about what it does, because the resemblance
+is real and the protection is not. `tools/removal_proofs_summary.py` records the
+reason in `_archive`, and the reason is collision handling:
+
+> Named by content digest as well as by clock, so two runs in the same second
+> with different outcomes are two files and two identical runs are one.
+
+That is same-second disambiguation and deduplication. **Self-verification is a
+property the scheme happens to have rather than a purpose it was built for**, and
+finding 032 did exploit it — recomputing the digest of the one record it quotes
+and matching the suffix in its filename. That was a decision about one exhibit,
+not a protection over a directory.
+
+Three properties keep it from doing what this attestation does, and each is
+checkable at the source rather than taken on description. The directory is
+**git-ignored**, at `.gitignore:171`, so no checkout contains it and the digests
+in its filenames guard nothing any reviewer will ever see: a reading of one
+working tree found `83` files there and exactly **one** tracked, the exhibit
+finding 032 quotes, present only because it was force-added past the ignore rule.
+The name is written by the same run that writes the body, so it is a self-report
+in the precise sense this section began with — the manifest's `harness_fingerprint`
+failed the same way. And nothing reads the names back: no gate recomputes a digest
+in that directory and compares it, so a renamed file, an edited body under an
+unchanged name, or a deletion all pass unremarked.
+
+**The hazard is a reader concluding that committed evidence is guarded because its
+filenames contain digests.** That is the false-green class this repository has
+hardened its instruments against, and it would be arrived at here by analogy
+rather than by any claim the archive makes about itself. A content-digest filename
+distinguishes records from each other. An attestation held outside the tree, with
+its own bytes pinned in a second file that a human edits, is what makes an edit
+loud. The two are different mechanisms with different jobs, and only the second one
+is a gate.
 
 ### Why the lifecycle is a table now
 

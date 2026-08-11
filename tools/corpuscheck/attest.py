@@ -35,6 +35,27 @@ cited by three findings, by `NEUTRALISATION.md` and by the harness index, and
 OD-31 declines the cost of a filename chasing its subject. So the digest goes in
 a record and not in a name.
 
+A content-digest *filename* is a different thing from this and does not do this
+job. `tests/batteries/results/removal-proofs-history/` names records that way, and
+`removal_proofs_summary._archive` records the reason as same-second
+disambiguation — two runs in one second are two files, two identical runs are one.
+The names are written by the run that writes the bodies, nothing reads them back,
+and the directory is git-ignored. See *The proof-history archive is not a
+precedent for this* in `tools/README.md`.
+
+## One unit per tree
+
+`config.json` carries a unit per attested tree rather than one unit spanning
+several. Two trees under this harness are preserved evidence on the same ruling —
+`results/`, the twelve run directories, and `adjudication/`, the blind study — and
+each has its own attestation and its own pin. Merged, a correction to either would
+produce one digest, and ratifying it would silently ratify whatever had moved in
+the other tree in the same window; split, `cli.reattest` reports the unmoved unit
+as already matching, so the ratifier is told which body of evidence changed. The
+merge is also unavailable mechanically: `measure` walks one tree, recursively and
+unfiltered, so one unit over both would have to be rooted at the harness directory
+and would cover the live code beside them.
+
 ## Two failures, and they are different acts
 
 `verify` reports both and never conflates them:

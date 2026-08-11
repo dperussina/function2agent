@@ -1,0 +1,22 @@
+{
+ "_comment": "Bytes-level attestation over a tree of preserved evidence. Written by tools/corpuscheck/attest.py and read by the `preserved-evidence` check. This file is NOT a record of a run and carries no measurement; it is a witness held outside the tree it attests. Rebuilding it does not restore a green gate on its own \u2014 `preserved_evidence.units[].attestation_sha256` in tools/corpuscheck/config.json pins these bytes and is edited by hand.",
+ "unit": "verifier-vs-judge-adjudication",
+ "tree": "specs/001-discovery-validation/harness/verifier-vs-judge/adjudication",
+ "generation": 1,
+ "attested_at": "2026-08-11",
+ "reason": "Extending the OD-31 bytes-level attestation to the blind adjudication study, preserved evidence on the same ruling and left uncovered when the guard was priced over the run directories alone.",
+ "file_count": 10,
+ "tree_sha256": "09846b0e1afcd3a96a84ba5dfb46387652181e1f8b1d30703216343846d69607",
+ "files": {
+  "REPORT.md": "d6b351902df40b13795a198a0cb3b7faf5f99a1d0316d94eadd683f2006714d3",
+  "blind/cases.md": "52b5224534ecc067b6c2c1a523ca6a23215015f33fec277d7c5a5ac97a04d928",
+  "blind/verdicts.md": "a561a41ed2f06feca3afdc83cd8e7fd7ca92437ef1eb18f5704b6e16eec3bb3d",
+  "compare.py": "1d58f1c68367c6ec5c38b0ed12383b79fefab4d72599a3cd0bc3868efb8b564c",
+  "comparison.json": "87aef1f6e9fe06166ac40dd49bf8eb4eb94cf4ae3a9396547d7a014a415984e4",
+  "digest.py": "d59864f990ab0866bd0370da54431ab2cbf6ee6524781e660e68cb17fe13b424",
+  "drift.py": "8371e732a6683692664aa4b3f98d49d8fa6ceceaf4817e5d7495c4006d1d0241",
+  "sealed/key.json": "26a18363bca3c9726c28cbde3d35d8005dbbf98e3057866d1842350047c2807d",
+  "select_sample.py": "e4b5b48bba411ae8863b60ee5b389a1634d59488225d66ace3ee9518aedc4f87",
+  "truth.py": "98d4d0ef1702c6baf336627d723d60b54349bc416a768dd077f376eafdf1838c"
+ }
+}

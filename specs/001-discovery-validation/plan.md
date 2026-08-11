@@ -4253,9 +4253,10 @@ dated notice stating that every artifact beneath it records the earlier name.
   forbids it in two acts that cannot collapse into one — `--reattest` writes the record and prints
   the digest, a human pins it, and `neutralise_decision.py` does not import either half. An
   attestation the editing tool refreshes attests nothing, which is this bullet's own defect one layer
-  down. **`adjudication/` is deliberately not attested**: the ruling in front of the owner priced
-  twelve directories, and the ten files of the completed blind study were not in it. That gap is
-  named below.
+  down. **`adjudication/` is attested as a second unit since later the same day**: the ruling in front
+  of the owner priced twelve directories, and the ten files of the completed blind study were not in
+  it — an omission rather than a decision, as the owner has since recorded. The bullet below carries
+  the extension.
   *(Read the rest of this bullet as the state on 2026-08-11 before the ruling.)*
   Discovered 2026-08-11 while taking **OD-31**, and established by planting the edit
   rather than by reading the code: an identifier rewrite in
@@ -4270,14 +4271,32 @@ dated notice stating that every artifact beneath it records the earlier name.
   Whether that boundary should also carry a bytes-level attestation over `results/` is an owner call
   with a real cost: it pins twelve directories against every future correction, including the next
   neutralisation.
-- **NEW 2026-08-11 — `adjudication/` is preserved evidence on the same ruling and is not attested.**
-  The bullet above names `harness/verifier-vs-judge/adjudication/` alongside `results/` in what OD-31
-  does not license, and its ten files are a completed blind study — `blind/verdicts.md`,
-  `sealed/key.json`, `comparison.json` and the scripts that produced them. **The attestation built
-  under that bullet's resolution covers `results/` and stops there**, because the cost the owner
-  priced was twelve run directories and the blind study was not in front of them. Extending it is
-  mechanically free: one more unit in `preserved_evidence.units`, ten more digests, no new code and no
-  new failure mode, since a unit is in scope wherever its attestation is committed. What is **not** free
-  is the same pinning cost applied to a tree nobody ruled on, and a guard installed over an artifact
-  its owner never priced is the shape this plan declines twice above. **It is an owner call and it is
-  cheap either way.**
+- ~~**`adjudication/` is preserved evidence on the same ruling and is not attested.**~~
+  ✅ **RESOLVED 2026-08-11, later the same day — the owner recorded the omission as an oversight rather
+  than a decision, and the attestation was extended to cover it.** The bullet above names
+  `harness/verifier-vs-judge/adjudication/` alongside `results/` in what OD-31 does not license, and its
+  ten files are a completed blind study — `blind/verdicts.md`, `sealed/key.json`, `comparison.json` and
+  the scripts that produced them. `verifier-vs-judge-adjudication` attests all **10** of them by SHA-256
+  from `tools/preserved_evidence_adjudication.json`, and the estimate that extending it was
+  mechanically free held: one unit added to `preserved_evidence.units`, ten digests, and no new code.
+  **It is a second unit rather than a widening of the first.** One pin per tree keeps a correction's
+  blast radius equal to its subject — merged, ratifying a correction to a run directory would also
+  ratify, in the same digest and without saying so, anything that had moved under `adjudication/` in the
+  same window. `--reattest` reports the unmoved unit as already matching, so the ratifier is told which
+  tree changed. The merge is also unavailable mechanically: `attest.measure` walks one tree recursively
+  and unfiltered, so a single unit over both would be rooted at `verifier-vs-judge/` and would cover the
+  live harness beside them.
+  **Each of the first unit's conditions was met again for this one, by running rather than by argument.**
+  A plant in `adjudication/sealed/key.json` — one blind-study `oracle_outcome` inverted from `pass` to
+  `fail` — is reported as `edited` and named by path, while `freeze.py --verify` goes on reading
+  *intact* over it, reproducing the near-miss this guard exists to close on a second tree. Deleting the
+  whole tree is reported as `removed` against the tree, once, with `skipped` empty: scope is keyed on the
+  attestation and not on the tree, which is the defeat the first version of the guard had and which was
+  confirmed absent here by deleting the directory rather than by reading the code. A rebuild under a
+  live plant leaves the gate red as `unratified` rather than green, so the two acts do not collapse for
+  this unit either. **Nothing under `adjudication/` was edited to install it**: every plant was
+  restored and restoration was verified by presence, all ten digests and the directory's git tree
+  object matching the pre-probe reading. `harness_fingerprint` still reads `6c58910ec3fd9c36` and
+  `freeze.py --verify` still reads intact, both verified rather than assumed.
+  **The residual is the first unit's residual and is not narrowed:** the guard makes a second edit
+  visible, not impossible.

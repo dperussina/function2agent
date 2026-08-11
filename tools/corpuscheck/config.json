@@ -214,7 +214,7 @@
     "specs/*/data-model.md"
   ],
 
-  "_comment_preserved_evidence": "Bytes-level attestation over trees of preserved evidence — dated records of runs that already happened, which OD-31 rules are kept rather than rewritten. `attestation` is a witness held OUTSIDE `tree`, because a digest stored beside the bytes it covers is the self-report that let an E8->E19 rewrite through every green gate. `attestation_sha256` pins the witness's own bytes and is the half a human ratifies: `tools/check_corpus.py --reattest` writes the record and prints this digest, and never writes it here. That split is the mechanism — an attestation a tool can refresh attests nothing — so wiring a rebuild into anything that edits these artifacts, `neutralise_decision.py` above all, reproduces the vacuity one layer down. A unit whose `tree` is absent from the root under scan is skipped, which is how the two fixture corpora and this repository share one list.",
+  "_comment_preserved_evidence": "Bytes-level attestation over trees of preserved evidence — dated records of runs that already happened, which OD-31 rules are kept rather than rewritten. `attestation` is a witness held OUTSIDE `tree`, because a digest stored beside the bytes it covers is the self-report that let an E8->E19 rewrite through every green gate. `attestation_sha256` pins the witness's own bytes and is the half a human ratifies: `tools/check_corpus.py --reattest` writes the record and prints this digest, and never writes it here. That split is the mechanism — an attestation a tool can refresh attests nothing — so wiring a rebuild into anything that edits these artifacts, `neutralise_decision.py` above all, reproduces the vacuity one layer down. Scope is keyed on `attestation` being present under the root, never on `tree`: keying it on the tree is what the check was written with first, and it was defeated by deleting the protected directory, which took the check to `skipped` while it announced itself disabled. An absent `tree` is now the `removed` violation instead, confirmed for each unit by deleting it. The attestation's presence is also what lets the two fixture corpora and this repository share one list.",
   "preserved_evidence": {
     "units": [
       {
@@ -222,6 +222,13 @@
         "tree": "specs/001-discovery-validation/harness/verifier-vs-judge/results",
         "attestation": "tools/preserved_evidence.json",
         "attestation_sha256": "ba9ca6c2afae54f560c6a154c60cd7deb92d1404b1c39d12322ff23f9367be4a"
+      },
+      {
+        "name": "verifier-vs-judge-adjudication",
+        "tree": "specs/001-discovery-validation/harness/verifier-vs-judge/adjudication",
+        "attestation": "tools/preserved_evidence_adjudication.json",
+        "_why": "The blind adjudication study, preserved on the same OD-31 ruling as the run directories beside it and attested as a SECOND unit rather than folded into the first. One unit per tree is what keeps a correction's blast radius equal to its subject: with the two trees merged under one pin, ratifying a correction to a run directory would also ratify, in the same digest and without saying so, whatever had moved under this tree in the same window. Split, `--reattest` prints `the pinned digest already matches; nothing to ratify` for the tree that did not move, so the ratifier is told which body of evidence changed. The merge is also unavailable mechanically: `attest.measure` walks one tree recursively and unfiltered on purpose, so a single unit spanning both would have to be rooted at `verifier-vs-judge/`, sweeping in the live harness that legitimately changes.",
+        "attestation_sha256": "1d1c1ea7d152f043610288d646fa28e0326180481b6ff35b993ea6903580cc2d"
       },
       {
         "name": "fixture-intact",
