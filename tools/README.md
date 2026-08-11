@@ -324,6 +324,47 @@ legitimately rewrites these artifacts, and which touches `analysis.json` and
 the gate **red**, reported as `unratified` rather than as an edit, so an agent
 that refreshes without ratifying leaves a failing gate rather than no trace.
 
+**`--reattest` could not report that nothing had changed, because the field it
+compared moves on every rebuild.** Recorded as the defect's history rather than as
+a live bug: the repair landed at `f7ade9f` on 2026-08-11, from a pass holding
+`cli.py` and `attest.py` while this entry was being written. Everything below is a
+dated reading of the behaviour before that commit, and the mechanism is the half
+that transfers either way.
+
+**A rebuild is never byte-identical to what it replaces, so no comparison of
+attestation digests can ever report an unmoved tree.** `generation` is inside the
+digested document and `build` increments it every time, and `attested_at` and
+`reason` move with it. A digest comparison after a rebuild therefore answers *did
+the bytes I just wrote differ from the bytes I just replaced*, whose answer is
+always yes, rather than *did the evidence move*, which is the question an author
+correcting one record actually has.
+
+**The one line that looked like the answer was a statement about the pin wearing
+the grammar of a statement about the tree.** That line was
+`the pinned digest already matches; nothing to ratify`, true exactly when the
+bytes written equal the pinned bytes, and reachable only from a corrupted or
+absent record plus a generation-1 pin, or from a readable predecessor sitting one
+generation below the pin — never from an ordinary rebuild. So the state a reader
+most wanted reported was the one
+state the output had no sentence for, and the sentence it did have fired in the
+states least like it.
+
+**The field that can answer is `tree_sha256`, because it is the one field a
+rebuild of an unmoved tree does not move**: it is a function of the file set
+rather than of the record describing it. Comparing it against the same field in
+the record the pin covers is a report about the evidence, and it is reachable on
+an ordinary rebuild rather than only on a corrupt one. That is the route `f7ade9f`
+took, reading the record about to be replaced, naming its state, and taking a
+baseline only from a record whose own bytes are the pinned ones.
+
+**The generalisation is about which fields a self-describing record may be
+compared on.** A record that stamps itself — a generation counter, a timestamp, a
+reason — cannot be diffed against its own predecessor to answer a question about
+its subject, because the stamp guarantees a difference the subject did not cause.
+The comparison has to name the field that is a function of the subject alone, and
+a record mixing the two kinds of field in one digest cannot be asked the question
+at all without that field being pulled out by name.
+
 **What it cannot do, stated plainly rather than left to be discovered.** It
 cannot stop an author who edits a record, rebuilds the attestation and moves the
 pin in one commit. Nothing in a repository can: the pin is text and the author
@@ -2452,6 +2493,130 @@ sentence, because it is the honest half of the same pass: their 5 minutes is a *
 one rather than dressed up as a derivation, since the jobs it covers finish in under a minute every
 time and a value scaled off that work would be measuring PyPI rather than the job. It still fires on
 a hang, and it is far tighter than GitHub's default: 5 minutes against 360.
+
+### The instrument a branch census is scored against is part of its result, and this file uses `library` in two senses
+
+**A branch census reports a rate against an instrument, and the rate without the
+instrument beside it is unresolvable.** The case that established it:
+[finding 038](../specs/002-spec-aware-agent-runtime/findings/038-corpus-check-branch-population-and-the-instrument-declined.md)
+scored every branch in the corpus checker against `tools/selftest.py` alone and
+found `tools/corpuscheck/figures.py` its worst module at **10 of 20 (50.0%)**
+unheld. Re-scored against the whole gate set, four of those ten are held by
+`check_corpus.py`, which is **6 of 20 (30.0%)** — the same twenty branches, the
+same module byte-for-byte, and two rates neither of which is wrong. They answer
+different questions: *what would `selftest` notice*, and *what would the gate set
+notice*. Both readings are dated at `aaa329b`, and both had moved again by
+`92143b9`.
+
+**So a census figure carries three things or it is not quotable: the population,
+the instrument, and the tree.** The denominator was already understood — finding
+038 states its own rate twice because a reader cannot tell whether unscorable
+branches sit in the denominator. The instrument is the same defect one level up,
+and it is worse in one respect: a wrong denominator makes a rate ambiguous, while
+a missing instrument makes a rate *look* like a property of the code when it is a
+property of what happened to be watching. **The remedy is the cheap one.** Name
+the instrument in the sentence, and name the tree, because both move.
+
+**The correction that belongs beside this, because the inference is inviting and
+wrong: `figures.py` is a library in the ordinary sense and is not one of the two
+files `tools/instruments.py --check` classifies as `library`.** Those two are the
+tamper matcher and the per-arm wall-clock cap — `tools/tamper.py` and
+`tools/proof_timeout.py` — and `library` there is a classification of *entry
+points*, meaning a file that is never invoked as a program and therefore has no
+exit code to gate on. `figures.py` is not in that census at all. The census's
+candidate set is built from `tools/*.py`, and `tools/corpuscheck/` is excluded
+from it as a package rather than a program, so no file under it is a candidate
+for any of the three classifications. **Reading the census's `2 library` as
+"the two libraries in `tools/`" is the error**, and it is the shape this file
+already records under [never stating a classifier as a
+complement](#never-state-a-classifier-as-a-complement--enumerate-the-accepting-set):
+`library` is the accepting set for one question and says nothing about the
+ordinary English word.
+
+### Two neutralisation forms turn "unscorable" into a verdict, because hanging and raising are properties of the form
+
+**A branch census that files hangs and raises as `unscorable` under-reports
+coverage, and one of the two needs no new form at all.** The census's own
+definitions are what settle it: *held* means the neutralised tree makes the
+instrument exit non-zero, and *unscorable* means no form produced a runnable
+tree because all of them either raised or hung. **A raise is a non-zero exit.**
+An inverted guard that dereferences a `None` takes the instrument to a failing
+exit by the census's own definition of held, so filing it as having no verdict
+records an absence where there was a verdict, and it records it in the direction
+that reports the branch as unmeasured rather than as protected. Hanging is the
+form that genuinely produces nothing, and it is worth keeping the two apart for
+exactly that reason.
+
+**The second form is for a `while` whose test carries its own termination bound,
+and preserving the bound is necessary and not sufficient.** Measured 2026-08-11
+against `corpus.py:161`, the inner backtick-run scanner, whose test is a
+conjunction of a bound and a character comparison. Six variants were run: the
+whole test inverted, forced true and forced false, and the same three applied to
+the non-bound conjunct with the bound kept as the left operand. **Exactly one
+terminates** — the bound preserved and the non-bound conjunct forced *true*. All
+three whole-test forms hang, and so do the two per-conjunct forms that stop the
+loop advancing. Under the form that terminates, `tools/selftest.py` and
+`check_corpus.py` both exit non-zero, so the branch is held and was never
+unscorable in substance.
+
+**The mechanism is the part that transfers, and it is not where it looks like it
+is: none of the hanging forms hangs in the loop whose test was neutralised.**
+That loop terminates in every form; in the forms that hang it simply never runs.
+What spins is the **enclosing** loop, whose index advances only by the inner
+loop's result, so a neutralisation that leaves the inner loop making no progress
+stalls the outer one. Preserving a termination bound keeps the neutralised loop
+bounded and says nothing about whether the loop still advances anything its
+caller depends on.
+
+**Which is the general statement: hanging and raising are properties of the
+neutralisation form and of the control flow around the branch, not of the
+branch.** A verdict filed against a branch on the strength of a form that hung is
+a verdict about the form. The remedy is to widen the form set before widening the
+verdict set — the third value is for branches no form reaches, and a third value
+reached by trying three forms is mostly a statement about the three.
+
+### A superset is not a hold, and one branch is inert rather than unheld
+
+**A membership assertion is satisfied by a superset, so a neutralisation that
+widens the result holds nothing while appearing to be checked.** Measured over
+`figures.digit_neighbours`, which returns the digit strings one substitution or
+transposition away from a value so a hint can name the near neighbour of a
+mistyped figure. The check that reads it asserts that an expected neighbour is
+**in** the returned set. Two of the function's guards are skips whose forcing
+widens what comes back: the substitution guard, forced never to skip, substitutes
+digits into non-digit positions, and the transposition guard, forced always to
+fire, transposes pairs it was written to exclude. The expected neighbour is still
+in the wider set, the assertion passes, and the guard that was supposed to be
+under test is gone.
+
+**The direction is what matters and it is asymmetric.** Inverting those same two
+guards *narrows* the result — the expected neighbour drops out and the assertion
+fails — which is why the census prefers inversion, and it is the whole of the
+difference between a form that holds a membership assertion and a form that
+cannot. **A widening neutralisation against a membership assertion is a hold that
+is not one**, and nothing about the passing run says so.
+
+**One branch is inert rather than unheld, and the two are not the same verdict.**
+The substitution loop's `d == ch` guard skips the substitution that would rewrite
+a character as itself. Forced never to skip, the only string it adds is the
+original value — and `out.discard(value)` on the way out removes exactly that, so
+the returned set is **byte-identical** to the pristine one. No instrument can
+hold it, because there is no output for an instrument to read differently: the
+branch is a small efficiency and the code is correct with it removed. That is the
+memoisation pole finding 038 §3 names, arriving in a second module by a second
+mechanism, and the test that separates it from an unheld branch is the same one —
+whether any input exists for which the two paths disagree about the output.
+
+**The nuance that keeps this from being over-applied, since it decides what a
+fixture is worth: whether the two widening guards widen at all depends on the
+value.** On a figure with no non-digit character in it, both are inert too — the
+substitution guard never skips anything, and the transposition guard excludes
+nothing a digit pair would have supplied. Widening needs a value carrying a
+decimal point or a thousands separator. So a fixture built entirely on integers
+scores those guards inert and a fixture carrying a decimal scores them widened,
+and neither fixture holds them. **A verdict over a function of its input is a
+verdict over the inputs the fixture supplies**, which is a sharper statement of
+the same asymmetry finding 038 §7 makes about held.
 
 ## Roles: who is authoritative
 

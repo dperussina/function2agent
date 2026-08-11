@@ -71,6 +71,23 @@ immediately before saving.
 > most transferable thing here. It does **not** claim "held" means correct — §7 states the asymmetry
 > that makes only one half of this number usable. And it takes **no** owner decision.
 
+> ## THE INSTRUMENT SITS BESIDE EVERY FIGURE HERE, AND ONE MODULE'S FIGURES HAVE MOVED
+>
+> **Every branch figure in this document was scored against `tools/selftest.py` alone.** The title's
+> clause that it is *"the sole instrument holding any of it"* is a reading over `checks/` and it does
+> not survive for one shared module: §2.2.1 records `figures.py` re-scored on 2026-08-11 against the
+> whole gate set, where `check_corpus.py` holds four of the ten branches `selftest` left unheld, and
+> at `92143b9` a unit test holds all twenty. The title stands as written because a heading cannot
+> carry a strikethrough without corrupting its anchor; this box is the correction.
+>
+> **No corpus-wide figure moves for it, and none is restated here.** 55, 32, 279 and every rate
+> derived from them are `selftest` readings taken over `aaa329b` and they stay exactly as taken.
+> **Only `figures.py` was re-scored.** Advancing the corpus-wide rates to an instrument nobody ran
+> them against would publish a measurement that was never taken, which is the defect §8 records this
+> document's own harness committing one level up and the defect §2.1's box declines for the
+> nineteenth check. §2.2.1 names the modules that were not re-derived, so a reader can tell which
+> one moved from which ones nobody looked at again.
+
 ---
 
 ## 1. What was measured, and how a branch was neutralised
@@ -139,6 +156,14 @@ the same delta of nothing.
 
 ## 2. The rate, both populations, and the split
 
+**Every figure in this section is scored against `tools/selftest.py`, and the instrument is part of
+the result rather than context for it.** A branch is unheld *with respect to an instrument*: the same
+branch scores held the moment anything else notices its removal, and nothing about the phrase "the
+unheld rate" says which instrument was watching. That is the same defect §2.3 records for the
+denominator, one level up — a figure quoted without its instrument is unresolvable, and §2.2.1 is the
+case that establishes it, where one module re-scored against more instruments halved its own rate
+with no line of the module changed.
+
 ### 2.1 The eighteen checks
 
 The eighteen checks live in fifteen files under `tools/corpuscheck/checks/`, and the branch counts
@@ -181,7 +206,7 @@ are per file:
 | `toc.py` | 11 | 1 |
 | **TOTAL** | **203** | **32** |
 
-**170 held, 32 unheld, 1 unscorable**, so the unheld rate over `checks/` is **32 of 203 (15.8%)**.
+**170 held, 32 unheld, 1 unscorable**, so the unheld rate over `checks/` **against `tools/selftest.py`** is **32 of 203 (15.8%)**. No other instrument was run against this population.
 
 **Five checks hold every branch they have**: `catalog-line-count`, `lifecycle-taxonomy`,
 `findings-numbering`, `preserved-evidence` and `sum-arithmetic`. That is worth stating beside the
@@ -197,23 +222,111 @@ with the most kinds and exemptions, so the two are unsurprising together.
 The checks are not the whole of the checker. Extending the population to the four modules the checks
 call into adds **76 (12 + 20 + 37 + 7)** branches:
 
-| module | branches | held | unheld | unscorable |
-|---|---|---|---|---|
-| `attest.py` | 12 | 10 | 2 | 0 |
-| `figures.py` | 20 | 10 | 10 | 0 |
-| `corpus.py` | 37 | 27 | 9 | 1 |
-| `search.py` | 7 | 5 | 2 | 0 |
-| **TOTAL** | **76** | **52** | **23** | **1** |
+Every verdict in the table is `tools/selftest.py`'s, and `figures.py`'s row is the one row a later
+pass re-scored against more instruments — see §2.2.1, which leaves this row standing and adds the
+other readings beside it rather than replacing it.
 
-**`figures.py` is the worst module in either population at 10 of 20 (50.0%)**, and its position
+| module | branches | held | unheld | unscorable | instrument |
+|---|---|---|---|---|---|
+| `attest.py` | 12 | 10 | 2 | 0 | `selftest` |
+| `figures.py` | 20 | 10 | 10 | 0 | `selftest`; re-scored in §2.2.1 |
+| `corpus.py` | 37 | 27 | 9 | 1 | `selftest` |
+| `search.py` | 7 | 5 | 2 | 0 | `selftest` |
+| **TOTAL** | **76** | **52** | **23** | **1** | `selftest` |
+
+~~**`figures.py` is the worst module in either population at 10 of 20 (50.0%)**, and its position
 explains why that matters more than its size: it is the arithmetic and figure-shape library that
 `numeric-provenance`, `ratio-arithmetic` and `sum-arithmetic` all read through, so a silently
-removable branch there is a silently removable branch in three checks at once.
+removable branch there is a silently removable branch in three checks at once.~~
+
+**Superseded 2026-08-11 in one clause, and the clause was wrong rather than stale.**
+`tools/corpuscheck/checks/ratio_arithmetic.py` contains **no reference to `figures` of any kind** —
+not an import, not a mention — so it never read through this module, and a silently removable branch
+here was never a silently removable branch in it. The rate above is untouched by the correction.
+
+**`figures.py` is the worst module in either population against `tools/selftest.py` at 10 of 20
+(50.0%)**, and its position explains why that matters more than its size: it is the arithmetic and
+figure-shape library the checks import for struck and inline spans, multiplier parsing and sum
+arithmetic, so a silently removable branch there is a silently removable branch in every check that
+imports it at once.
+
+**The importers are named by the search that finds them rather than counted here**, because a count
+is the half a later import falsifies while the search keeps answering — and a stated count that a
+future import moves is the class of claim this corpus keeps repairing:
+
+    git grep -nE '^from \.\.figures import' -- tools/corpuscheck/checks/
+
+**Widening that search past `checks/` is where the reach turns out to be larger than the struck
+sentence claimed, and it is what §2.2.1 needs:**
+
+    git grep -nE 'from \.*(corpuscheck\.)?figures import' -- tools/
+
+The second form finds everything the first one does and adds `tools/gen_claims.py`, which imports
+`inside_spans` and `struck_spans` for its own use. So this module sits under a second gate as well as
+under `check_corpus.py`, and it is read by a `pytest` unit test besides — which is the mechanism
+§2.2.1 measures rather than a detail about imports.
+
+### 2.2.1 The same twenty branches, re-scored against the gate set
+
+**Re-scored 2026-08-11, and both readings are right because they answer different questions.** The
+module did not change: `tools/corpuscheck/figures.py` is byte-identical at `aaa329b` and at
+`92143b9`, and an `ast` walk derives the same twenty branches from either. Every difference below is
+a property of the instrument.
+
+| instrument | tree | unheld of 20 |
+|---|---|---|
+| `tools/selftest.py` alone | `aaa329b` | 10 — §2.2's row, reproduced branch for branch |
+| the gate set as it stood when the re-scoring ran | `aaa329b` | 6 |
+| `tools/selftest.py` alone | `92143b9` | 7 |
+| the gate set | `92143b9` | 0 |
+
+**Four of the ten are held by `check_corpus.py`, and they are named rather than counted** because a
+count is the thing a reader cannot check:
+
+| branch | site | what it decides |
+|---|---|---|
+| the `percent_decimal` dispatch | `figures.py:258` | whether percentage figures are extracted at all |
+| `table_cells`'s pipe early-out | `figures.py:298` | whether a line is treated as a table row |
+| `rate_columns`'s header test | `figures.py:322` | which header cells declare a per-unit denominator |
+| `column_of`'s containment test | `figures.py:329` | which column a figure's offset falls in |
+
+**The last three are the rate-column mechanism, and their hold rests on prose.** `check_corpus.py`
+notices their removal because documents in the corpus carry rate-bearing table columns for it to
+read; edit those sentences away and the hold goes with them. A hold that depends on what a document
+happens to say is a hold, and it is a different kind of hold from a fixture's.
+
+**The two rows at `92143b9` are why this subsection states a tree beside every instrument.** Three
+more branches — the whole of `digit_neighbours`, at `figures.py:438`, `:441` and `:445` — became
+`selftest`-held when two `numeric-provenance` rows reading the near-neighbour clause landed, which is
+the difference between the first row and the third. And `tests/unit/test_figures_library.py` landed in
+the same commit and holds all twenty, which is the difference between the second row and the fourth.
+**So the gate-set reading of 6 of 20 (30.0%) is a dated reading of a gate set that no longer exists**,
+and quoting it as current would assert a rate the tree has already closed.
+
+**The other modules are un-re-derived, and that is the honest state rather than an oversight.**
+`attest.py`, `corpus.py`, `search.py` and all fifteen files under `checks/` carry `selftest`-scored
+figures and nothing else. **No gate-set reading exists for any of them**, none is inferred here from
+`figures.py`'s, and a reader must be able to tell the one module that was re-scored from the ones
+nobody looked at again — which is what this paragraph exists to make possible. What a gate-set
+re-scoring would report about them is unmeasured, and §7 says which direction it would have to move.
 
 ### 2.3 The combined figure, and the denominator that has to be stated
 
 Combining the two populations gives **279 (203 + 76)** branches: **222 held, 55 unheld, 2
 unscorable**.
+
+> **The two unscorable branches are a property of the three forms tried, not of the branches, and
+> one of them has since been scored.** `corpus.py:161` is the inner backtick-run scanner's
+> `while` test. All three of §1's forms hang on it, and none of the three hangs *in that loop*: the
+> enclosing loop advances its index only by the inner loop's result, so a form that stops the inner
+> loop making progress stalls the outer one. A fourth form — the termination bound kept as the left
+> conjunct and the right conjunct forced true — terminates, and under it `tools/selftest.py` and
+> `check_corpus.py` both exit 1, so the branch is **held**. Measured 2026-08-11 at `92143b9`, over a
+> `corpus.py` byte-identical to `aaa329b`'s, so it is the same branch this document scored. The other
+> unscorable branch was not re-examined and no claim is made about it.
+> **Neither figure below is advanced for this**, because the sweep that produced them tried three
+> forms and these are its numbers; what changes is what "unscorable" may be read as meaning, and
+> `tools/README.md` carries the generalisation.
 
 **The rate is 55 of 279 (19.7%).** Stated with the other denominator a reader might reasonably use,
 excluding the two unscorable branches because they carry no verdict either way, it is
@@ -462,6 +575,17 @@ self-test stayed green. If `tools/selftest.py` were weaker than it is, more bran
 unheld and none would score fewer. So **55 of 279 (19.7%)** is a lower bound on what is removable
 without detection, and it is a lower bound in the safe direction: the true figure is this or worse,
 never better.
+
+**§2.2.1 is that floor behaving as a floor, and it is the strongest confirmation this document has
+of its own asymmetry.** The argument above says an instrument weaker than the one scored against
+moves the unheld count up and never down. Its contrapositive is that *adding* instruments moves the
+count down and never up, and that is the direction `figures.py` moved in every one of the readings
+§2.2.1 records: 10 against `selftest`, 6 once `check_corpus.py` was counted, 0 once a unit test
+existed. **Nothing in §2.2 needed correcting for that to happen**, which is the point — the
+re-scoring did not find the census wrong, it found the census's own qualifier doing its job. So a
+reader who re-scores any figure in §2 against more instruments should expect it to fall, and a fall
+is this claim holding rather than failing. The direction is the claim; the magnitude is not, and only
+`figures.py` has been measured.
 
 **"Held" is not robust and must not be read as coverage.** A branch scored held is held by whatever
 `tools/selftest.py` happens to assert, and the self-test asserting *something* that changed is not
