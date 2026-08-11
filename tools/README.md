@@ -652,6 +652,87 @@ skipped.
 sharing its line with a *struck* one, and a fresh provenance sentence has no
 struck range to trigger it.
 
+#### Nothing detects the split itself, and the corpus is safe by coincidence
+
+**The bullet above says the span has to stay on one source line. Nothing in the
+gate set can tell you whether it did.** Established 2026-08-11 by planting
+rather than by reading `build_masked`, because a masker's source shows what its
+author meant to cover and what it covers was the question. Both plants went
+into this file in a clean detached worktree at `5305172` — the corpus walks it,
+`include` carrying `tools` and `consumer` carrying `tools/*.md` — and each was
+restored by reading a needle back out of the file, never by observing an empty
+diff, which is [what a destroyed tree also
+prints](#the-emptiness-test-inversion--git-diff-cannot-tell-unchanged-from-changed-back).
+
+**A split whose content trips no other rule is completely silent.** The span
+`export PATH="$PWD/.venv/bin:$PATH"` broken after `export` — the split this
+file took at `a7e91ed`, from a reflow that meant nothing by it — passes **all
+seven gates**: corpus 0 errors 0 warnings with the one declared skip, 39 claims
+0 stale, 344 proofs, self-test green, 27 instruments, 34 perturbations, 1792
+passed and 83 skipped. Nothing tests span balance, so there is no instrument to
+name and no severity to argue over.
+
+**The one recorded firing ran the other way, and it cost more than the warning
+it was recorded as.** `register-range` at the worked example above was a false
+positive *caused by* a split, not a detection *of* one: the split defeated the
+masking and exposed a range the masking would otherwise have hidden. Re-planted
+at `5305172`, that shape does more than warn. `check_corpus.py` reports it as a
+warning and still exits 0, so the gate that actually goes red is
+`gen_claims.py --check`, at **exit 1** with 40 claims and 1 stale — the split
+did not merely expose a range, it *created a generated-claim site* inside bytes
+that should have been masked. Running the documented remedy then advanced the
+worked example's bound to `OD-31`, after which all seven gates are green, a
+sentence whose whole purpose is a deliberately-partial range no longer carries
+one, and it disagrees with this file's two other accounts of the same example.
+A whitespace edit reaches [the remedy corrupting the correct
+artifact](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes)
+in two commands.
+
+**The condition is common, and it currently costs nothing; both halves are the
+same measurement.** 46 split spans sit in the walked corpus at `5305172` across
+140 markdown documents — 28 authority, 12 consumer, 5 harness, 1 other, every
+one a single-backtick run, seven of them in this file — and the corpus reads 0
+errors 0 warnings, so **not one of the 46 is visible to any gate**. Joining all
+of them in a scratch worktree moves nothing except three `line-count` claims
+that go stale because their files got a line shorter, which is the newline and
+not the span. **The count is a dated reading and it grows with ordinary
+authoring**: it read 44 at `0d8b2e4` half an hour earlier, and a single new
+finding added two. Three of the 46 carry a token another rule reads, and all
+three are silent for three different reasons, none of them masking: the range
+in the bullet above, because the split also breaks `_RANGE`, which needs the
+second identifier to follow the separator on the same line;
+`Preprints 202606.0238` under [the false-positive
+register](#known-false-positive-modes), because a rate's integer part is capped
+at three digits; and `E8` in `specs/001-discovery-validation/plan.md`, because
+it resolves. Three coincidences, not a guard.
+
+**What a check would have to key on**, recorded so a later owner need not
+derive it again. Not a fresh definition of an inline span but the masker's own:
+`_INLINE_CODE_RE` needs its opening and closing runs in one string, so the
+condition is two adjacent non-fenced lines that `mask_line` leaves carrying
+unconsumed backtick runs of equal length, where joining them the way a reflow
+would un-join them yields a run the masker does consume. **Adjacency is the
+scope control and it is not optional.** Without it the indented fence rows in
+`adjudication/blind/cases.md` pair with each other dozens of lines apart —
+`_FENCE_RE` anchors at `^\s{0,3}` and does not see a fence opened at column
+twelve — and the first form of this census read 230 sites, nearly all of them
+that.
+
+**It is not offered as ready to wire, and the number is the reason.** An
+error-severity rule fires 46 times on a clean corpus, which is the shape that
+declined [both halves of an earlier
+widening](#both-halves-were-declined-on-a-blast-radius-nobody-had-counted-and-counting-it-reversed-both).
+The difference is the part an owner has to rule on, and it cuts both ways:
+those declines counted **false positives**, and these 46 are **true
+instances** of the condition. They are also not defects in what the documents
+say — CommonMark joins the two lines of a paragraph, so a split span renders
+exactly as intended. It is a masking defect and not a reading defect, and it
+becomes a reading defect only when the exposed half happens to carry something
+a rule reads. Wiring it therefore means landing 46 repairs first, and the
+question is whether a hazard whose entire measured cost is one corrupted worked
+example in this file is worth that. **Recorded rather than closed on the
+measuring pass's own authority.**
+
 ### Finding the next free register number — and the two searches that get it wrong
 
 **Read this before minting a `U-` or `C-` entry.** Three attempts to read these
