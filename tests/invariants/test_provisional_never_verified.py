@@ -451,9 +451,12 @@ def _mypy() -> str:
     if found is None:
         pytest.skip(
             "mypy is not on PATH and is not in this project's venv, so the "
-            "static half of T123 cannot be exercised here. It is NOT enforced "
-            "by any of this repository's gates. This is a skip and not a pass: "
-            "nothing was checked. Install mypy to run this arm."
+            "static half of T123 cannot be exercised here. This is a skip and "
+            "not a pass: nothing was checked. It is a fact about this machine "
+            "and not about the gate set — the workflow's invariants job runs "
+            "python -m mypy over src/ against a declared error count, and both "
+            "jobs that execute this arm install mypy from requirements.lock, "
+            "so it runs in CI. Install mypy to run it here."
         )
     return found
 

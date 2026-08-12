@@ -156,15 +156,15 @@ recomputation.
 ## What is type-enforced and what is refused at run time
 
 Stated plainly because the honest partial is this repository's accepted form,
-and because one half of it is **not enforced by any gate in this repository**:
+and because one half of it is enforced **only in CI and not on a laptop**:
 
 - **Type-enforced**: the distinct types, the return annotations, and
   `Verified.issued_by`. A type checker rejects the forbidden program. **mypy is
   not in this project's venv**, so the arm exercising this skips with a named
   reason where mypy is absent rather than passing over nothing — but the
-  workflow's `invariants` job now runs `python -m mypy` over `src/` against a
-  declared error count, so the checker is a gate even though it is not a local
-  one.
+  workflow's `invariants` job runs `python -m mypy` over `src/` against a
+  declared error count, and `tools/instruments.py` registers that step as a
+  gate. A local skip is a fact about the machine, not about the gate set.
 - **Construction-enforced, needing no checker**: `Verified` has no constructor
   that does not take a `ValidatedContract`. This holds under a bare interpreter
   and is what most arms assert.

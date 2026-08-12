@@ -27,8 +27,11 @@ dev = [
     # is verified on whichever laptop happens to carry a checker. INV-012's two
     # static arms locate it with `shutil.which`, so before this pin they skipped
     # in CI — the only place the guarantee matters — with a message that said so
-    # outright. `tools/typecheck.py` is the gate; the arms are the negative
-    # control over it.
+    # outright. **The gate is the `type check` step in `ci.yml`'s `invariants`
+    # job, not a script**: an earlier draft of this comment named
+    # `tools/typecheck.py`, which was never created, and `tools/instruments.py`
+    # records the same fact as `files=()` on that entry. The arms are the
+    # negative control over the step; this pin is what makes them run.
     #
     # **2.3.0 rather than an older release, and the choice cost nothing.** The
     # error set over `src/` is identical on 1.3.0 and 2.3.0 — the same 15 errors

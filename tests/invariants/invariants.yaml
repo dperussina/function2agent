@@ -243,21 +243,31 @@ invariants:
       what T132 will assert over an injected fault corpus. Conformance to a
       declared shape is explicitly not verification (FR-022).
 
-      **Two halves, and one of them is not gated here.** The static half — a
-      type checker rejecting the forbidden program — is exercised by a planted
-      forbidden construction paired with a clean control, because a green
-      type-check is a positive result whose meaning is the absence of a failure
-      signal and needs a planted failure to mean anything. mypy is not in this
-      project's venv and no gate runs a type checker, so that arm **skips with
-      a named reason** where mypy is absent rather than passing over nothing.
-      The construction half needs no checker and is what the remaining arms
-      assert.
+      **Two halves, and the static one is gated in CI and not on a laptop.**
+      The static half — a type checker rejecting the forbidden program — is
+      exercised by a planted forbidden construction paired with a clean
+      control, because a green type-check is a positive result whose meaning is
+      the absence of a failure signal and needs a planted failure to mean
+      anything. mypy is not in this project's venv, so the two static arms
+      locate it with shutil.which and **skip with a named reason** where it is
+      absent rather than passing over nothing.
 
-      One residual is asserted rather than fixed: Result.provisional is a bool
-      defaulting to False, the unsafe value, so Result(VERIFIED, payload) with
-      the flag omitted stays constructible. The type that carries it is
-      T126/T127's, and the arm records the defect executably so it is not
-      rediscovered.
+      **That skip is a fact about the machine and not a statement about the
+      gate set**, and the two were one sentence here until 2026-08-12. The
+      workflow's invariants job carries a type check step running python -m
+      mypy over the whole of src/ against an error count declared in the
+      workflow, and both jobs that execute these arms — invariants, through
+      this runner, and python — install mypy from requirements.lock, so the
+      arms run in CI rather than skip. tools/instruments.py registers that step
+      as a GATE named type check, which is where the gate set is enumerated.
+
+      The residual this entry used to record is closed. Result.provisional was
+      a bool defaulting to False, the unsafe value, so Result(VERIFIED,
+      payload) with the flag omitted stayed constructible; T126 replaced it
+      with a required Corroboration having no default, and VERIFIED is now
+      refused alongside both readings of absence — PROVISIONAL and NOT_STATED.
+      The arm that recorded the defect was turned over to hold the fix down
+      rather than deleted.
     test: tests/invariants/test_provisional_never_verified.py
     removal_proof: >
       Five, all in tests/removal_proofs.sh. In src/analysis/validate.py: make
