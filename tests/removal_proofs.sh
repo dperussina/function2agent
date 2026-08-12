@@ -784,6 +784,25 @@ report_signalled () {
   FAIL=$((FAIL+1))
 }
 
+# THE TITLE IS A DOUBLE-QUOTED SHELL STRING, SO THE SHELL READS IT BEFORE THIS
+# FUNCTION DOES. A backtick in a title is command substitution and `$name` is an
+# expansion, and both are silent in the direction that matters: the arm scores
+# correctly and the title recorded beside its verdict is the rewritten one.
+#
+# Observed 2026-08-12, not foreseen. A title reading "so `required` is a presence
+# test again" made the harness print `required: command not found` — which reads
+# as a broken environment rather than as a typo — and record the title with the
+# word deleted. An expansion is worse, because nothing is printed at all and the
+# recorded identity of the proof quietly becomes a property of the host.
+#
+# **This is a gate and not a convention, deliberately.** The note that came out
+# of that episode sat as a comment at the one arm that had been bitten, where no
+# author of a NEW arm would ever read it, and this repository has already
+# recorded "a convention every future author remembers" as a safeguard class
+# that failed here. `tools/check_tampers.py` refuses any title whose written form
+# differs from the form bash produced — so substitution, expansion and whatever
+# bash grows next are one rule that cannot fall behind the shell — and it runs in
+# the `invariants` CI job in under a second.
 proof () {
   local name="$1" file="$2" test="$3" python_edit="$4"
   local verdict
@@ -3227,6 +3246,21 @@ proof "stale bytecode — the arm inherits the image's PYTHONDONTWRITEBYTECODE a
   "tests/unit/test_tamper_matching.py::test_the_stale_pyc_arm_plants_its_hazard_where_the_images_disable_bytecode" \
   's = s.replace("    env.pop(\x22PYTHONDONTWRITEBYTECODE\x22, None)", "    pass")'
 
+# The title check in `tools/check_tampers.py`, and it is one arm because the
+# mechanism is one comparison. The two constructs that reach it — substitution
+# and expansion — are two parametrizations of the named test rather than two
+# proofs, since removing the comparison takes both and there is nothing a
+# second arm would distinguish.
+#
+# It is the first proof this file declares against `check_tampers.py`, whose two
+# older floor guards still have none. That asymmetry is left alone rather than
+# closed quietly here: covering them is its own pass, and it is stated so the
+# gap reads as unvisited rather than as decided.
+proof "tamper gate — the written title is no longer compared with the one bash produced, so a substituted title records as healthy" \
+  tools/check_tampers.py \
+  "tests/unit/test_tamper_matching.py::test_a_title_the_shell_rewrites_is_refused" \
+  's = s.replace("        if written is not None and written != proof.name:", "        if False:")'
+
 # ---------------------------------------------------------------------------
 # Finding 036 — the instrument census, and the six ways it goes quiet.
 #
@@ -4100,11 +4134,9 @@ proof "T121 — validated may be claimed with no artifact, so Principle I holds 
 # Every arm below was observed failing under its tamper before it was written
 # here.
 
-# No backticks in a proof title: these are double-quoted shell strings, so a
-# backtick is command substitution. The first draft of the title below read
-# "so 'required' is a presence test again" with backticks, and the harness
-# reported `required: command not found` and recorded the title with the word
-# deleted. No other title in this file uses one.
+# The title below is the one the substitution episode happened to; the rule that
+# came out of it is enforced by `tools/check_tampers.py` and is described at
+# `proof ()`, not here, because a new arm's author reads that and not this.
 proof "OD-32 — the inner provenance check is never called, so the outer presence test is all that is left" \
   src/contracts/schemas.py \
   "tests/unit/test_derived_record.py::test_a_current_document_with_an_empty_provenance_object_is_refused" \

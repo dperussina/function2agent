@@ -63,7 +63,7 @@ sys.path.insert(0, str(REPO / "tools"))
 #: The illustration used to read `66 to 65`, figures from a revision this
 #: constant left behind, which made the coupling read as an example of the rule
 #: rather than as the rule operating on the number directly above.
-EXPECTED_PROOFS = 374
+EXPECTED_PROOFS = 375
 
 from tamper import (  # noqa: E402
     AMBIGUOUS,
@@ -292,6 +292,93 @@ def test_the_gate_fails_on_a_proofs_file_it_cannot_read(
         "the gate passed a proofs file it could not read:\n" + result.stdout
     )
     assert expect_in_output in result.stdout, result.stdout
+
+
+# ---------------------------------------------------------------------------
+# The recorded title, and the shell that rewrites it on the way in.
+
+
+def _gate_over(proofs_text: str, tmp_path) -> subprocess.CompletedProcess:
+    """Run the gate over a planted proofs file, scoring this tree's sources."""
+    planted = tmp_path / "removal_proofs.sh"
+    planted.write_text(proofs_text)
+    return subprocess.run(
+        [sys.executable, str(CHECKER), "--root", str(REPO), "--proofs", str(planted)],
+        capture_output=True,
+        text=True,
+    )
+
+
+def _retitled(title: str) -> str:
+    """The real proofs file with the first declaration's title replaced.
+
+    The real file rather than a synthetic one, because the defect this is about
+    is a *live* declaration wearing a title nobody can tell is wrong, and the
+    surrounding proof has to stay intact for the run to reach the title check
+    at all.
+    """
+    return re.sub(
+        r'^proof "[^"]*"',
+        f'proof "{title}"',
+        PROOF_FILE.read_text(),
+        count=1,
+        flags=re.M,
+    )
+
+
+@pytest.mark.parametrize(
+    "title,expect_in_output",
+    [
+        ("FR-048 mount namespace — `pivot_root` removed",
+         "a backtick, so the shell ran what it enclosed as a command"),
+        ("FR-048 mount namespace — $HOME removed",
+         "a `$`, so the shell expanded what followed it"),
+    ],
+    ids=["command-substitution", "parameter-expansion"],
+)
+def test_a_title_the_shell_rewrites_is_refused(tmp_path, title, expect_in_output):
+    """The defect that shipped once, in both of its shapes.
+
+    A proof title is a double-quoted shell string, so the shell interprets what
+    is in it. The failure is not that an arm scores wrongly — it scores
+    correctly — but that the title archived beside the verdict is no longer the
+    one an author wrote, and it announces itself as an environment fault:
+    `required: command not found`, with the word silently gone from the record.
+
+    The two arms are the two constructs that reach it, and the second is the
+    worse of the two: an expansion does not fail at all, so nothing is printed
+    and the recorded identity of the proof quietly becomes a property of the
+    machine that ran the gate.
+
+    Asserted through the gate's own exit status and message rather than by
+    calling the comparison, because a rule that fires without failing the run
+    is the vacuity this file's floor tests are about.
+    """
+    result = _gate_over(_retitled(title), tmp_path)
+    assert result.returncode != 0, (
+        "the gate accepted a title the shell rewrote:\n" + result.stdout
+    )
+    assert "the recorded title is not the written one" in result.stdout, result.stdout
+    assert expect_in_output in result.stdout, result.stdout
+
+
+def test_a_title_carrying_an_escape_is_not_reported(tmp_path):
+    """The skip, asserted — because without it this rule invents its own rot.
+
+    `\\"` inside a double-quoted title is legitimate and the shell strips the
+    backslash, so written and produced differ for a reason that is nobody's
+    defect. The comparison declines to judge a written title holding a
+    backslash, which keeps it looser than the shell instead of a second
+    implementation of the shell's quoting. Planted here so that removing the
+    skip is a red test rather than a plausible simplification.
+    """
+    result = _gate_over(
+        _retitled('FR-048 mount namespace — \\"pivot_root\\" removed'), tmp_path
+    )
+    assert result.returncode == 0, (
+        "an escaped quote in a title was reported as rot:\n" + result.stdout
+    )
+    assert "the recorded title is not the written one" not in result.stdout
 
 
 # ---------------------------------------------------------------------------

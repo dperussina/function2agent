@@ -223,7 +223,9 @@ INSTRUMENTS: list[Instrument] = [
         checks="Every removal proof's tamper still names exactly one live site, "
                "and every test it names still exists. Zero extracted proofs is "
                "an error, and a declaration-shaped line that produced no proof "
-               "is an error.",
+               "is an error. A title the shell rewrote on the way in — a "
+               "backtick or a `$` in a double-quoted string — is an error, "
+               "because the arm scores while its recorded identity does not.",
         job="invariants",
         anchor="run: python tools/check_tampers.py",
         command=("python3", "tools/check_tampers.py"),
