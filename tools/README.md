@@ -2096,6 +2096,74 @@ same verdict on every input is vacuous — true, and carrying no weight, in the 
 vacuous-invariant banner means it. What actually distinguishes your commits is that you wrote their
 subjects minutes ago. Recognise them, and treat a subject you do not recognise as a stop.
 
+**Amended 2026-08-11: the two-field form of that check is vacuous too, the span is measured, and the
+replacement that discriminates is named rather than left to the reader.** The rule as it travels in
+briefs reads *"push only if the commit range is entirely your own authorship — verify with
+`git log --format='%an %ae'` over the range"*, and the second field buys nothing. Over all `322`
+commits reachable from `HEAD` at `f09b6f0`, `%an` takes exactly one distinct value; `%ae` takes two,
+and the second belongs to `deea4f3`, the *"Initial commit"* authored
+`379170+dperussina@users.noreply.github.com` and committed by `GitHub <noreply@github.com>` from the
+web UI on 2026-08-02. **The outlier is the repository's own root commit rather than another pass**, so
+it can never sit in a push range, and every commit any pass has ever made carries the identical pair.
+A two-field check is the one-field check with a second constant beside it.
+
+**The vacuity is not a no-op, which is why this belongs with the traps and not with the style
+notes.** The check does not decline to answer — it answers *"the range is entirely yours"* on the
+exact input where the range is not, and so licenses the push it exists to prevent while reporting
+that it verified the opposite. The instances this repository has recorded are real, and they are of
+two kinds. **Pushing:** the 2026-08-10 brief at the head of this entry, which told a pass to commit
+and push while a concurrent pass held unpushed commits on the same branch, and where nothing went
+wrong only because the sibling pushed in the interval — that paragraph calls it luck; and 2026-08-11,
+where *"one push then carried a commit its author had never gated"*, recorded in
+[the entry on the tree the index rule is silent about](#the-entry-above-is-exact-about-the-index-and-silent-about-the-tree-and-on-2026-08-11-it-was-the-tree-that-fired).
+**Staging**, which this check does not cover and cannot: the explicit-path practice was adopted
+[after two sweep-ups of other passes' work](#staging-explicit-paths-protects-you-from-another-passs-working-tree-not-from-its-index),
+and findings 025 and 028 were dropped out of version control entirely by the `git commit -a` that
+shape leads to.
+
+**Four candidate replacements were measured rather than reasoned about, in a scratch worktree where
+two simulated passes committed to one branch — two commits "mine", one a sibling's, interleaved so
+the sibling's sits in the middle of the range.** Only one discriminates:
+
+| method | reading on a range holding another pass's commit | discriminates |
+| --- | --- | --- |
+| `git log --format='%an <%ae>' <base>..HEAD \| sort -u` | one distinct author; reports clean | **no** |
+| author date against committer date, `%aI` against `%cI` | identical on all three commits, and all three inside one second | **no** |
+| `git reflog show <branch>` | all three commits, one author, no field naming a pass | **no** |
+| recorded-SHA set equality | the sibling's SHA is in the range and absent from the recorded set — **stop** | **yes** |
+
+**Recording your own SHAs is the only sound method of the four, and a single sound method beats a
+menu.** Capture `git rev-parse HEAD` immediately after each commit you make, and push only when
+`git rev-list <base>..HEAD` equals that recorded set exactly, both sorted. It depends on nothing the
+environment can make ambiguous: not on an identity field every pass shares by configuration, not on a
+clock two passes can occupy in the same second, and not on a log that records both passes into one
+file.
+
+**Why each of the three losers loses, separated because the reasons do not transfer.** The identity
+fields are constant by configuration, so they are the vacuity above. Dates fail because concurrency
+*is* the hazard rather than an aggravation of it — the three probe commits share a single second, so
+any window wide enough to contain your own work contains a sibling's committed alongside it. And the
+reflog fails on **scope**, in the way most likely to mislead: the `HEAD` reflog genuinely is
+per-worktree, at `.git/worktrees/<name>/logs/HEAD`, which looks like the discriminator until the
+branch reflog turns out not to be one. Commits to a branch land in the shared
+`.git/logs/refs/heads/<branch>` from every worktree, and the arrangement here has every pass
+committing in the one shared tree in any case.
+
+**The method's own failure mode, stated because it will fire rather than left to surprise somebody.**
+Amending or rebasing your own commit gives it a new SHA, so the recorded set goes stale and the
+comparison reports **stop** over a range that really is entirely yours. Measured: an amend moved
+`f1bc838` to `de3a1b6` and the comparison refused. That is a false alarm **in the safe direction**,
+and the discipline is to re-record after any history rewrite — never to loosen the comparison, which
+would trade a sound method for a comfortable one.
+
+**None of this weakens the paragraph below, and it is worth saying so explicitly.** A *gate* still
+cannot answer the question, for exactly the reason given there: another pass's commits are not
+defective, so nothing that inspects them can object. A recorded SHA set is not a gate. It is the pass
+writing down, at the moment of creation, the one fact that lives outside the tree — and it is
+available only to the party that holds it. What this amendment adds is that the fact can be *written
+down* rather than only *recognised*, so a reader's memory of what they committed minutes ago stops
+being the sole instrument.
+
 **No hook and no gate can take this over**, and the reason is not that nobody has written one. The
 question is not one a check can answer: another pass's commits are not defective, so every gate here
 passes on them cheerfully. `check_corpus.py`, `check_tampers.py` and the suite all go green on a range
