@@ -125,6 +125,194 @@ def test_a_reference_inside_a_comment_is_not_reported(workflow: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Direction 2, the 2026-08-12 widening. Until then this direction matched on a
+# file-shaped pattern only, so `python -m mypy`, all three `python -m pytest`
+# invocations and `go vet`/`go test`/`go build` were invisible to it while
+# `--check` printed "every instrument the workflow runs is declared". Each
+# newly-read form gets a firing arm, and — because the widening's whole
+# justification is a measured zero false-positive rate — each rejected variant
+# gets an arm asserting silence. Those silence arms are the load-bearing half:
+# a matcher that fires on prose is worse than the gap it closes, and nothing
+# else in this file would notice.
+
+
+def test_a_module_form_gate_missing_from_the_census_is_reported(
+    workflow: str,
+) -> None:
+    """The shape the old pattern could not see, planted in the shape it uses."""
+    perturbed = workflow.replace(
+        "      - name: The corpus gate\n",
+        "      - name: A gate nobody listed\n"
+        "        run: python -m ruff check src/\n\n"
+        "      - name: The corpus gate\n",
+    )
+    assert perturbed != workflow, "the corpus gate step has moved"
+    problems = instruments.reconcile(perturbed)
+    assert any("ruff" in p and "no census entry names" in p
+               for p in problems), problems
+
+
+def test_a_go_subcommand_gate_missing_from_the_census_is_reported(
+    workflow: str,
+) -> None:
+    perturbed = workflow.replace(
+        "      - name: The corpus gate\n",
+        "      - name: A gate nobody listed\n"
+        "        run: go run ./cmd/planted\n\n"
+        "      - name: The corpus gate\n",
+    )
+    assert perturbed != workflow
+    problems = instruments.reconcile(perturbed)
+    assert any("go run" in p and "no census entry names" in p
+               for p in problems), problems
+
+
+def test_a_specs_harness_missing_from_the_census_is_reported(
+    workflow: str,
+) -> None:
+    """`specs/` was added because a real one was hiding there.
+
+    The `slug-differential` job has always run a harness under `specs/`, and no
+    census entry named it: the job was declared and reconciled by `name:`, so
+    direction 4 passed, and direction 3's candidate list does not reach it.
+    """
+    perturbed = workflow.replace(
+        "      - name: The corpus gate\n",
+        "      - name: A gate nobody listed\n"
+        "        run: python3 specs/001-discovery-validation/harness/nope.py\n\n"
+        "      - name: The corpus gate\n",
+    )
+    assert perturbed != workflow
+    problems = instruments.reconcile(perturbed)
+    assert any("harness/nope.py" in p and "no census entry names" in p
+               for p in problems), problems
+
+
+def test_the_go_matcher_does_not_fire_on_prose_that_says_go_test() -> None:
+    """The measured reason the Go matcher is anchored at a command position.
+
+    Unanchored it fires 7 times over `ci.yml`'s job blocks and 4 are false: a
+    job's own `name:`, and three `echo` lines. 3 true to 4 false is a worse
+    ratio than either check relaxation `tools/README.md` records as declined.
+    """
+    silent = [
+        'name: go test (the enforcement point)',
+        'echo "::error::a package under ./... has no test files; '
+        'go test exits 0 over it"',
+        'echo "::error::go test reported zero outcomes; nothing was executed"',
+        "echo '### go test — the enforcement point'",
+        'echo "run go build before shipping"',
+    ]
+    for line in silent:
+        assert instruments.references(line) == [], line
+
+
+def test_the_module_matcher_does_not_fire_on_prose_that_says_python_dash_m() -> None:
+    for line in ['echo "run python -m mypy locally first"',
+                 'name: python -m pytest, both halves']:
+        assert instruments.references(line) == [], line
+
+
+def test_a_declared_mypy_error_string_is_not_read_as_an_invocation() -> None:
+    """Why the path shape stops at `specs/` and does not reach `src/`.
+
+    Extending it to `src/` adds exactly one firing over `ci.yml` and that one
+    is this line — the *declared* error the type-check step asserts by
+    identity, not an invocation of anything.
+    """
+    line = (
+        """        KNOWN='src/runtime/runner.py:252: error: "LifecycleGateway" """
+        """has no attribute "create"'"""
+    )
+    assert instruments.references(line) == []
+
+
+def test_the_run_key_is_stripped_so_a_one_line_step_is_at_a_command_position(
+) -> None:
+    """Without this, the anchored Go matcher finds 1 of 3 rather than 3 of 3.
+
+    `run: go vet ./...` and `go test ...` inside a `run: |` block are the same
+    invocation wearing different YAML.
+    """
+    assert instruments.references("      - run: go vet ./...") == ["go vet"]
+    assert instruments.references("        go test ./... -race") == ["go test"]
+    assert instruments.references(
+        "      - run: go build -o /tmp/f2a-proxy ./..."
+    ) == ["go build"]
+
+
+def test_a_sudo_env_prefix_does_not_hide_a_module_invocation() -> None:
+    """`ci.yml` runs the privileged pytest half behind `sudo -E env "PATH=…"`."""
+    assert instruments.references(
+        '          sudo -E env "PATH=$PATH" python -m pytest tests -q -rs'
+    ) == ["pytest"]
+
+
+def test_a_line_matched_by_two_patterns_is_reported_once() -> None:
+    """`python -m src.supervisor.preflight` is matched by `_REFERENCE` and by
+    `_MODULE`. Reporting it twice would make one undeclared instrument look
+    like two, and the count is what a reader acts on."""
+    assert instruments.references(
+        '          sudo -E env "PATH=$PATH" python -m src.supervisor.preflight'
+    ) == ["src.supervisor.preflight"]
+
+
+def test_direction_two_reads_something_on_the_committed_tree() -> None:
+    """The vacuity floor, and it is the arm that would have caught the gap.
+
+    A matcher that reads nothing reconciles perfectly with any census — which
+    is `check_tampers.py`'s zero-extracted-proofs argument, and the failure
+    `tools/README.md` opens with. The old pattern was not vacuous, so this arm
+    alone would not have caught it; the two below are what pin the reach.
+    """
+    read, scanned = instruments.coverage()
+    assert scanned > 100, scanned
+    assert read > 0, read
+
+
+def test_direction_two_reads_the_gates_that_used_to_be_invisible() -> None:
+    """The regression arm for the widening itself.
+
+    Each of these is an instrument `ci.yml` runs that direction 2 could not see
+    before 2026-08-12 — pytest, the largest gate in the repository, among them.
+    If a future edit narrows the matcher back, this fails rather than the
+    census going quietly green over a smaller population.
+    """
+    text = instruments.WORKFLOW.read_text()
+    seen: set[str] = set()
+    for block in instruments._jobs(text).values():
+        for line in block.splitlines():
+            if line.lstrip().startswith("#"):
+                continue
+            seen.update(instruments.references(line))
+    for token in ("mypy", "pytest", "go vet", "go test", "go build",
+                  "specs/001-discovery-validation/harness/slug-differential/"
+                  "slug_differential.py"):
+        assert token in seen, (token, sorted(seen))
+
+
+def test_every_invocation_token_a_census_entry_declares_is_actually_invoked(
+) -> None:
+    """The reverse of direction 2, over the new field.
+
+    An `invocations` token nobody runs is a census claiming to bind something
+    it does not — the same defect as a stale `anchor`, in the field added to
+    close it. Direction 1 checks that for `anchor`; nothing would check it
+    here.
+    """
+    text = instruments.WORKFLOW.read_text()
+    seen: set[str] = set()
+    for block in instruments._jobs(text).values():
+        for line in block.splitlines():
+            if line.lstrip().startswith("#"):
+                continue
+            seen.update(instruments.references(line))
+    for entry in instruments.INSTRUMENTS:
+        for token in entry.invocations:
+            assert token in seen, (entry.name, token, sorted(seen))
+
+
+# ---------------------------------------------------------------------------
 # Direction 3 — unclassified.
 
 

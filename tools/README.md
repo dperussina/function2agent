@@ -4397,14 +4397,22 @@ against a shared-tree number sees the same thing mirrored. Say which tree.
 it checks, whether a non-zero exit fails anything, which CI job runs it, and
 what to type to run it by hand. ~~Twenty-six entries at the time of writing —
 nineteen gates, five advisories, two libraries.~~ ~~Twenty-seven entries as of
-2026-08-11 — nineteen gates, six advisories, two libraries.~~ **Twenty-eight
-entries as of 2026-08-12 — twenty gates, six advisories, two libraries**, which
-is `20 + 6 + 2` and is read off `instruments.py --check` rather than counted by
-hand. *(The first struck figure was a hedged count and went stale anyway, in a
-section whose own first line says to read it before quoting a list of gates; the
-advisory population was the limb that moved then. The second went stale to the
-`type check` gate in the `invariants` job, which is the gate limb, and the job
-count did not move — it is a step in an existing job and `ci.yml` says why.)*
+2026-08-11 — nineteen gates, six advisories, two libraries.~~ ~~Twenty-eight
+entries as of 2026-08-12 — twenty gates, six advisories, two libraries.~~
+**Twenty-nine entries as of 2026-08-12 — twenty gates, seven advisories, two
+libraries**, which is `20 + 7 + 2` and is read off `instruments.py --check`
+rather than counted by hand. *(The first struck figure was a hedged count and
+went stale anyway, in a section whose own first line says to read it before
+quoting a list of gates; the advisory population was the limb that moved then.
+The second went stale to the `type check` gate in the `invariants` job, which is
+the gate limb, and the job count did not move — it is a step in an existing job
+and `ci.yml` says why. The third went stale the same day to the `slug
+differential` advisory, and that one is worth reading twice: the entry was not
+added because a new instrument arrived, but because [direction 2's
+widening](#direction-2-was-widened-on-a-measured-zero-false-positive-rate-and-caught-one-immediately)
+found an instrument CI had been running all along that no entry named. The job
+count did not move for it either — `slug-differential` was already in the job
+census and reconciled by name.)*
 
 It exists because of a defect this directory had no name for. For a week every
 pass was briefed with a five-item list of gates — `pytest`, `check_corpus.py`,
@@ -4436,8 +4444,8 @@ The three directions over the instruments:
 | direction | what it catches |
 |---|---|
 | declared and absent | a census entry names a CI job and step that the workflow no longer contains. A deleted step, or a renamed job — and a renamed job is not hypothetical here, the removal-proofs job was renamed on 2026-08-04. |
-| present and undeclared | a `run:` step names a repository instrument that no entry names. **This is the 2026-08-08 defect mechanised**: a gate wired into CI cannot stay off the list. |
-| unclassified | a file that looks like an entry point — every top-level `tools/*.py`, plus `tests/removal_proofs.sh` and `tests/invariants/runner.py` — that no entry names at all. `library` is a real answer and four files use it; not deciding is not an answer. |
+| present and undeclared | a line in a job block invokes a repository instrument that no entry names. **This is the 2026-08-08 defect mechanised**: a gate wired into CI cannot stay off the list. **Reads four invocation forms and is blind to the rest** — see [the widening](#direction-2-was-widened-on-a-measured-zero-false-positive-rate-and-caught-one-immediately), which is also where the scope is stated and why the success line now states it. |
+| unclassified | a file that looks like an entry point — every top-level `tools/*.py`, plus `tests/removal_proofs.sh` and `tests/invariants/runner.py` — that no entry names at all. `library` is a real answer and ~~four~~ **two** files use it; not deciding is not an answer. *(Corrected 2026-08-12, the same stale figure `instruments.py`'s own header corrected on 2026-08-11 and this copy of it did not.)* |
 
 All four failure modes were **planted and observed firing** rather than reasoned
 about, on 2026-08-09: a deleted `gen_claims.py --check` step, a synthetic
@@ -4453,6 +4461,103 @@ which prose about a tool reads as wiring; and whether the entry-point scan
 reads the filesystem at all, since an empty candidate list satisfies direction
 3 for every input and no other test in the file would notice. That second one
 is `check_tampers.py`'s vacuity floor, one file over.
+
+#### Direction 2 was widened on a measured zero false-positive rate, and caught one immediately
+
+**Measured 2026-08-12 at `8e0bbef`.** Direction 2 matched on a file-shaped
+pattern — `tools/*.py`, `tests/**.py|.sh`, `src.supervisor.*` — so an instrument
+invoked in any other shape was invisible to the one direction whose whole purpose
+is *present and undeclared*. `--check` nonetheless printed **"every instrument
+the workflow runs is declared"**. The gap was recorded honestly in the `type
+check` entry's own notes when that gate landed; what had not been done was
+measuring it.
+
+**What was invisible.** Over the **397** non-comment lines of `ci.yml`'s job
+blocks, the old pattern read **17** path references. It could not see:
+
+| invisible invocation | job | why |
+|---|---|---|
+| `python -m mypy --no-incremental …` | `invariants` | module form, no path |
+| `python -m pytest tests -q --collect-only` | `python` | `tests` has no extension |
+| `python -m pytest … -m "not privileged"` | `python` | same |
+| `python -m pytest … -m privileged` | `python` | same |
+| `go vet ./...` | `go` | no path at all |
+| `go test ./... -race -count=1 -v` | `go` | same |
+| `go build -o /tmp/f2a-proxy ./...` | `go` | same |
+| `specs/…/slug_differential.py` | `slug-differential` | path, but under `specs/` |
+
+**The brief that prompted this measured "2 of 13 visible" and that figure is
+wrong in both halves.** Its population was lines matching a hand-written grep for
+`python -m |go (test|vet|build|run)|npm |node |bash |sh `, which excludes every
+`python3 tools/…` invocation — the majority of what direction 2 *does* see — and
+includes `echo` lines and a job `name:`, which are not invocations. Direction 2
+also does not iterate invocation lines: it iterates **every non-comment line of
+every job block**, which is why a job's `name:` is inside its population at all.
+Counted over genuine instrument invocations, the old pattern saw **17 of 25**;
+counted over the four job-block lines the brief's grep would have kept, it saw
+`src.supervisor.preflight` and nothing else.
+
+**The widening, and the two variants declined against it.** All firing counts are
+over the same 397 lines, and false positives are counted rather than estimated:
+
+| matcher | firings | false positives | disposition |
+|---|---:|---:|---|
+| `python -m NAME`, anchored at a command position | 5 | **0** | **installed** |
+| `go (vet\|test\|build\|run)`, anchored | 3 | **0** | **installed** |
+| path shape extended to `specs/` | +1 | **0** | **installed** |
+| `go (vet\|test\|build\|run)`, unanchored | 7 | **4** | declined |
+| path shape extended to `src/` | +1 | **1** | declined |
+
+The 4 false positives of the unanchored Go matcher are a job's own `name: go test
+(the enforcement point)` and three `echo` lines whose *prose* says `go test`,
+including `echo "::error::a package under ./... has no test files; go test exits
+0 over it"`. **That is 3 true to 4 false, which is worse than either check
+relaxation this file records as declined** — so the unanchored form is not a
+cheaper version of what was installed, it is the version that would have been
+declined. The anchor is `_command_head()`: strip the YAML `run:` key, then strip
+`sudo`, `-E`, `env` and simple assignments. Without the `run:` strip the anchored
+Go matcher finds **1 of 3**, because `run: go vet ./...` puts the command
+mid-line.
+
+**`src/` is declined, and the reason is that its one new firing is false.** It
+matches `KNOWN='src/runtime/runner.py:252: error: "LifecycleGateway" has no
+attribute "create"'` — the *declared mypy error string* in the type-check step,
+not an invocation of anything. It escapes the current pattern only because a `'`
+rather than whitespace precedes it, so a matcher reading `src/` would be one
+quoting change from firing on a line whose whole purpose is to hold an error
+message. **Named ground when this decline is cited**: unlike
+[`register-range`'s relaxation](#no-correct-statement-of-one-features-fr-or-sc-extent-can-pass-register-range-and-the-relaxation-stays-declined),
+declined at 0 firings over 48 sites, and unlike the duplicate-register-row guard,
+declined at a bad true-to-false ratio, this one is declined at **1 firing, 1
+false, 0 true** — it buys nothing *and* costs something, which is the easiest of
+the three cases.
+
+**Why this widening was taken when those two were declined: it caught a real one
+on the tree it was written against.** The `slug-differential` job runs
+`specs/001-discovery-validation/harness/slug-differential/slug_differential.py`
+and **no census entry named it**, for as long as the job has existed. The job
+itself was declared and reconciled by `name:` from `8d74942`, so direction 4 was
+green over it; direction 3's candidate list is every top-level `tools/*.py` plus
+two named harness entry points, and this is a third, so direction 3 could not see
+it either. **A declared job running an undeclared instrument, inside the census
+whose stated purpose is to catch exactly that.** It is now the `slug differential`
+advisory entry, and it is the limb that moved the documented split to `20 + 7 + 2`.
+
+**Restored by presence, in the shape that was blind.** A `python -m ruff check
+src/` step was planted into the `invariants` job — module form specifically,
+since that is what the old pattern could not see. The unrepaired
+`tools/instruments.py` printed `census OK … every instrument the workflow runs is
+declared` and **exited 0** over it. The widened one exits 1 with *"job
+'invariants' runs ruff, which no census entry names"*. `go run ./cmd/planted` and
+a planted `specs/…/planted_probe.py` were each observed firing the same way, and
+`ci.yml` was restored and verified by sha256 rather than by an empty diff.
+
+**The success line was overclaiming and is corrected in the same pass.** It
+asserted a property direction 2 could not verify. It now names the four forms it
+reads, says outright what it does not read, and prints direction 2's reach —
+**26 references over 397 lines** at this commit — computed at run time rather
+than transcribed, because a figure typed into a success message is the thing this
+whole file is a response to.
 
 ### Direction 4 — the workflow's own jobs
 

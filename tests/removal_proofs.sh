@@ -3294,7 +3294,7 @@ proof "census — a deleted CI step is not reported" \
 proof "census — a gate wired into CI and missing from the list is not reported" \
   tools/instruments.py \
   "tests/unit/test_instrument_census.py::test_a_gate_wired_into_ci_and_missing_from_the_census_is_reported" \
-  's = s.replace("                if reference not in named:", "                if False:")'
+  's = s.replace("                if reference not in invoked:", "                if False:")'
 
 # Direction 4, the second population — the job census by `name:`. Directions 1
 # and 2 above read the mapping key; nothing read the `name:` value, and the two
@@ -3330,10 +3330,67 @@ proof "job census — an empty declaration reconciles cleanly" \
 # workflow discusses several tools in prose, including one it deliberately does
 # not wire; a scanner that matched comment text would report the reverse of the
 # truth about that one on every push.
+#
+# The trailing `for reference` line is part of the match and is what keeps this
+# naming one site. `coverage()` skips comments with a byte-identical two-line
+# block, and from 2026-08-12 the shorter string was AMBIGUOUS at 2 occurrences
+# — which the tamper matcher reports as an error rather than silently patching
+# the first, and this is the anchor it made re-derive.
 proof "census — comments are scanned, so prose about a tool reads as wiring" \
   tools/instruments.py \
   "tests/unit/test_instrument_census.py::test_a_reference_inside_a_comment_is_not_reported" \
-  's = s.replace("            if line.lstrip().startswith(\x22#\x22):\n                continue", "            pass")'
+  's = s.replace("            if line.lstrip().startswith(\x22#\x22):\n                continue\n            for reference in references(line):", "            for reference in references(line):")'
+
+# The 2026-08-12 widening, five arms because it is five mechanisms failing in
+# five directions. Direction 2 read a file-shaped pattern only, so `python -m
+# mypy`, all three `python -m pytest` invocations and `go vet`/`go test`/`go
+# build` were invisible to it while `--check` printed "every instrument the
+# workflow runs is declared" — a clean bit over a population nobody had
+# measured. The first three arms remove a form the widening added; the last two
+# remove the anchor, which is the entire reason the widening was taken rather
+# than declined. `tools/instruments.py` is a gate instrument **and** is directly
+# exercised by `tests/unit/test_instrument_census.py`, so a pytest-scored proof
+# of it is not the vacuous shape a proof of a corpus-checker helper would be:
+# pytest is blind to those, and it is not blind to this.
+
+proof "census — a module-form gate wired into CI is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_module_form_gate_missing_from_the_census_is_reported" \
+  's = s.replace("    found.extend(_MODULE.findall(head))", "    pass")'
+
+proof "census — a Go-subcommand gate wired into CI is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_go_subcommand_gate_missing_from_the_census_is_reported" \
+  's = s.replace("    found.extend(f\x22go {sub}\x22 for sub in _GO.findall(head))", "    pass")'
+
+# `specs/` is the alternative that caught a real one: the `slug-differential`
+# job has always run a harness there and no census entry named it.
+proof "census — a harness under specs/ wired into CI is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_specs_harness_missing_from_the_census_is_reported" \
+  's = s.replace("(?:tests|specs)/", "(?:tests)/")'
+
+# The anchor, both halves. Unanchored, the Go matcher fires 7 times over
+# `ci.yml`'s job blocks and 4 are false — a job's own `name:` and three `echo`
+# lines whose prose says `go test`. A matcher that reads prose as wiring is the
+# failure `tools/README.md` opens with, and it is worse than the gap it closes.
+proof "census — the Go matcher reads prose saying go test as an invocation" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_the_go_matcher_does_not_fire_on_prose_that_says_go_test" \
+  's = s.replace("_GO = re.compile(r\x22^go", "_GO = re.compile(r\x22go")'
+
+proof "census — the module matcher reads prose saying python -m as an invocation" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_the_module_matcher_does_not_fire_on_prose_that_says_python_dash_m" \
+  's = s.replace("_MODULE = re.compile(r\x22^python3?", "_MODULE = re.compile(r\x22python3?")'
+
+# The anchor is only reachable because the YAML `run:` key is stripped first.
+# Without it `run: go vet ./...` is not at a command position and the Go matcher
+# finds 1 of 3 — a silent two-thirds loss, with the census still green.
+proof "census — the run: key is not stripped, so a one-line step is invisible" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_the_run_key_is_stripped_so_a_one_line_step_is_at_a_command_position" \
+  's = s.replace("    text = _RUN_KEY.sub(\x22\x22, line.strip(), count=1)", "    text = line.strip()")'
 
 proof "census — a new unclassified tool is not reported" \
   tools/instruments.py \

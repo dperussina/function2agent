@@ -25,9 +25,30 @@ each closes a different way the two drift apart:
 1. **Declared and absent.** An entry says it runs in CI job *J* and *J*'s block
    does not contain its invocation. This is a step deleted or a job renamed
    while the census went on advertising it.
-2. **Present and undeclared.** A `run:` step names a repository instrument that
-   no entry names. This is the defect above, mechanised: a new gate wired into
-   CI cannot stay off the list.
+2. **Present and undeclared.** A line in a job block invokes a repository
+   instrument that no entry names. This is the defect above, mechanised: a new
+   gate wired into CI cannot stay off the list.
+
+   **This direction has a stated scope, and it is stated because it was once
+   overclaimed.** It reads four invocation forms — a `tools/`, `tests/` or
+   `specs/` path; a `src.supervisor.*` module; `python -m NAME`; and a `go`
+   subcommand — and is blind to every other. Until 2026-08-12 it read only the
+   first two, so `python -m mypy`, **all three `python -m pytest` invocations**
+   and `go vet`/`go test`/`go build` were invisible to it: the largest gate in
+   the repository was among the things this direction could not see, while
+   `--check` printed *"every instrument the workflow runs is declared"*. That
+   sentence is corrected and now names the forms; `--check` also prints
+   direction 2's reach, computed rather than transcribed.
+
+   **The widening was measured, and one variant of it was declined.** Over the
+   397 non-comment lines of `ci.yml`'s job blocks: the module and Go matchers
+   anchored at a command position fire **8 times with 0 false positives**;
+   unanchored, the Go matcher fires **7 times of which 4 are false** — a job's
+   own `name:` and three `echo` lines whose prose says `go test`. Extending the
+   path shape to `src/` adds exactly **1 firing and it is a false positive**,
+   the declared-mypy-error string `KNOWN='src/runtime/runner.py:252: ...'`, so
+   `src/` is declined. Extending it to `specs/` added **1 firing and 0 false
+   positives**, and that firing was real: see the `slug differential` entry.
 3. **Unclassified.** A file that *looks* like an entry point — every top-level
    `tools/*.py`, plus the two harness entry points outside it — that no entry
    names at all. This is what catches a tool arriving in the tree before
@@ -53,9 +74,16 @@ workflow's, a job missing the runner-identity action, and a workflow job the
 census does not declare.
 
 The two populations are counted separately and printed on separate lines.
-`tools/README.md` documents the instrument split as `19 + 6 + 2` read off
-`--check`, so a job entry in `INSTRUMENTS` would move a documented figure and
-make it a mixture of two things.
+`tools/README.md` documents the instrument split as ~~`19 + 6 + 2`~~
+**`20 + 7 + 2`** read off `--check`, so a job entry in `INSTRUMENTS` would move a
+documented figure and make it a mixture of two things.
+*(Corrected 2026-08-12. This file's prose said `19 + 6 + 2` while `--check`
+printed `20 gate` — the `type check` gate landed on 2026-08-11 and moved the gate
+limb, and `tools/README.md` was updated while these two sentences were not. The
+advisory limb then moved here, to `7`, when direction 2's widening caught the
+`slug differential` harness. A census whose own prose miscounts its classes is
+the defect this file is named after, one level in, and this is the second time
+that has happened — the `library` count a few lines up is the first.)*
 
 What it does **not** claim: that any instrument is correct, that the set is
 sufficient, or that a green `--run` means anything about the repository. It is
@@ -134,6 +162,13 @@ class Instrument:
     command: tuple[str, ...] = ()
     #: Files this entry accounts for under direction 3.
     files: tuple[str, ...] = ()
+    #: Non-file invocation tokens this entry accounts for under direction 2 —
+    #: `mypy`, `pytest`, `go vet`. **Separate from `files` on purpose**: these
+    #: are not files, direction 3 asks a question about files, and folding a
+    #: command string into `files` would make a `tools/*.py` entry-point census
+    #: reconcile against something that is not an entry point. Direction 2
+    #: reads both; direction 3 reads `files` alone.
+    invocations: tuple[str, ...] = ()
     #: True when the instrument costs minutes rather than seconds, or needs a
     #: facility a developer host may not have. Excluded from `--run` unless
     #: `--all`. No number attached: see the header.
@@ -162,7 +197,8 @@ class Job:
 
 #: The CI job census — **a second population, deliberately not folded into
 #: `INSTRUMENTS`**, and the separation is measured rather than tidy.
-#: `tools/README.md` states the instrument split as `19 + 6 + 2` and says it is
+#: `tools/README.md` states the instrument split as ~~`19 + 6 + 2`~~
+#: **`20 + 7 + 2`** (corrected 2026-08-12; see the header) and says it is
 #: read off `--check` rather than counted by hand; a job entry added to
 #: `INSTRUMENTS` would move that total and silently make a documented figure a
 #: mixture of two things being counted. So the two censuses share this file's
@@ -248,16 +284,22 @@ INSTRUMENTS: list[Instrument] = [
         # the same shape `go vet` and `go test` take — the scope lives in
         # `pyproject.toml` under `[tool.mypy]`, so a bare `mypy` reproduces it.
         files=(),
+        invocations=("mypy",),
         needs="mypy, from requirements.lock",
-        notes="**Direction 2 does not bind this entry, and that is worth knowing "
-              "rather than assuming.** `_REFERENCE` matches `tools/*.py`, "
-              "`tests/**` and `src.supervisor.*`; `python -m mypy` matches none "
-              "of them, so a type-check step added to CI and left out of this "
-              "list would NOT be reported. Direction 1 does bind it — the anchor "
-              "above must stay in the job — so a gate advertised here and gone "
-              "from CI still fails. The reverse gap is real and shared with "
-              "`go vet`, `go test` and `go build`, which are invisible to "
-              "direction 2 for the same reason.",
+        notes="~~**Direction 2 does not bind this entry, and that is worth "
+              "knowing rather than assuming.** `_REFERENCE` matches "
+              "`tools/*.py`, `tests/**` and `src.supervisor.*`; `python -m mypy` "
+              "matches none of them, so a type-check step added to CI and left "
+              "out of this list would NOT be reported.~~ **Closed 2026-08-12: "
+              "`_MODULE` reads module-form invocations and the `invocations` "
+              "field above is what direction 2 now binds this entry by.** The "
+              "gap was real when written and the note is struck rather than "
+              "deleted because the measurement that closed it — 5 module-form "
+              "firings, 0 false positives — is the reason the widening was "
+              "taken and the reason `src/` was not. Direction 1 binds it too: "
+              "the anchor above must stay in the job. The same closure reached "
+              "`pytest`, `go vet`, `go test` and `go build`, which were "
+              "invisible to direction 2 for the same reason.",
     ),
     # -- job `corpus` --------------------------------------------------------
     Instrument(
@@ -314,6 +356,38 @@ INSTRUMENTS: list[Instrument] = [
         command=("python3", "tools/gen_claims.py", "--check"),
         files=("tools/gen_claims.py",),
     ),
+    # -- job `slug-differential` ---------------------------------------------
+    Instrument(
+        name="slug differential",
+        kind=ADVISORY,
+        checks="`corpuscheck.corpus.slugify` against GitHub's own renderer over "
+               "the whole corpus. The one oracle here that belongs to somebody "
+               "else: `link-anchor` resolves every `#fragment` with `slugify`, "
+               "so while `slugify` was written from documentation rather than "
+               "measured, `link-anchor` computed every target with the same "
+               "defect and passed two invented anchors as green.",
+        job="slug-differential",
+        anchor="slug_differential.py",
+        # `continue-on-error: true` on the step, read off `ci.yml` rather than
+        # assumed: it needs outbound HTTPS to api.github.com, and `ci.yml`
+        # declines to let a network-dependent check redden a merge.
+        files=("specs/001-discovery-validation/harness/slug-differential/"
+               "slug_differential.py",),
+        slow=True,
+        needs="outbound HTTPS to api.github.com; ~105s over the whole corpus",
+        notes="**This entry is direction 2's first catch after the 2026-08-12 "
+              "widening, and it had been missing for as long as the job "
+              "existed.** The job was declared in `JOBS` and reconciled by name "
+              "from `8d74942`, so direction 4 was green over it; the instrument "
+              "it runs was named by nothing. `_REFERENCE` read `tools/` and "
+              "`tests/` and this harness lives under `specs/`, so the one "
+              "direction whose whole purpose is *present and undeclared* could "
+              "not see it. Direction 3 could not either — its candidate list is "
+              "every top-level `tools/*.py` plus two named harness entry "
+              "points, and this is a third. A declared job running an "
+              "undeclared instrument is the census's own defect class, and it "
+              "was inside the census.",
+    ),
     # -- job `python` --------------------------------------------------------
     Instrument(
         name="linux facility preflight",
@@ -337,6 +411,10 @@ INSTRUMENTS: list[Instrument] = [
         job="python",
         anchor='python -m pytest tests -q -rs -m "not privileged"',
         command=("python3", "-m", "pytest", "tests", "-q", "-rs"),
+        # The largest gate in the repository, and until 2026-08-12 direction 2
+        # could not see any of its three invocations: `tests` carries no file
+        # extension, so `_REFERENCE`'s `tests/` alternative never matched them.
+        invocations=("pytest",),
         slow=True,
         needs="Linux for the kernel arms; privileges for the privileged half",
     ),
@@ -463,6 +541,7 @@ INSTRUMENTS: list[Instrument] = [
         anchor="run: go vet ./...",
         command=("go", "vet", "./..."),
         files=(),
+        invocations=("go vet",),
         slow=True,
         needs="a Go toolchain; run from src/proxy",
         notes="Run with cwd=src/proxy.",
@@ -476,6 +555,7 @@ INSTRUMENTS: list[Instrument] = [
                "the outcome count is not zero.",
         job="go",
         anchor="go test ./... -race -count=1 -v",
+        invocations=("go test",),
         slow=True,
         needs="a Go toolchain, and cgo for -race",
         notes="Run with cwd=src/proxy. The three assertions are inlined in the "
@@ -497,6 +577,7 @@ INSTRUMENTS: list[Instrument] = [
         job="go",
         anchor="go build -o /tmp/f2a-proxy ./...",
         command=("go", "build", "-o", "/tmp/f2a-proxy", "./..."),
+        invocations=("go build",),
         slow=True,
         needs="a Go toolchain; run from src/proxy",
         notes="Run with cwd=src/proxy.",
@@ -602,13 +683,84 @@ def _jobs(text: str) -> dict[str, str]:
     return blocks
 
 
-#: What a `run:` step referencing one of these is: an instrument, and therefore
-#: something the census must name. Deliberately file-shaped — a bare `pytest`
-#: or `go test` is caught by direction 1 instead, and inventing a pattern for
-#: every possible command would be a classifier stated as a complement.
+#: What a line referencing one of these is: an instrument, and therefore
+#: something the census must name. **File-shaped, and that shape was measured
+#: rather than assumed** — see `_MODULE` and `_GO` below for the two invocation
+#: forms it cannot see, and the header for what the three together do and do
+#: not cover.
+#:
+#: `specs/` was added on 2026-08-12 and it caught a real one: the
+#: `slug-differential` job runs a harness under `specs/001-discovery-validation/`
+#: and **no census entry named it**, which is precisely the defect direction 2
+#: exists to close, undetected for as long as the job has existed. Measured over
+#: the 397 non-comment lines of `ci.yml`'s job blocks: `specs/` adds **1 firing,
+#: 0 false positives**.
+#:
+#: **`src/` was measured alongside it and is declined.** It adds `19 - 18 = 1`
+#: firing and that one is a **false positive**: the `invariants` job's
+#: `KNOWN='src/runtime/runner.py:252: error: ...'` line, which is a declared
+#: mypy error string and not an invocation of anything. It passes today only
+#: because the path is preceded by a `'` rather than whitespace, so a matcher
+#: that read it would be one quoting change away from firing — an accident, not
+#: a guard.
 _REFERENCE = re.compile(
-    r"tools/[\w-]+\.py|tests/[\w./-]+\.(?:py|sh)|src\.supervisor\.[\w.]+"
+    r"tools/[\w-]+\.py|(?:tests|specs)/[\w./-]+\.(?:py|sh)|src\.supervisor\.[\w.]+"
 )
+
+#: The YAML key a step's script hangs off, so that a one-line `run: go vet ./...`
+#: and a line inside a `run: |` block present the same head to the matchers
+#: below. Without this, `run: go vet ./...` is not at a command position and the
+#: anchored `_GO` misses it — measured: 1 firing instead of 3.
+_RUN_KEY = re.compile(r"^-?\s*run:\s*(?:[|>][-+]?\s*)?")
+
+#: Shell words that may precede a command without changing what is invoked.
+#: Enumerated from what `ci.yml` actually uses — `sudo -E env "PATH=$PATH"` —
+#: rather than invented. The `[^"\s()]*` on the assignment value is what stops
+#: `checked=$(grep -oE ...` being eaten as an assignment: a `(` ends the value
+#: and the whole alternative then fails, which is the safe direction to fail in.
+_RUN_PREFIX = re.compile(r'^(?:sudo|-E|env|"?[A-Za-z_]\w*=[^"\s()]*"?)\s+')
+
+#: Module-form invocation: `python -m NAME`. Yields the module name, so that
+#: `python -m src.supervisor.preflight` yields the same token `_REFERENCE`
+#: already yields for it and the entry naming it stays as it is.
+_MODULE = re.compile(r"^python3?\s+-m\s+([\w.]+)")
+
+#: Go subcommand invocation. Yields `go vet`, `go test`, `go build`, `go run`.
+_GO = re.compile(r"^go\s+(vet|test|build|run)\b")
+
+
+def _command_head(line: str) -> str:
+    """The line reduced to what it invokes, for the two anchored matchers.
+
+    **The anchor is the whole guard, and its value is measured.** Unanchored,
+    `go (vet|test|build)` fires **7** times over `ci.yml`'s job blocks and
+    **4 are false positives** — a job's own `name: go test (the enforcement
+    point)`, and three `echo` lines whose prose says `go test`. Anchored it
+    fires **3** times with **0** false positives. That ratio is worse than the
+    two check relaxations `tools/README.md` records as declined, so the
+    unanchored form is not a cheaper version of this: it is the version that
+    would have been declined.
+    """
+    text = _RUN_KEY.sub("", line.strip(), count=1)
+    while True:
+        found = _RUN_PREFIX.match(text)
+        if not found:
+            return text
+        text = text[found.end():]
+
+
+def references(line: str) -> list[str]:
+    """Every instrument token one workflow line invokes, deduplicated.
+
+    Deduplicated because `python -m src.supervisor.preflight` is matched by both
+    `_REFERENCE`'s third alternative and `_MODULE`, and reporting one line twice
+    would make a single undeclared instrument look like two.
+    """
+    found = list(_REFERENCE.findall(line))
+    head = _command_head(line)
+    found.extend(_MODULE.findall(head))
+    found.extend(f"go {sub}" for sub in _GO.findall(head))
+    return list(dict.fromkeys(found))
 
 #: A job-level `name:` in this workflow. Four spaces is the only indentation at
 #: which a job's own keys sit — a step's name is `      - name:` — so this cannot
@@ -708,6 +860,25 @@ def _entry_point_candidates() -> list[str]:
     return found
 
 
+def coverage(text: str | None = None) -> tuple[int, int]:
+    """Direction 2's reach: (references read, non-comment lines scanned).
+
+    Derived at run time and printed by `--check`, because the alternative is a
+    figure transcribed into a success message that goes stale the next time
+    `ci.yml` moves — which is the failure this whole file is a response to, and
+    it would be an unusually poor place to reintroduce it.
+    """
+    text = WORKFLOW.read_text() if text is None else text
+    read = scanned = 0
+    for block in _jobs(text).values():
+        for line in block.splitlines():
+            if line.lstrip().startswith("#"):
+                continue
+            scanned += 1
+            read += len(references(line))
+    return read, scanned
+
+
 def reconcile(text: str | None = None,
               candidates: list[str] | None = None) -> list[str]:
     """Both arguments exist so the three directions can be shown to fire.
@@ -745,13 +916,20 @@ def reconcile(text: str | None = None,
     #    own workflow discusses several instruments in prose, including one it
     #    deliberately does not wire, and a scanner that matched those would
     #    report the opposite of the truth about them.
+    #
+    #    `named` is `files` alone, because direction 3 below asks a question
+    #    about entry-point *files* and must not be answered by a command
+    #    string. Direction 2 reads the union.
     named = {name for entry in INSTRUMENTS for name in entry.files}
+    invoked = named | {
+        token for entry in INSTRUMENTS for token in entry.invocations
+    }
     for job, block in blocks.items():
         for line in block.splitlines():
             if line.lstrip().startswith("#"):
                 continue
-            for reference in _REFERENCE.findall(line):
-                if reference not in named:
+            for reference in references(line):
+                if reference not in invoked:
                     problems.append(
                         f"job {job!r} runs {reference}, which no census entry "
                         "names. Add it to INSTRUMENTS — a gate wired into CI "
@@ -857,9 +1035,28 @@ def main(argv: list[str] | None = None) -> int:
             for problem in problems:
                 print(f"  - {problem}")
             return 1
-        print("census OK — every declared gate is in the workflow, every "
-              "instrument the workflow runs is declared, every entry point is "
-              "classified")
+        # **The scope clause is load-bearing and it used to be absent.** This
+        # line read "every instrument the workflow runs is declared" until
+        # 2026-08-12, which direction 2 has never been able to verify: it reads
+        # four invocation forms and is blind to every other, so the claim was a
+        # clean bit over a population nobody had measured. The forms are named
+        # here and the reach is computed rather than transcribed.
+        read, scanned = coverage()
+        print("census OK — every declared gate is in the workflow, every entry "
+              "point is classified, and every instrument the workflow invokes "
+              "in a form direction 2 reads is declared.")
+        print(f"  direction 2 read {read} reference(s) over {scanned} "
+              "non-comment line(s) of job block. It reads four forms: a "
+              "`tools/`, `tests/` or `specs/` path; a `src.supervisor.*` "
+              "module; `python -m NAME`; and a `go` subcommand — the last two "
+              "at a command position, which is what keeps prose saying "
+              "`go test` from counting as running it.")
+        print("  It does NOT read any other shape — a bare `pytest`, an `npm` "
+              "or `node` command, a wrapper script, anything inside `$(...)`, "
+              "or a `src/` path. An instrument invoked that way is bound only "
+              "by direction 1, which requires this census to already name its "
+              "job and anchor, and is therefore no help against one nobody "
+              "declared.")
         return 0
 
     print(render())
