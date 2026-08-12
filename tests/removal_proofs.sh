@@ -4206,8 +4206,10 @@ proof "T136 — the refusal adopts the drift vocabulary, so an upstream release 
 
 # Independence. A recomputation that reads the quantity it checks agrees with
 # itself whatever the value is, which is FR-022 satisfied on paper and nothing
-# detected in fact — the 8 schema-blind numeric false successes feature 001
-# measured, reproduced by a verifier that believes it is recomputing.
+# detected in fact — the ~~8~~ 9 schema-blind numeric false successes feature
+# 001 measured, reproduced by a verifier that believes it is recomputing.
+# Corrected 2026-08-12 from E8-VIABILITY.md section 6: the split is 9 numeric
+# and 2 set-typed, not 8 and 3, and the schema-derived arm misses both classes.
 proof "T120 — a recomputation may read the quantity it checks, so it agrees with itself" \
   src/analysis/derive.py \
   "tests/unit/test_derive.py::test_a_self_referential_recomputation_is_refused" \

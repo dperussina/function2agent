@@ -7,10 +7,16 @@ be the success signal for any result."*
 ## The design constraint this file exists to hold, and where it comes from
 
 A schema-only verifier is blind to the faults that matter. Feature 001 measured
-**11 false successes, 8 of them numeric-typed and schema-blind** — the value was
-wrong and the shape was right — and the recorded v1 constraint is that a
-shipping verifier cannot be schema-only and must recompute postconditions by an
-independent path.
+**11 false successes, ~~8 of them numeric-typed and schema-blind~~ 9 of them
+numeric-typed and 2 set-typed, and a schema-derived arm is blind to both** — the
+value was wrong and the shape was right — and the recorded v1 constraint is that
+a shipping verifier cannot be schema-only and must recompute postconditions by
+an independent path.
+
+*Corrected 2026-08-12 from `E8-VIABILITY.md` §6. The struck 8 was not a
+decomposition of the 11 and the split is 9 and 2. This widens the constraint
+rather than weakening it: the set-typed cases are schema-blind too, so the
+struck text named a narrower blind spot than the one that was measured.*
 
 T120 is the *derivation* half of that. It is not enough for this module to emit
 checks; it has to emit checks **capable of expressing a recomputation**. T124

@@ -379,10 +379,17 @@ def test_a_planted_disagreement_is_reported_as_a_disagreement() -> None:
 def test_a_planted_fault_smaller_than_one_percent_is_detected() -> None:
     """Negative control 2 — the fault class **SC-005** names, at its hard end.
 
-    Feature 001 measured 8 schema-blind numeric false successes and 3 sub-1%
-    near-misses. A verifier that catches a fault of 7 and misses a fault of 1
-    on a total of 200+ has not covered the class the product is sold on. The
-    plant here is **one unit**, which is under one percent of the correct sum.
+    Feature 001 measured ~~8~~ **9** schema-blind numeric false successes and 3
+    sub-1% near-misses. A verifier that catches a fault of 7 and misses a fault
+    of 1 on a total of 200+ has not covered the class the product is sold on.
+    The plant here is **one unit**, which is under one percent of the correct
+    sum.
+
+    *Corrected 2026-08-12 from `E8-VIABILITY.md` §6: the numeric count is 9, not
+    8 (the split is 9 numeric and 2 set-typed). The sub-1% figure of 3 beside it
+    was already the corrected one — §7's table advances it from 2 — so this
+    sentence had been carrying one corrected figure and one superseded one at
+    the same time, and the two now agree.*
     """
     application = app_mod.from_committed_state()
     _status, body = app_mod.from_committed_state().call("GET", "/shipments")

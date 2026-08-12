@@ -9,10 +9,20 @@ result."*
 ## The constraint that decides this module's shape
 
 A schema-only verifier is blind to the faults that matter. Feature 001 measured
-**11 false successes, of which 8 were numeric-typed and schema-blind** — the
-value was wrong and the shape was right — and the recorded v1 constraint is that
-a shipping verifier **cannot be schema-only and must recompute postconditions by
-an independent path**.
+**11 false successes, ~~of which 8 were numeric-typed and schema-blind~~ of
+which 9 are numeric-typed and 2 are set-typed, and the schema-derived arm is
+blind to both** — the value was wrong and the shape was right — and the recorded
+v1 constraint is that a shipping verifier **cannot be schema-only and must
+recompute postconditions by an independent path**.
+
+*Corrected 2026-08-12 from `E8-VIABILITY.md` §6 and §7. The struck 8 was never a
+decomposition of the 11; the split is 9 and 2. The correction is to the
+arithmetic and to the scope, **not** to the conclusion this module is built on —
+it runs the other way. Set-typed cases escape the schema-derived arm as well:
+on the one set-typed case that survives §6's re-scope, the cardinality clause
+does not merely miss the error, it certifies the wrong answer as correct. So the
+blindness this module exists to answer is wider than the struck text claimed,
+not narrower.*
 
 T120 is the derivation half of that, so the requirement lands here as: what this
 module emits must be **capable of expressing a recomputation**, not merely a
@@ -113,10 +123,15 @@ class DerivationError(ValueError):
 class CheckKind(Enum):
     """Two kinds, and the distinction is the product.
 
-    `SHAPE` is what feature 001's 8 schema-blind numeric false successes passed.
-    It is emitted anyway — a wrong shape is still worth catching — but it is
-    labelled so a consumer can filter on it, and T132's control verifier is
-    exactly the subset that survives that filter.
+    `SHAPE` is the kind feature 001's ~~8 schema-blind numeric~~ **9
+    numeric-typed** false successes passed (*corrected 2026-08-12 from
+    `E8-VIABILITY.md` §6: the split is 9 numeric and 2 set, not 8 and 3*), **and
+    the 2 set-typed ones are not a class it catches either** — §6 walks the
+    surviving set-typed case clause by clause and the cardinality clause
+    certifies the wrong answer as correct. The struck figure named a narrower
+    blind spot than the measured one. It is emitted anyway — a wrong shape is
+    still worth catching — but it is labelled so a consumer can filter on it,
+    and T132's control verifier is exactly the subset that survives that filter.
     """
 
     SHAPE = "shape"
