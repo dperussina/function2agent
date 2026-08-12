@@ -46,9 +46,19 @@ where that result is produced:
 
 - **`Verified`** — validate.py's token, reachable only from a `ValidatedContract`
   and a check that recomputes.
+- **`ProvisionallyVerified`** — the values agreed at a precision the **caller**
+  declared (T212). `VERIFIED`, and a distinct type from `Verified` so that
+  FR-024 property 5's *"never plain verified"* is held by the taxonomy rather
+  than by a flag a consumer can overlook.
 - **`Disagreement`** — the recomputation disagreed. `FAILED`.
 - **`Refusal`** — no comparison of stated precision could be made, with a named
   reason and the sources consulted. `NOT_VERIFIABLE`.
+
+**FR-025 still has three states and T212 adds no fourth.** The declared rung
+adds one route to `VERIFIED` and one to `FAILED` and **no** new route to
+`NOT_VERIFIABLE`, so it adds no `RefusalReason` member and cannot disturb the
+sum `_check_totals` asserts in `src/runtime/reports/not_verifiable.py`. It can
+only ever move a quantity *out* of the not-verifiable population.
 
 `ResultRecord` is **T126 and T127's**, not this module's, and these three are
 deliberately not a fourth enum beside `VerificationOutcome`. Each maps onto an
@@ -61,31 +71,48 @@ to that and introduces no constant: `tests/unit/test_verify.py::test_no_toleranc
 scans this file's identifiers and numeric literals so that the property is a
 fact about the source rather than about a review.
 
-⚠️ **What is built here is FR-024's refusal, and not FR-024's ladder.** The
-requirement also fixes an **ordered precision ladder** with six properties, and
-**three** of them are discharged by nothing here: properties **1, 5 and 6**.
+⚠️ **What is built here is FR-024's refusal and its caller-declared rung, and
+still not FR-024's ladder as an object.** The requirement fixes an **ordered
+precision ladder** with six properties. **Five are carried; property 1 is not,
+and property 1 is not a task.**
 
 - **Property 1** requires the ladder to be *versioned configuration under
   FR-012, committed before any derivation is written against it* — and the
-  ordering is already inverted, because `derive.py` writes a `precision_source`
-  against a ladder that is not a reviewable artifact. Its disposition is an
-  owner decision rather than a task: gating it under FR-012 means making it an
-  artifact kind first, and `OD-33` declines to mint a ninth kind, defers the
-  gating, and expires that deferral at the second producer to write a
-  `precision_source`.
-- **Properties 5 and 6** govern the caller-declared rung — admissible only where
-  no artifact source supplies a precision, and provisional wherever admitted.
-  They are carried by `T212`, which is `OD-23`'s task.
+  ordering is already **inverted**, because `derive.py` writes a
+  `precision_source` against a ladder that is not a reviewable artifact. No
+  amount of work in this module fixes an ordering that has already happened.
+  Its disposition is an owner decision rather than a task: gating it under
+  FR-012 means making it an artifact kind first, and `OD-33` declines to mint a
+  ninth kind, defers the gating, and expires that deferral at the second
+  producer to write a `precision_source`.
+- **Property 2** is `derive.py`'s refusal of a numeric `precision_source`.
+  Nothing added for T212 weakens it: `DeclaredPrecision.decimal_places` arrives
+  from the caller at run time and is not a value this module names.
+- **Property 3** — *its last rung MUST be refusal* — is carried **in behaviour
+  and not as structure**: an unstated precision does reach refusal, through
+  `_admissible_precision`, and what is absent is a ladder object for that
+  refusal to be the last rung *of*. T212 moves the refusal one rung further
+  down without changing that: the declared rung sits **above** refusal, so
+  refusal is still last.
+- **Property 4** is `ADMISSIBLE_PRECISION_SOURCES` and the `ConsultedSource`
+  constructor below, which now also governs the disclosure — a displacement
+  citing a source FR-024 does not admit is refused at construction.
+- **Properties 5 and 6** are `verify_declared_quantity` and
+  `PrecisionProvenance`, built for **T212** against `OD-23`.
 
-**Properties 2, 3 and 4 are carried.** Property 2 is `derive.py`'s refusal of a
-numeric `precision_source`; property 4 is `ADMISSIBLE_PRECISION_SOURCES` and the
-`ConsultedSource` constructor below. Property 3 — *its last rung MUST be
-refusal* — is carried **in behaviour and not as structure**: an unstated
-precision does reach refusal, through `_admissible_precision`, and what is
-absent is a ladder object for that refusal to be the last rung *of*. An earlier
-revision of this paragraph counted property 3 among the undischarged and then
-conceded its behaviour two sentences later; the census was redone
-property-by-property on 2026-08-12 and this is its result.
+**What property 5 and 6 being carried does not settle**, and it is one step
+further in: the properties fix *which artifacts* may state a precision and not
+*how one is read out of them*. `_consult_precision` reports both sources it
+consults as silent because **nothing in v1 extracts a precision from a
+postcondition, an exception class or a published specification** — that is
+`tasks.md`'s loose-requirement row 4, narrowed on 2026-08-12 and deliberately
+not struck. So the admissibility test below is answerable today in exactly one
+direction from a float: no artifact source supplies one, so a declaration is
+admitted. The `IGNORED_ARTIFACT_SUPPLIED` branch is **not** dead — an integer
+aggregate names its own precision through `check.precision_source`, which is
+28 of the 61 entries in `OD-23`'s census — but the branch that would ignore a
+declaration because a *postcondition* stated a precision has no producer, and
+will not until the extraction is written.
 
 ## Why the verified path is exercised but never with both halves real
 
@@ -120,9 +147,14 @@ from src.contracts.result import VerificationOutcome
 __all__ = [
     "ADMISSIBLE_PRECISION_SOURCES",
     "ConsultedSource",
+    "DeclarationDisposition",
+    "DeclaredPrecision",
     "Disagreement",
     "IndependentPath",
     "PathUnavailable",
+    "PrecisionProvenance",
+    "ProvisionallyVerified",
+    "QuantityVerification",
     "Refusal",
     "RefusalReason",
     "ReportedResult",
@@ -131,6 +163,7 @@ __all__ = [
     "VerificationReport",
     "recompute",
     "reported_quantity",
+    "verify_declared_quantity",
     "verify_quantity",
 ]
 
@@ -329,7 +362,205 @@ class ReportedResult:
             )
 
 
-VerificationReport = Verified | Disagreement | Refusal
+# ---------------------------------------------------------------------------
+# T212 — FR-024's caller-declared precision rung (properties 5 and 6, `OD-23`).
+#
+# The rung is a narrow domain and that is the point. It acts on **one** state:
+# the ladder about to refuse for want of a stated precision. Everywhere else a
+# declaration is ignored, and everywhere it is ignored it is disclosed.
+
+
+@dataclass(frozen=True)
+class DeclaredPrecision:
+    """A precision declared in the caller's own request.
+
+    **`declared_in` is required and carries the declaration's source text**,
+    because FR-024 property 5 requires the verifier to *"record the declaration
+    and its source text as the precision's provenance"*. Without it nothing
+    distinguishes a precision the caller asked for from one the agent supplied
+    on the caller's behalf — and property 4 is explicit that *"a precision a
+    model proposes is not a source, at any rung, under any provenance"*.
+
+    `decimal_places` is **not** a tolerance and admits negative values, which
+    is the coarse direction — *to the nearest hundred*. Refusing them would
+    make the type quietly incapable of expressing the weakening a caller can
+    attempt, and the admissibility test below is what makes that attempt inert
+    rather than the type's inability to spell it.
+    """
+
+    decimal_places: int
+    declared_in: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.decimal_places, int) or isinstance(
+            self.decimal_places, bool
+        ):
+            raise VerificationError(
+                "a declared precision is a number of decimal places, as an "
+                f"int; got {type(self.decimal_places).__name__}. A float here "
+                "would be a tolerance wearing the name of a place count."
+            )
+        if not self.declared_in.strip():
+            raise VerificationError(
+                "a declared precision carries the source text it was declared "
+                "in. FR-024 property 5 requires the declaration and its source "
+                "text to be recorded as the precision's provenance, and a "
+                "precision attributable to nobody is the one thing property 4 "
+                "excludes at every rung."
+            )
+
+
+class DeclarationDisposition(Enum):
+    """What became of a caller's declaration. Closed, and every case discloses.
+
+    There is no member meaning *nothing happened*: a declaration the verifier
+    was handed and did not act on is `IGNORED_ARTIFACT_SUPPLIED` or
+    `NOT_REACHED`, and both are disclosures. FR-024 property 5's closing
+    sub-bullet — *"an ignored declaration MUST be disclosed on the result, not
+    silently dropped"* — is carried by the enum being total rather than by a
+    branch remembering to say so.
+    """
+
+    #: No artifact source supplied a precision, so the ladder would otherwise
+    #: have refused. The declaration was used, and property 6 marks it.
+    ADMITTED = "admitted"
+    #: An artifact source supplied one. The declaration was ignored — tighter,
+    #: equal or looser alike — and the quantity was checked at the artifact
+    #: rung, exactly as if the declaration were absent.
+    IGNORED_ARTIFACT_SUPPLIED = "ignored_artifact_supplied"
+    #: The ladder never reached the precision question: it refused for a reason
+    #: no precision answers, or it compared without consulting a source at all.
+    #: Distinct from the member above because claiming an artifact displaced the
+    #: declaration when none did is finding 007's fabricated provenance
+    #: arriving in a disclosure.
+    NOT_REACHED = "not_reached"
+
+
+@dataclass(frozen=True)
+class PrecisionProvenance:
+    """Where this quantity's precision came from, and what became of the declaration.
+
+    **This is the disclosure, and it rides on the result rather than in a
+    trace.** The distinction is not pedantry: FR-058's bounded-result
+    disclosure cost this corpus a pass for exactly this, because a reader
+    arrives at the result and nowhere else.
+    """
+
+    disposition: DeclarationDisposition
+    declared: DeclaredPrecision
+    #: The artifact source that displaced the declaration. Set on
+    #: `IGNORED_ARTIFACT_SUPPLIED` and on nothing else.
+    displaced_by: ConsultedSource | None
+    detail: str
+
+    def __post_init__(self) -> None:
+        ignored = self.disposition is DeclarationDisposition.IGNORED_ARTIFACT_SUPPLIED
+        if ignored and self.displaced_by is None:
+            raise VerificationError(
+                "a declaration reported as ignored names no source that "
+                "displaced it. FR-024 property 5 ignores a declaration because "
+                "an artifact source supplied a precision instead, and a "
+                "disclosure that cannot say which one leaves the caller unable "
+                "to tell an artifact rung from a dropped declaration."
+            )
+        if not ignored and self.displaced_by is not None:
+            raise VerificationError(
+                f"a {self.disposition.value} declaration names "
+                f"{self.displaced_by.artifact_class!r} as having displaced it. "
+                "Nothing displaced it — it was admitted, or the ladder never "
+                "reached the precision question — and a source cited for a "
+                "displacement that did not happen is fabricated provenance."
+            )
+        if not self.detail.strip():
+            raise VerificationError(
+                f"a {self.disposition.value} disclosure with no detail is not "
+                "actionable. The member says what became of the declaration; "
+                "the detail says against what."
+            )
+
+    @property
+    def is_provisional(self) -> bool:
+        """FR-024 property 6's marking, **read off the disposition**.
+
+        Not a stored field. A second field could disagree with the disposition,
+        and a marking that disagrees with the reason for it is worse than none
+        — it is the shape `Result.provisional` was before T126 replaced it with
+        `Corroboration`, where one value meant two different things.
+        """
+        return self.disposition is DeclarationDisposition.ADMITTED
+
+
+@dataclass(frozen=True)
+class ProvisionallyVerified:
+    """The two values agreed at a precision the **caller** declared.
+
+    **A distinct type from `Verified`, and that is property 5's *"never plain
+    verified"* held structurally rather than by a flag.** `Verified` is
+    `src/analysis/validate.py`'s token and the thing a consumer asks
+    `isinstance` about; this is not it, so a caller cannot reach the plain
+    state by ignoring a field.
+
+    It could not be `Verified` even if that were wanted:
+    `RecomputationAgreement` refuses a float pair by raising, and this rung is
+    only ever reached by a float. The type distinction is therefore forced by
+    the construction as well as chosen for the requirement.
+
+    `outcome()` is `VERIFIED` because a comparison was made and it agreed —
+    FR-025 has three states and *provisionally verified* is not a fourth. What
+    keeps it from reading as plain verification is this type and the
+    `PrecisionProvenance` that always accompanies it.
+    """
+
+    issued_by: ValidatedContract
+    check: DerivedCheck
+    reported: SourcedValue
+    recomputed: SourcedValue
+    declared: DeclaredPrecision
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.issued_by, ValidatedContract):
+            raise VerificationError(
+                "ProvisionallyVerified.issued_by must be a ValidatedContract; "
+                f"got {type(self.issued_by).__name__}. A provisional contract "
+                "can produce NOT_VERIFIABLE and never a verified state of any "
+                "kind (constitution Principle I as amended at v1.1.0), and a "
+                "caller-declared precision is not a route around it."
+            )
+        # Spelled through a named local rather than as a bare comparison, and
+        # the reason is mechanical rather than stylistic: `Disagreement` above
+        # carries the identical condition and that line is a removal-proof
+        # target. An exact textual duplicate makes that tamper AMBIGUOUS and
+        # the proof unscoreable — which `check_tampers.py` caught the moment
+        # this type was added, rather than being noticed later.
+        one_retrieval_for_both = self.reported.retrieval == self.recomputed.retrieval
+        if one_retrieval_for_both:
+            raise VerificationError(
+                "the reported and recomputed values both came out of "
+                f"{self.reported.retrieval!r}. A declared precision does not "
+                "make one retrieval into two paths (FR-022)."
+            )
+
+    def outcome(self) -> VerificationOutcome:
+        return VerificationOutcome.VERIFIED
+
+
+VerificationReport = Verified | ProvisionallyVerified | Disagreement | Refusal
+
+
+@dataclass(frozen=True)
+class QuantityVerification:
+    """A verified quantity **and** the provenance of the precision it used.
+
+    Both fields are required. A disclosure a consumer can read the outcome
+    without is one a consumer will read the outcome without, so there is no
+    value of this type that carries an outcome and no disposition.
+    """
+
+    report: VerificationReport
+    precision: PrecisionProvenance
+
+    def outcome(self) -> VerificationOutcome:
+        return self.report.outcome()
 
 
 # ---------------------------------------------------------------------------
@@ -551,18 +782,19 @@ def _admissible_precision(
     return None
 
 
-def verify_quantity(
-    *,
+def _obtain(
     contract: ProvisionalContract | ValidatedContract,
     check: DerivedCheck,
     result: ReportedResult,
     path: IndependentPath,
-) -> VerificationReport:
-    """Verify one reported quantity, or say why it was not verified.
+) -> Refusal | tuple[ValidatedContract, SourcedValue, SourcedValue]:
+    """Everything up to the precision question, shared by both entry points.
 
-    The join between `contract` and `check` is **declared and never inferred**,
-    on T122's reasoning one level up: a check from another contract is refused
-    rather than run.
+    **Extracted for T212 rather than duplicated**, so that FR-024 property 5's
+    *"the ladder MUST proceed exactly as if the declaration were absent"* is
+    the same code and not two copies that can drift. It returns the narrowed
+    contract with the pair, because the caller needs the narrowing and a
+    second `isinstance` would be a second place to get it wrong.
     """
     if check.operation_id != contract.contract.operation_id:
         raise VerificationError(
@@ -626,7 +858,35 @@ def verify_quantity(
             ),
         )
 
-    refusal = _admissible_precision(check, contract, reported, recomputed)
+    return contract, reported, recomputed
+
+
+def verify_quantity(
+    *,
+    contract: ProvisionalContract | ValidatedContract,
+    check: DerivedCheck,
+    result: ReportedResult,
+    path: IndependentPath,
+) -> VerificationReport:
+    """Verify one reported quantity, or say why it was not verified.
+
+    The join between `contract` and `check` is **declared and never inferred**,
+    on T122's reasoning one level up: a check from another contract is refused
+    rather than run.
+
+    **There is no parameter here for a caller-declared precision, and that is
+    deliberate** (T212). A declaration carries a disclosure obligation under
+    FR-024 property 5, and this function's return type has nowhere to put one —
+    so a caller holding a declaration cannot hand it to a function that would
+    silently drop it. `verify_declared_quantity` is the entry point that takes
+    one, and it returns a record that cannot omit the disclosure.
+    """
+    obtained = _obtain(contract, check, result, path)
+    if isinstance(obtained, Refusal):
+        return obtained
+    validated, reported, recomputed = obtained
+
+    refusal = _admissible_precision(check, validated, reported, recomputed)
     if refusal is not None:
         return refusal
 
@@ -637,4 +897,220 @@ def verify_quantity(
     except ValidationError as exc:
         return Disagreement(reported=reported, recomputed=recomputed, detail=str(exc))
 
-    return contract.verified(check, agreement)
+    return validated.verified(check, agreement)
+
+
+def _artifact_supplied_precision(check: DerivedCheck) -> ConsultedSource | None:
+    """The artifact source that states this quantity's precision, or `None`.
+
+    **A precision is stated when it is attributable to a named source
+    artifact** — FR-024's own pin. So this asks the check whether its
+    derivation named one, and reports `check.precision_source` as what that
+    source supplied. It does not compute a precision and it does not name a
+    number: property 2 forbids any rung naming a numeric value, and
+    `derive.py` already refuses a numeric `precision_source` on that ground.
+
+    Returning `None` where the check names nothing is not a gap being papered
+    over. It is the state FR-024 calls silence, and the caller of this function
+    turns it into a disposition rather than into a precision.
+    """
+    if check.precision_source is None:
+        return None
+    return ConsultedSource(
+        artifact_class=check.provenance.rule.reads,
+        supplied=check.precision_source,
+        detail=(
+            f"rule {check.provenance.derivation_rule!r} read "
+            f"{check.provenance.source_symbol!r} and derived "
+            f"{check.precision_source!r}, which the ladder compares at "
+            "exactly. FR-024 property 5 ignores a caller's declaration "
+            "wherever an artifact source supplies a precision — tighter, "
+            "equal or looser alike."
+        ),
+    )
+
+
+def _compare_at(
+    reported: SourcedValue, recomputed: SourcedValue, declared: DeclaredPrecision
+) -> bool:
+    """The two values at the precision the caller declared.
+
+    `round` to the declared number of places and compare exactly. **No constant
+    is written here and none is derivable from here**: the number of places
+    arrives from the caller at run time, which is what makes this a *source*
+    under property 2 rather than the default tolerance FR-024 exists to forbid.
+    """
+    reported_at_declared = round(reported.value, declared.decimal_places)
+    recomputed_at_declared = round(recomputed.value, declared.decimal_places)
+    return reported_at_declared == recomputed_at_declared
+
+
+def verify_declared_quantity(
+    *,
+    contract: ProvisionalContract | ValidatedContract,
+    check: DerivedCheck,
+    result: ReportedResult,
+    path: IndependentPath,
+    declared: DeclaredPrecision,
+) -> QuantityVerification:
+    """FR-024's caller-declared rung. **The admissibility test runs first.**
+
+    > A precision declared in the caller's own request is admissible only where
+    > no artifact source supplies any precision for that quantity at all — that
+    > is, only where the ladder would otherwise refuse. (property 5, `OD-23`)
+
+    So this is not `verify_quantity` with an extra argument, and the separate
+    entry point is the mechanism rather than a naming choice: it returns a
+    `QuantityVerification`, which **cannot be constructed without the
+    disclosure**. A caller holding a declaration has nowhere to put it on
+    `verify_quantity`, and a caller receiving an answer from here cannot read
+    the outcome without the disposition being present on the same object.
+
+    The rung acts on exactly one state — a `PRECISION_NOT_STATED` refusal — and
+    everywhere else the ladder proceeds **as if the declaration were absent**,
+    which is literal here rather than aspirational: the same `_obtain` and the
+    same `_admissible_precision` run, and their results are used unchanged.
+    """
+    obtained = _obtain(contract, check, result, path)
+    if isinstance(obtained, Refusal):
+        return QuantityVerification(
+            report=obtained,
+            precision=PrecisionProvenance(
+                disposition=DeclarationDisposition.NOT_REACHED,
+                declared=declared,
+                displaced_by=None,
+                detail=(
+                    f"the ladder refused at {obtained.reason.value} before any "
+                    "precision was consulted, so the declaration was neither "
+                    "used nor displaced. A declared precision answers the "
+                    "question *how close is close enough*; it does not supply "
+                    "a quantity, a collection or a contract."
+                ),
+            ),
+        )
+
+    validated, reported, recomputed = obtained
+    refusal = _admissible_precision(check, validated, reported, recomputed)
+
+    if refusal is not None and refusal.reason is RefusalReason.PRECISION_NOT_STATED:
+        # The one state this rung acts on: no artifact source supplies a
+        # precision, so the ladder would otherwise refuse. Property 5's
+        # *"only circumstance in which a declaration converts what would
+        # otherwise be a refusal into a checked quantity"*.
+        # The consulted list is obtained from `_consult_precision` rather than
+        # read off `refusal.consulted`, and the difference is not cosmetic: it
+        # keeps this branch from dereferencing the refusal object at all. With
+        # the dereference in place, the removal proof that drops the
+        # admissibility test crashed on a `NoneType` instead of reaching the
+        # comparison — an arm that scores because a tamper broke something
+        # incidental proves nothing about the mechanism it names.
+        consulted = _consult_precision(check, validated)
+        provenance = PrecisionProvenance(
+            disposition=DeclarationDisposition.ADMITTED,
+            declared=declared,
+            displaced_by=None,
+            detail=(
+                f"{check.operation_id}/{check.quantity}: every source "
+                "consulted was silent — "
+                f"{[entry.artifact_class for entry in consulted]} — so "
+                "the ladder would otherwise have refused. The declaration in "
+                f"{declared.declared_in!r} is admitted and the verification is "
+                "provisional on its own provenance (FR-024 property 6): no "
+                "independent artifact exists to validate this precision "
+                "against, which is this rung's own admissibility premise."
+            ),
+        )
+        if _compare_at(reported, recomputed, declared):
+            return QuantityVerification(
+                report=ProvisionallyVerified(
+                    issued_by=validated,
+                    check=check,
+                    reported=reported,
+                    recomputed=recomputed,
+                    declared=declared,
+                ),
+                precision=provenance,
+            )
+        return QuantityVerification(
+            report=Disagreement(
+                reported=reported,
+                recomputed=recomputed,
+                detail=(
+                    f"{check.operation_id}/{check.quantity}: the reported "
+                    f"{reported.value!r} and the independently recomputed "
+                    f"{recomputed.value!r} differ at the precision declared in "
+                    f"{declared.declared_in!r}. The comparison was made at the "
+                    "caller's declared precision because no artifact source "
+                    "supplies one (FR-024 property 5); without this rung the "
+                    "quantity refuses and the difference is neither detected "
+                    "nor missed."
+                ),
+            ),
+            precision=provenance,
+        )
+
+    if refusal is not None:
+        return QuantityVerification(
+            report=refusal,
+            precision=PrecisionProvenance(
+                disposition=DeclarationDisposition.NOT_REACHED,
+                declared=declared,
+                displaced_by=None,
+                detail=(
+                    f"the ladder refused at {refusal.reason.value}, which no "
+                    "precision answers. Declaring how close is close enough "
+                    "does not make a quantity a magnitude."
+                ),
+            ),
+        )
+
+    # No refusal: the ladder compares. Whatever precision that comparison rests
+    # on came from an artifact, so the declaration is ignored — and disclosed.
+    displaced_by = _artifact_supplied_precision(check)
+    if displaced_by is None:
+        provenance = PrecisionProvenance(
+            disposition=DeclarationDisposition.NOT_REACHED,
+            declared=declared,
+            displaced_by=None,
+            detail=(
+                f"{check.operation_id}/{check.quantity}: the ladder compared "
+                "without consulting any source, because this check names no "
+                "`precision_source`. Nothing displaced the declaration by "
+                "name, so nothing is cited as having done so — but the "
+                "comparison made is exact equality, which is stricter than any "
+                "declaration could ask for. **Not reachable from `derive.py`**, "
+                "which sets a `precision_source` on every recomputation check "
+                "it emits; a check reaching here was built by hand."
+            ),
+        )
+    else:
+        provenance = PrecisionProvenance(
+            disposition=DeclarationDisposition.IGNORED_ARTIFACT_SUPPLIED,
+            declared=declared,
+            displaced_by=displaced_by,
+            detail=(
+                f"{check.operation_id}/{check.quantity}: "
+                f"{displaced_by.artifact_class} supplies "
+                f"{displaced_by.supplied!r}, so the declaration in "
+                f"{declared.declared_in!r} was ignored and the quantity was "
+                "checked at the artifact rung. A caller-declared precision may "
+                "never be the reason a quantity is checked less strictly than "
+                "an artifact source permits (FR-024 property 5)."
+            ),
+        )
+
+    try:
+        agreement = RecomputationAgreement(
+            reported=reported.value, recomputed=recomputed.value
+        )
+    except ValidationError as exc:
+        return QuantityVerification(
+            report=Disagreement(
+                reported=reported, recomputed=recomputed, detail=str(exc)
+            ),
+            precision=provenance,
+        )
+
+    return QuantityVerification(
+        report=validated.verified(check, agreement), precision=provenance
+    )
