@@ -72,7 +72,7 @@ threshold** before you write any edit-and-restore loop of your own.
 | `proof_timeout.py` | **Not a check.** The per-arm wall-clock cap `tests/removal_proofs.sh` runs every proof under, and the reason it exists rather than `timeout(1)`: macOS ships none. Exits `124`, which the harness scores as `timed-out` — never `proved`, because a killed process is non-zero for a reason that says nothing about the mechanism, and never `skipped`, because that is how an arm leaves a green run unnoticed. |
 | `proof_attribution.py` | **Not a check.** For each removal proof, the test that actually fails once its tamper lands — the reading a human does to decide whether a proof proves what it claims. Applies every tamper, so it runs each one under `proof_timeout.py` at the same cap the harness uses; a run that was killed reports `TIMED OUT` or `SIGNALLED` and never `fails NOTHING`, which would be a claim that the test passed made by a run that never reached an assertion. |
 | `removal_proofs_summary.py` | **Not a check either.** Writes the harness's JSON record — one entry per proof, plus the kernel, privilege and toolchains the totals are a property of — and renders it for a CI run page. It exists because a green job is one bit, and one bit cannot separate a run where every arm fired from one where the kernel arms all skipped. On the harness's abort path it deliberately emits no totals at all: a record that reads as success out of a run that measured nothing is the defect, not the fix. |
-| `instruments.py` | **The census.** Every instrument in the repository that can fail, what it checks, where it runs, and whether anything runs it automatically — with `--check` reconciling that list against `.github/workflows/ci.yml` in three directions so it cannot quietly stop being the set. `--run` runs the fast gates and names the ones it did not. See [The census](#the-census--instrumentspy). |
+| `instruments.py` | **The census.** Every instrument in the repository that can fail, what it checks, where it runs, and whether anything runs it automatically — with `--check` reconciling that list against `.github/workflows/ci.yml` in three directions so it cannot quietly stop being the set, and a fourth reconciling a second population — the workflow's own jobs, by mapping key *and* by `name:`, the string nothing used to read. `--run` runs the fast gates and names the ones it did not. See [The census](#the-census--instrumentspy). |
 | `selftest.py` | Proof that each check fires, that none fires on well-formed input, and that the generator writes digits and nothing else. |
 | `threshold_probe.py` | Proof that each numeric threshold is pinned: moves every tolerance, window, bound and distance by one unit and requires the self-test to break. |
 | `fixtures/` | The two miniature corpora. See `fixtures/README.md`. |
@@ -3650,8 +3650,16 @@ absent from CI. What was absent was **the instrument from the list of
 instruments**, and no mechanism existed whose job was to notice that the list
 and the set had come apart.
 
-So `--check` makes exactly one machine-checkable claim — that the census and
-`.github/workflows/ci.yml` agree — and proves it in three directions:
+So `--check` makes ~~exactly one machine-checkable claim — that the census and
+`.github/workflows/ci.yml` agree — and proves it in three directions:~~ **two
+claims as of 2026-08-11, over two populations: that the instrument census agrees
+with `.github/workflows/ci.yml`, in the three directions below, and that a
+second census of the workflow's own jobs agrees with it, in a fourth.** *(The
+struck phrasing was true until the job census landed, and is superseded in place
+rather than edited because "exactly one claim" is what made this section's scope
+legible.)*
+
+The three directions over the instruments:
 
 | direction | what it catches |
 |---|---|
@@ -3673,6 +3681,63 @@ which prose about a tool reads as wiring; and whether the entry-point scan
 reads the filesystem at all, since an empty candidate list satisfies direction
 3 for every input and no other test in the file would notice. That second one
 is `check_tampers.py`'s vacuity floor, one file over.
+
+### Direction 4 — the workflow's own jobs
+
+**This section's thesis reproduced itself one level out, and in this file.**
+At `8d74942` `ci.yml` declared six named jobs, and exactly one of those six —
+`corpus gates (consistency, no model)` — appeared anywhere in this README, and a
+pass was briefed with *"all five jobs are in `tools/README.md`"*, which is wrong
+twice over: six, not five, and one named, not all. A hand-maintained list and
+the real set had come apart again, in the section that opens by telling you to
+read it before quoting a list of gates.
+
+So the repair has the same shape as the one above and for the same reason: the
+six names live in a `JOBS` census in `instruments.py` that `--check` reconciles
+against the workflow, **and not in a paragraph here**, because a paragraph here
+is what failed both times.
+
+**What hid it is that a job has two names with different audiences.** The
+mapping key — `go` — is what `needs:` and every `job=` field in the census point
+at, and directions 1 and 2 have always read it. The `name:` value — `go test
+(the enforcement point)` — is what a run page shows, what `gh run view` reports
+per job, and what a required status check is matched on. **Nothing in the
+repository read the second one.** Measured 2026-08-11 by renaming one job's
+`name:` in a scratch worktree at `8d74942`: `check_corpus.py`, `gen_claims.py
+--check`, `check_tampers.py`, `selftest`, `instruments.py --check`,
+`invariants/runner.py` and `pytest` **all passed**. Renaming the *key* fires
+direction 1 and always did, so the blindness was exactly the string a human
+reads.
+
+Direction 4 carries five checks and a vacuity floor: a declared job the workflow
+does not define; a job whose `name:` disagrees with the workflow's; a job with
+no `name:` at all, where GitHub falls back to the key and the declared name is
+one nothing will ever show; a job that drops the shared runner-identity action;
+and a job the workflow defines that the census does not declare, which is
+direction 2's argument over the second population. The floor fails on an empty
+declaration, because zero declared jobs would otherwise satisfy every other
+check. Each was planted and observed firing, and each has an arm in
+`tests/unit/test_instrument_census.py` with a removal proof behind it.
+
+**The two populations stay separate.** `JOBS` is not folded into `INSTRUMENTS`
+and `--check` prints them on separate lines, because merging them would move the
+`19 + 6 + 2` figure this section is read for, and the classifications do not
+transfer — a CI job is not a gate, an advisory or a library.
+
+**A prose rule over the corpus was measured and declined.** 34 lines in the
+corpus match a count-of-jobs phrase: 25 use *job* in an unrelated sense, 4 are
+dated readings that must stay frozen, 4 are correct in-context references, and
+**1** is the wrong site. One real defect in 34 firings is the disposition this
+file already records for the duplicate-definition guard, declined on false
+alarms it could not shed, and 4 of the 9 CI-relevant firings are sites a rule
+would be asking to have falsified. **The ratio is not the decisive part,
+though.** The one wrong site was in `tools/instruments.py`, a `.py` file, and
+the walked corpus is markdown only while `search_roots` in
+`corpuscheck/config.json` excludes `tools/` outright — so a prose rule could not
+have reached its target at any width. That is a different and worse thing than a
+poor hit rate, and it is a class the declinations recorded here did not yet
+name: **a rule aimed at a population that does not contain the defect.** Finding
+040 carries the full table.
 
 `--run` runs the gates that have a standalone command, **does not stop at the
 first failure**, and then names every gate it could not run and why. That last
