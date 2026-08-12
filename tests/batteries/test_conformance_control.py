@@ -61,14 +61,26 @@ feature 001, which is **9 numeric-typed and 2 set-typed** —
 records the correction from an earlier 8-and-3, recomputed independently by two
 agents from the frozen corpus.
 
-⚠️ **`src/analysis/derive.py` and `src/analysis/provenance.py` both still quote
+~~⚠️ **`src/analysis/derive.py` and `src/analysis/provenance.py` both still quote
 the superseded 8**, and `provenance.py` additionally attributes the census to
 *finding 001*, which is the structure-recovery study and contains no false
 success at all. Neither is corrected from here — they are other tasks' files and
 this one does not need them to be right — but neither is inherited either: this
-module cites the artifact rather than the docstring beside it. Nothing in this
-repository would have caught the drift, because a bare integer is not a shape
-`tools/check_corpus.py` extracts, and `tests/` is outside its walk entirely.
+module cites the artifact rather than the docstring beside it.~~ **Both were
+corrected 2026-08-12** — `derive.py` and `provenance.py` now carry 9-and-2, and
+`provenance.py` names `E8-VIABILITY.md` §6 instead of finding 001. The struck
+warning is kept visible because it is the record of how long the drift stood
+and of the fact that this module never inherited it: **the citation rule it
+states is unchanged and is the reason this file was already right** — cite the
+artifact, never the docstring beside it. **Five further sites carried the same
+superseded 8 and were corrected in the same pass** — two in
+`tests/unit/test_derive.py`, one in `tests/unit/test_verify.py`, one in
+`tests/removal_proofs.sh` and one in
+[`specs/002-spec-aware-agent-runtime/tasks.md`](../../specs/002-spec-aware-agent-runtime/tasks.md)
+— so the drift was wider than the two modules this warning named. Nothing in this repository
+would have caught the drift, because a bare integer is not a shape
+`tools/check_corpus.py` extracts, and `tests/` is outside its walk entirely —
+**that exposure is unchanged and is not closed by the correction.**
 
 ## WHAT THIS BATTERY DELIBERATELY DOES NOT REPORT
 
