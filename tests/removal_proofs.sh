@@ -3999,6 +3999,87 @@ proof "T004 — the revision disclosure leaves the version string, so the pin re
   "tests/unit/test_codegraph_pin.py::test_the_pinned_version_names_a_revision_that_cannot_be_installed" \
   's = s.replace("(describe v1.5.0-7-g49c11fc; unreleased revision, not an npm version)", "(1.5.0)")'
 
+# ---------------------------------------------------------------------------
+# Phase 5, the analysis cluster: T119, T120, T121, T136.
+
+# The ordering, which is the whole of T119's contract with the pin. Swapping
+# `verify` for `schema_digest` leaves the index constructible, leaves the digest
+# populated and leaves every other arm of the file passing — it removes only the
+# comparison against the pinned constant, which is the one thing that stops an
+# upstream release being read as source.
+proof "T119 — the index is built from an unverified artifact, so an upstream release passes as source" \
+  src/analysis/codegraph.py \
+  "tests/unit/test_codegraph_invocation.py::test_the_schema_pin_is_asserted_before_the_index_is_returned" \
+  's = s.replace("digest=pin.verify(path)", "digest=pin.schema_digest(path)")'
+
+# rc == 0 with no database. The case a returncode check alone reads as fine, and
+# the reason the check is separate from the returncode branch above it.
+proof "T119 — a successful run that wrote nothing is admitted, so the stage reads an absent index" \
+  src/analysis/codegraph.py \
+  "tests/unit/test_codegraph_invocation.py::test_a_successful_run_that_produced_no_artifact_is_a_failure" \
+  's = s.replace("    if not db_path.is_file():", "    if False:")'
+
+# T136's distinct mechanism, and it is deliberately not the tamper above.
+# `verify()` still fires, the stage still stops, no artifact is still published
+# — only the *wording* moves, from "upstream schema change, NOT source drift" to
+# the vocabulary the drift channel uses. That is the whole failure U-04 names:
+# the analysis correctly refuses and the operator is sent to their own
+# repository to look for a change they did not make.
+proof "T136 — the refusal adopts the drift vocabulary, so an upstream release reads as source drift" \
+  src/analysis/codegraph_pin.py \
+  "tests/contract/test_codegraph_schema_pin.py::test_the_refusal_never_reads_as_source_drift" \
+  's = s.replace("This is an upstream schema change, NOT source drift. It must ", "Schema drift was detected here. It must ")'
+
+# Independence. A recomputation that reads the quantity it checks agrees with
+# itself whatever the value is, which is FR-022 satisfied on paper and nothing
+# detected in fact — the 8 schema-blind numeric false successes feature 001
+# measured, reproduced by a verifier that believes it is recomputing.
+proof "T120 — a recomputation may read the quantity it checks, so it agrees with itself" \
+  src/analysis/derive.py \
+  "tests/unit/test_derive.py::test_a_self_referential_recomputation_is_refused" \
+  's = s.replace("            if self.quantity in self.recomputation.reads:", "            if False:")'
+
+# The empty derivation. Emitting a contract for a function no rule fired on is
+# how an analyzer becomes indistinguishable from one that is right, and it is
+# the shape of both measured instances of *fluent, plausible and wrong*.
+proof "T120 — a function no rule fired on still yields a contract, so absence becomes a claim" \
+  src/analysis/derive.py \
+  "tests/unit/test_derive.py::test_the_negative_fixture_derives_nothing" \
+  's = s.replace("    if not checks and not preconditions and not failures:\n        return None", "    if False:\n        return None")'
+
+# FR-024 property 2. A numeric precision source is a default tolerance with
+# extra steps, and the ladder T125 builds would fall to it.
+proof "T120 — a numeric precision source is admitted, so the ladder gets a constant to fall to" \
+  src/analysis/derive.py \
+  "tests/unit/test_derive.py::test_a_numeric_precision_source_is_refused" \
+  's = s.replace("        if self.precision_source is not None and _is_numeric(self.precision_source):", "        if False:")'
+
+# The recomputation capability itself, removed one rule at a time rather than
+# wholesale: only the `len` branch goes, so `sum` and `max` still recompute and
+# the suite does not collapse. What goes red is the arm asserting that no
+# numeric quantity is left covered by a shape check alone — which is T132's
+# premise, and T132 is unsatisfiable if this ever stops holding.
+proof "T120 — the count aggregate stops recomputing, so a numeric quantity is left to a shape check" \
+  src/analysis/derive.py \
+  "tests/unit/test_derive.py::test_the_shape_only_subset_cannot_express_the_numeric_fault" \
+  's = s.replace('"'"'    if name == "len" and isinstance(argument, ast.Name):'"'"', "    if False:")'
+
+# FR-026's "as data", which an absolute path silently defeats: `envelope.scan`
+# moves anything path-shaped out of the hashed payload, so the provenance would
+# survive construction and vanish at wrap time.
+proof "T121 — an absolute source path is admitted, so the provenance is stripped at wrap time" \
+  src/analysis/provenance.py \
+  "tests/unit/test_provenance.py::test_an_absolute_source_path_is_refused" \
+  's = s.replace('"'"'        if self.source_file.startswith("/") or _WINDOWS_PATH.match(self.source_file):'"'"', "        if False:")'
+
+# Constitution Principle I as amended at v1.1.0. A `validated` status with no
+# artifact behind it is precisely the presented-as-validated case FR-026
+# forbids, and it is the one that happens by accident.
+proof "T121 — validated may be claimed with no artifact, so Principle I holds by convention" \
+  src/analysis/provenance.py \
+  "tests/unit/test_provenance.py::test_validated_cannot_be_claimed_without_naming_the_artifact" \
+  's = s.replace("        if validated and not self.validated_against:", "        if False:")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
