@@ -57,7 +57,12 @@ CODEGRAPH_VERSION = (
 #
 #   revision  : git 49c11fc2e0c02170742be8411e66a31af611f4b7 (v1.5.0-7-g49c11fc)
 #   built by  : node v22.20.0, `npm install && npm run build`, in a scratch
-#               tree outside this repository (`examples/` is never built in place)
+#               tree outside this repository ~~(`examples/` is never built in
+#               place)~~ **(struck 2026-08-11 — the reading itself was taken
+#               in a scratch tree and that half stands; the parenthetical was
+#               a standing rule about the vendored tree and it no longer
+#               holds. `examples/codegraph` was built in place on 2026-08-11,
+#               which is what made the re-verification below possible.)**
 #   indexed   : a copy of `examples/adk-python` — 1,867 files, 48,154 nodes,
 #               149,714 edges, a 149,282,816-byte `.codegraph/codegraph.db`
 #   command   : `python -m src.analysis.codegraph_pin <that>/.codegraph/codegraph.db`
@@ -79,6 +84,52 @@ CODEGRAPH_VERSION = (
 # this same value, which is why `tests/fixtures/codegraph-schema/` can exist and
 # why the constant is re-derivable offline. See that directory's README for what
 # that does and does not establish.
+#
+# **Re-verified 2026-08-11, end to end, and it is a second measurement rather
+# than a re-reading of the first.** The one link the fixture's README and
+# `tests/unit/test_codegraph_pin.py` both decline to claim — that the committed
+# SQL is what upstream ships — was measured again, against a `codegraph` built
+# **in place** under `examples/`:
+#
+#   revision  : git 49c11fc2e0c02170742be8411e66a31af611f4b7, `git describe`
+#               v1.5.0-7-g49c11fc — unmoved from 2026-08-10. Building in place
+#               dirtied neither repository: the vendored tree is its own git
+#               repository and reports 0 dirty entries, its `.gitignore`
+#               covering `node_modules/` and `dist/`, and the outer
+#               repository ignores `examples/` at `.gitignore:156`
+#   built by  : node v22.20.0, `npm install && npm run build`, in place in
+#               `examples/codegraph` (an owner action, not a gate's)
+#   identical : the committed fixture, `examples/codegraph/src/db/schema.sql`
+#               and the freshly built `examples/codegraph/dist/db/schema.sql`
+#               are byte-identical — md5 99255f39133266fb690fe361300d51a7,
+#               194 lines, 8,509 bytes, `diff -q` silent on both pairs
+#   indexed   : `node examples/codegraph/dist/bin/codegraph.js init .` over an
+#               rsynced copy of `examples/labs-OO-Agents` (`.git` excluded,
+#               1,328 files in the tree, of which `codegraph` reports indexing
+#               951), in a scratch directory under /tmp — 25,880 nodes,
+#               72,239 edges, a 72,695,808-byte `.codegraph/codegraph.db`
+#   command   : `verify()` on that artifact, and on a zero-row database built
+#               from that same `dist/db/schema.sql`
+#   on        : 2026-08-11, Darwin 25.2.0 arm64, euid 501, CPython 3.12.11
+#               with `sqlite3` at SQLite 3.53.3
+#
+# Twelve tables and this constant's value from both databases, and `verify()`
+# passed against both.
+#
+# **The live index is the load-bearing half of that.** A database built from
+# the committed fixture, digested and compared against the constant beside it,
+# is in the end a file read back to itself; the `init` run is the pin holding
+# against an artifact `codegraph` produced from its own source at this
+# revision, which is the thing the fixture stands in for.
+#
+# **What it does not change, because a reader must not take it for coverage.**
+# `examples/` is git-ignored, so **nothing in the gate set re-checks any of
+# the above** — not a test, not `check_corpus.py`, not a CI job — and that is
+# by design rather than an omission: the evidence that would settle it is
+# deliberately absent from the repository. A green suite is not evidence that
+# the pinned revision still produces this schema. What has changed is that the
+# link now rests on two dated measurements instead of one; what has not is
+# that it goes stale silently between them.
 #
 # To move it: run `python -m src.analysis.codegraph_pin <path-to-codegraph.db>`
 # against an artifact produced by the new revision, and record the provenance

@@ -281,16 +281,44 @@ def test_the_pinned_digest_is_re_derived_from_the_pinned_revisions_own_schema():
     and the only tractable way to do that is to copy the real schema and compute
     the real digest — which is the honest procedure.
 
-    **What it does not verify, stated plainly rather than left to be assumed.**
+    ~~**What it does not verify, stated plainly rather than left to be assumed.**
     It does not verify that the committed SQL is what upstream ships. Nothing
     offline can: `examples/` is git-ignored, so the only evidence that would
     settle it is absent from the repository by design. That link was established
     once, by measurement, on 2026-08-10 — a real index of `adk-python` built by
     this revision digested to this same value — and it is recorded in the
-    constant's provenance block and in the fixture's README, not here. **Nothing
-    in this file re-runs `codegraph`, and a green run of it is not evidence that
-    the pinned revision still produces this schema.** Only re-running the recipe
-    in `specs/001-discovery-validation/harness/recall-adk-fastapi/run.sh` is.
+    constant's provenance block and in the fixture's README, not here.~~
+    **Superseded 2026-08-11 in one half and reaffirmed in the other, and the
+    split is the point.** What this test does not verify is unchanged: nothing
+    here reads upstream, and the sentence stands as the statement of this file's
+    scope. What was wrong is *"nothing offline can"* and *"once"*. The
+    verification is not impossible, it is merely uncommitted — and it has now
+    been performed a second time.
+
+    On 2026-08-11 `examples/codegraph` was built in place (`npm install && npm
+    run build`, node v22.20.0) and three things were measured on Darwin 25.2.0
+    arm64 at euid 501, under CPython 3.12.11 with `sqlite3` at SQLite 3.53.3:
+    this fixture, `examples/codegraph/src/db/schema.sql` and the freshly built
+    `examples/codegraph/dist/db/schema.sql` are byte-identical (md5
+    99255f39133266fb690fe361300d51a7, 194 lines, 8,509 bytes, `diff -q` silent
+    on both pairs); a zero-row database built from that `dist` copy digests to
+    `CODEGRAPH_SCHEMA_SHA256` over 12 tables; and `verify()` passes against a
+    **live index** `codegraph` itself produced — `dist/bin/codegraph.js init .`
+    over an rsynced copy of `examples/labs-OO-Agents` (`.git` excluded, 1,328
+    files in the tree, 951 of them indexed), 25,880 nodes, 72,239 edges. Neither
+    repository was dirtied. The full record is in the constant's provenance
+    block and in the fixture's README, not here.
+
+    **The reason the struck sentence was written is still live, and it is the
+    half a reader must not lose on the way past.** `examples/` is git-ignored,
+    so **no gate can ever check this** — not this test, not `check_corpus.py`,
+    not any CI job — and no instrument will announce it going stale. The link
+    rests on two dated readings taken by a human, which is a different thing
+    from a verified one. **Nothing in this file re-runs `codegraph`, and a green
+    run of it is not evidence that the pinned revision still produces this
+    schema.** Only re-running the recipe in
+    `specs/001-discovery-validation/harness/recall-adk-fastapi/run.sh`, or the
+    `init` route recorded beside the constant, is.
     """
     built = a_db_from_the_pinned_schema()
 

@@ -13,6 +13,7 @@ and 8,509 bytes, and its SHA-256 is
 | `package.json` `version` | `1.5.0` — **seven commits behind the tree this came from** |
 | Copied from | `examples/codegraph/src/db/schema.sql` |
 | Copied on | 2026-08-10 |
+| Re-verified against upstream on | 2026-08-11 — and the record of what that did and did not settle is below |
 
 ## Why a copy exists at all
 
@@ -35,10 +36,52 @@ a tree this repository does not contain:
 diff examples/codegraph/src/db/schema.sql tests/fixtures/codegraph-schema/schema.sql
 ```
 
-The link from "upstream revision `49c11fc` ships this SQL" to "this SQL is in
+~~The link from "upstream revision `49c11fc` ships this SQL" to "this SQL is in
 `tests/fixtures/`" is a copy performed once, on the date above, and recorded
-here. It is not re-checked by any test, and it cannot be: the only evidence
-that would settle it is the git-ignored tree itself.
+here.~~ **Struck 2026-08-11: the command above was run, it reported no
+difference, and the link now rests on two dated measurements rather than on one
+recorded copy.** The record is below. It is not re-checked by any test, and it
+cannot be: the only evidence that would settle it is the git-ignored tree
+itself. **That last sentence is deliberately not struck, and neither is this
+section's heading** — what establishes the link is a measurement taken outside
+this repository, and it never was and never will be this file.
+
+### The 2026-08-11 re-verification
+
+The vendored tree was built in place by the repository owner — `npm install &&
+npm run build` in `examples/codegraph`, node v22.20.0 — and three readings were
+taken on Darwin 25.2.0 arm64 at euid 501, under CPython 3.12.11 with `sqlite3`
+at SQLite 3.53.3:
+
+| Reading | Result |
+|---|---|
+| This file against `examples/codegraph/src/db/schema.sql` and against the freshly built `examples/codegraph/dist/db/schema.sql` | **byte-identical**, all three — md5 `99255f39133266fb690fe361300d51a7`, 194 lines, 8,509 bytes, `diff -q` silent on both pairs |
+| `codegraph_pin.verify()` over a zero-row database built from that `dist/db/schema.sql` | **passes**, 12 tables, the pinned digest |
+| `codegraph_pin.verify()` over a **live index** — `node examples/codegraph/dist/bin/codegraph.js init .` on an rsynced copy of `examples/labs-OO-Agents`, `.git` excluded, 1,328 files in the tree of which `codegraph` reports indexing 951, giving 25,880 nodes, 72,239 edges and a 72,695,808-byte `.codegraph/codegraph.db` | **passes**, 12 tables, the same digest |
+
+The third is the load-bearing one. The first two compare this file against
+itself by a longer route; the third is the pin holding against an artifact
+`codegraph` produced from its own source at the pinned revision, which is the
+thing this fixture stands in for.
+
+Building in place dirtied neither repository. `examples/codegraph` is its own git
+repository and reports 0 dirty entries, because its `.gitignore` covers
+`node_modules/` and `dist/`; the outer repository ignores `examples/` at
+`.gitignore:156`. `git -C examples/codegraph describe --tags` still reads
+`v1.5.0-7-g49c11fc`.
+
+### What the re-verification does not buy, which is coverage
+
+`examples/` is git-ignored, so **no gate re-checks any of the above** — not a
+test in this repository, not `check_corpus.py`, not a CI job. This directory is
+outside the checked corpus altogether, so even the sentences above are read by no
+instrument. Nothing will announce it when this stops being true.
+
+So the fixture's standing is neither *unverified* nor *verified*: the link has
+been **established twice by measurement, on 2026-08-10 and on 2026-08-11, by a
+human, and is re-checked by nothing in between.** A reader who takes a green
+suite as evidence that upstream still ships this SQL has misread it in exactly
+the direction this section exists to prevent.
 
 ## Why it may be used in place of a real index
 
