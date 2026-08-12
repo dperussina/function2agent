@@ -1154,17 +1154,46 @@ proof "FR-011 rule id — the deny/rule_id check removed" \
   "tests/invariants/test_rule_id_present.py::test_a_deny_without_a_rule_id_cannot_be_constructed" \
   's = s.replace("        if self.disposition == DENY and not self.rule_id:", "        if False:")'
 
-# The tamper moves the field as well as defaulting it, and it has to. `verification` is the first
-# field of a dataclass whose second field has no default, so adding a default to it alone is not a
-# weaker contract — it is `TypeError: non-default argument 'payload' follows default argument` at
-# class-definition time. The module then does not import, every test in the file errors during
-# collection, and the harness scored that as `proved` for as long as the proof existed. Moving the
-# field below `payload` is the edit a contributor would actually make, and it is the one both
-# assertions in `test_verification_has_no_default_in_the_source` exist to catch.
+# The tamper moves the field as well as defaulting it, and it has to: a dataclass forbids a defaulted
+# field ahead of a non-defaulted one, so a default on `verification` is only expressible below every
+# field that has none. That makes {default, relocation} the unique minimal form of ONE mechanism
+# removal rather than two — Python offers no other spelling of it — and the distinction is
+# load-bearing here, because the T126 arm near the foot of this file defaults `corroboration`.
+# Defaulting both in one tamper would remove two mechanisms and prove neither. `corroboration` keeps
+# no default under this tamper, and `test_corroboration_has_no_default_in_the_source` goes on passing
+# through it, which is the positive evidence that only one moved.
+#
+# **This arm read `unproven` at `2a5cdbf`, and the reason is worth keeping rather than tidying away.**
+# The needle spanned `verification` and `payload` alone, which was right while `payload` was the only
+# no-default field after it. T126 made `corroboration` required one field further on, so the tampered
+# class raised `TypeError: non-default argument 'corroboration' follows default argument` when the
+# decorator built `__init__`. The module never imported, no test ran, and the harness scored
+# `unproven` with `tamper-broke-collection` — correctly, and without fabricating a pass. **The
+# hardening is what disabled the tamper**: making the corroboration required is precisely what turned
+# an edit that used to produce a live wrong program into one that produces a dataclass error.
+#
+# `tools/check_tampers.py` cannot catch this class and could not have. It checks that the needle still
+# matches and that the result still `compile()`s, and here both succeed perfectly — field-ordering is
+# enforced when the decorator runs, which is import time and not compile time. That asymmetry is
+# recorded in `tools/README.md` under what none of it catches.
+#
+# **The selector names one test rather than the whole file, and that was measured rather than tidied.**
+# Relocating the field also breaks five behavioural arms in this file on `TypeError:
+# Result.__init__() got multiple values for argument 'payload'`, which is positional collateral and
+# not FR-025's property. Measured 2026-08-12: with the file as the selector and
+# `test_verification_has_no_default_in_the_source` deleted outright, the tampered run still read
+# `5 failed` and the arm would still have scored `proved` — so the file-level selector could not tell
+# the guard it names from the collateral, and would have survived that guard's deletion. Naming the
+# test makes the arm's failure identity its own assertion, and turns a deleted guard into a
+# `check_tampers.py` error instead of a silent pass.
+#
+# Residue, stated rather than closed: the arm lands on the first of that test's two assertions —
+# verification must be the first field — and no single-edit tamper can reach the second, because the
+# configuration it catches, a default on a field that is still first, is one Python refuses to build.
 proof "FR-025 result — verification given a default" \
   src/contracts/result.py \
-  "tests/invariants/test_result_constructor.py" \
-  's = s.replace("    verification: VerificationOutcome\n    payload: Any\n", "    payload: Any\n    verification: VerificationOutcome = VerificationOutcome.VERIFIED\n")'
+  "tests/invariants/test_result_constructor.py::test_verification_has_no_default_in_the_source" \
+  's = s.replace("    verification: VerificationOutcome\n    payload: Any\n    corroboration: Corroboration\n", "    payload: Any\n    corroboration: Corroboration\n    verification: VerificationOutcome = VerificationOutcome.VERIFIED\n")'
 
 proof "FR-006 taxonomy — closed membership becomes a prefix match" \
   src/contracts/terminal.py \

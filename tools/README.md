@@ -2120,6 +2120,33 @@ against the source that caused them, plus the refusals that keep the tolerance h
   tamper is never applied — but `check_tampers.py` reads the source statically and so covers those
   four arms on any host, which is the one place the static check is strictly stronger than the
   harness.
+- **A tamper whose *applied* form fails at import rather than at an assertion.** This is the one
+  asymmetry in the list that is structural rather than a matter of degree, and it is worth reading
+  twice: the needle still matches **perfectly**, so every question this tool asks is answered yes.
+  What it verifies after the edit is that the result still `compile()`s, and a whole class of failure
+  is raised later than that. Measured at `2a5cdbf`: the `FR-025 result` arm reordered two fields of
+  `Result` so that `verification` acquired a default, T126 had made `corroboration` required one
+  field further on, and the tampered class raised `TypeError: non-default argument 'corroboration'
+  follows default argument` when the dataclass decorator built `__init__` — import time, not compile
+  time. `check_tampers.py` reported no rot and was right to; the harness scored the arm `unproven`
+  with `tamper-broke-collection`, which is the honest outcome and the only signal there was. **So a
+  green rot check at N declared proofs is not proof coverage**: this tool checks the tamper strings,
+  and only `tests/removal_proofs.sh` applies them.
+
+  **The class was searched and it has one member, so no guard was built for it.** Over all 413
+  declared arms at `f918b0c` — 378 Python arms reachable by dotted import, the 7 under
+  `tests/fixtures/reference-app/` re-checked by path because a hyphenated directory is not an
+  importable module name, 18 Python-kind arms whose target is a Dockerfile, a markdown contract, Go
+  source, a JSON record or this harness itself, and 10 Go arms, which between them account for every
+  arm — each tamper was applied and its target re-imported. **One arm's applied form fails to
+  import**, and it is the `FR-025 result` arm above. Three arms change a field's default-ness or the
+  ordering of annotated fields at all; the other two — `T064 no invented estimate` on
+  `ReservationPolicy` and the `T126` arm on this same `Result` — import cleanly, because each defaults
+  a field that nothing required follows. A check firing on one known site is worse than a documented
+  residue, which is the disposition this file records for
+  [`register-range`](#no-correct-statement-of-one-features-fr-or-sc-extent-can-pass-register-range-and-the-relaxation-stays-declined)
+  and for the `src/` path shape. What does cover the class generally is the harness: it applies every
+  tamper and scores an unimportable one `tamper-broke-collection`, which is how this one surfaced.
 
 ### The emptiness-test inversion — `git diff` cannot tell "unchanged" from "changed back"
 
@@ -4429,6 +4456,41 @@ had not taken — instruments that *lied*. Here nothing lied and nothing was
 absent from CI. What was absent was **the instrument from the list of
 instruments**, and no mechanism existed whose job was to notice that the list
 and the set had come apart.
+
+**2026-08-12 — the same list drifted again, and the member it lost this time was
+the removal-proof harness.** Both the pass that authored T126 and the pass that
+audited it worked from a seven-gate list — `check_corpus.py`, `selftest.py`,
+`gen_claims.py --check`, `check_tampers.py`, `instruments.py --check`,
+`tests/invariants/runner.py`, `pytest` — and `tests/removal_proofs.sh` was in
+neither copy of it. Set against the five-item list above, **the drift is not
+random**: the list *gained* exactly the three instruments this census taught it —
+`selftest.py`, `instruments.py --check`, the invariants runner — and *lost* the
+one member that costs minutes rather than seconds. So the list has now been wrong
+in both directions, and the direction correlates with runtime rather than with
+importance, which is the part that makes it likely to recur.
+
+**What made the omission feel covered is a real reading of a real gate.**
+`check_tampers.py` stands green at 413 declared proofs, and that reads like proof
+coverage is verified. It is not: that tool checks the tamper *strings*, and only
+the harness applies them — see [what none of it
+catches](#what-none-of-it-catches) for the class of defect that leaves the
+strings intact and the arm unprovable. `main` went red at `2a5cdbf` on exactly
+that class, and CI was the only thing that caught it, on two runs of the same
+commit.
+
+**A gate absent from the customary list is a gate only CI runs, and CI here is
+advisory.** `main` carries no branch protection and empty rulesets —
+[finding 036](../specs/002-spec-aware-agent-runtime/findings/036-the-instrument-absent-from-the-list-of-instruments.md)
+§3 established that by four `gh api` reads rather than by relay — so nothing
+blocks a merge on a red arm, and a red arm reached `main` here. **Nothing is
+added to enforce this, and the reason is that no gate can reach the artifact that
+failed.** The census already declares `removal_proofs.sh` and `--check`
+reconciles that declaration against `ci.yml`, in both directions, and both were
+green throughout: the list that was wrong is the *briefing's*, which lives
+outside the repository. That is the residue this section has carried since it was
+written — a census makes the set enumerable and does not make anybody run it —
+and the honest statement of it is that the harness is the one gate whose absence
+from a hand-carried list is invisible to every mechanism here.
 
 So `--check` makes ~~exactly one machine-checkable claim — that the census and
 `.github/workflows/ci.yml` agree — and proves it in three directions:~~ **two
