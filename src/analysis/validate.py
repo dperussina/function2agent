@@ -177,10 +177,22 @@ and because one half of it is **not enforced by any gate in this repository**:
 ## No tolerance, anywhere
 
 `RecomputationAgreement` compares by **exact equality** and refuses a float pair
-with a named reason. FR-024's *"stated precision"* is undefined in the
-specification and is T125's open question; a tolerance constant here would
-settle it by accident, and T125's rule is that a check of insufficient precision
-refuses with a named reason rather than falling back to a default.
+by **raising**. That refusal carries **no named reason, and carries none by
+design** — it is a *construction* error, raised because this type was handed an
+operand it cannot compare, and FR-024's named reasons are *verification
+outcomes*. The machine-readable reason for an unstated precision is
+`RefusalReason.PRECISION_NOT_STATED`, which lives beside the verifier in
+`src/runtime/verify.py` and is produced there **before** a pair ever reaches
+this type.
+
+It is not raised from here and **cannot be**: that module imports this one, so
+naming its enum here would close an import cycle. The layering is the reason the
+two refusals read alike and are not duplicates — see `_admissible_precision`,
+whose docstring states why running ahead of this type is the mechanism rather
+than an optimisation.
+
+A tolerance constant here would pick a precision no source stated, which is the
+substitution FR-024 exists to forbid.
 
 ## The two committed fixtures, and which status each yields
 
@@ -305,12 +317,16 @@ class RecomputationAgreement:
             if isinstance(value, float):
                 raise ValidationError(
                     f"{label} is the float {value!r}. This comparison is exact "
-                    "equality and no tolerance is defined: FR-024's *stated "
-                    "precision* is undefined in the specification and is "
-                    "T125's open question. Refused with a named reason rather "
-                    "than compared under a default tolerance nobody chose, "
-                    "because a constant here would settle that question by "
-                    "accident."
+                    "equality and no tolerance is defined, so the pair is "
+                    "refused rather than compared under a precision no source "
+                    "stated (FR-024). This is a construction error and it "
+                    "carries no named reason: the machine-readable reason for "
+                    "an unstated precision is "
+                    "RefusalReason.PRECISION_NOT_STATED in "
+                    "src/runtime/verify.py, which refuses there before a pair "
+                    "reaches this type. Reaching this message instead means "
+                    "the type was constructed directly, bypassing the "
+                    "verifier."
                 )
         if self.reported != self.recomputed:
             raise ValidationError(

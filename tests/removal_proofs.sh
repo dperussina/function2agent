@@ -4347,9 +4347,12 @@ proof "T123 — an agreement accepts two values that disagree, so agreement stop
   "tests/invariants/test_provisional_never_verified.py::test_an_agreement_refuses_two_values_that_are_not_equal" \
   's = s.replace("        if self.reported != self.recomputed:", "        if False:")'
 
-# No default tolerance (FR-024, T125). Removing the refusal makes a float pair
-# compare under exact equality silently, which is a precision decision taken by
-# accident in the one place T125 says must refuse with a named reason instead.
+# No default tolerance (FR-024). Removing the refusal makes a float pair compare
+# under exact equality silently, which is a precision decision taken by accident.
+# This refusal raises and carries no named reason: FR-024's machine-readable
+# reason is RefusalReason.PRECISION_NOT_STATED, which lives in
+# src/runtime/verify.py and refuses ahead of this type. The two are separately
+# proved because deleting either leaves the other standing.
 proof "T125 — the float refusal goes, so an undefined precision is compared silently" \
   src/analysis/validate.py \
   "tests/invariants/test_provisional_never_verified.py::test_an_agreement_refuses_a_float_and_names_precision_as_undecided" \

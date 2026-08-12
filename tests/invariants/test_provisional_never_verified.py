@@ -298,12 +298,16 @@ def test_an_agreement_cannot_be_asserted_without_the_two_values():
 
 
 def test_an_agreement_refuses_a_float_and_names_precision_as_undecided():
-    """FR-024 / T125 — no default tolerance is introduced here.
+    """FR-024 — no default tolerance is introduced here.
 
-    Exact equality is the only comparison this type performs. A float pair is
-    refused with a named reason rather than compared under a tolerance nobody
-    chose, because *"stated precision"* is an open question owned by T125 and a
-    constant here would settle it by accident.
+    Exact equality is the only comparison this type performs, so a float pair is
+    refused rather than compared under a precision no source stated.
+
+    **The refusal carries no named reason and is not expected to.** It is a
+    construction error; FR-024's machine-readable reason for an unstated
+    precision is `RefusalReason.PRECISION_NOT_STATED`, produced in
+    `src/runtime/verify.py` before a pair reaches this type. This arm therefore
+    matches on the message and not on an enum member — there is none to match.
     """
     with pytest.raises(ValueError, match="precision"):
         RecomputationAgreement(reported=2.0, recomputed=2.0)
