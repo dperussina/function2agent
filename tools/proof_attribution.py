@@ -160,6 +160,97 @@ _GO_OUTCOME = re.compile(r"^ *--- (PASS|FAIL|SKIP): (\S+)", re.M)
 
 ABSENT, FAILED, SKIPPED, PASSED = "ABSENT", "FAILED", "SKIPPED", "PASSED"
 
+PROOF_FILE = REPO / "tests" / "removal_proofs.sh"
+
+
+def required_paths() -> list[str]:
+    """The work tree's contents, read off `REQUIRED_PATHS` in the harness.
+
+    This tool used to carry its own copy list — `src`, `tests`, `tools` and
+    `pyproject.toml` — and that list is exactly the one the harness had before
+    `deploy`, `requirements.lock`, `.github` and `specs` were each added to it
+    retroactively, every time after a pass found N arms refused and nothing
+    naming the copy list as the cause — and `.gitignore` after those, under
+    finding 039 §10, for the same reason at one remove: a test read it, the list
+    said nothing did, and the reading was a grep somebody ran once. What the
+    omission costs here, measured at
+    `b7b4254` on macOS arm64 unprivileged, CPython 3.12.11, and read off this
+    tool's own `baseline` line rather than computed:
+
+        the four-path hand list        1888 python outcomes (34 not passing)
+        `REQUIRED_PATHS` as declared   1888 python outcomes ( 0 not passing)
+
+    The 34 fall in six test files, and **13 proof arms name one of the failing
+    tests** and would be refused as UNUSABLE. All 13 sit in the three files the
+    three retroactive additions were made for: `tests/contract/test_egress_policy.py`
+    (no `specs/`), `tests/unit/test_instrument_census.py` (no `.github/`) and
+    `tests/invariants/test_sandbox_image.py` (no `deploy/`, the directory that
+    test reads `deploy/images/sandbox.Dockerfile` out of) — the omission's
+    signature, one instrument over. That 13 is **derived** from the measured
+    baseline by intersecting its failing node ids with the declared selectors,
+    which is the shape finding 039 §9.2 used; it is not an observed sweep total,
+    and no sweep of the hand-list condition was run.
+
+    Hand-adding the four would have re-created the hand-maintained list that has
+    come apart three times in the harness and, in this tool, stayed apart. Its
+    copy list was never corrected at all, so the fourth instance did not need to
+    be scheduled: it was already here. Reading the harness's declaration makes
+    the next path added there arrive here without anyone remembering to, and it
+    is established practice rather than a novelty:
+    `tests/unit/test_removal_proof_scoring.py::_path_lists` already extracts
+    these same two declarations out of the shell script by regex, and its
+    partition guard — which asserts the two lists account for every top-level
+    entry — now polices this tool's work tree as well as the harness's.
+
+    Refuses rather than returning an empty list. A silent `[]` copies nothing,
+    and pytest over an empty tree produces no outcomes at all, which the
+    `CANNOT RUN` guard below would report as an environment that cannot run the
+    suite — a true sentence about the wrong subject, pointing a reader at their
+    interpreter while the actual fault is this regex.
+    """
+    match = re.search(
+        r'^REQUIRED_PATHS="([^"]*)"$', PROOF_FILE.read_text(encoding="utf-8"), re.M
+    )
+    if match is None:
+        raise SystemExit(
+            f"`REQUIRED_PATHS` is not declared in {PROOF_FILE}. That declaration "
+            "is this tool's copy list; without it the work tree would be empty "
+            "and every proof would be refused for an environment defect. If the "
+            "harness renamed it, rename it here in the same commit."
+        )
+    paths = match.group(1).split()
+    if not paths:
+        raise SystemExit(
+            f"`REQUIRED_PATHS` in {PROOF_FILE} is empty, so the work tree would "
+            "contain nothing to run the suite against."
+        )
+    return paths
+
+
+def _populate(work: pathlib.Path) -> None:
+    """Copy the declared paths in, asserting each exists before touching any.
+
+    The harness aborts on an absent path for the reason its comment gives: a
+    listed path that is not there and a path that was never listed used to
+    produce the same silence, and both then presented as N arms refused. Checked
+    up front rather than per-copy so the message names every missing path at
+    once instead of the first one.
+    """
+    missing = [name for name in required_paths() if not (REPO / name).exists()]
+    if missing:
+        raise SystemExit(
+            "CANNOT RUN — the harness's copy list names path(s) this tree does "
+            f"not have: {' '.join(missing)}. Every test reading one of them "
+            "would fail in the baseline for a missing file and its proof would "
+            "be refused, which says nothing about any mechanism."
+        )
+    for name in required_paths():
+        source = REPO / name
+        if source.is_dir():
+            shutil.copytree(source, work / name)
+        else:
+            shutil.copy(source, work / name)
+
 
 def _run_baseline_py(work: pathlib.Path) -> tuple[str, list[tuple[str, str]]]:
     """The whole suite, untampered. Returns the raw output and its outcomes."""
@@ -284,17 +375,11 @@ def main(argv: list[str] | None = None) -> int:
               "seconds. Refusing to run uncapped.", file=sys.stderr)
         return 2
 
-    proofs = [
-        p
-        for p in extract((REPO / "tests" / "removal_proofs.sh").read_text())
-        if args.only in p.name
-    ]
+    proofs = [p for p in extract(PROOF_FILE.read_text()) if args.only in p.name]
 
     work = pathlib.Path(tempfile.mkdtemp())
     try:
-        for name in ("src", "tests", "tools"):
-            shutil.copytree(REPO / name, work / name)
-        shutil.copy(REPO / "pyproject.toml", work / "pyproject.toml")
+        _populate(work)
 
         have_go = shutil.which("go") is not None
 
