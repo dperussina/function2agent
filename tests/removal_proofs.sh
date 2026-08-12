@@ -4100,7 +4100,12 @@ proof "T121 — validated may be claimed with no artifact, so Principle I holds 
 # Every arm below was observed failing under its tamper before it was written
 # here.
 
-proof "OD-32 — the inner provenance check is never called, so `required` is a presence test again" \
+# No backticks in a proof title: these are double-quoted shell strings, so a
+# backtick is command substitution. The first draft of the title below read
+# "so 'required' is a presence test again" with backticks, and the harness
+# reported `required: command not found` and recorded the title with the word
+# deleted. No other title in this file uses one.
+proof "OD-32 — the inner provenance check is never called, so the outer presence test is all that is left" \
   src/contracts/schemas.py \
   "tests/unit/test_derived_record.py::test_a_current_document_with_an_empty_provenance_object_is_refused" \
   's = s.replace("        if self.required_provenance:", "        if False:")'
