@@ -67,7 +67,7 @@ from pathlib import Path
 from typing import Callable
 
 from src.analysis import codegraph_pin as pin
-from src.analysis.codegraph_pin import CodegraphPinError, SchemaDigest
+from src.analysis.codegraph_pin import SchemaDigest
 
 __all__ = [
     "CODEGRAPH_DB_RELPATH",
@@ -214,6 +214,3 @@ def index_repository(
         )
 
     return CodegraphIndex.verified(db_path)
-
-
-__pin_error__ = CodegraphPinError  # re-exported for callers that catch both
