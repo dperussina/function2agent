@@ -201,6 +201,21 @@ jobs:
         # `pyproject.toml`, not here.** A scope picked to make a gate green is
         # the defect this repository keeps catching, one level up.
         run: |
+          # **`set +e` is explicit and load-bearing, and leaving it out cost run
+          # 31619922016.** Every `run:` in this file executes under `bash -e`,
+          # and **mypy exits non-zero whenever it reports an error** — including
+          # the single error this step declares as expected. So the step aborted
+          # on mypy's own exit status before any assertion ran and before the
+          # summary was written: it would have failed every run regardless of
+          # what `src/` actually contained, which is a gate that fails for a
+          # reason it is not measuring. The status is carried by hand to the last
+          # line instead, the same discipline the unshare-pair and
+          # slug-differential steps state in their own bodies.
+          #
+          # The local negative control missed it because the harness mirrored
+          # this body without mirroring this shell. A laptop figure and a CI
+          # figure are different measurements, and so are their shells.
+          set +e
           set -uo pipefail
           # **The declared error count, and it is a bound in both directions.**
           # `src/` carries exactly one error and it is not an annotation defect:
@@ -264,6 +279,9 @@ jobs:
             echo '```'
             echo
           } >> "$GITHUB_STEP_SUMMARY"
+          # Explicit, because `set +e` means the step's status is whatever the
+          # last command left behind. Every failing path above exits 1 by hand.
+          exit 0
 
       - name: Are the removal proofs still pointed at anything?
         # Under a second, no pytest, no Go, no privileges. It is here, in the
