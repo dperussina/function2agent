@@ -23,6 +23,18 @@ dependencies = []
 dev = [
     "pytest==8.3.4",
     "PyYAML==6.0.2",
+    # The type checker, pinned because a type-level guarantee that no gate runs
+    # is verified on whichever laptop happens to carry a checker. INV-012's two
+    # static arms locate it with `shutil.which`, so before this pin they skipped
+    # in CI — the only place the guarantee matters — with a message that said so
+    # outright. `tools/typecheck.py` is the gate; the arms are the negative
+    # control over it.
+    #
+    # **2.3.0 rather than an older release, and the choice cost nothing.** The
+    # error set over `src/` is identical on 1.3.0 and 2.3.0 — the same 15 errors
+    # in the same 8 files before this branch's source fixes, the same 1 after —
+    # so there was no greener version to pick and no reason to pin a stale one.
+    "mypy==2.3.0",
 ]
 
 [tool.setuptools.packages.find]
