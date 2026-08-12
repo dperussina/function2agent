@@ -4715,6 +4715,92 @@ proof "T125 — a quantity absent from the reported result refuses under the wro
 # type. Named here rather than proved, because a proof shaped to pass is worse
 # than a declared gap.
 
+# --- T131/T132, the value-fault corpus and its shape-and-type-only control ----
+#
+# SC-006 asserts a verifier detects NOTHING, which is Rule 8's shape: the
+# positive result is a failure to detect, and a control that cannot run, that is
+# handed an empty corpus, or that errors on every input all report the same bit.
+# So the arms here divide the same way T115's block does — some remove the
+# CONTROL and require its positive arm to notice, others remove the CORPUS's own
+# properties and require the non-vacuity arms to notice. A control proof that
+# passed while the corpus was empty would prove nothing about either.
+#
+# All three were run against the working tree before being declared, and the
+# first is the one that matters: neutering the control leaves
+# `test_the_control_detects_none_of_the_value_faults` GREEN — correctly, that is
+# the vacuity — and turns the positive arm red. That asymmetry is the whole
+# claim, and it is why the arm below names the positive test and not the zero.
+proof "T132 control — the conformance check detects nothing at all, so SC-006's zero is free" \
+  tests/batteries/test_conformance_control.py \
+  "tests/batteries/test_conformance_control.py::test_the_positive_control_is_caught_naming_the_shape" \
+  's = s.replace("    kind = declared_shape[\x22kind\x22]", "    return ()\n    kind = declared_shape[\x22kind\x22]")'
+
+# The recorded resolution of finding 015's open contradiction, as a gate. E8's
+# c1 control asserted zero detections over the NUMERIC class, passed correctly,
+# and was structurally blind to the set-typed class its subject was actually
+# broken in. Narrowing the declaration must turn this red rather than quietly
+# shrinking what the zero covers.
+proof "T132 control — the bounded-class declaration narrows, so the zero silently covers less" \
+  tests/batteries/test_conformance_control.py \
+  "tests/batteries/test_conformance_control.py::test_the_null_states_the_classes_it_bounds" \
+  's = s.replace("{\x22numeric_value_error\x22, \x22set_cardinality_error\x22, \x22set_membership_error\x22}", "{\x22numeric_value_error\x22}")'
+
+# The stratum is COMPUTED from the two values and never declared, because a
+# declared one survives the case being edited underneath it. Pinning it removes
+# the computation without removing the field, which is the drift a reviewer
+# would not see.
+proof "T131 corpus — the relative magnitude is pinned, so the sub-one-percent stratum stops being measured" \
+  tests/batteries/test_conformance_control.py \
+  "tests/batteries/test_conformance_control.py::test_the_sub_one_percent_stratum_is_populated_and_computed" \
+  's = s.replace("        return abs(self.faulted_value - self.correct_value) / abs(self.correct_value)", "        return 0.0")'
+
+# --- T130, the not-verifiable share report (FR-045, SC-019) -------------------
+#
+# Three properties, and each is a different way the same document reads as a
+# measurement while being something else: a threshold in force that nothing
+# declares, an idle window reported as a flawless one, and a required key that
+# acquired a default.
+proof "T130 — a threshold enters the module, so a bound is in force while the field says none is" \
+  src/runtime/reports/not_verifiable.py \
+  "tests/unit/test_not_verifiable_report.py::test_the_share_is_never_compared_against_anything" \
+  's = s.replace("        if self.total_results == 0:", "        if (self.share or 0.0) > 0.5:\n            pass\n        if self.total_results == 0:")'
+
+proof "T130 — an empty window reports a share of zero, so an idle deployment reads as a flawless one" \
+  src/runtime/reports/not_verifiable.py \
+  "tests/unit/test_not_verifiable_report.py::test_an_empty_window_has_no_share_rather_than_a_share_of_zero" \
+  's = s.replace("        if self.total_results == 0:\n            return None", "        if self.total_results == 0:\n            return 0.0")'
+
+proof "T130 — the reporting window acquires a default, so an unset one stops failing startup" \
+  src/contracts/config.py \
+  "tests/unit/test_not_verifiable_report.py::test_the_window_length_is_declared_configuration_with_no_default" \
+  's = s.replace("no_default_reason=_NO_DEFAULT_REPORTING_WINDOW)", "no_default_reason=_NO_DEFAULT_REPORTING_WINDOW, default=\x223600\x22)")'
+
+# --- T133, provenance coverage (SC-007) ---------------------------------------
+#
+# SC-007 states a 100% and a zero, and both are free over this tree: the
+# hundred is a property of two required dataclass fields, and the zero has an
+# empty population because nothing in this repository promotes. So the arms
+# below remove the two PREDICATES rather than the types, because a predicate
+# that returns no faults reports full coverage and no offenders at once.
+proof "T133 — the coverage predicate reports no faults, so 100% is a property of the predicate" \
+  tests/contract/test_provenance_coverage.py \
+  "tests/contract/test_provenance_coverage.py::test_the_coverage_predicate_catches_a_record_that_carries_nothing" \
+  's = s.replace("    provenance = getattr(record, \x22provenance\x22, None)", "    return ()\n    provenance = getattr(record, \x22provenance\x22, None)")'
+
+proof "T133 — the presented-as-validated predicate clears everything, so SC-007's zero is unfalsifiable" \
+  tests/contract/test_provenance_coverage.py \
+  "tests/contract/test_provenance_coverage.py::test_the_predicate_catches_a_status_with_no_artifact_behind_it" \
+  's = s.replace("    faults: list[str] = []", "    return ()\n    faults: list[str] = []")'
+
+# Principle I's own refusal, in the source rather than in the test. This is the
+# one arm in the block that removes a shipped mechanism: without it a derived
+# contract can cite the file its own derivation read as the artifact that
+# corroborated it, which is the exact wording SC-007 rules out.
+proof "T133 — the independence refusal goes, so a derivation validates against its own input" \
+  src/analysis/provenance.py \
+  "tests/contract/test_provenance_coverage.py::test_the_constructor_refuses_both_defects_as_well" \
+  's = s.replace("        if validated and self.validated_against == self.source_file:", "        if False:")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
