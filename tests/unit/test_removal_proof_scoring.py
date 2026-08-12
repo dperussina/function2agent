@@ -528,6 +528,40 @@ def test_the_work_tree_copy_does_not_discard_its_own_errors():
     )
 
 
+def test_the_harness_writes_no_scratch_files_into_the_work_tree():
+    """The work tree is the tree under test, and nothing the harness needs itself.
+
+    Four files — the two baseline transcripts, the per-arm records and the
+    tamper's stderr — lived directly under `$WORK` until 2026-08-11. Two of them
+    exist by the time the Python baseline runs, and the test above then found two
+    top-level entries declared in neither path list and failed. The harness was
+    writing undeclared files into the tree it was about to assert over, so **the
+    partition guard was reporting a real defect in its own instrument** and the
+    only thing wrong was where it appeared: in a baseline nothing prints, under a
+    green verdict. Finding 039 §9.3 measures the cost at 1 outcome per sweep.
+
+    This is the direction that guard cannot cover on its own. It runs in the work
+    tree, so it fires only during a sweep, and a sweep's baseline failures are
+    reported nowhere a reader looks — which is how this survived every run the
+    instrument has ever made. Asserted statically here instead, where it fails in
+    the ordinary suite the moment a fifth scratch file is added.
+
+    Matched as `"$WORK/.` rather than by listing the four known names, so a name
+    nobody has thought of is caught too. Every legitimate use of `$WORK` in the
+    harness is the directory itself, the `cp` target, or a path into the copied
+    tree; none of them writes a dotfile at its root.
+    """
+    text = PROOF_FILE.read_text(encoding="utf-8")
+    offenders = [line.strip() for line in text.splitlines() if '"$WORK/.' in line]
+    assert offenders == [], (
+        "the harness puts its own working file(s) directly inside the work tree, "
+        "which is the population `test_the_two_path_lists_between_them_account_"
+        "for_this_tree` asserts over — so each one costs a baseline failure that "
+        "no verdict shows. Put them under $SCRATCH beside the tree instead:\n"
+        + "\n".join(offenders)
+    )
+
+
 def test_the_required_paths_are_all_present_in_this_tree():
     """The other direction of `2>/dev/null`: a listed path that is not there.
 

@@ -84,8 +84,35 @@ SRC=$(pwd)
 # the Go arms it declares — see the toolchain check under the baseline for why
 # that count and not a fixed expectation about the environment.
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
-WORK=$(mktemp -d)
-trap 'rm -rf "$WORK"' EXIT
+# $WORK holds the tree under test and NOTHING else. $SCRATCH holds this harness's
+# own working files beside it: the two baseline transcripts, the per-arm records
+# and the tamper's stderr. They were one directory until 2026-08-11, and that
+# cost a baseline failure in every sweep this instrument ever took.
+#
+# Two tests resolve a repository root from `__file__`'s ancestors, which under
+# this harness resolves to $WORK rather than to the repository. One of them —
+# `tests/unit/test_removal_proof_scoring.py::test_the_two_path_lists_between_them_account_for_this_tree`
+# — then asserts that REQUIRED_PATHS and NOT_NEEDED_PATHS account for every
+# top-level entry it finds, and the four files below were four entries declared
+# in neither. The test was right and this harness was wrong: it wrote undeclared
+# files into the tree it was about to assert over. Only `.summary-records` and
+# `.baseline-pytest.txt` exist by the time the Python baseline runs, which is why
+# the cost was 1 outcome and not 4 — finding 039 §9.3 measures it, and §10
+# records this repair.
+#
+# Declaring the four names in NOT_NEEDED_PATHS was the one-line alternative and
+# is declined, because that list is consulted for the REPOSITORY root as well —
+# the population `unlisted_top_level` exists to police — so it would teach the
+# guard to ignore those four names where they would be genuine omissions.
+#
+# One `mktemp -d` and one trap, so every exit path is covered including the two
+# `exit 2` aborts below, and $WORK is a subdirectory rather than a sibling so
+# that a single `rm -rf` still removes both. The trap is armed before $WORK is
+# created, so a failed `mkdir` cannot leak the directory it was made under.
+SCRATCH=$(mktemp -d)
+trap 'rm -rf "$SCRATCH"' EXIT
+WORK="$SCRATCH/tree"
+mkdir -p "$WORK" || exit 1
 # ---------------------------------------------------------------------------
 # THE COPY LIST, AND THE TWO DIRECTIONS IT USED TO FAIL SILENTLY IN
 #
@@ -101,6 +128,13 @@ trap 'rm -rf "$WORK"' EXIT
 #       added under finding 036. tests/unit/test_instrument_census.py reconciles
 #       the census against .github/workflows/ci.yml, reached by segment join in
 #       `tools/instruments.py` rather than by a slash-joined literal.
+#   .gitignore
+#       added under finding 039 §10, having been on the not-needed list until
+#       then. tests/unit/test_seccomp_overhead_record.py reads it to establish
+#       that `tests/batteries/results/*.latest.json` is still an ignored line —
+#       the property that keeps its sibling assertion from being vacuous. Reached
+#       as `REPO / ".gitignore"`, which is a third form the 2026-08-10 grep
+#       behind the not-needed list did not cover.
 #   specs
 #       added under T095. A CONTRACT test's mechanism lives on the other side of
 #       a document in `specs/*/contracts/`. The WHOLE tree, not `002` alone,
@@ -159,7 +193,7 @@ trap 'rm -rf "$WORK"' EXIT
 # measurement above attached so it need not be re-derived.
 
 #: Every top-level path the work tree must contain. Asserted, not assumed.
-REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github specs"
+REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github specs .gitignore"
 
 #: Every top-level path deliberately NOT copied, so that `unlisted_top_level`
 #: can tell "declared unnecessary" from "nobody has looked at it yet". Keeping
@@ -169,10 +203,19 @@ REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github 
 #:
 #: .git/.venv and the caches are environment. `examples/` is 1.38 GB of vendored
 #: read-only reference repos. `research/`, `docs/`, `README.md`, `LICENSE`,
-#: `.gitignore`, `.cursor/` and `.specify/` are read by nothing under `tests/`,
-#: verified 2026-08-10 by grep for path literals and for segment joins off a
-#: repo-root variable — the two forms `.github` and `deploy` are reached by.
-NOT_NEEDED_PATHS=".git .venv examples research docs README.md LICENSE .gitignore .cursor .specify .pytest_cache .ruff_cache"
+#: `.cursor/` and `.specify/` are read by nothing under `tests/`, verified
+#: 2026-08-10 by grep for path literals and for segment joins off a repo-root
+#: variable — the two forms `.github` and `deploy` are reached by.
+#:
+#: **That verification was wrong about one entry, and the entry is instructive.**
+#: `.gitignore` sat on this list until 2026-08-11, and
+#: `tests/unit/test_seccomp_overhead_record.py` reads it as `REPO / ".gitignore"`
+#: — a third form neither of the two greps covered. So the work tree never had
+#: it, and that test failed in the baseline of every sweep this harness has ever
+#: taken, invisibly, because no proof arm names it. It is in REQUIRED_PATHS now.
+#: The general lesson is the one this whole block is about: a path is on this
+#: list because somebody looked once, and "looked once" is not a guard.
+NOT_NEEDED_PATHS=".git .venv examples research docs README.md LICENSE .cursor .specify .pytest_cache .ruff_cache"
 
 # unlisted_top_level <dir> -> the entries of <dir> in neither list, one per line.
 #
@@ -242,8 +285,8 @@ _unlisted=$(unlisted_top_level "$SRC" | tr '\n' ' ')
 cd "$WORK" || exit 1
 
 TAMPER="$SRC/tools/tamper.py"
-BASELINE_PY="$WORK/.baseline-pytest.txt"
-BASELINE_GO="$WORK/.baseline-go.txt"
+BASELINE_PY="$SCRATCH/.baseline-pytest.txt"
+BASELINE_GO="$SCRATCH/.baseline-go.txt"
 
 # A wall-clock cap on one arm, and the script that applies it. See
 # `tools/proof_timeout.py` for why this is a script rather than `timeout(1)`
@@ -263,9 +306,13 @@ CAP="$SRC/tools/proof_timeout.py"
 PROOF_TIMEOUT="${REMOVAL_PROOF_TIMEOUT:-300}"
 TIMED_OUT_STATUS=124
 
-# One line per proof, tab separated, in the order they ran. Lives in $WORK so an
-# interrupted run cannot leave a partial file behind that looks like a result.
-RECORDS="$WORK/.summary-records"
+# One line per proof, tab separated, in the order they ran. Lives under $SCRATCH
+# so an interrupted run cannot leave a partial file behind that looks like a
+# result, and beside $WORK rather than inside it for the reason given at the
+# `mktemp -d` above. Its only consumer is `tools/removal_proofs_summary.py`,
+# which is handed the path through `F2A_RECORDS` below, so where it lives is not
+# a fact any other instrument depends on.
+RECORDS="$SCRATCH/.summary-records"
 : >"$RECORDS"
 
 # Gitignored by `tests/batteries/results/*.latest.json`, and named to say so:
@@ -639,7 +686,7 @@ report_unrunnable () {
 apply_tamper () {
   local name="$1" file="$2" snippet="$3" mode status reason
   cp "$file" "$file.orig"
-  mode=$(python3 "$TAMPER" "$file" "$snippet" 2>"$WORK/.tamper-err")
+  mode=$(python3 "$TAMPER" "$file" "$snippet" 2>"$SCRATCH/.tamper-err")
   status=$?
   if [ "$status" -ne 0 ]; then
     case "$status" in
@@ -654,7 +701,7 @@ apply_tamper () {
       *) echo "  BROKEN    $name — the tamper script failed to run"
          reason=tamper-script-failed ;;
     esac
-    sed 's/^/            /' "$WORK/.tamper-err" | head -2
+    sed 's/^/            /' "$SCRATCH/.tamper-err" | head -2
     _record unproven "$reason"
     FAIL=$((FAIL+1))
     mv "$file.orig" "$file"
@@ -3107,6 +3154,17 @@ proof "harness setup — the work-tree copy discards its errors again, so a fail
   tests/removal_proofs.sh \
   "tests/unit/test_removal_proof_scoring.py::test_the_work_tree_copy_does_not_discard_its_own_errors" \
   's = s.replace("  cp -r \x22$SRC/$_p\x22 \x22$WORK/\x22 || {", "  cp -r \x22$SRC/$_p\x22 \x22$WORK/\x22 2>/dev/null || {")'
+
+# The replacement writes the variable as `\x24WORK` on purpose. The named test
+# greps THIS file for a quoted work-tree dotfile path, and a snippet spelling
+# that path out would put it in the UNTAMPERED source — failing the test before
+# any tamper, which is a guard defeated by the declaration of its own proof.
+# Observed, not foreseen: the first version of this comment quoted the pattern
+# and the test fired on the comment.
+proof "harness setup — the baseline transcript moves back inside the work tree, so the tree under test carries an undeclared file again" \
+  tests/removal_proofs.sh \
+  "tests/unit/test_removal_proof_scoring.py::test_the_harness_writes_no_scratch_files_into_the_work_tree" \
+  's = s.replace("BASELINE_PY=\x22$SCRATCH/.baseline-pytest.txt\x22", "BASELINE_PY=\x22\x24WORK/.baseline-pytest.txt\x22")'
 
 # --- The already-failing baseline, split out of `unproven` on 2026-08-10 -------
 #

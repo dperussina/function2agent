@@ -9,7 +9,8 @@ incidents against commit `e4ef6e6`.
 deliberately — see §7 for why a repair is owed an owner and not this pass. **Superseded in
 part: §8 records the repair landing later the same day, and corrects two things §3 and §7
 got wrong. §9 measures one of incident 2's two candidates and rules it out, and confirms a
-work-tree baseline floor that neither candidate names.**
+work-tree baseline floor that neither candidate names. §10 REPAIRS that floor and reports it
+at 0, which supersedes §9.5's "owed an owner" and §9.3's present-tense count of 2.**
 **User Story**: none. Prompted by a brief asking whether three separately-recorded
 non-reproducing failures share a mechanism.
 **Owner decision**: **none is minted here and no register was edited.** §7 states the one
@@ -68,8 +69,12 @@ re-checked free immediately before saving. A concurrent pass owns `038`.
 | # | Incident | Recorded in | Recorded at |
 |---|---|---|---|
 | 1 | `test_the_crash_arms_child_does_not_outlive_a_failing_test` failed once in a full-suite run, passed on isolation and on re-run | the test file itself, added `4eb66be` | 2026-08-09 11:09:53 −0600 |
-| 2 | A sweep took a baseline with **234 of 1653 outcomes failing**, reported *"236 proved, 58 unproven"* | `tests/removal_proofs.sh:297`, added `f3f1c89` | 2026-08-10 08:00:14 −0600 |
-| 3 | One arm reported `BROKEN` on a first run and not on three subsequent ones; the classifying output had been discarded | `tests/removal_proofs.sh:766`, added `ce64490` | 2026-08-05 12:47:25 −0600 |
+| 2 | A sweep took a baseline with **234 of 1653 outcomes failing**, reported *"236 proved, 58 unproven"* | `tests/removal_proofs.sh:344`, added `f3f1c89` | 2026-08-10 08:00:14 −0600 |
+| 3 | One arm reported `BROKEN` on a first run and not on three subsequent ones; the classifying output had been discarded | `tests/removal_proofs.sh:813`, added `ce64490` | 2026-08-05 12:47:25 −0600 |
+
+*(Both line numbers were `297` and `766` when this table was written; §10's repair inserted
+lines above each, and they are repointed rather than left to rot. The commits they are
+attributed to are unchanged and are the durable half of each citation.)*
 
 ## 2. Dating against `e4ef6e6`, which bounds one of the three off it
 
@@ -323,6 +328,11 @@ shape and finding the target already present. `.baseline-go.txt` is created *aft
 Python baseline and so is not part of this floor. The assertion names **2** paths and costs
 **1** outcome; the second row costs the other.
 
+> **Corrected in §10, on two counts.** The harness wrote **four** scratch files into `$WORK`
+> and not two — `.tamper-err` is the fourth — and only the two above exist by baseline time,
+> which is why the floor was 2 and not 4. And the count in this section's heading is a
+> property of the revisions it was measured at, not of the instrument: §10 takes it to **0**.
+
 **Confirmed independently on CI.** The `removal proofs` job at `5fa07bb` printed `baseline
 1879 python outcomes (2 not passing), 226 go outcomes (0 not passing)` and then `346 proved,
 0 unproven`, and the job concluded **success**. Same total and same count as the local
@@ -354,6 +364,10 @@ the `.gitignore` row and is **not established here**.
 
 ### 9.5 The repair is owed an owner, and this pass did not take it
 
+> **Superseded by §10, which takes it.** Both rows are closed and the floor reads **0**. The
+> options table below is left standing because §10 reports which option it took and which it
+> declined, and that is unreadable without the alternatives it was choosing between.
+
 Two rows, and the cheap fix reaches only one of them, which is why none was taken.
 
 | Row | Options |
@@ -364,3 +378,94 @@ Two rows, and the cheap fix reaches only one of them, which is why none was take
 Option (a) on the first row alone would leave the floor at 1 and the headline unchanged — a
 green verdict over a non-zero baseline-failure count — so a partial repair here buys
 nothing and hides half the evidence for the other half.
+
+## 10. Amendment — the floor is **repaired**, both rows, and it reached **0** rather than lower
+
+**Date**: 2026-08-11, later the same day. §9.5 left this owed to an owner; it is taken here.
+Both rows are closed in one commit, and the harness's own `baseline` line reads **0 not
+passing** where it read **2**. The invisibility §9.3 describes is closed as a separate
+mechanism from the failures themselves: what hid them now has a guard that fires in the
+ordinary suite, not in a baseline nothing prints.
+
+**Platform**: `macOS-26.2-arm64`, euid `501`, CPython `3.12.11` from
+`/Users/djperussina/Code/function2agent/.venv/bin/python`. Every figure below is read off an
+instrument's own output, never computed as a baseline plus a delta. The two sweeps are
+end-to-end runs of `tests/removal_proofs.sh` in the shared tree: **before** at `7b809e9`,
+**after** at `0c3c33c` plus this commit. The only commits between those two states are a
+date-fragility fix in one test and a `tools/README.md` edit, neither of which moves either
+figure.
+
+### 10.1 Before and after, and the target was 0
+
+| | before (`7b809e9`) | after (this commit) |
+|---|---|---|
+| `baseline … python outcomes (… not passing)` | `1887` outcomes, **2** not passing | `1888` outcomes, **0** not passing |
+| go outcomes | `226`, 0 not passing | `226`, 0 not passing |
+| verdict | `337 proved, 0 unproven, 13 skipped` | `338 proved, 0 unproven, 13 skipped` |
+
+**Compared arm for arm and not on totals**, from each run's own JSON record: **0** arms lost,
+**0** arms changed outcome, **1** arm added — the new guard's, and it scored `proved`. The one
+extra Python outcome is that guard's own test. A change that moved one arm from proved to
+refused while another moved the other way would leave both totals exactly where they are,
+which is why a total is not evidence here.
+
+### 10.2 The floor decomposed **1 + 1**, established on a second instrument
+
+§9.3 attributes one outcome to each row by reading the two assertions. That is now measured,
+because `tools/proof_attribution.py` builds a work tree from the **same** declared path set
+and writes **no** scratch files into it. Read off that tool's own baseline line at `8c802e2`:
+
+| Work tree | Scratch files in it at baseline time | `not passing` |
+|---|---|---|
+| the harness's | 2 | **2** |
+| `proof_attribution`'s, copy list read off `REQUIRED_PATHS` | none | **1** |
+
+The remaining 1 was **named rather than inferred**: in a work tree built from those eight
+declared paths, `test_the_durable_record_is_the_tracked_one_and_the_latest_is_not` fails with
+`FileNotFoundError` on `…/.gitignore`, and the partition test in the same run **passes**. So
+the `.gitignore` row is worth 1 on an instrument that has no scratch files at all, the
+partition row is worth the difference, and the two are additive.
+
+### 10.3 Which of §9.5's options was taken, and what the cheap ones cost
+
+| Row | Taken | Why not the cheaper one |
+|---|---|---|
+| partition test | **(b)** — `mktemp -d` now yields `$SCRATCH`, the work tree is `$SCRATCH/tree`, and all **four** scratch files live under `$SCRATCH` beside it. One trap on `$SCRATCH` still covers every exit path, including the two `exit 2` aborts | (a) declaring the four names in `NOT_NEEDED_PATHS` is one line, but that list is consulted for the **repository** root as well — the population `unlisted_top_level` exists to police — so it would teach the guard to ignore those names where they would be genuine omissions. (c) asserting against the repository root would make the work-tree run stop asserting about the work tree |
+| `.gitignore` row | **(a)** — moved from `NOT_NEEDED_PATHS` into `REQUIRED_PATHS` | `REQUIRED_PATHS` means *the suite reads it*, and the suite demonstrably does; this corrects a miscategorisation rather than distorting the list. (b) having the test decline when the file is absent is a test that skips exactly where it would fail |
+
+**The not-needed list's own comment was wrong, and how it was wrong is the transferable
+part.** It recorded `.gitignore` as read by nothing under `tests/`, *"verified 2026-08-10 by
+grep for path literals and for segment joins off a repo-root variable"*. The one reader
+reaches it as `REPO / ".gitignore"` — a third form neither grep covered. The list is now
+annotated with that, because a path sits on it because somebody looked once, and looking once
+is not a guard.
+
+### 10.4 The guard, so a fifth scratch file cannot reintroduce this quietly
+
+`test_the_harness_writes_no_scratch_files_into_the_work_tree` greps the harness for a quoted
+work-tree dotfile path and fails on any. Matched as a pattern rather than as the four known
+names, so a name nobody has thought of is caught too.
+
+It is asserted **statically, in the ordinary suite**, and that placement is the whole point.
+The partition test already reports this defect — correctly — but it only runs inside a sweep,
+and a sweep's baseline failures print nowhere a reader looks, which is how this survived every
+run the instrument has ever made. The guard carries a removal proof, and that proof's tamper
+puts `BASELINE_PY` back inside the work tree; it scored `proved`, which is the positive
+control that the guard fails on the code it replaces.
+
+Two things worth recording about writing it. Its proof's tamper spells `$WORK` as `\x24WORK`,
+because a snippet spelling the path out puts the pattern in the **untampered** source — a
+guard defeated by the declaration of its own proof. That was **observed, not foreseen**: the
+first version of the comment explaining the escape quoted the pattern, and the guard fired on
+the comment.
+
+### 10.5 What §9.4 leaves open is unchanged by this
+
+The two committed post-guard records at `10:17:54` and `10:29:15` read a baseline of 2 while
+the `.gitignore` mechanism's test did not land until `73e9af3` at `16:47:20`, so their second
+failure was something else and is still not established. Settling it needs one thing and not
+an investigation: a sweep's baseline transcript from that window, which nothing retained —
+`$WORK` is removed by the trap and only the counts reach the JSON record. Absent that, it
+would have to be reconstructed by running the suite in a work tree built the way the harness
+built one at those commits, which is a measurement nobody has asked for. **Left open,
+deliberately, and cheap to close if a reason appears.**
