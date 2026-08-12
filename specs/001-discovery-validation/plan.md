@@ -4317,7 +4317,8 @@ they differ in exactly one respect that matters.
   exception and for every producer, and `validate` refuses a null outright. The absence exists where
   it actually is — in what a reader can conclude — and is named there.
 
-**The precedent is decisive on this point and it was misread on the first pass.** The journal
+**The precedent is decisive on this point, and this entry's own first draft misread it — recorded
+because the misreading is the one a later pass will make too.** The journal
 episode's mechanism is not a migration that rewrites a revision-1 payload into a revision-3 one; it
 is `decode_model_outcome`, which **reads** a revision-1 payload and returns a response with
 `spend_usd=None`. The payload on disk stays a revision-1 payload forever. What became nullable was
