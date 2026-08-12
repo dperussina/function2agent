@@ -809,6 +809,50 @@ report_signalled () {
 # differs from the form bash produced — so substitution, expansion and whatever
 # bash grows next are one rule that cannot fall behind the shell — and it runs in
 # the `invariants` CI job in under a second.
+#
+# ---------------------------------------------------------------------------
+# THE SELECTOR MUST NAME A TEST NODE, NEVER A BARE FILE.
+#
+# `proof()` reads any non-zero exit from the tampered run as "the test failed
+# with the mechanism removed". A selector naming a whole file therefore scores
+# `proved` on a failure ANYWHERE in that file, and cannot tell the guard it
+# names from its neighbours. The arm goes on reading green after the guard it
+# exists to exercise has been deleted, which is the one event it should be
+# loudest about.
+#
+# **Measured across the whole population, 2026-08-12, not reasoned.** 14 of the
+# then-413 arms named a bare `.py` file, spanning 11 files of 10-40 collected
+# tests each. Each was screened by applying its tamper and counting the failures
+# in the named file, then probed by deleting its intended guard outright and
+# re-running — the method that settled the FR-025 arm below. **9 of the 14 still
+# scored `proved` with their guard gone; 5 correctly went `UNPROVEN`, and those 5
+# were exactly the 5 whose tamper failed a single test.** A control was run for
+# every arm — guard deleted, no tamper — and all 14 exited 0, so no probe was
+# reading the deletion rather than the tamper. All 14 now name a node.
+#
+# The 9 survivors were NOT the FR-025 failure. There the collateral was
+# positional (`Result.__init__() got multiple values for argument 'payload'`) and
+# said nothing about the property; here every surviving failure was a genuine
+# assertion about the same removed mechanism. So those arms were still evidence
+# that the mechanism is covered *somewhere* — what they had stopped being is
+# evidence about a NAMED guard, which is the whole of what an archived verdict
+# carries. Both are worth repairing and they are not the same finding.
+#
+# Two further reasons a node selector is not a tidy-up:
+#
+#   - a deleted guard becomes a `tools/check_tampers.py` ERROR rather than a
+#     silent pass, because the selector stops resolving. Verified for all 14.
+#   - `baseline_py` scores a file selector FAILED if ANY test in the file failed
+#     untampered, so a file-level arm's usability is hostage to up to 39 tests it
+#     makes no claim about.
+#
+# **Name the bare function, never a parametrized id.** `check_tampers.py` reads
+# the defined names with a `def test_...(` scan, so `test_x[PARAM]` is reported
+# as undefined — which is why two proofs were previously refused for naming ids.
+# An id that has merely been renamed is worse: `pytest` exits 4 on a selector it
+# cannot resolve, and 4 is non-zero, so the arm reports `proved` having run
+# nothing. Naming the function runs every parameter, which is sufficient: the arm
+# needs one of them to fail, not all.
 proof () {
   local name="$1" file="$2" test="$3" python_edit="$4"
   local verdict
@@ -1146,7 +1190,7 @@ proof "T108 renewer — the tolerance becomes a lifetime quota" \
 
 proof "FR-036 Secret — a __str__ that discloses" \
   src/contracts/secret.py \
-  "tests/invariants/test_secret_has_no_serializer.py" \
+  "tests/invariants/test_secret_has_no_serializer.py::test_str_does_not_contain_the_value" \
   's = s.replace("    def __str__(self) -> str:\n        return _marker(self._name)", "    def __str__(self) -> str:\n        return self._value")'
 
 proof "FR-011 rule id — the deny/rule_id check removed" \
@@ -1202,12 +1246,16 @@ proof "FR-006 taxonomy — closed membership becomes a prefix match" \
 
 proof "Q-10 no-default bounds — a default added" \
   src/contracts/config.py \
-  "tests/invariants/test_no_default_bounds.py" \
+  "tests/invariants/test_no_default_bounds.py::test_no_default_is_declared" \
   's = s.replace(chr(34)+"memory.max on the session cgroup"+chr(34)+", no_default_reason=_NO_DEFAULT_BOUND"+chr(41), chr(34)+"memory.max on the session cgroup"+chr(34)+", default="+chr(34)+"512MiB"+chr(34)+chr(41))'
 
 # The proof above plants on SANDBOX_MEMORY_MAX, which three separate sites cover — INV-006 by name,
-# the fail-loud check by requirement, and the loader test by absence — so it proves the property is
-# checked *somewhere* and cannot notice any one of those sites narrowing. This one plants on
+# the fail-loud check by requirement, and the loader test by absence. Until 2026-08-12 it named the
+# whole of `test_no_default_bounds.py`, so it proved only that the property was checked *somewhere*
+# and could not notice any one of those sites narrowing; measured then, the tamper failed three of
+# that file's tests and the arm still scored `proved` with its intended guard deleted outright. It
+# now names `test_no_default_is_declared`, so it is attributed to one site. **That repair does not
+# make this arm redundant**, and the reason is the key rather than the selector. This one plants on
 # MODEL_PRICES_OPERATOR, and the two are not redundant: measured against this exact plant, the old
 # requirement-gated check flagged nothing, `test_no_default_bounds.py` and `test_result_bound.py`
 # passed, and the widened check was the only thing in the repository that failed. It is the arm that
@@ -1389,7 +1437,7 @@ go_proof "FR-017 ordering — the exemption consulted before the class is decide
 
 proof "FR-055 canonical order — key sorting removed" \
   src/contracts/canonical.py \
-  "tests/contract/test_canonical_determinism.py" \
+  "tests/contract/test_canonical_determinism.py::test_key_insertion_order_does_not_change_the_bytes" \
   's = s.replace("for i, key in enumerate(sorted(value, key=_sort_key)):", "for i, key in enumerate(value):")'
 
 proof "FR-055 envelope — volatile values left in the hashed payload" \
@@ -1406,12 +1454,12 @@ proof "FR-055 volatility scan — the detector stops detecting" \
 # without the required bump — the exact edit the gate exists to catch.
 proof "T015 schema gate — a version moves backwards unnoticed" \
   src/contracts/schemas.py \
-  "tests/contract/test_schema_versions.py" \
+  "tests/contract/test_schema_versions.py::test_the_version_never_moves_backwards" \
   's = s.replace("    kind=\x22served_operation_set\x22,\n    version=\x221.1.0\x22,", "    kind=\x22served_operation_set\x22,\n    version=\x221.0.0\x22,")'
 
 proof "T015 schema gate — a required field removed without a MAJOR bump" \
   src/contracts/schemas.py \
-  "tests/contract/test_schema_versions.py" \
+  "tests/contract/test_schema_versions.py::test_a_removed_or_renamed_required_field_is_a_major_bump" \
   's = s.replace("    required=(\x22schema_version\x22, \x22deployment_id\x22, \x22set_version\x22, \x22captured_at\x22,\n              \x22operations\x22),", "    required=(\x22schema_version\x22, \x22deployment_id\x22, \x22set_version\x22),")'
 
 # The tamper names the guard inside `migrate`, not the string `raise MigrationError(`.
@@ -1421,17 +1469,17 @@ proof "T015 schema gate — a required field removed without a MAJOR bump" \
 # as it existed. `tools/check_tampers.py` is what surfaced it.
 proof "T014 migration — a stale document passes through unmigrated" \
   src/contracts/migrations/__init__.py \
-  "tests/contract/test_migrations.py" \
+  "tests/contract/test_migrations.py::test_a_document_with_no_path_forward_is_refused_not_passed_through" \
   's = s.replace("        if migration is None:\n", "        if migration is None:\n            return dict(document)\n")'
 
 proof "T017 ownership — a non-owner may write" \
   src/contracts/ownership.py \
-  "tests/invariants/test_writer_ownership.py" \
+  "tests/invariants/test_writer_ownership.py::test_only_the_owner_may_write_each_table" \
   's = s.replace("def require_write(", "def require_write(*_unused_a, **_unused_k):\n    return None\n\n\ndef _disabled_require_write(")'
 
 proof "T016 scope columns — the caller supplies its own tenant" \
   src/contracts/repository.py \
-  "tests/invariants/test_writer_ownership.py" \
+  "tests/invariants/test_writer_ownership.py::test_a_caller_cannot_set_its_own_scope" \
   's = s.replace("        if any(c in row for c in SCOPE_COLUMNS):", "        if False:")'
 
 proof "T019 object store — an address may be overwritten" \
@@ -1446,12 +1494,12 @@ proof "T020 rollback — the restoration record stops naming an operator" \
 
 proof "T032 fail-closed config — startup proceeds with values missing" \
   src/contracts/config.py \
-  "tests/contract/test_configuration_failloud.py" \
+  "tests/contract/test_configuration_failloud.py::test_each_required_key_unset_fails_and_names_itself" \
   's = s.replace("    if missing or invalid:\n        raise ConfigError(_report(missing, invalid))", "    if False:\n        raise ConfigError(_report(missing, invalid))")'
 
 proof "T033 unvalidated marking — the marker dropped from the rendering" \
   src/contracts/unvalidated.py \
-  "tests/contract/test_unvalidated_marking.py" \
+  "tests/contract/test_unvalidated_marking.py::test_string_interpolation_carries_the_marking" \
   's = s.replace("        return f\x22{self.value} ({MARKER}: {self.provenance})\x22", "        return str(self.value)")'
 
 proof "FR-036 marker — the key name dropped, leaving an undiagnosable trace" \
@@ -1461,17 +1509,17 @@ proof "FR-036 marker — the key name dropped, leaving an undiagnosable trace" \
 
 proof "T037 rule id — a decision span may omit its rule" \
   src/runtime/trace.py \
-  "tests/contract/test_trace_spans.py" \
+  "tests/contract/test_trace_spans.py::test_a_decision_span_cannot_be_built_without_a_rule" \
   's = s.replace("        if self.kind in DECISION_KINDS and self.decision is None:", "        if False:")'
 
 proof "Principle VI — a state_transition span may omit its predicate inputs" \
   src/contracts/transition.py \
-  "tests/unit/test_state_transition.py" \
+  "tests/unit/test_state_transition.py::test_a_selecting_rule_cannot_omit_its_predicate_inputs" \
   's = s.replace("        if rule.selects_among_alternatives and not self.predicate_inputs:", "        if False:")'
 
 proof "Principle VI — bounds.check stops recording the inputs it did not match" \
   src/supervisor/bounds.py \
-  "tests/unit/test_state_transition.py" \
+  "tests/unit/test_state_transition.py::test_from_bound_outcome_carries_every_reading" \
   's = s.replace("        readings=readings,", "        readings=readings[:1],")'
 
 proof "FR-049 preflight — the cgroup.kill probe reads the root cgroup" \
@@ -1645,7 +1693,7 @@ proof "FR-036 — the shared Secret scan stops at a mapping key" \
 
 proof "T038 journal location — a ledger inside the session root is accepted" \
   src/runtime/trace_budget.py \
-  "tests/contract/test_budget_journal.py" \
+  "tests/contract/test_budget_journal.py::test_a_journal_inside_the_session_root_is_refused" \
   's = s.replace("    if journal == root or root in journal.parents:", "    if False:")'
 
 # Distinct from the proof above: that one removes the *check*, this one removes
