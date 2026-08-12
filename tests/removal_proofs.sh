@@ -4511,6 +4511,13 @@ proof "T123 — the bridge stops marking a provisional result provisional, so th
 # Every one of these was applied by hand and the named test read failing before
 # it was written down here. None fails on an import or a collection error.
 
+# This tamper is applicable only because `corroboration` is currently the LAST field of `Result`
+# with no default — add a required field after it and the defaulted `corroboration` precedes a
+# non-defaulted one, the dataclass decorator raises `TypeError: non-default argument ... follows
+# default argument` at import, and this arm degrades to `unproven`/`tamper-broke-collection`
+# exactly as the FR-025 arm above did before `5d067f7`. Measured 2026-08-12 by planting one such
+# field. It fails safe rather than green, and `tools/check_tampers.py` cannot see it coming:
+# field ordering is enforced when the decorator runs, which is import time and not compile time.
 proof "T126 — the corroboration gets a default, so a caller reaches a verified result by saying nothing" \
   src/contracts/result.py \
   "tests/invariants/test_result_constructor.py::test_corroboration_has_no_default_in_the_source" \
