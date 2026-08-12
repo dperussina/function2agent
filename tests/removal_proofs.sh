@@ -4705,6 +4705,109 @@ proof "T125 — a quantity absent from the reported result refuses under the wro
   "tests/unit/test_verify.py::test_a_quantity_absent_from_the_reported_result_refuses" \
   's = s.replace("            reason=RefusalReason.QUANTITY_ABSENT_FROM_RESULT,", "            reason=RefusalReason.NO_RECOMPUTING_CHECK,")'
 
+# ---------------------------------------------------------------------------
+# T212 — FR-024's caller-declared precision rung (properties 5 and 6, OD-23).
+#
+# Eight arms. Every one fails on an assertion naming a wrong disposition, a
+# wrong report type or a missing refusal; none fails on an import, a crash or
+# an unrecognised selector. The two that matter most are the first and the
+# fifth, and they fail in OPPOSITE directions: the first opens the weakening
+# vector the rung exists to close, the fifth closes the detection the rung
+# exists to buy.
+#
+# The arms live against `tests/unit/test_declared_precision.py` rather than
+# `test_verify.py` because that file was under concurrent edit when this rung
+# was built. The split is coordination and not a judgement about where the
+# arms belong.
+
+# THE WEAKENING VECTOR, and the sharpest arm in this block. Admitting a
+# declaration wherever one is present — rather than only where the ladder would
+# otherwise refuse — lets a caller declare `-2` against a count the target got
+# wrong by one, and 395 and 396 both round to 400 and agree. It fails into a
+# FALSE NEGATIVE: a wrong answer read as verified. This is the single condition
+# OD-23 replaced the ratchet to remove BY CONSTRUCTION, so its removal restores
+# exactly the vector the decision was taken against.
+proof "T212 — the admissibility test goes, so a caller-declared precision loosens a comparison an artifact source made exactly" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_a_declaration_may_never_make_a_quantity_be_checked_less_strictly" \
+  's = s.replace("    if refusal is not None and refusal.reason is RefusalReason.PRECISION_NOT_STATED:", "    if refusal is None or refusal.reason is RefusalReason.PRECISION_NOT_STATED:")'
+
+# FR-024 property 5s closing sub-bullet: an ignored declaration MUST be
+# disclosed on the result, not silently dropped. With the artifact source never
+# found, the disclosure degrades to NOT_REACHED and the caller can no longer
+# tell an artifact rung from a dropped declaration. A disclosure in a trace does
+# not discharge this — the reader arrives at the result and nowhere else, which
+# is what FR-058s bounded-result disclosure cost this corpus once already.
+proof "T212 — the artifact-source lookup goes, so an ignored declaration is disclosed as never reached and names nothing that displaced it" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_an_ignored_declaration_is_disclosed_on_the_result_and_names_what_displaced_it" \
+  's = s.replace("    if check.precision_source is None:", "    if True:")'
+
+# FR-024 property 6. Under this variant the marking is not a formality: *no
+# artifact source supplies one* is the rungs own admissibility premise, so the
+# precision is by construction a derived field nothing independent can validate,
+# and constitution Principle I at v1.1.0 leaves marking as the only disposition.
+# Without it an affirmative that can be wrong in either direction reads plain.
+proof "T212 — the provisional marking goes, so a verification resting on a caller-declared precision reads as plainly verified" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_an_admitted_declaration_is_marked_provisional_and_is_never_plainly_verified" \
+  's = s.replace("        return self.disposition is DeclarationDisposition.ADMITTED", "        return False")'
+
+# A RELABEL rather than a removal, and chosen for the reason T125s two relabels
+# were: deleting the disposition produces a constructor error, which is a crash
+# and a crash is a failure any tamper produces. What is scoreable is the LIE — a
+# declaration that was used, reported as one the ladder never reached.
+proof "T212 — an admitted declaration is disclosed under the wrong disposition, so a precision the caller supplied reads as one the ladder never consulted" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_a_declaration_is_admitted_only_where_no_artifact_source_supplies_a_precision" \
+  's = s.replace("            disposition=DeclarationDisposition.ADMITTED,", "            disposition=DeclarationDisposition.NOT_REACHED,")'
+
+# WHAT THE RUNG BUYS, scored against OD-23s own measured instance: 3.23 against
+# 3.201754, a 0.882% error and the only sub-one-percent catch in the census of
+# 61. A comparison that always agrees turns that detection into an affirmative,
+# which is a MISSED FAULT against SC-005s 95% — the opposite direction from the
+# first arm in this block, and the reason both are held.
+proof "T212 — the comparison at the declared precision always agrees, so the census's one sub-one-percent near-miss is reported as verified" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_the_admitted_rung_detects_the_sub_one_percent_near_miss_the_census_measured" \
+  's = s.replace("    return reported_at_declared == recomputed_at_declared", "    return True")'
+
+# Property 5 requires the declaration AND ITS SOURCE TEXT recorded as the
+# precisions provenance. Without the refusal an unattributable declaration is
+# admitted, and property 4s *a precision a model proposes is not a source, at
+# any rung, under any provenance* stops being enforceable one level down:
+# nothing then distinguishes a precision the caller asked for from one the agent
+# supplied on the callers behalf.
+proof "T212 — the source-text requirement goes, so a declaration attributable to nobody is admitted as the precision's provenance" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_a_declaration_with_no_source_text_is_refused_at_construction" \
+  's = s.replace("        if not self.declared_in.strip():", "        if False:")'
+
+# Finding 007s fabricated provenance, arriving in a disclosure instead of in a
+# contract: a declaration reported as admitted while naming a source that
+# displaced it. The two arms below are the two directions of one guard, and
+# either alone is satisfiable by a broken pair.
+proof "T212 — the fabricated-displacement guard goes, so an admitted declaration can name a source that displaced it" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_a_disclosure_cannot_claim_a_displacement_that_did_not_happen" \
+  's = s.replace("        if not ignored and self.displaced_by is not None:", "        if False:")'
+
+proof "T212 — the displacement-naming requirement goes, so a declaration reported as ignored need not say what displaced it" \
+  src/runtime/verify.py \
+  "tests/unit/test_declared_precision.py::test_a_disclosure_cannot_claim_a_displacement_that_did_not_happen" \
+  's = s.replace("        if ignored and self.displaced_by is None:", "        if False:")'
+
+# NOTE — `test_the_declared_rung_reaches_no_not_verifiable_state_the_ladder_did_
+# not_already_reach` has NO removal proof, and the absence is declared rather
+# than filled with an arm shaped to pass. It asserts an ABSENCE — that the rung
+# opens no new route into the not-verifiable state — and there is no line whose
+# removal creates one. Creating a route means ADDING a RefusalReason member and
+# a branch reaching it, which is not a removal and which
+# `test_the_refusal_reasons_are_closed_and_each_one_is_reachable` already
+# refuses. The arm is kept because it is what fails if a later pass adds that
+# member and branch, and `_check_totals` in
+# `src/runtime/reports/not_verifiable.py` then stops summing.
+
 # NOTE — the shape-check refusal in `recompute` has NO removal proof, and the
 # absence is a finding about this module rather than an oversight. Its condition
 # is `not check.recomputes() or check.recomputation is None`, and over any

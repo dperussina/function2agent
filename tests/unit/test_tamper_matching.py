@@ -59,12 +59,12 @@ sys.path.insert(0, str(REPO / "tools"))
 #: This is the half that needs to know the number, so it lives here.
 #:
 #: Changing the proof set is meant to edit this line. That coupling is the
-#: mechanism and not an inconvenience: a silent drop from 422 to 421 is the rot.
+#: mechanism and not an inconvenience: a silent drop from 430 to 429 is the rot.
 #: The illustration has twice been left behind by the constant — it read
 #: `66 to 65`, then `351 to 350`, while the number above moved past both — which
 #: made the coupling read as an example of the rule rather than as the rule
 #: operating on the number directly above. Move it with the constant.
-EXPECTED_PROOFS = 422
+EXPECTED_PROOFS = 430
 
 from tamper import (  # noqa: E402
     AMBIGUOUS,
