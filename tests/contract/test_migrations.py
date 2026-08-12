@@ -1,8 +1,24 @@
-"""T014 — the migration framework, exercised by the one migration that exists.
+"""T014 — the migration framework, exercised through ~~the one migration that
+exists~~ **the first of the five the registry now holds. Corrected 2026-08-12.**
 
-The migration registered is real rather than illustrative: `declared_location_set`
-entries did not originally carry `rule_id` and `justification`, and they were
-added when FR-048 required each declaration to name the rule that declares it.
+**The digit is struck rather than substituted because the sentence carried a
+second error that advancing it alone would have preserved.** This module drives
+**one** kind from end to end and never did exercise the registry, so "the five
+migrations that exist" would be a fresh falsehood wearing the shape of a
+correction. The four later ones — `admission_decision`, `served_operation_set`,
+`derived_contract` and `derived_check`, each 1.0.0 to 1.1.0 — are exercised where
+their kinds are: `tests/contract/test_admission.py`,
+`tests/contract/test_served_operations.py` and `tests/unit/test_derived_record.py`.
+
+What *is* registry-wide here is `test_two_migrations_cannot_claim_the_same_source`,
+which iterates `MIGRATIONS` itself. At one entry it was vacuous — a single key
+cannot collide with itself — and at five it is a live check, so the arm the count
+made pointless is the one the count moving repaired.
+
+The migration this module drives is real rather than illustrative:
+`declared_location_set` entries did not originally carry `rule_id` and
+`justification`, and they were added when FR-048 required each declaration to
+name the rule that declares it.
 """
 
 from __future__ import annotations
