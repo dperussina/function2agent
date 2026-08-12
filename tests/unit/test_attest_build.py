@@ -514,11 +514,18 @@ def test_reproducing_a_ratified_record_is_still_reported(tmp_path) -> None:
     nothing to ratify. Nothing is corrupt in this state, so the reassurance is
     kept — which is why the repair gates the arm on the predecessor rather than
     deleting it.
+
+    The pin is stamped `TODAY` and not `STAMP` for the reason recorded on `TODAY`
+    itself: the rebuild below goes through `cli.reattest`, which stamps
+    `date.today()` and takes no override. Against the frozen `STAMP` the rebuilt
+    bytes stop equalling the pin on any day but the one this was written, the
+    reassurance is never reached, and the arm fails for a reason having nothing to
+    do with what it checks. It did, on the first run that crossed midnight UTC.
     """
     _evidence(tmp_path, "evidence/records")
     unit = _unit("u", tree="evidence/records", witness="witness.json")
     built = [
-        attest.build(tmp_path, unit, reason="r", attested_at=STAMP) for _ in range(3)
+        attest.build(tmp_path, unit, reason="r", attested_at=TODAY) for _ in range(3)
     ]
     unit["attestation_sha256"] = built[2][1]
     (tmp_path / "witness.json").write_text(built[1][0], encoding="utf-8")
