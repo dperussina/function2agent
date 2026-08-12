@@ -74,6 +74,7 @@ re-checked free immediately before saving. A concurrent pass owns `038`.
 | 2 | A sweep took a baseline with **234 of 1653 outcomes failing**, reported *"236 proved, 58 unproven"* | `tests/removal_proofs.sh:344`, added `f3f1c89` | 2026-08-10 08:00:14 −0600 |
 | 3 | One arm reported `BROKEN` on a first run and not on three subsequent ones; the classifying output had been discarded | `tests/removal_proofs.sh:813`, added `ce64490` | 2026-08-05 12:47:25 −0600 |
 | 4 | One full-suite run in five reported `1 failed, 2042 passed`; the run was piped to `tail -1`, so the failing test's identity was discarded. **§12** | this table and §12 | 2026-08-12 |
+| 5 | A removal-proof sweep scored **69 arms `UNUSABLE BASELINE`** across unrelated subsystems, run **while another pass's pytest was known to be live**. **§13** | this table and §13 | 2026-08-12 |
 
 *(Both line numbers were `297` and `766` when this table was written; §10's repair inserted
 lines above each, and they are repointed rather than left to rot. The commits they are
@@ -617,3 +618,74 @@ same sentence. **The working rule is recorded in
 paired with the existing rule about not reading `$?` through a pipe, which is the same
 mistake in the exit-status dimension. No gate script or CI step was found discarding failure
 identity this way, and no CI change was made.
+
+## 13. Amendment — a fifth incident, and it is the first one with the concurrency conditions **known at the time** and a contention-sensitive test among the casualties
+
+**Provenance, stated first because it decides what this section is worth.** The incident below was
+**relayed to this pass and not observed by it**. This pass did not run the contended sweep, did not
+see the 69 arms, and holds no log of them. What it did measure is stated separately at the end and is
+a different thing. Everything in the next paragraph is therefore a *report*, at the same standing as
+`f3f1c89`'s *"transiently dirty"* — which §5 already declines to read as a cause.
+
+**What was reported.** On 2026-08-12 a pass ran `tests/removal_proofs.sh` while another pass's
+`pytest` was running, and **69 arms scored `UNUSABLE BASELINE`**, scattered across unrelated
+subsystems. Among the casualties was
+[`tests/unit/test_conftest_basetemp.py::test_a_live_process_directory_survives_another_runs_configure`](../../../tests/unit/test_conftest_basetemp.py)
+— a test that exists specifically to assert a property about concurrent runs. A pristine tree at
+`5c63ada` passed, and the same committed state passed on a quiet system.
+
+**What is new, against incidents 2 and 3.** Not the shape — a mass baseline failure is incident 2's
+shape exactly. What is new is the **conditions**, which in both earlier cases had to be reconstructed
+afterwards and in this one were known while it happened. §4 states concurrency per arm because it is
+a variable rather than noise, and incidents 2 and 3 are the two rows where that variable was never
+recorded. This is the first instance where a concurrent run is *given* rather than inferred, and the
+first where a test whose subject is concurrent runs is among the arms that went unusable. That is the
+evidence the earlier episodes lacked; it is not yet a mechanism.
+
+**Contention is NOT ruled out, and [§6](#6-is-serialising-runs-still-the-cheapest-fix) already says
+so in the terms that matter.** That section states it outright — *"Nothing here rules contention out
+as a contributor to incident 2's residue"* — and it already accepts the reasoning: one clean run
+under the same conditions shows contention is **not sufficient**, never that it is not the cause. §9
+ruled out incident 2's **candidate A** specifically, which is the work-tree copy list, and that is a
+different proposition from contention. Nothing in §9, §10 or §11 narrows contention, and this
+amendment does not narrow it either. **The reason to keep saying so is that serialising runs is the
+cheapest fix available, and recording contention as ruled out forecloses it** — §6 declines
+serialisation as a *first* response and explicitly preserves it as a backstop.
+
+**A candidate mechanism, stated as a candidate and bound to nothing.**
+[`tests/conftest.py:87`](../../../tests/conftest.py) builds its basetemp root as
+`os.path.join("/tmp", f"f2a-pytest-{os.getuid()}")` — **one path per uid, shared by every checkout on
+the machine**, which is the machine-wide-namespace-keyed-on-a-non-unique-string class this finding's
+§3 established for incident 1 by planting. `e4ef6e6` (2026-08-05 13:54:38 −0600, *"Stop the basetemp
+redirect from deleting a concurrent run's directory"*) already repaired **one** concurrent-run fault
+at that root, and the test named among the casualties above is one of the two files that commit
+added. That is suggestive and it is not evidence: nothing here plants a competing run, and until
+something does, this stands where candidate A stood before §9 — a route that would produce this shape,
+unbound to this instance.
+
+**Two corrections to the relay, both of which would have sent a reader to a file that does not
+exist.** The brief attributed the earlier episodes to `tools/conftest.py`. **There is no
+`tools/conftest.py`**; the only conftest in the tree outside `.venv/` and `examples/` is
+`tests/conftest.py`, which is where the shared root and `e4ef6e6` both live. And the **116-outcome /
+20-arm** episode is documented in
+[`tests/unit/test_operator_log.py:169`](../../../tests/unit/test_operator_log.py), not in any
+conftest — with a **fully stated mechanism** (macOS runs a crash reporter per `SIGABRT`; a dozen
+saturate the host) that was **repaired in `a00f096`**. §5 already records both facts. Citing it as an
+undiagnosed conftest episode inflates the count of open contention instances from two to three, which
+is the direction that makes an unmeasured cause look better supported than it is.
+
+**What this pass did measure, and what it is not.** On a quiet host with **zero** concurrent `pytest`
+processes (checked with `ps` immediately before starting), `bash tests/removal_proofs.sh` over the
+working tree at `9dc81a3` scored **417 proved, 0 unproven, 13 skipped, and 0 `UNUSABLE BASELINE`**.
+By the standard this section has just restated, **that is not a refutation of anything**. It is one
+draw under the uncontended condition, and the uncontended condition is the one nobody has ever
+suspected. It is recorded so the count of clean runs is honest, and it is worth exactly what §6 says
+a clean run is worth.
+
+**Nothing is built here, and that is a decision rather than an omission.** No repair to
+`tests/conftest.py`, no serialisation lock, no change to the harness. The fix's shape is a decision
+the owner has not made, and §7 and §9.5 are this finding's two standing records of what happens when
+a pass takes a repair that was owed an owner. **What is owed is a plant**: run the harness against a
+deliberately concurrent `pytest` and see whether the baseline goes unusable at a rate. That is the
+move that settled incident 1 in §3, it is the only thing that would move this off "candidate", and it
+is cheap.
