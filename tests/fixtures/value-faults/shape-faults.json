@@ -1,0 +1,87 @@
+{
+  "_comment": "T132's POSITIVE CONTROL, committed here beside the corpus it controls rather than in the battery, on FR-053's rule that a fixture is committed and not described. This file is NOT part of T131's corpus and is never scored as a value fault; `tests/batteries/test_conformance_control.py` reads the two separately and `README.md` says which task owns which file.\n\nEvery entry below carries the CORRECT underlying value wearing a wrong shape or a wrong type. That is the single variable this control turns: against `corpus.json` the shape is right and the value is wrong, and here the value is right and the shape is wrong. A control whose entries were also value-faulted could be detected for the wrong reason and would prove nothing about which half the detector reads.",
+
+  "_comment_recovery": "`recovery` names the wrapping this entry applies, so the battery can UNWRAP it and check that what comes back is the correct value. It declares the shape of the fault, never the answer — the answer is `correct_value`, and `test_the_positive_controls_entries_really_do_carry_the_correct_value` performs the named unwrapping and compares. Two entries declare `none_carried`: `null` and an absent key carry no value at all, so there is nothing to recover and nothing that could be read as a value fault either.",
+
+  "cases": [
+    {
+      "case_id": "shape-integer-as-string",
+      "quantity": "total_units",
+      "declared_shape": {"kind": "integer"},
+      "correct_value": 12480,
+      "faulted_value": "12480",
+      "recovery": "cast_int",
+      "why": "The right number as a string. A verifier comparing magnitudes after a cast would miss this; a type check is exactly what catches it."
+    },
+    {
+      "case_id": "shape-integer-as-float",
+      "quantity": "total_units",
+      "declared_shape": {"kind": "integer"},
+      "correct_value": 12480,
+      "faulted_value": 12480.0,
+      "recovery": "cast_int",
+      "why": "Equal to the correct value under `==` in Python, so a value-only comparison agrees with it. Only the declared type separates them, which is why this case is here and not in corpus.json."
+    },
+    {
+      "case_id": "shape-integer-as-boolean",
+      "quantity": "lot_count",
+      "declared_shape": {"kind": "integer"},
+      "correct_value": 1,
+      "faulted_value": true,
+      "recovery": "cast_int",
+      "why": "`isinstance(True, int)` is True in Python and `True == 1`, so a bool passes both a naive type check and a value comparison against a count of one. `src/runtime/verify.py` refuses a bool for this reason under RefusalReason.QUANTITY_NOT_A_MAGNITUDE; the control has to refuse it too or its integer check is weaker than the shipped verifier's."
+    },
+    {
+      "case_id": "shape-integer-as-mapping",
+      "quantity": "total_units",
+      "declared_shape": {"kind": "integer"},
+      "correct_value": 12480,
+      "faulted_value": {"value": 12480},
+      "recovery": "unwrap_value_key",
+      "why": "A scalar wrapped in an envelope. The number is present and reachable, and the declared shape is still not what arrived."
+    },
+    {
+      "case_id": "shape-integer-as-null",
+      "quantity": "total_units",
+      "declared_shape": {"kind": "integer"},
+      "correct_value": 12480,
+      "faulted_value": null,
+      "recovery": "none_carried",
+      "why": "The absent-value case that is still a present key. Distinct from `shape-quantity-absent` below, and a detector reading only key presence passes it."
+    },
+    {
+      "case_id": "shape-string-list-as-mapping-list",
+      "quantity": "part_ids",
+      "declared_shape": {"kind": "list", "element_kind": "string"},
+      "correct_value": ["P-0011", "P-0012", "P-0013", "P-0014", "P-0015", "P-0016"],
+      "faulted_value": [
+        {"part_id": "P-0011"},
+        {"part_id": "P-0012"},
+        {"part_id": "P-0013"},
+        {"part_id": "P-0014"},
+        {"part_id": "P-0015"},
+        {"part_id": "P-0016"}
+      ],
+      "recovery": "unwrap_element_key:part_id",
+      "why": "The correct cardinality, the correct ordering and the correct members, each wrapped in a one-key envelope so the element type is wrong. It is the mirror of corpus.json's two set-typed cases, which carry the right element type and the wrong members. An earlier draft used a list of bare integers; that turns two variables rather than one, because 11 is not P-0011 and the entry would have been detectable as a value fault too."
+    },
+    {
+      "case_id": "shape-list-where-scalar-declared",
+      "quantity": "total_units",
+      "declared_shape": {"kind": "integer"},
+      "correct_value": 12480,
+      "faulted_value": [12480],
+      "recovery": "unwrap_single_element",
+      "why": "A single-element list around the right scalar. A detector that iterates before it checks the container reads the right value out of the wrong shape."
+    },
+    {
+      "case_id": "shape-quantity-absent",
+      "quantity": "total_units",
+      "declared_shape": {"kind": "integer"},
+      "correct_value": 12480,
+      "quantity_absent": true,
+      "recovery": "none_carried",
+      "why": "The key is not in the payload at all. Carried as a flag rather than as a value because JSON has no way to write `absent`, and because absent and null are two different faults — the case above is the other one."
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "_comment": "T131 — the injected value-fault corpus (SC-005). One entry per case, each carrying BOTH the correct reported value and the faulted one, so the 'matched corpus of correct results' is matched by construction rather than by two lists that can drift apart. `correct_value` is re-derived from `collection` by the loader and the committed figure is compared against it, so a hand-edited number cannot silently become the oracle. `relative_magnitude` and the sub-one-percent stratum are COMPUTED, never declared: see README.md.",
+
+  "vocabulary": {
+    "_comment": "Every part identifier the catalogue knows. A set-typed fault selects the wrong members OF THIS SET rather than inventing one, which is what makes it invisible to a membership or enum check — E8's R1.012 submitted 60 names that were all real recipe names in the application's own vocabulary.",
+    "part_ids": ["P-0011", "P-0012", "P-0013", "P-0014", "P-0015", "P-0016", "P-0017", "P-0018", "P-0019"]
+  },
+
+  "collections": {
+    "lots": [
+      {"lot_id": "L-0001", "part_id": "P-0011", "quantity": 2100, "age_days": 412},
+      {"lot_id": "L-0002", "part_id": "P-0012", "quantity": 2340, "age_days": 730},
+      {"lot_id": "L-0003", "part_id": "P-0013", "quantity": 1980, "age_days": 118},
+      {"lot_id": "L-0004", "part_id": "P-0014", "quantity": 2205, "age_days": 655},
+      {"lot_id": "L-0005", "part_id": "P-0015", "quantity": 1875, "age_days": 301},
+      {"lot_id": "L-0006", "part_id": "P-0016", "quantity": 1980, "age_days": 589}
+    ]
+  },
+
+  "cases": [
+    {
+      "case_id": "sum-total-units-off-by-sixty-eight",
+      "operation_id": "inventory:stock_report",
+      "quantity": "total_units",
+      "fault_class": "numeric_value_error",
+      "declared_shape": {"kind": "integer"},
+      "recomputation": {"operator": "sum", "over": "lots", "element_field": "quantity", "reads": ["lots"]},
+      "correct_value": 12480,
+      "faulted_value": 12548,
+      "why": "A summation slip, which is one of the three phenomena the E8 corpus's false successes decomposed into. The response is a well-formed integer either way."
+    },
+    {
+      "case_id": "sum-total-units-off-by-one",
+      "operation_id": "inventory:stock_report",
+      "quantity": "total_units",
+      "fault_class": "numeric_value_error",
+      "declared_shape": {"kind": "integer"},
+      "recomputation": {"operator": "sum", "over": "lots", "element_field": "quantity", "reads": ["lots"]},
+      "correct_value": 12480,
+      "faulted_value": 12481,
+      "why": "The smallest fault an integer quantity can carry. It exists so the sub-one-percent stratum is not represented only by faults near the boundary, where a detector that rounds could pass it by accident."
+    },
+    {
+      "case_id": "max-oldest-lot-age-off-by-three",
+      "operation_id": "inventory:oldest_lot_age",
+      "quantity": "oldest_age_days",
+      "fault_class": "numeric_value_error",
+      "declared_shape": {"kind": "integer"},
+      "recomputation": {"operator": "max", "over": "lots", "element_field": "age_days", "reads": ["lots"]},
+      "correct_value": 730,
+      "faulted_value": 733,
+      "why": "A wrong extremum rather than a wrong total. An aggregate whose correct answer is a member of the collection can be wrong while still looking like a plausible member."
+    },
+    {
+      "case_id": "min-smallest-lot-off-by-nine",
+      "operation_id": "inventory:smallest_lot",
+      "quantity": "smallest_lot_units",
+      "fault_class": "numeric_value_error",
+      "declared_shape": {"kind": "integer"},
+      "recomputation": {"operator": "min", "over": "lots", "element_field": "quantity", "reads": ["lots"]},
+      "correct_value": 1875,
+      "faulted_value": 1884,
+      "why": "The other extremum, and the only sub-one-percent case whose correct value is not the largest quantity in play."
+    },
+    {
+      "case_id": "sum-total-units-off-by-six-hundred-and-twenty",
+      "operation_id": "inventory:stock_report",
+      "quantity": "total_units",
+      "fault_class": "numeric_value_error",
+      "declared_shape": {"kind": "integer"},
+      "recomputation": {"operator": "sum", "over": "lots", "element_field": "quantity", "reads": ["lots"]},
+      "correct_value": 12480,
+      "faulted_value": 13100,
+      "why": "A coarse fault, above the one-percent boundary. Present so the corpus is not entirely sub-one-percent: SC-005 requires the stratum to be REPORTED SEPARATELY, which needs both strata to be populated."
+    },
+    {
+      "case_id": "count-lot-count-off-by-one",
+      "operation_id": "inventory:stock_report",
+      "quantity": "lot_count",
+      "fault_class": "numeric_value_error",
+      "declared_shape": {"kind": "integer"},
+      "recomputation": {"operator": "count", "over": "lots", "element_field": null, "reads": ["lots"]},
+      "correct_value": 6,
+      "faulted_value": 7,
+      "why": "A dropped list member. This case CANNOT be sub-one-percent and that is a property of the quantity rather than a choice: the smallest fault a count of six can carry is one, which is 16.7%. The loader computes the stratum instead of reading a declared one so this stays visible."
+    },
+    {
+      "case_id": "set-part-ids-wrong-cardinality",
+      "operation_id": "inventory:stock_report",
+      "quantity": "part_ids",
+      "fault_class": "set_cardinality_error",
+      "declared_shape": {"kind": "list", "element_kind": "string"},
+      "recomputation": {"operator": "project", "over": "lots", "element_field": "part_id", "reads": ["lots"]},
+      "correct_value": ["P-0011", "P-0012", "P-0013", "P-0014", "P-0015", "P-0016"],
+      "faulted_value": ["P-0011", "P-0012", "P-0013", "P-0014", "P-0015", "P-0016", "P-0017", "P-0018", "P-0019"],
+      "why": "E8's R1.012 in miniature: every submitted member is a real part identifier from the catalogue's own vocabulary, the element type is right, and the selection is wrong. A type check passes it and an enum-membership check passes it."
+    },
+    {
+      "case_id": "set-part-ids-wrong-member",
+      "operation_id": "inventory:stock_report",
+      "quantity": "part_ids",
+      "fault_class": "set_membership_error",
+      "declared_shape": {"kind": "list", "element_kind": "string"},
+      "recomputation": {"operator": "project", "over": "lots", "element_field": "part_id", "reads": ["lots"]},
+      "correct_value": ["P-0011", "P-0012", "P-0013", "P-0014", "P-0015", "P-0016"],
+      "faulted_value": ["P-0011", "P-0012", "P-0013", "P-0014", "P-0015", "P-0019"],
+      "why": "Strictly harder than the case above and present because of it. The cardinality is CORRECT, so the one clause E8's preregistration singled out as having any chance at the set-typed class — clause 5, cardinality — passes this too. Only a comparison of the members themselves separates it."
+    }
+  ]
+}
