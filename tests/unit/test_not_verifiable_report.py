@@ -373,6 +373,31 @@ def test_the_source_reading_arm_can_see_a_comparison_when_there_is_one() -> None
     assert "def report(" in nv.module_source()
 
 
+def test_an_unlocatable_module_is_refused_rather_than_read_as_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The negative control over the two arms above, and over the type fix.
+
+    `inspect.getmodule` is typed `ModuleType | None`, and until 2026-08-12 the
+    `None` went straight into `getsource`. The repair is a refusal only if the
+    refusal fires, so this drives the branch rather than trusting the
+    annotation: an unexercised `raise` is a claim about a line, not a result.
+
+    It matters here more than it would elsewhere because the arm above reports
+    an absence — no threshold found in the text. Text that was never read
+    reports the same absence, so an empty return would turn a real gate into a
+    green one and nothing downstream would notice.
+    """
+    monkeypatch.setattr(nv.inspect, "getmodule", lambda _obj: None)
+    with pytest.raises(nv.ModuleTextUnavailable) as excinfo:
+        nv.module_source()
+    message = str(excinfo.value)
+    # Naming what went missing is the point: `getsource` handed `None` raises
+    # `TypeError: ... got NoneType`, which names a type and not the module.
+    assert "inspect.getmodule()" in message
+    assert "report()" in message
+
+
 # ---------------------------------------------------------------------------
 # The window is configuration, and it has no default.
 

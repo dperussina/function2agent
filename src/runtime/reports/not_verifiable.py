@@ -165,6 +165,19 @@ class ReportInputError(ValueError):
     """
 
 
+class ModuleTextUnavailable(RuntimeError):
+    """This module's own text could not be located for the arm that reads it.
+
+    Not a `ReportInputError`: nothing was passed in and no report is being
+    computed. It is an introspection failure, and it is separate so that the
+    arm reading this module cannot mistake it for a record it handed over.
+
+    Raised rather than absorbed, for the reason `module_source` states: the
+    only caller measures an absence, so text that was never read and text that
+    is clean produce the same result.
+    """
+
+
 @dataclass(frozen=True)
 class ReportedOutcome:
     """One reported result, in the only shape this report can count.
@@ -449,5 +462,24 @@ def module_source() -> str:
     A function rather than a path the test reconstructs: a test that guesses
     the file location silently stops reading anything when the module moves,
     and an arm that reads nothing finds no threshold in it.
+
+    **`inspect.getmodule` returns `ModuleType | None`, and the `None` is
+    refused here rather than passed on.** It is the same vacuity one step
+    earlier: handed `None`, `getsource` raises `TypeError: ... got NoneType`,
+    which names the argument's type and not the module that went missing, and
+    any handling that turned it into `""` would leave the caller searching
+    empty text for a threshold and finding none. The caller is
+    `test_the_share_is_never_compared_against_anything`, whose whole result is
+    that search coming back empty — so an empty read is indistinguishable from
+    a clean one. Loud, and naming what could not be located.
     """
-    return inspect.getsource(inspect.getmodule(report))
+    module = inspect.getmodule(report)
+    if module is None:
+        raise ModuleTextUnavailable(
+            "inspect.getmodule() could not locate the module defining "
+            "report(), so this module's own text cannot be read. Refused "
+            "rather than returned empty: the arm that calls this searches "
+            "the text for a threshold comparison and reports finding none, "
+            "and text that was never read finds none either."
+        )
+    return inspect.getsource(module)
