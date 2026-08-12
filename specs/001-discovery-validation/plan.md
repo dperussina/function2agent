@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ **thirty-one** owner decisions
-(OD-01 through OD-31, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ **thirty-two** owner decisions
+(OD-01 through OD-32, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -77,7 +77,10 @@ correct. `register-range` cannot see the pairing, and the direction here is the 
 it guards: the range is current and the narrative count is stale. **The pairing is read as of
 2026-08-11 by `count-versus-range`**, which compares this count against this range and would have
 reported *thirty* against `OD-01 through OD-31` on the day it was live; it is the only check that
-looks at both halves.)*
+looks at both halves. **Extended 2026-08-12 with OD-32**, which makes provenance required in the
+derived-contract and derived-check schemas at 1.1.0 behind a version gate; the count and the range
+moved together in the same act this time, which is the whole of what the 2026-08-11 correction asked
+of the next entry, and the headings run unbroken to OD-32.)*
 
 *(**The count in the sentence below was resolved 2026-08-11 by counting its own members, and it did
 not move.** Three passes read it as arithmetic in doubt, because the anchor was inferred from the
@@ -95,8 +98,12 @@ record of why the count could not move earlier rather than as a live account of 
 enumeration now runs OD-10 through OD-31, contiguous, and the two halves agree again. **Both entries
 were tested against the sentence's own claim rather than assumed into it**: OD-30 settles an
 environment question belonging to feature 002's T101 and OD-31 assigns identifiers, so each
-post-dates the closure recorded at OD-07 and neither re-opens what that closure adjudicated.)*
-~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ ~~**The last twenty**~~ **The last twenty-two
+post-dates the closure recorded at OD-07 and neither re-opens what that closure adjudicated.
+**Extended 2026-08-12 with OD-32, enumerated below in the same act that moved the count**, and tested
+against the sentence's claim on the same footing: OD-32 settles a schema question belonging to feature
+002's T121 and T133, so it post-dates the OD-07 closure and re-opens nothing that closure
+adjudicated. The enumeration now runs OD-10 through OD-32, contiguous.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ ~~**The last twenty**~~ ~~**The last twenty-two**~~ **The last twenty-three
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -146,7 +153,12 @@ measured control with pooling forbidden, and declines the `workflow_dispatch` re
 because the artifact route it would have built already exists**, and **OD-31 renumbers the
 verifier-vs-judge experiment E19 and leaves E8 with the Stage-D synthesis experiment, reaching live
 prose only while the fingerprinted harness files, the committed run directories and the dated
-assessments keep the name they were recorded under**.
+assessments keep the name they were recorded under**, and **OD-32 makes provenance required in the
+`derived_contract` and `derived_check` schemas at 1.1.0 behind a version gate, ruling that a 1.0.0
+artifact stays readable and comes back with its provenance explicitly absent and named rather than as
+an empty record or as `provisional` — the sentinel form being the limb the decision turns on, because
+a sentinel must carry a validation status and the only one available would make a missing record
+indistinguishable from a weak one**.
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -4206,6 +4218,152 @@ number it later; [`VERDICT.md`](./VERDICT.md), the root [`README.md`](../../READ
 index, and the research documents that cite the experiment. **A reader who meets `E8` inside a frozen
 record reaches the answer in one hop**: the harness index names `E19` in its own title and carries a
 dated notice stating that every artifact beneath it records the earlier name.
+
+### OD-32 — provenance becomes **required** in the `derived_contract` and `derived_check` schemas at **1.1.0**, behind a version gate; a 1.0.0 artifact stays **readable** and comes back with its provenance **explicitly absent and named**, never as an empty record and never as `provisional`
+
+**Decided 2026-08-12**, closing a gap a prior pass named rather than closed. `src/analysis/derive.py`'s
+own producer docstring said it in as many words — *"`provenance` is carried and the schema does not
+require it … so this producer satisfies FR-026 and the schema does not yet enforce it for any
+producer. Closing that is a schema change with a migration"* — and that was the right call at the
+time: widening a schema quietly is worse than carrying a named debt. The debt is now settled.
+
+**What was actually open, stated precisely, because two of the three readings of it are wrong.** It
+was **not** that this repository's derivations lacked provenance; `derive.py` has attached all six
+FR-026 fields to every contract and every check since T121. It was **not** that `derived_check` never
+mentioned provenance; that kind has listed `provenance` in `required` from its first version. What was
+open is that `required` is a **presence** test over top-level keys, so `derived_contract` required
+nothing at all here and `derived_check` was satisfied by any value whatever — a free-form string, or
+an empty object. The governing rule this register already states is that **a digest with no provenance
+is indistinguishable from an invented one**, and until this entry the schema could not tell the two
+apart for any producer other than ours.
+
+**① The schema requires the six fields, and the bump is MINOR.** Both kinds move to `1.1.0`.
+`derived_contract` gains `provenance` in `required`; both kinds now require the value to carry
+FR-026's six — the rule that derived it, the source symbol, the source file, the analyzer version, the
+content hash and the validation status. MINOR rather than MAJOR on the standard this register already
+applies at **OD-27**'s neighbouring bump and which
+[`tests/contract/test_schema_versions.py`](../../tests/contract/test_schema_versions.py) states: a
+consumer written against `1.0.0` still reads every field it knew, and it is **producers** that must
+now supply more.
+
+**② A 1.0.0 artifact is readable, and its unprovenanced state is named on the object a caller
+holds.** This is the limb the decision turns on and it was argued from the requirement and from
+precedent rather than from convenience.
+
+- **From the requirement.** FR-026 exists so that a reader can tell a derivation that is traceable
+  from one that is not. Refusing to read a 1.0.0 artifact does not make it compliant; it makes its
+  non-compliance unreadable, and it collapses *derived-and-untraceable* into *no artifact at all*,
+  which is a third state and not the one that exists.
+- **From an existing gate, which forecloses the alternative rather than merely arguing against it.**
+  FR-054 requires restoring the immediately prior version to be one operator action, and
+  `test_every_superseded_version_has_a_migration` holds that obligation mechanically on the stated
+  ground that *"a version bump with no migration strands the artifacts already stored"*. A refusal
+  disposition makes every stored 1.0.0 derived contract and check unloadable, so the rollback FR-054
+  guarantees would restore something the runtime cannot read. **Refusal is therefore not available to
+  this entry at all** without amending FR-054, which this entry does not do.
+- **From the precedent, which is the journal's revision-3 migration.** That episode had the same
+  shape — an older payload that could not be priced — and resolved it as neither a refusal nor an
+  invention: a revision-1 turn comes back with its spend explicitly absent and is **named** in
+  `ResumePlan.unpriced_turns`. The load-bearing property was that `spend_usd` became nullable
+  *specifically so that* **unpriced** and **cost nothing** stopped being one value. Provenance gets
+  the same treatment for the same reason, one field over.
+
+**③ Absent and `provisional` are different states and are distinguishable at every site a reader
+could confuse them.** A stored artifact's provenance is read back as a record **or** as an explicit
+absence, and three separate mechanisms carry that distinction rather than one: the read-back record
+answers `is_provenanced`; asking for the provenance of an unprovenanced artifact **raises** rather
+than returning a placeholder, on the same reasoning that gives `require_spend_usd` no
+`spend_usd_or_zero` companion; and a single closed three-member state — `absent`, `provisional`,
+`validated` — is what a reader keys off, so the two states cannot be reached through one value.
+`ValidationStatus` itself keeps its two members and gains no third; the third state belongs to the
+*reader*, because it is a fact about whether a record exists rather than about what a record says.
+
+> #### ⚠️ A SENTINEL PROVENANCE RECORD IS THE ONE SHAPE THIS DECISION FORBIDS, AND IT IS THE SHAPE A PRECEDENT IN THIS REGISTER WOULD OTHERWISE HAVE LICENSED
+>
+> **The obvious move here is the location-set migration's move, and it is wrong here for a reason
+> that is worth stating rather than discovering.** `declared_location_set`'s pre-1.0.0 migration
+> fills an unrecoverable `rule_id` with a marked sentinel — *"marks each entry as unattributed rather
+> than inventing one"* — and that is the correct disposition for a string field with no closed set
+> behind it.
+>
+> **It cannot be the disposition here, because a provenance record must carry a
+> `validation_status`, and that field has exactly two members with no member meaning *not looked
+> at*.** A sentinel record would therefore necessarily read `provisional` — and `provisional` is a
+> claim about the evidence, asserted by a derivation that compared itself to something. An absence is
+> a statement that no derivation record exists. Writing one as the other is `spend_usd: 0.0` wearing
+> a different field name: **a missing quantity made indistinguishable from a measured one.** That is
+> the exact defect this whole exercise exists to remove, so a sentinel is refused and the absence is
+> carried as an absence.
+>
+> **The empty-but-present object is refused on the same ground and by the schema rather than by
+> convention.** An object with none of the six fields is not an absence a reader can enumerate; it is
+> a provenance record that claims nothing, and `validate` rejects it.
+
+**One scoped refusal, and it is a refusal rather than a silent widening.** A 1.0.0 `derived_check`
+whose `provenance` value is present but is **neither** a complete six-field record **nor** an
+explicit absence — a free-form string, or a partial record — is **refused** by the migration, naming
+what is missing. It has no honest destination: completing it would invent the missing fields, and
+replacing it with an absence would silently discard a claim the document makes. This is the second
+branch the journal precedent already has, where an older revision is read forward and a payload that
+*"does not carry what a response is made of"* is refused. **The population is empty by construction
+of the only producer** — `DerivedCheck.to_document` has always written the full six-field payload — so
+this refusal strands nothing this repository wrote, and it is recorded because the `1.0.0` schema did
+permit the shape.
+
+**Where the guard is not placed, and why that is the improvement over the precedent rather than a
+gap.** The pricing seam had to widen `ModelResponse.spend_usd` because **one type served both the
+producer and the reader**. Here two types exist: the derivation's `DerivedContract` and `DerivedCheck`
+keep provenance **mandatory and non-nullable**, and are now unconstructible without it, while the
+nullable state lives only on the read-back record. So no fresh derivation can reach an unprovenanced
+document by omission, and the nullable field is confined to the one direction that genuinely has an
+absence to report. The precedent's own reason for widening is what licenses *not* widening here.
+
+**What this decision does not license.**
+- **Not** a licence to add a third member to `ValidationStatus`. The reader's three-state view is
+  derived from *whether a record exists* plus *what the record says*, and collapsing those into one
+  enum is how a missing record starts reading as a weak one.
+- **Not** a licence to treat a migrated 1.0.0 artifact as validated, as provisional, or as
+  provenanced in any coverage figure. It is absent, it is enumerated, and a count of provenanced
+  artifacts that includes it is wrong.
+- **Not** a licence to back-fill provenance onto any stored artifact, by migration or by hand. The
+  derivation that produced it recorded none; supplying one at load time is the invention this entry
+  forbids.
+- **Not** a licence to make `validated_against` a seventh required field, or to relax the rule that
+  `validated` is unconstructible without naming an artifact the derivation did not produce. FR-026
+  and constitution Principle I are untouched.
+- **Not** a MAJOR bump, and **not** a finding that this repository ever emitted an unprovenanced
+  derived artifact. Every derivation since T121 carried all six.
+- **Not** a licence to widen any other of FR-054's eight artifact kinds, or to advance
+  `test_schema_versions.py`'s committed baseline for these two. The baseline entries stay at `1.0.0`
+  for the reason `admission_decision`'s already does: advancing them silences the two guards that
+  check the move.
+- **Not** a claim that the schema can stop a hand-written document from declaring its provenance
+  explicitly absent at `1.1.0`. It cannot, and the residue is stated below rather than left to be
+  found.
+
+**Authorises** the two version bumps, the two migrations that carry them, a read-back path for both
+kinds, and the tests and removal proofs over the gate in both directions. It authorises **no
+requirement text**, no new task, no threshold and no figure. `EXPECTED_PROOFS` moves, and the
+movement is read off the transition the suite itself reports rather than computed from a baseline plus
+a delta.
+
+**Propagated to** `src/contracts/schemas.py`, whose two kind entries carry the bump and the
+requirement; `src/contracts/migrations/`, which gains the two migrations; `src/analysis/derive.py`,
+whose producer docstring named this debt and now records it as settled rather than open; the new
+read-back path beside `src/analysis/admission_record.py`, which is the module this one is shaped
+after; and `tests/contract/test_canonical_roundtrip.py`, whose two fixtures carried the shapes this
+entry now refuses — a `derived_contract` with no provenance at all and a `derived_check` whose
+provenance was the string `signature`. **Those two fixtures are the demonstration that the gap was
+real** rather than theoretical: both validated at `1.0.0`, and neither validates now.
+
+**The residue, stated rather than closed.** `validate` accepts an explicit absence at `1.1.0`,
+because that is the state a migrated artifact legitimately holds and the schema cannot see which
+direction a document arrived from. So a **hand-written** `1.1.0` document may declare its provenance
+absent and pass. What the schema forbids is *silence* — an absent key, an empty record, a value that
+is not a record — and what it cannot forbid is an author writing the absence down deliberately. The
+producer path in this repository cannot reach that state, every reader of it raises or names it, and
+nothing counts it as provenanced. This is the same standard **OD-31**'s attestation residual accepted
+one register entry earlier: the guard makes the state **visible**, not impossible.
 
 ## Open items this plan does not resolve
 
