@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ ~~thirty-two~~ **thirty-three** owner decisions
-(OD-01 through OD-33, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ ~~thirty-two~~ ~~thirty-three~~ **thirty-four** owner decisions
+(OD-01 through OD-34, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -4459,6 +4459,55 @@ sources, in `src/runtime/verify.py`. What is deferred is the **reviewable artifa
 behaviour, not the behaviour. The distinction is recorded because a reader of the loose-requirement
 row would otherwise take the whole requirement as unbuilt, which is the opposite error from taking it
 as finished.
+
+### OD-34 — the verification seam is **not** `to_result`'s to close, because the import graph forecloses it; the join is minted as **T213** against a mapping this entry fixes, and the arm that cannot be chosen freely is constitutional
+
+**Decided 2026-08-12.** No verification outcome reaches a caller-visible record. Measured rather than
+read off a task list: `verify_quantity` and `verify_declared_quantity` appear nowhere in `src/`
+outside their own module `src/runtime/verify.py`, and `Result` is constructed at exactly **two** sites
+in `src/` — `src/analysis/validate.py:403` and `:556`, both inside a `to_result` method. The verifier
+and the record are both built, both closed, and joined by nothing.
+
+**Why this is a decision and not an ordinary task.** The obvious repair — have `to_result` call the
+verifier — is **structurally foreclosed**, and the foreclosure is measured: `src/runtime/verify.py:138`
+imports `src/analysis/validate`, and nothing under `src/analysis/` imports `src/runtime/` at all. The
+call would invert the layering that `tests/invariants/test_import_graph.py` and `test_layering.py`
+enforce and would be a load-time cycle. This is [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md)'s
+**T126** argument in the same shape one layer up: there, a record named for `src/runtime/` was *not
+buildable at the named path*; here, a call from `src/analysis/` is not writable at all. Two routes
+remain and choosing between them is a design act:
+
+**① The join lives in `verify.py`.** Legal today with no new import — `verify.py:145` already imports
+`VerificationOutcome` from `src/contracts/result`. **Not taken.** It makes the module that performs a
+verification also the module that constructs the caller-visible record of it, so the record's
+constructor and the thing it records have one author and no independent step between them.
+
+**② The join lives in a composition root above both layers, and this is the route taken.** `src/runtime/`
+already imports `src/analysis/`, so a module there may hold a `VerificationReport` and a `Result`
+simultaneously without inverting anything. **T213** carries it.
+
+**③ The mapping is fixed here, because one arm of it is not free.** `VerificationReport` is a
+four-member union at `verify.py:547` — `Verified | ProvisionallyVerified | Disagreement | Refusal` —
+and `Result` takes a `VerificationOutcome` *and* a `Corroboration`, so the join is a map into a
+product and not a rename. `ProvisionallyVerified` **must** map to `NOT_VERIFIABLE` with
+`Corroboration.PROVISIONAL`: constitution Principle I (v1.1.0) forbids the other reading, and
+`Result.__post_init__` already refuses `VERIFIED` with `PROVISIONAL`, so a mapping that tried it would
+raise rather than mislead. The remaining three are fixed as `Verified → VERIFIED/CORROBORATED`,
+`Disagreement → FAILED`, `Refusal → NOT_VERIFIABLE`, each non-verified arm carrying the report's own
+named reason rather than a synthesised one. **`MODEL_ASSESSED` has no source in this union and must
+not acquire one here** — nothing in `verify.py` produces it, and a join that could emit it would be
+the Principle I boundary crossed at the one point built to hold it.
+
+**④ What this entry does not repair, stated because a green run says nothing about it.** T024's
+invariant `tests/invariants/test_result_constructor.py` was **planted against on 2026-08-12** and it
+is *not* vacuous — a default on `Result.verification` fails two of its nine arms. But its subject is
+the **type**, not the call sites: a new module constructing `Result(VerificationOutcome.VERIFIED, …)`
+with no verifier anywhere in it was planted and passed all 200 invariants and all three static gates
+silently. So the invariant constrains the *field*, and T024's sentence — *no code path constructs a
+caller-visible result without a verification outcome* — is true only in the field-presence reading.
+Whichever route T213 takes, **nothing today would catch a fabricated outcome**, and T213 owes the
+construction-site arm that would. This is recorded rather than fixed here because the arm cannot be
+written before the join it would range over exists.
 
 ## Open items this plan does not resolve
 
