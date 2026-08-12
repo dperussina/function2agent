@@ -1992,6 +1992,82 @@ mentions of that entry, of which this file carries two more — one applying its
 planted tamper needle, and one explicitly declining membership as complementary rather than
 duplicate.
 
+### One worktree per pass, because every defence above is a read a pass has to remember to take
+
+**Ruled by the owner on 2026-08-11: each non-trivial concurrent pass gets its own git worktree.**
+`git worktree add -b <branch> <path> <base>`, work there, commit on that branch, report the resulting
+SHAs to the coordinator, who integrates. Nothing here is new machinery. It takes the
+[recorded-SHA set](#use-a-detached-worktree-names-no-path-so-two-passes-share-one-and-the-collision-is-silent-in-the-direction-that-matters)
+— the one push-safety method of four that discriminates — and makes the isolation it depends on
+**structural rather than conventional**: a pass that cannot see another pass's tree cannot absorb its
+writes, and a branch carrying one pass's commits cannot publish another's.
+
+**What the shared checkout cost on 2026-08-11, with three passes in it, and the three failures are
+the three scopes the git verbs have arriving on one day.**
+
+- **The branch.** The Phase 5 pass found two commits it had not written — `82384f7` and `6756109` —
+  interleaved between its own `4ba7bea` and `f09b6f0`. Both touch `src/analysis/codegraph_pin.py`,
+  which is the file that pass's own T136 removal proof tampers, and four of the declared proofs name
+  it at `7c917d6`. **A rotted tamper needle was the live risk rather than a hypothetical one**: the
+  proofs re-gated at the merged `HEAD` and the needles survived, which is luck of exactly the kind
+  this file keeps having to record, not a property of the arrangement.
+- **The remote.** That pass's push carried the sibling's two commits with it, and both are reachable
+  from `origin/main` today. No push can carry a subset, for the reason set out
+  [one entry along](#use-a-detached-worktree-names-no-path-so-two-passes-share-one-and-the-collision-is-silent-in-the-direction-that-matters);
+  it is not restated here.
+- **The tree.** A third pass's in-flight uncommitted edits were misattributed by a second pass to the
+  first.
+
+**This class is already recorded here from earlier instances, and the ruling exists because recording
+it has not stopped it.** [The index hazard](#staging-explicit-paths-protects-you-from-another-passs-working-tree-not-from-its-index)
+dropped two findings out of version control. [The tree hazard](#the-entry-above-is-exact-about-the-index-and-silent-about-the-tree-and-on-2026-08-11-it-was-the-tree-that-fired)
+silently reverted two edits to this file in one day and let one push carry a commit its author had
+never gated. [A stale held-file list](#a-held-file-list-decays-from-the-moment-it-is-written-and-relaying-one-from-memory-asserts-a-reading-nobody-took)
+handed a pass a false all-clear on two files it happened not to need. Each of the three ends in an
+instruction to read something — `git status`, the commit range, the tree over the brief — and each
+read is available only to a pass that remembers to take it. **An isolated worktree ends in a state
+that does not require the read**, which is the whole of what the ruling buys.
+
+**Cost, re-measured on 2026-08-12 rather than transcribed, and the figure this rule was priced with
+was measuring something else.** `git worktree add --detach` at `7c917d6` — 906 tracked files — took
+`0.532 s` and then `0.466 s` on two consecutive creations. The checkout is not the cost. The gate run
+is: `check_corpus.py` from the fresh worktree took `14.4 s` and read `0 error(s), 0 warning(s)` with
+the one declared skip that a tree holding no `examples/` always reads, per
+[the baseline table](#gating-a-commit). The ~20 s this convention has been quoted with is the
+creation and one gate run together, and the second half of that would have been paid in the shared
+tree too. **So the isolation is very nearly free**, and that is the measured answer to whether it is
+worth keeping.
+
+**The toolchain runs from a worktree provided `PATH` names the shared tree's venv by absolute path**,
+which is [the amended companion rule](#use-a-detached-worktree-names-no-path-so-two-passes-share-one-and-the-collision-is-silent-in-the-direction-that-matters)
+and its measurement, unchanged by this entry. One worktree per pass makes that rule load-bearing
+rather than a special case: there is now always a worktree, so there is never a `.venv` beside the
+gate being run.
+
+**Where this meets the index-only workflow, which is the sharp part.** [The index-only
+practice](#the-entry-above-is-exact-about-the-index-and-silent-about-the-tree-and-on-2026-08-11-it-was-the-tree-that-fired)
+exists to survive a **shared** tree, and it carries a defect that only became reachable once `tools/`
+entered `include`: **every gate reads the working tree and none of them reads the index.**
+`corpus.build` walks `base.rglob("*")` and reads each path with `read_text`, and no **gate** under
+`tools/` invokes `git` for content at all — the one instrument here that does is `cite_advisor.py`,
+which reads requirements and contracts out of a revision under `--at` and is advisory, so the
+exception belongs to the thing that cannot fail a commit. Established by plant rather than by that
+reading, on
+[this file's own rule](#reading-an-instrument-is-not-measuring-it--plant-the-case-instead): five
+broken `#fragment`s staged into the index alone, with the working tree left correct, leave
+`check_corpus.py` at `0 error(s), 0 warning(s)`, and the control is that a single broken `#fragment`
+written into the **tree** fires `link-anchor` by name and takes the run to exit 1. So an
+index-only edit to a **gated** file is staged, committed and pushed having never been gated once —
+the hunk the gate would have objected to is in the commit and was never in the tree the gate walked.
+The pass that produced `7c917d6` deviated from index-only for exactly this reason and was right to.
+
+**So the two workflows are not alternatives; they are keyed on whether the tree is shared.**
+Index-only in a shared tree, where the hazard is a concurrent writer and the price is a commit you
+must then get gated by some other route. Ordinary editing in an isolated worktree, where there is no
+other pass to lose work to and the gate reads precisely the bytes you are about to commit. **The
+index-only entry above is not superseded and is not to be deleted**: a pass may still be sent into
+the shared tree, and everything that entry says about that case remains correct.
+
 ### "Use a detached worktree" names no path, so two passes share one, and the collision is silent in the direction that matters
 
 **On 2026-08-10 two concurrent passes were each told to measure in a detached worktree, and both
