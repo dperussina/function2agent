@@ -41,6 +41,33 @@ dev = [
 where = ["."]
 include = ["src*"]
 
+[tool.mypy]
+# **The gate's scope, declared here rather than in a workflow line, because a
+# scope chosen to make a gate pass is the same defect one level up and belongs
+# somewhere a reviewer reads.**
+#
+# Whole of `src/`, and the 15 errors that stood at `7496292` are what decided
+# that rather than a narrow set of the modules carrying type-level guarantees.
+# Fourteen were annotations disagreeing with the code under them, all cheap and
+# all behaviour-preserving; they are fixed in their own commit. The fifteenth is
+# an ownership question — see `.github/workflows/ci.yml`, which declares the
+# error count this scope is expected to produce and fails on any movement in
+# either direction.
+files = ["src"]
+python_version = "3.12"
+
+# **`ignore_missing_imports` is deliberately absent.** The invocation this gate
+# was scoped from carried `--ignore-missing-imports`, and it turns out to be
+# doing nothing: `src/` has no third-party import, by the design FR-021 states
+# in the comment above. Left on, the flag would silently absorb a stub that went
+# missing rather than reporting it, which is the wrong direction for a gate.
+
+# A `type: ignore` that has stopped suppressing anything is an instrument that
+# has stopped measuring, and this repository has caught eleven of those. Two of
+# the errors fixed on this branch were the other half of that defect — ignores
+# naming one error code on a line where two fire.
+warn_unused_ignores = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

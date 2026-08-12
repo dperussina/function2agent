@@ -173,6 +173,98 @@ jobs:
         run: pip install --require-hashes -r requirements.lock
       - name: Run the invariant runner
         run: python tests/invariants/runner.py
+      - name: Does a checker still refuse a `verified` built from a provisional?
+        # **A step in this job rather than a seventh job, and rather than a step
+        # in `corpus gates`.** `corpus` looks cheaper — 44s max, no job name
+        # added — but it is the one job here that installs nothing, and its own
+        # comment says that is what keeps `tools/README.md`'s "standard library
+        # only, no network" claim honest. mypy is a pip dependency, so a
+        # type-check step there would falsify the property that job exists to
+        # protect. This job already runs `pip install --require-hashes`, is the
+        # fastest signal in the repository, and is where INV-012 lives.
+        #
+        # A seventh job would also need a `timeout-minutes` with no sample
+        # behind it, and would add a job *name* — which is what a required
+        # status check is matched on, and this file records a rename detaching
+        # one silently. mypy over `src/` measures ~2s against a 5-minute floor
+        # with 17x headroom already, so a job buys nothing and costs a name.
+        #
+        # **What this is for.** T123 made `verified` unreachable from a
+        # provisional derived contract at the type level, and mypy rejects the
+        # planted forbidden program. Nothing checked it: mypy was in neither
+        # `requirements.lock` nor this file, so INV-012's two static arms
+        # located it with `shutil.which`, failed to, and skipped — in CI, the
+        # only place the guarantee matters. Those arms are the negative control
+        # over this step, and this step is what makes them run.
+        #
+        # **Scope is whole `src/` and the scope is declared in
+        # `pyproject.toml`, not here.** A scope picked to make a gate green is
+        # the defect this repository keeps catching, one level up.
+        run: |
+          set -uo pipefail
+          # **The declared error count, and it is a bound in both directions.**
+          # `src/` carries exactly one error and it is not an annotation defect:
+          # `src/runtime/runner.py:252` calls `create` through
+          # `LifecycleGateway`, a Protocol whose own docstring says the runtime
+          # "cannot create a session". That is an ownership question — either
+          # the Protocol is stale or the call reaches past the ownership map —
+          # and it is routed as a task rather than settled by whoever was adding
+          # a gate. It is deliberately NOT suppressed with an inline `type:
+          # ignore`, because that would erase the only signal anybody has.
+          #
+          # Declared instead, so this step fails on any movement: a second error
+          # fails it, and resolving this one fails it too and forces the number
+          # down. That is `check_tampers.py`'s EXPECTED_PROOFS discipline, and
+          # the alternative — a gate that tolerates "one or more" — stops
+          # measuring the moment it passes.
+          EXPECTED_ERRORS=1
+          KNOWN='src/runtime/runner.py:252: error: "LifecycleGateway" has no attribute "create"'
+
+          report=$(mktemp)
+          # `--cache-dir` outside the workspace on purpose. `.mypy_cache` is in
+          # `NOT_NEEDED_PATHS` in `tests/removal_proofs.sh` so the path
+          # accounting would survive it, but it is NOT in `.gitignore`, and this
+          # step writing nothing into the tree is cheaper than reasoning about
+          # which of those two lists decides. Same reason the report is a
+          # `mktemp` and not a file in the repository root.
+          python -m mypy --no-incremental --cache-dir="$(mktemp -d)" \
+            > "$report" 2>&1
+          cat "$report"
+
+          # **Zero files checked is a failure, not a pass** — this file's third
+          # stated rule, and the vacuity question applies to a new gate
+          # directly. A type checker pointed at nothing exits 0 and prints
+          # `Success`, which is the clean-bit-over-an-absent-measurement family
+          # this whole workflow is written against.
+          checked=$(grep -oE '[0-9]+ source files?' "$report" \
+            | head -1 | grep -oE '^[0-9]+' || true)
+          if [ -z "$checked" ] || [ "$checked" -eq 0 ]; then
+            echo "::error::mypy reported no file count, so it is not known that anything was checked. A checker over zero files is green."
+            exit 1
+          fi
+
+          errors=$(grep -cE '^src/.+: error: ' "$report" || true)
+          if [ "$errors" -ne "$EXPECTED_ERRORS" ]; then
+            echo "::error::mypy reports $errors error(s) over src/; $EXPECTED_ERRORS is declared. If this is a new error, fix it. If the declared one was resolved, lower the count in ci.yml in the same commit — a gate whose expected set drifts from its actual set has stopped measuring."
+            exit 1
+          fi
+          if ! grep -qF "$KNOWN" "$report"; then
+            echo "::error::src/ carries $EXPECTED_ERRORS error as declared, but not the declared one. A different single error is not the same finding."
+            exit 1
+          fi
+          {
+            echo '### Type check — the provisional/verified barrier'
+            echo
+            echo "| files checked | errors | declared | the declared one |"
+            echo "|---:|---:|---:|---|"
+            echo "| $checked | $errors | $EXPECTED_ERRORS | \`runner.py:252\`, an open ownership question |"
+            echo
+            echo '```'
+            cat "$report"
+            echo '```'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Are the removal proofs still pointed at anything?
         # Under a second, no pytest, no Go, no privileges. It is here, in the
         # fastest job, because the proofs' dominant failure mode is not a

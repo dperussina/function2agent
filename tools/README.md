@@ -4396,12 +4396,15 @@ against a shared-tree number sees the same thing mirrored. Say which tree.
 `python3 tools/instruments.py` prints every instrument in the repository: what
 it checks, whether a non-zero exit fails anything, which CI job runs it, and
 what to type to run it by hand. ~~Twenty-six entries at the time of writing —
-nineteen gates, five advisories, two libraries.~~ **Twenty-seven entries as of
-2026-08-11 — nineteen gates, six advisories, two libraries**, which is
-`19 + 6 + 2` and is read off `instruments.py --check` rather than counted by
-hand. *(The struck figure was a hedged count and went stale anyway, in a section
-whose own first line says to read it before quoting a list of gates. The
-advisory population is the limb that moved.)*
+nineteen gates, five advisories, two libraries.~~ ~~Twenty-seven entries as of
+2026-08-11 — nineteen gates, six advisories, two libraries.~~ **Twenty-eight
+entries as of 2026-08-12 — twenty gates, six advisories, two libraries**, which
+is `20 + 6 + 2` and is read off `instruments.py --check` rather than counted by
+hand. *(The first struck figure was a hedged count and went stale anyway, in a
+section whose own first line says to read it before quoting a list of gates; the
+advisory population was the limb that moved then. The second went stale to the
+`type check` gate in the `invariants` job, which is the gate limb, and the job
+count did not move — it is a step in an existing job and `ci.yml` says why.)*
 
 It exists because of a defect this directory had no name for. For a week every
 pass was briefed with a five-item list of gates — `pytest`, `check_corpus.py`,
@@ -4490,7 +4493,7 @@ check. Each was planted and observed firing, and each has an arm in
 
 **The two populations stay separate.** `JOBS` is not folded into `INSTRUMENTS`
 and `--check` prints them on separate lines, because merging them would move the
-`19 + 6 + 2` figure this section is read for, and the classifications do not
+`20 + 6 + 2` figure this section is read for, and the classifications do not
 transfer — a CI job is not a gate, an advisory or a library.
 
 **A prose rule over the corpus was measured and declined.** 34 lines in the

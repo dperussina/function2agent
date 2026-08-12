@@ -231,6 +231,34 @@ INSTRUMENTS: list[Instrument] = [
         command=("python3", "tools/check_tampers.py"),
         files=("tools/check_tampers.py",),
     ),
+    Instrument(
+        name="type check",
+        kind=GATE,
+        checks="mypy over the whole of src/, with the error count it is expected "
+               "to produce declared in the workflow so a second error fails the "
+               "step and resolving the declared one fails it too. Also fails "
+               "when mypy reports no file count, because a checker over zero "
+               "files exits 0 and prints Success. It is what makes INV-012's two "
+               "static arms run rather than skip: they locate mypy with "
+               "shutil.which, and before it was pinned they found none in CI.",
+        job="invariants",
+        anchor="python -m mypy --no-incremental",
+        # No standalone command, and no file in `tools/`. The invocation is
+        # `python -m mypy` plus three assertions inlined in the workflow shell,
+        # the same shape `go vet` and `go test` take — the scope lives in
+        # `pyproject.toml` under `[tool.mypy]`, so a bare `mypy` reproduces it.
+        files=(),
+        needs="mypy, from requirements.lock",
+        notes="**Direction 2 does not bind this entry, and that is worth knowing "
+              "rather than assuming.** `_REFERENCE` matches `tools/*.py`, "
+              "`tests/**` and `src.supervisor.*`; `python -m mypy` matches none "
+              "of them, so a type-check step added to CI and left out of this "
+              "list would NOT be reported. Direction 1 does bind it — the anchor "
+              "above must stay in the job — so a gate advertised here and gone "
+              "from CI still fails. The reverse gap is real and shared with "
+              "`go vet`, `go test` and `go build`, which are invisible to "
+              "direction 2 for the same reason.",
+    ),
     # -- job `corpus` --------------------------------------------------------
     Instrument(
         name="corpus self-test",
