@@ -76,6 +76,27 @@ class ArtifactSchema:
 # ---------------------------------------------------------------------------
 # The eight.
 
+# FR-026 requires the source file a derivation came from to be carried **as
+# data**, and `src/analysis/provenance.py` refuses an absolute path for exactly
+# this reason: an absolute path really is volatile and would be moved out of the
+# hashed payload, taking the provenance with it.
+#
+# What is left — a repository-relative path — is stable by construction and is
+# the same shape collision `path_template` has: the scanner matches on shape,
+# and a bare `service.py` reads as a hostname (`name` + a two-letter `tld`).
+# Two derivations over the same commit produce the byte-identical string, which
+# is the FR-055 test, so the excusal is the designed hatch and not a hole. It is
+# added here rather than by widening the regex, because narrowing the hostname
+# rule to spare `.py` would spare a genuine hostname ending in a short label.
+_SOURCE_FILE_EXCUSAL = (
+    "a repository-relative source path, not a hostname and not an absolute "
+    "filesystem path — `src/analysis/provenance.py` refuses an absolute one at "
+    "construction. It is a property of the analysed commit, byte-identical "
+    "across two derivations over the same input, which is the FR-055 test. The "
+    "scanner matches on shape and `service.py` and `example.io` are the same "
+    "shape."
+)
+
 SERVED_OPERATION_SET = ArtifactSchema(
     kind="served_operation_set",
     version="1.1.0",
@@ -127,6 +148,9 @@ DERIVED_CONTRACT = ArtifactSchema(
     source_derived=True,
     description="What an operation requires and returns, derived from source. "
                 "Principle I's node contract.",
+    stable_despite_appearance={
+        "provenance.source_file": _SOURCE_FILE_EXCUSAL,
+    },
 )
 
 DERIVED_CHECK = ArtifactSchema(
@@ -141,6 +165,9 @@ DERIVED_CHECK = ArtifactSchema(
                 "Carries provenance and confidence because Principle I "
                 "requires a verifier with no independent validating artifact "
                 "to be marked provisional.",
+    stable_despite_appearance={
+        "provenance.source_file": _SOURCE_FILE_EXCUSAL,
+    },
 )
 
 EFFECT_GATE_RULE_SET = ArtifactSchema(
