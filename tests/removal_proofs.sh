@@ -4413,14 +4413,100 @@ proof "T122 — promotion names the derivation's own source file as its validato
 # be a proof shaped to pass. The test stands as a guard against that future
 # edit; it is not evidence that a guard is running.
 
-# The bridge that passes the flag the unsafe default would otherwise leave
-# false. Without it a provisional contract yields a Result reading as
-# corroborated, and the pre-existing guard in src/contracts/result.py never
-# fires because it is never given anything to fire on.
+# The bridge that names the contract's status. It was the mitigation for a
+# default that no longer exists; what it still carries is the naming, and
+# without it a provisional contract yields a Result that says nobody looked.
 proof "T123 — the bridge stops marking a provisional result provisional, so the old guard never fires" \
   src/analysis/validate.py \
   "tests/invariants/test_provisional_never_verified.py::test_the_bridge_marks_a_provisional_result_provisional" \
-  's = s.replace("            provisional=True,\n        )", "            provisional=False,\n        )")'
+  's = s.replace("            corroboration=Corroboration.PROVISIONAL,", "            corroboration=Corroboration.NOT_STATED,")'
+
+# ---------------------------------------------------------------------------
+# T126, T127 and T128 — the result record.
+#
+# Seven arms over one file. The first two are the defect T123 recorded and this
+# record closed: a corroboration a caller could reach by omission. The middle
+# three are the exhaustiveness of FR-025's three states, and they are the arms
+# worth reading carefully — each removes a DIFFERENT property of the same map,
+# because a map that is total, disjoint and complete in its image fails three
+# different ways and a single tamper would only ever show one of them.
+#
+# Every one of these was applied by hand and the named test read failing before
+# it was written down here. None fails on an import or a collection error.
+
+proof "T126 — the corroboration gets a default, so a caller reaches a verified result by saying nothing" \
+  src/contracts/result.py \
+  "tests/invariants/test_result_constructor.py::test_corroboration_has_no_default_in_the_source" \
+  's = s.replace("    corroboration: Corroboration\n", "    corroboration: Corroboration = Corroboration.CORROBORATED\n")'
+
+proof "T127 — the refusal of a verified state with nothing behind it is removed, so nobody said reads as verified" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_a_verified_state_cannot_be_built_without_corroboration" \
+  's = s.replace("            if self.corroboration is not Corroboration.CORROBORATED:", "            if False:")'
+
+# Totality. An outcome with no row carries none of FR-025's three states, and
+# the record would raise a KeyError at the point a caller asked what state it
+# was in — which is the exhaustiveness failure, arriving as a crash.
+proof "T127 — an outcome loses its row in the state map, so one outcome carries no reported state" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_the_map_domain_is_exactly_the_outcome_enum" \
+  's = s.replace("    VerificationOutcome.MODEL_ASSESSED: ReportedState.NOT_VERIFIABLE,\n", "")'
+
+# Mutual exclusivity, from the other side: the map stays total but starts
+# reporting a model assessment as verified. This is Principle I's failure
+# exactly, and it is the one a totality check cannot see.
+proof "T127 — a model assessment is mapped onto the verified state, so an opinion reports as a verification" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_only_the_verified_state_reads_as_verified" \
+  's = s.replace("    VerificationOutcome.MODEL_ASSESSED: ReportedState.NOT_VERIFIABLE,", "    VerificationOutcome.MODEL_ASSESSED: ReportedState.VERIFIED,")'
+
+# The fourth state. This is the arm the structural checks alone cannot carry:
+# a fourth member the map's image does not reach is caught by the image check,
+# but the count is what catches one that IS reached, and the count is only
+# meaningful because it is read off FR-025 rather than written here.
+proof "T127 — a fourth reported state is declared, which the requirement does not name" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_the_state_count_agrees_with_the_requirement_that_declares_it" \
+  's = s.replace("    NOT_VERIFIABLE = \x22not_verifiable\x22\n\n\n#: The wording", "    NOT_VERIFIABLE = \x22not_verifiable\x22\n    PENDING = \x22pending\x22\n\n\n#: The wording")'
+
+proof "T128 — a stale marking no longer has to carry its age, so nothing can be compared to the ceiling" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_a_stale_marking_without_an_age_is_refused" \
+  's = s.replace("            if self.age_seconds is None:", "            if False:")'
+
+# The asymmetry between the two defaults, which is the whole of T128's shape.
+# FRESH here would be the boolean defect moved one field over: a caller that
+# said nothing about the served-operation set would be recorded as having said
+# it was current.
+proof "T128 — the staleness default becomes fresh, so silence reads as a current served-operation set" \
+  src/contracts/result.py \
+  "tests/invariants/test_result_constructor.py::test_the_staleness_default_makes_no_claim" \
+  's = s.replace("    staleness: Staleness = field(default=STALENESS_NOT_STATED)", "    staleness: Staleness = field(default=Staleness(StaleMarking.FRESH))")'
+
+# ---------------------------------------------------------------------------
+# INV-013 — the layering pin.
+#
+# The checker lives in its own test file, as INV-002's does, so these two tamper
+# that file. Both were applied by hand and read failing before being written
+# here, and both fail on an assertion rather than on a collection error.
+#
+# The first widens the comparison by one layer, which is the smallest edit that
+# makes the rule stop seeing the edge it exists for while still walking the tree
+# and still reporting a well-formed empty result — the shape a rule takes when it
+# has quietly stopped measuring.
+proof "INV-013 — the layer comparison is widened by one, so an upward import is no longer an upward import" \
+  tests/invariants/test_layering.py \
+  "tests/invariants/test_layering.py::test_the_checker_fires_on_a_planted_upward_import" \
+  's = s.replace("if destination is None or destination <= source:", "if destination is None or destination <= source + 1:")'
+
+# The second widens the scope instead of the comparison. Reading every node
+# rather than the module body makes the rule fire on the one deferred upward
+# import the tree deliberately uses to break a cycle — a rule stated more widely
+# than the tree obeys it, firing on something legitimate.
+proof "INV-013 — the walk reads every node, so the tree's one deliberate deferred import is reported as a violation" \
+  tests/invariants/test_layering.py \
+  "tests/invariants/test_layering.py::test_a_deferred_upward_import_is_not_reported" \
+  's = s.replace("        for node in tree.body:", "        for node in ast.walk(tree):")'
 
 # ---------------------------------------------------------------------------
 # T124, T125 and T129 — the recomputing verifier.

@@ -73,7 +73,8 @@ success payload.
 ## What of `contracts/result-record.md` is here, and what is not
 
 `src/contracts/result.py::Result` is the caller-visible result as it exists —
-the verification outcome, the payload, the reason and the provisional flag —
+FR-025's reported state, the verification outcome, the payload, the reason, the
+corroboration and FR-047's staleness marking —
 and its own docstring records the rest as owed: *"the result's payload schema,
 its storage and its trace linkage are Phase 6's and are still owed."* So
 `render_result` renders `Result` and the end-of-run marker beside it. The
@@ -255,10 +256,24 @@ def render_result(view: SessionView) -> dict[str, Any]:
 
     return {
         "session_id": view.session_id,
+        # Both, and they answer different questions. `state` is FR-025's three,
+        # which is what a consuming system branches on; `verification` is the
+        # four-member outcome, which keeps MODEL_ASSESSED distinguishable from
+        # the other things that report as not verifiable. Collapsing to one
+        # would lose either the requirement's exhaustiveness or Principle I's
+        # distinction.
+        "state": view.result.state.value,
         "verification": view.result.verification.value,
         "payload": view.result.payload,
         "reason": view.result.reason,
-        "provisional": view.result.provisional,
+        "corroboration": view.result.corroboration.value,
+        # FR-047's marking, on the same record as the state and never a value
+        # of it. `not_stated` is a third thing from `fresh`.
+        "staleness": {
+            "marking": view.result.staleness.marking.value,
+            "age_seconds": view.result.staleness.age_seconds,
+            "specification_state": view.result.staleness.specification_state,
+        },
         # Both, and from one source. `RunOutcome` keeps the two apart for the
         # same reason: a caller asking *did this end?* and a caller asking
         # *why did it end?* are asking different questions, and the marker is

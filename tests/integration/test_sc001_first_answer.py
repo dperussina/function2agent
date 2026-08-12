@@ -115,7 +115,11 @@ from src.analysis.timing import (  # noqa: E402
     SubjectSize,
 )
 from src.contracts.canonical import dumps  # noqa: E402
-from src.contracts.result import Result, VerificationOutcome  # noqa: E402
+from src.contracts.result import (  # noqa: E402
+    Corroboration,
+    Result,
+    VerificationOutcome,
+)
 
 #: The starting configuration. Everything the operator supplies and nothing
 #: else — no answers, no expected timings, no thresholds.
@@ -304,6 +308,9 @@ def verify(records: list[dict], question: dict[str, Any]) -> Result:
         return Result(
             ABSENT_EVIDENCE_OUTCOME,
             payload=None,
+            # Nothing corroborated it and nothing could have: the independent
+            # channel this answer would be checked against was not served.
+            corroboration=Corroboration.NOT_STATED,
             reason=(
                 f"{NO_EVIDENCE}: the origin served "
                 f"{len(supporting)} of the {len(question['evidence'])} "
@@ -314,6 +321,7 @@ def verify(records: list[dict], question: dict[str, Any]) -> Result:
         return Result(
             ABSENT_EVIDENCE_OUTCOME,
             payload=None,
+            corroboration=Corroboration.NOT_STATED,
             reason=(
                 f"{NO_EVIDENCE}: a supporting record carried no attestation, "
                 "so there is no channel independent of the business fields to "
@@ -330,6 +338,10 @@ def verify(records: list[dict], question: dict[str, Any]) -> Result:
         return Result(
             VerificationOutcome.FAILED,
             payload={"answer": answer},
+            # Corroborated and disagreeing is a different report from nobody
+            # having looked, and FAILED carries the distinction the same way
+            # VERIFIED does — the attestation channel was there and was read.
+            corroboration=Corroboration.CORROBORATED,
             reason="the evidence digest recomputed from the served "
             "attestations disagrees with the one the question declares",
         )
@@ -337,12 +349,17 @@ def verify(records: list[dict], question: dict[str, Any]) -> Result:
         return Result(
             VerificationOutcome.FAILED,
             payload={"answer": answer},
+            corroboration=Corroboration.CORROBORATED,
             reason=(
                 f"recomputed {answer!r}, the question declares "
                 f"{question['answer']!r}"
             ),
         )
-    return Result(VerificationOutcome.VERIFIED, payload={"answer": answer})
+    return Result(
+        VerificationOutcome.VERIFIED,
+        payload={"answer": answer},
+        corroboration=Corroboration.CORROBORATED,
+    )
 
 
 # ---------------------------------------------------------------------------

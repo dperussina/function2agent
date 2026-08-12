@@ -33,7 +33,7 @@ import urllib.request
 
 import pytest
 
-from src.contracts.result import Result, VerificationOutcome
+from src.contracts.result import Corroboration, Result, VerificationOutcome
 from src.runtime import events, serving
 from src.runtime.dispatch import ToolCall, ToolResult
 from src.runtime.events import EventError, EventStream, SessionEvent
@@ -105,6 +105,7 @@ def build_view(session_id: str = SESSION, **kwargs) -> SessionView:
         session_id=session_id,
         stream=build_stream(session_id, **kwargs),
         result=Result(VerificationOutcome.NOT_VERIFIABLE, payload={"answer": 41},
+                      corroboration=Corroboration.NOT_STATED,
                       reason="no derived contract covers this operation"),
     )
 

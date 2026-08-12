@@ -21,7 +21,7 @@
 # supposed to depend on it, and reports UNPROVEN for any test that still passes.
 
 schema_version: "1.0.0"
-version: "1.5.0"
+version: "1.6.0"
 updated: "2026-08-12"
 
 invariants:
@@ -267,5 +267,46 @@ invariants:
       check can reach VERIFIED; accept an unequal pair in
       RecomputationAgreement; or drop its float refusal so an undefined
       precision is compared silently.
+    runtime: milliseconds
+    model_in_loop: false
+
+  # T126/T127/T128. The FR-024 pass ruled that RefusalReason does not belong in
+  # src/analysis/validate.py and proved it by planting the import and reading a
+  # hard ImportError. The ruling was right and the enforcement was an accident:
+  # it held only because src/runtime/verify.py imports src/analysis/validate.py,
+  # so the reverse edge was a cycle. Remove that one import in any unrelated
+  # change and the layering becomes unenforced with nothing to report it. This
+  # entry is what the ruling rests on instead, and it was landed in the commit
+  # that moved the result record — which is the change that would otherwise have
+  # been free to put a caller-visible record in src/runtime/ and drag
+  # src/analysis/ up after it.
+  - id: INV-013
+    discharges: FR-024, FR-025
+    statement: >
+      The package layering under src/ is declared, and no module-level import
+      goes up it. src/contracts is the lowest layer; src/analysis, src/supervisor
+      and src/sandbox sit above it; src/runtime sits above those and has zero
+      inbound edges. The generality was measured rather than assumed: every one
+      of the three forbidden directions into src/runtime is forbidden for the
+      same concrete reason, that src/runtime already imports that package, so
+      the edge would be a load-time cycle.
+
+      The load-bearing arm is the one that plants a tree with the downward
+      import ABSENT, so no cycle exists and a bare interpreter would accept the
+      upward edge. The rule still reports it. Without that arm this file would
+      be re-proving the accident it was written to replace.
+
+      Scope is module-level imports, because that is what a load-time cycle is
+      made of. The one deliberate deferred upward import — migrations reaching
+      src/analysis/served_operations inside a function — is enumerated and
+      checked in the forbidding direction too, so a second one is a visible
+      edit and a declaration outliving its import fails rather than going quiet.
+      Not covered: an upward dependency expressed without an import.
+    test: tests/invariants/test_layering.py
+    removal_proof: >
+      Two, both in tests/removal_proofs.sh — collapse the layer comparison in
+      upward_edges so an equal-or-higher destination is accepted, or make the
+      walk read every node instead of tree.body so the declared deferred import
+      is reported and the rule fires on the tree's one legitimate escape.
     runtime: milliseconds
     model_in_loop: false

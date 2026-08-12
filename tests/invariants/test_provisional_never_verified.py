@@ -8,10 +8,8 @@ makes the status load-bearing rather than decorative.
 
 ## Why a runtime refusal was not enough, and what already existed
 
-`src/contracts/result.py` has held a runtime refusal since T021:
-
-    if self.provisional and self.verification is VerificationOutcome.VERIFIED:
-        raise MissingVerification(...)
+`src/contracts/result.py` has held a runtime refusal since T021, against the
+pair `VERIFIED` and a provisional corroboration.
 
 That satisfies the sentence's letter. It does not satisfy its point, for two
 reasons this file's arms assert separately:
@@ -19,11 +17,15 @@ reasons this file's arms assert separately:
 1. **A later caller can construct the forbidden combination and only find out at
    run time.** The refusal lives inside a constructor a caller reaches with the
    wrong pair already in hand.
-2. **`Result.provisional` is a `bool` that defaults to `False`** — the unsafe
-   value. A caller holding a provisional contract who does not pass the flag
-   gets a `Result` that reads `VERIFIED` and trips nothing, because `False`
-   means both *this contract was corroborated* and *nobody said*. That is the
-   `spend_usd is None` against a measured zero defect, in a boolean.
+2. **The field it reads used to be a `bool` defaulting to `False`** — the unsafe
+   value, because `False` meant both *this contract was corroborated* and
+   *nobody said*, so a caller holding a provisional contract who did not pass
+   the flag got a `Result` that read `VERIFIED` and tripped nothing. That is the
+   `spend_usd is None` against a measured zero defect, in a boolean. **T126
+   closed it**: `Corroboration` is a required three-member field whose
+   `NOT_STATED` names the absent case, and
+   `test_the_residual_this_file_recorded_is_closed_and_stays_closed` is the arm
+   that used to record the defect and now holds the fix down.
 
 So T123's contribution is **unreachability**, not a second check.
 `src/analysis/validate.py` carries two distinct types with no inheritance
@@ -36,10 +38,12 @@ to pass and no method that returns one.
 **Honest split, because this repository's accepted form is a named partial.**
 
 - *Type-enforced*: the return annotations, and `Verified`'s dependence on
-  `ValidatedContract`. A checker rejects the forbidden program. **No type
-  checker is in this repository's gate set** — mypy is not in the project venv —
-  so the arm that exercises this skips with a named reason where mypy is
-  absent rather than passing over nothing.
+  `ValidatedContract`. A checker rejects the forbidden program. **mypy is not in
+  the project venv**, so the arm that exercises this skips with a named reason
+  where mypy is absent rather than passing over nothing. It is not, however,
+  ungated: the workflow's `invariants` job runs `python -m mypy` over `src/`
+  against a declared error count, so a local skip and an unchecked property are
+  no longer the same thing.
 - *Construction-enforced, needing no checker*: `Verified` has no constructor
   that does not take a `ValidatedContract`, and `ValidatedContract` has one
   producer. This holds under a bare interpreter and is what the arms below
@@ -86,7 +90,12 @@ from src.analysis.validate import (
     Verified,
     validate_contract,
 )
-from src.contracts.result import Result, VerificationOutcome
+from src.contracts.result import (
+    Corroboration,
+    MissingVerification,
+    Result,
+    VerificationOutcome,
+)
 
 REPO = Path(__file__).resolve().parent.parent.parent
 FIXTURES = REPO / "tests" / "fixtures" / "analyzer"
@@ -324,43 +333,82 @@ def test_an_agreement_refuses_a_boolean_dressed_as_a_count():
 
 
 def test_the_bridge_marks_a_provisional_result_provisional():
-    """`Result.provisional` defaults to the unsafe value, so it is passed here.
+    """The bridge is the sanctioned path from a contract to a `Result`.
 
-    The bridge is the sanctioned path from a contract to a `Result`. It exists
-    because the flag's default is `False` and a caller that forgets it gets a
-    result that reads VERIFIED and trips nothing.
+    It was the mitigation for a default — `Result.provisional` was a `bool`
+    defaulting to `False`, so a caller that forgot it got a result that read
+    VERIFIED and tripped nothing. T126 removed the default, so this is now the
+    convenience path rather than the only safe one, and what it asserts is that
+    it still names the contract's status rather than shrugging.
     """
     result = _provisional().to_result(payload=None)
 
-    assert result.provisional is True
+    assert result.corroboration is Corroboration.PROVISIONAL
     assert result.verification is VerificationOutcome.NOT_VERIFIABLE
 
 
 def test_the_old_runtime_guard_still_refuses_the_hand_built_combination():
     """Not this file's mechanism, and asserted so the two are not confused.
 
-    This is `src/contracts/result.py`'s check. It remains the backstop for a
-    caller who bypasses the bridge, and the residual it does **not** cover is
-    the caller who bypasses the bridge *and* leaves `provisional` defaulted.
+    This is `src/contracts/result.py`'s T021 check, which survives T126's
+    reshaping of the field it reads. **The exception type is pinned**: this arm
+    used to accept any `Exception` matching *provisional*, and after the field
+    was renamed a `TypeError` for an unexpected keyword argument would have
+    matched that too — the guard would have been green while checking nothing.
     """
-    with pytest.raises(Exception, match="provisional"):
-        Result(VerificationOutcome.VERIFIED, payload=None, provisional=True)
+    with pytest.raises(MissingVerification, match="provisional"):
+        Result(
+            VerificationOutcome.VERIFIED,
+            payload=None,
+            corroboration=Corroboration.PROVISIONAL,
+        )
 
 
-def test_the_uncovered_residual_is_real_and_is_named_here():
-    """The honest half: the default makes a wrong VERIFIED constructible.
+def test_the_residual_this_file_recorded_is_closed_and_stays_closed():
+    """T123 recorded a defect executably; T126 fixed it. This is the same arm,
+    turned over.
 
-    This arm asserts the **defect**, not the fix. `Result(VERIFIED, payload)`
-    with `provisional` left at its default succeeds, and nothing in
-    `src/contracts/result.py` can tell that caller apart from one whose
-    contract really was validated. The fix is a required field on a type
-    T126/T127 own; recording it as an executable statement is what stops it
-    being rediscovered.
+    What it asserted was that `Result(VERIFIED, payload)` with the flag
+    defaulted **succeeded** — the honest statement that `False` meant both
+    *corroborated* and *nobody said*. Both readings of absence are now refused,
+    and they are refused **differently**, which is what the two halves below
+    keep apart:
+
+    - omitted entirely is a `TypeError` from the signature, because the field
+      has no default;
+    - stated as `NOT_STATED` is a `MissingVerification`, because saying *nobody
+      said* is a legal thing to record and an illegal thing to call verified.
+
+    A single arm asserting *this raises* would be satisfied by either alone, and
+    by a module that failed to import. The positive control below is what makes
+    all of it evidence.
     """
-    result = Result(VerificationOutcome.VERIFIED, payload=None)
+    with pytest.raises(TypeError):
+        Result(VerificationOutcome.VERIFIED, payload=None)  # type: ignore[call-arg]
 
-    assert result.provisional is False
+    with pytest.raises(MissingVerification, match="corroborat"):
+        Result(
+            VerificationOutcome.VERIFIED,
+            payload=None,
+            corroboration=Corroboration.NOT_STATED,
+        )
+
+
+def test_a_verified_result_is_still_constructible_when_something_corroborated_it():
+    """The positive control for the arm above.
+
+    Without it, a `Result` that refused every construction would satisfy both
+    halves and this file would be asserting that verification is impossible
+    rather than that unevidenced verification is.
+    """
+    result = Result(
+        VerificationOutcome.VERIFIED,
+        payload=None,
+        corroboration=Corroboration.CORROBORATED,
+    )
+
     assert result.is_verified is True
+    assert result.corroboration is Corroboration.CORROBORATED
 
 
 # ---------------------------------------------------------------------------

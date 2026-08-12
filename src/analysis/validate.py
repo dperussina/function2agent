@@ -117,17 +117,19 @@ and this module adds a fourth requirement to none of them:
 
 ## T123 — why the gate is a construction and not a check
 
-`src/contracts/result.py` has held a runtime refusal since T021:
+`src/contracts/result.py` has held a runtime refusal since T021, against the
+pair `VERIFIED` and a provisional corroboration.
 
-    if self.provisional and self.verification is VerificationOutcome.VERIFIED:
-
-That satisfies the sentence's letter. It does not satisfy its point. A later
-caller can construct the forbidden pair and only find out at run time, and — the
-sharper defect — **`Result.provisional` is a `bool` that defaults to `False`**,
-the unsafe value. `False` means both *this contract was corroborated* and
-*nobody said*, which is the `spend_usd is None` against a measured zero defect
-wearing a boolean. A caller holding a provisional contract who omits the flag
-gets a `Result` reading `VERIFIED` that trips nothing.
+That satisfies the sentence's letter. It does not satisfy its point: a later
+caller can construct the forbidden pair and only find out at run time. **The
+sharper defect this paragraph used to describe as live is fixed.** The field was
+`provisional: bool = False`, and `False` meant both *this contract was
+corroborated* and *nobody said* — the `spend_usd is None` against a measured
+zero defect wearing a boolean, with the claim-making value as the default, so a
+caller holding a provisional contract who omitted the flag got a `Result`
+reading `VERIFIED` that tripped nothing. T126 replaced it with a required
+`Corroboration`, whose `NOT_STATED` member is the absent case named, and
+`Result` refuses `VERIFIED` alongside either absent reading.
 
 So the mechanism here is **unreachability**:
 
@@ -157,10 +159,12 @@ Stated plainly because the honest partial is this repository's accepted form,
 and because one half of it is **not enforced by any gate in this repository**:
 
 - **Type-enforced**: the distinct types, the return annotations, and
-  `Verified.issued_by`. A type checker rejects the forbidden program.
-  **mypy is not in this project's venv and no gate runs a type checker**, so the
-  arm exercising this skips with a named reason where mypy is absent rather than
-  passing over nothing.
+  `Verified.issued_by`. A type checker rejects the forbidden program. **mypy is
+  not in this project's venv**, so the arm exercising this skips with a named
+  reason where mypy is absent rather than passing over nothing — but the
+  workflow's `invariants` job now runs `python -m mypy` over `src/` against a
+  declared error count, so the checker is a gate even though it is not a local
+  one.
 - **Construction-enforced, needing no checker**: `Verified` has no constructor
   that does not take a `ValidatedContract`. This holds under a bare interpreter
   and is what most arms assert.
@@ -169,10 +173,9 @@ and because one half of it is **not enforced by any gate in this repository**:
 - **Not covered**: Python has no sealed constructor, so a caller can build a
   `ValidatedContract` by hand. What it cannot build is one naming no artifact,
   or one naming the source file it was derived from — `Provenance.__post_init__`
-  refuses that pair. And `Result(VERIFIED, payload)` with `provisional`
-  defaulted remains constructible; the fix is a required field on a type
-  T126/T127 own, and `test_the_uncovered_residual_is_real_and_is_named_here`
-  records it as an executable statement rather than a note.
+  refuses that pair. `Result(VERIFIED, payload)` with the corroboration omitted
+  is **no longer** constructible — `Corroboration` has no default — which is the
+  residual T123 recorded executably and T126 closed.
 
 ## No tolerance, anywhere
 
@@ -215,7 +218,7 @@ from typing import Any, Mapping, Sequence
 from src.analysis.derive import DerivedCheck, DerivedContract
 from src.analysis.provenance import Provenance, ValidationStatus
 from src.analysis.served_operations import ServedOperation, ServedOperationSet
-from src.contracts.result import Result, VerificationOutcome
+from src.contracts.result import Corroboration, Result, VerificationOutcome
 
 __all__ = [
     "NotVerifiable",
@@ -388,8 +391,20 @@ class Verified:
         return VerificationOutcome.VERIFIED
 
     def to_result(self, *, payload: Any) -> Result:
-        """A `Result` this token vouches for. `provisional` is `False` and earned."""
-        return Result(VerificationOutcome.VERIFIED, payload=payload, provisional=False)
+        """A `Result` this token vouches for. The corroboration is earned.
+
+        `CORROBORATED` is the only value `Result` admits alongside `VERIFIED`,
+        and this token is the thing that earns it: it cannot exist without a
+        `ValidatedContract` and a check that recomputes. Staleness is left at
+        its default — a verification token bears on the contract, not on the
+        freshness of the served-operation set, and `NOT_STATED` is the honest
+        answer rather than `FRESH`.
+        """
+        return Result(
+            VerificationOutcome.VERIFIED,
+            payload=payload,
+            corroboration=Corroboration.CORROBORATED,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -527,18 +542,22 @@ class ProvisionalContract:
         return NotVerifiable(reason=f"{self.reason.value}: {self.detail}")
 
     def to_result(self, *, payload: Any) -> Result:
-        """The sanctioned bridge to a `Result`, which passes the flag.
+        """The sanctioned bridge to a `Result`, which states the corroboration.
 
-        It exists because `Result.provisional` defaults to `False` — the unsafe
-        value — so a caller assembling a `Result` by hand from a provisional
-        contract gets one that reads as corroborated and trips no guard.
+        It was the mitigation for a default: `Result.provisional` was a `bool`
+        defaulting to `False`, so a caller assembling a `Result` by hand from a
+        provisional contract got one that read as corroborated and tripped no
+        guard. T126 removed the default rather than the hazard's mitigation —
+        `corroboration` is now required — so this bridge is convenience and
+        naming, and no longer the only thing standing between a provisional
+        contract and a result that misreads it.
         """
         outcome = self.not_verifiable()
         return Result(
             outcome.outcome(),
             payload=payload,
             reason=outcome.reason,
-            provisional=True,
+            corroboration=Corroboration.PROVISIONAL,
         )
 
     def to_document(self, *, deployment_id: str) -> dict[str, Any]:
