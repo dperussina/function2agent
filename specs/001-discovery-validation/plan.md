@@ -4260,7 +4260,9 @@ precedent rather than from convenience.
   ground that *"a version bump with no migration strands the artifacts already stored"*. A refusal
   disposition makes every stored 1.0.0 derived contract and check unloadable, so the rollback FR-054
   guarantees would restore something the runtime cannot read. **Refusal is therefore not available to
-  this entry at all** without amending FR-054, which this entry does not do.
+  this entry at all** without amending FR-054, which this entry does not do. (The gate's literal
+  demand — a registered migration for the superseded version — is met, and limb ④ below sets out
+  exactly what that migration can and cannot carry, because the two are not the same obligation.)
 - **From the precedent, which is the journal's revision-3 migration.** That episode had the same
   shape — an older payload that could not be priced — and resolved it as neither a refusal nor an
   invention: a revision-1 turn comes back with its spend explicitly absent and is **named** in
@@ -4299,16 +4301,44 @@ than returning a placeholder, on the same reasoning that gives `require_spend_us
 > convention.** An object with none of the six fields is not an absence a reader can enumerate; it is
 > a provenance record that claims nothing, and `validate` rejects it.
 
-**One scoped refusal, and it is a refusal rather than a silent widening.** A 1.0.0 `derived_check`
-whose `provenance` value is present but is **neither** a complete six-field record **nor** an
-explicit absence — a free-form string, or a partial record — is **refused** by the migration, naming
-what is missing. It has no honest destination: completing it would invent the missing fields, and
-replacing it with an absence would silently discard a claim the document makes. This is the second
-branch the journal precedent already has, where an older revision is read forward and a payload that
-*"does not carry what a response is made of"* is refused. **The population is empty by construction
-of the only producer** — `DerivedCheck.to_document` has always written the full six-field payload — so
-this refusal strands nothing this repository wrote, and it is recorded because the `1.0.0` schema did
-permit the shape.
+**④ The absence is a fact about a *reading*, never a value a `1.1.0` document may assert — and this
+is the limb that decides where the nullable field goes.** There were two ways to make ② work, and
+they differ in exactly one respect that matters.
+
+- **Rejected: migrate the artifact to `1.1.0` and write `provenance: null`.** This reads as the
+  natural sibling of the three migrations already in the registry, each of which brings a document
+  forward with an unrecoverable field marked. It is wrong here because the marker is not a marker:
+  the resulting **document declares `1.1.0` and does not satisfy `1.1.0`**. Once one such artifact is
+  in the store, the schema has lost the ability to tell a pre-requirement artifact from a current
+  producer's omission — which is the *whole* capability this entry was opened to add. It also makes
+  the requirement conditional on a producer's honesty, since anything willing to write `null` passes.
+- **Adopted: read the artifact at `1.0.0` and hold the absence on the read-back object.** The stored
+  document is not rewritten. `1.1.0` therefore *means* FR-026's six fields are present, without
+  exception and for every producer, and `validate` refuses a null outright. The absence exists where
+  it actually is — in what a reader can conclude — and is named there.
+
+**The precedent is decisive on this point and it was misread on the first pass.** The journal
+episode's mechanism is not a migration that rewrites a revision-1 payload into a revision-3 one; it
+is `decode_model_outcome`, which **reads** a revision-1 payload and returns a response with
+`spend_usd=None`. The payload on disk stays a revision-1 payload forever. What became nullable was
+the *in-memory* type, not the stored schema. Provenance follows exactly: `DerivedRecord.provenance`
+is nullable, the document schema is not.
+
+**So the migration's job is narrower than readability, and it is the one it can do honestly.**
+`src/contracts/migrations/` carries a 1.0.0 derived artifact forward **when the six fields survive in
+the document** — which is every artifact this repository has ever written, since `to_document` has
+attached all six since T121 — and **refuses every other input**: a partial record, a free-form string,
+and an absent provenance alike. None of the three has an honest destination at `1.1.0`. Completing one
+invents FR-026 fields; discarding one silently drops a claim; and writing a null produces the
+false-versioned document the limb above rejects. The remedy the refusal names is the only one that is
+true: **re-derive from source**, which is the sole operation that can produce the six fields honestly.
+
+**What FR-054's rollback then means for an unprovenanced artifact, stated exactly.** It is
+**readable** — every field it recorded is available, and its untraceability is named. It is **not
+migratable**, and cannot be, because there is nothing to migrate it to. A rollback that restores such
+an artifact restores something the runtime can load and can correctly refuse to treat as evidence.
+That is a weaker guarantee than the other three migrations give, it is a property of the data rather
+than of this decision, and it is written down here rather than hidden behind a null.
 
 **Where the guard is not placed, and why that is the improvement over the precedent rather than a
 gap.** The pricing seam had to widen `ModelResponse.spend_usd` because **one type served both the
@@ -4337,9 +4367,11 @@ absence to report. The precedent's own reason for widening is what licenses *not
   `test_schema_versions.py`'s committed baseline for these two. The baseline entries stay at `1.0.0`
   for the reason `admission_decision`'s already does: advancing them silences the two guards that
   check the move.
-- **Not** a claim that the schema can stop a hand-written document from declaring its provenance
-  explicitly absent at `1.1.0`. It cannot, and the residue is stated below rather than left to be
-  found.
+- **Not** a licence to add a null carve-out to `validate` so that an unprovenanced artifact can be
+  stored as a `1.1.0` document. Limb ④ rejects that shape explicitly; a later pass that finds the
+  refusal inconvenient is amending this decision, not implementing it.
+- **Not** a licence to read a 1.0.0 document through `migrations.migrate` on the read path. The
+  reader branches on the declared version and the two obligations are separate on purpose.
 
 **Authorises** the two version bumps, the two migrations that carry them, a read-back path for both
 kinds, and the tests and removal proofs over the gate in both directions. It authorises **no
@@ -4348,7 +4380,8 @@ movement is read off the transition the suite itself reports rather than compute
 a delta.
 
 **Propagated to** `src/contracts/schemas.py`, whose two kind entries carry the bump and the
-requirement; `src/contracts/migrations/`, which gains the two migrations; `src/analysis/derive.py`,
+requirement and whose `validate` refuses a null provenance outright; `src/contracts/migrations/`,
+which gains the two migrations and the refusal limb ④ describes; `src/analysis/derive.py`,
 whose producer docstring named this debt and now records it as settled rather than open; the new
 read-back path beside `src/analysis/admission_record.py`, which is the module this one is shaped
 after; and `tests/contract/test_canonical_roundtrip.py`, whose two fixtures carried the shapes this
@@ -4356,14 +4389,23 @@ entry now refuses — a `derived_contract` with no provenance at all and a `deri
 provenance was the string `signature`. **Those two fixtures are the demonstration that the gap was
 real** rather than theoretical: both validated at `1.0.0`, and neither validates now.
 
-**The residue, stated rather than closed.** `validate` accepts an explicit absence at `1.1.0`,
-because that is the state a migrated artifact legitimately holds and the schema cannot see which
-direction a document arrived from. So a **hand-written** `1.1.0` document may declare its provenance
-absent and pass. What the schema forbids is *silence* — an absent key, an empty record, a value that
-is not a record — and what it cannot forbid is an author writing the absence down deliberately. The
-producer path in this repository cannot reach that state, every reader of it raises or names it, and
-nothing counts it as provenanced. This is the same standard **OD-31**'s attestation residual accepted
-one register entry earlier: the guard makes the state **visible**, not impossible.
+**The residue, stated rather than closed.** The schema now admits no unprovenanced `1.1.0` document at
+all, so the residue is not a hole in the requirement — it is a limit on what a stored artifact can be
+made into. Three things remain true and are recorded rather than left to be found.
+
+- **An unprovenanced 1.0.0 artifact has no path to `1.1.0` except re-derivation.** Limb ④ says why
+  that is correct; it is still a real operational cost, and an operator holding such artifacts must
+  re-run analysis to obtain a provenanced set rather than run a migration over what they have.
+- **A reader that never asks is still not told.** `require_provenance()` raises and
+  `unprovenanced_operations` names, but a consumer that reads other fields off the record and never
+  touches either learns nothing. Three mechanisms are provided precisely so that the ordinary path
+  hits one, and none of them is a substitute for a consumer that does not look. This is the same
+  standard **OD-31**'s attestation residual accepted one register entry earlier: the guard makes the
+  state **visible**, not impossible.
+- **`test_schema_versions.py`'s committed baseline models top-level `required` only**, so for
+  `derived_check` — where `provenance` was already listed — the added-field guard returns early and the
+  migration guard is what fires. The gap is in that instrument, this entry authorises no instrument
+  change, and it is named in the baseline's own comment rather than papered over.
 
 ## Open items this plan does not resolve
 

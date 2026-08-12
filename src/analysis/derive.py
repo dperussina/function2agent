@@ -184,6 +184,16 @@ class DerivedCheck:
     precision_source: str | None = None
 
     def __post_init__(self) -> None:
+        if self.provenance is None:
+            raise DerivationError(
+                f"{self.operation_id}/{self.quantity}: no provenance. FR-026 "
+                "requires it on every derived check as data, and OD-32 makes it "
+                "required in the schema at 1.1.0. **This type is the producer "
+                "side and holds no absence**: the nullable state lives only on "
+                "the read-back record in src/analysis/derived_record.py, "
+                "because a fresh derivation always knows the rule, the symbol "
+                "and the file it read."
+            )
         if self.check_kind is CheckKind.RECOMPUTATION:
             if self.recomputation is None:
                 raise DerivationError(
@@ -270,6 +280,17 @@ class DerivedContract:
     provenance: Provenance
     checks: tuple[DerivedCheck, ...]
 
+    def __post_init__(self) -> None:
+        if self.provenance is None:
+            raise DerivationError(
+                f"{self.operation_id}: no provenance. FR-026 requires it on "
+                "every derived contract as data, and OD-32 makes it required in "
+                "the schema at 1.1.0. Refused here rather than at `to_document` "
+                "so that an unprovenanced contract is unconstructible and not "
+                "merely unpublishable — a contract held in memory is read by "
+                "T124 and T133 without being wrapped."
+            )
+
     def to_expected(self) -> dict[str, Any]:
         return {
             "operation_id": self.operation_id,
@@ -284,13 +305,18 @@ class DerivedContract:
     def to_document(self, *, deployment_id: str) -> dict[str, Any]:
         """The FR-054 `derived_contract` document.
 
-        **`provenance` is carried and the schema does not require it.**
-        `DERIVED_CONTRACT` at 1.0.0 lists `provenance` in neither `required` nor
-        `volatile`, while FR-026 requires it on every derived contract *and*
-        every derived check. So this producer satisfies FR-026 and the schema
-        does not yet enforce it for any producer. Closing that is a schema
-        change with a migration and it belongs with T133's coverage test; it is
-        named here rather than done quietly.
+        **`provenance` is carried and the schema now requires it.** At 1.0.0
+        `DERIVED_CONTRACT` listed it in neither `required` nor `volatile`, so
+        this producer satisfied FR-026 and the schema enforced it for nobody.
+        That gap was named here rather than closed quietly, and **OD-32 closed
+        it**: both derived kinds are at 1.1.0 with FR-026's six fields required,
+        `src/contracts/migrations/` carries the 1.0.0 migration, and
+        `src/analysis/derived_record.py` is the read-back path that names an
+        absence instead of inventing a record.
+
+        Nothing about this method's output changed. `schema_version` reads off
+        the registry, so it advanced with the bump, and the payload already
+        carried all six.
         """
         return {
             "schema_version": DERIVED_CONTRACT.version,

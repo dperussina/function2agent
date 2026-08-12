@@ -33,6 +33,23 @@ BASELINE: dict[str, tuple[str, tuple[str, ...]]] = {
     "served_operation_set": ("1.1.0", (
         "captured_at", "deployment_id", "operations", "schema_version",
         "set_version")),
+    # **Both left at 1.0.0 by OD-32, which moved both kinds to 1.1.0**, on the
+    # reasoning the `admission_decision` entry below sets out at length:
+    # advancing an entry for an *addition* silences the guards that check the
+    # move. Left here, `test_an_added_required_field_is_at_least_a_minor_bump`
+    # asserts `derived_contract`'s new `provenance` requirement moved the version
+    # and `test_every_superseded_version_has_a_migration` asserts both 1.0.0
+    # migrations are registered.
+    #
+    # **`derived_check`'s `required` tuple is unchanged, and that is the point of
+    # the bump rather than an argument against it.** `provenance` was already
+    # required here; `required` is a presence test over top-level keys, so the
+    # string `"signature"` satisfied it and carried none of FR-026's six fields.
+    # What 1.1.0 adds is `required_provenance`, which this baseline does not
+    # model — so for this kind the added-field guard returns early and the
+    # migration guard is the one that fires. The gap is named rather than
+    # papered over: widening the baseline to carry inner requirements is a change
+    # to this instrument and OD-32 authorises no instrument change.
     "derived_contract": ("1.0.0", (
         "deployment_id", "failure_taxonomy", "operation_id", "postconditions",
         "preconditions", "reads", "schema_version", "writes")),

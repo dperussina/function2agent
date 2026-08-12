@@ -30,7 +30,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping
 
-from src.contracts.schemas import SchemaError, require
+from src.contracts.schemas import (
+    FR_026_PROVENANCE_FIELDS,
+    SchemaError,
+    require,
+)
 
 
 class MigrationError(SchemaError):
@@ -172,10 +176,118 @@ SERVED_OPERATION_SET_1_0_0 = Migration(
     apply=_served_operation_set_1_0_0_to_1_1_0,
 )
 
+def _derived_provenance_1_0_0_to_1_1_0(
+    document: Mapping[str, Any], kind: str
+) -> dict[str, Any]:
+    """OD-32 — carry a derived artifact forward only where its provenance survives.
+
+    **This migration recovers; it does not fill in.** A complete six-field record
+    is carried forward unchanged, which is every artifact this repository has
+    ever produced — `DerivedContract.to_document` has written all six since
+    FR-026 was implemented, and 1.0.0's defect was that the *schema* did not
+    demand them, not that the producer omitted them. That path has the same
+    standing as `set_version` in the served-operation migration above: the value
+    is read out of the document, so a migrated artifact is comparable with a
+    freshly produced one.
+
+    **Everything else is refused, including — especially — an absent
+    provenance.** This is the one place this file departs from its three
+    neighbours, all of which bring a document forward with an unrecoverable field
+    marked (`FS-DECL-MIGRATED`, or `None`). Marking works there because the
+    marked field is free-form prose or a nullable scalar. It does **not** work
+    here, for two independent reasons:
+
+    - A provenance record must carry a `validation_status`, and
+      `ValidationStatus` has exactly two members with none meaning *not looked
+      at*. Any record written for an artifact that recorded none would read
+      `provisional` — a claim about evidence, asserted on behalf of a derivation
+      that compared itself to nothing. That is `spend_usd: 0.0` one field over.
+    - Writing `{"provenance": None, "schema_version": "1.1.0"}` avoids inventing
+      a record but produces something worse: a **document claiming 1.1.0 that
+      does not satisfy 1.1.0**. Storing that would put an artifact in the store
+      whose declared version is a lie, and the next unprovenanced document to
+      appear would be indistinguishable from a current producer's bug. So
+      `ArtifactSchema._validate_provenance` refuses a null, and this function
+      cannot emit one.
+
+    The absence is real and it is not discarded — it is simply **not a document's
+    to assert**. `src/analysis/derived_record.py` reads such an artifact at its
+    own declared 1.0.0, yields `provenance=None` on the read-back object and
+    names the operation in `LoadedDerivations.unprovenanced_operations`. That is
+    exactly where `src/runtime/resume.py` puts the same distinction: a revision-1
+    turn comes back unpriced from `decode_model_outcome`, and no revision-1
+    payload is ever rewritten into a revision-3 one to achieve it.
+
+    So FR-054's rollback reads: an artifact stored at 1.0.0 with its provenance
+    intact migrates; one stored without provenance is readable and named
+    unprovenanced, and becomes a 1.1.0 document only by being **re-derived from
+    source**, which is the only operation that can produce the six fields
+    honestly.
+
+    **Not `drops`.** The accepting path discards nothing — every sub-key of a
+    complete record survives. A partial record *would* lose sub-keys and
+    `migrate`'s undeclared-drop guard would report it; it never reaches that
+    guard because this function refuses it first. Declaring `provenance.*` in
+    `drops` to make that loss legal is the move this refusal exists instead of.
+    """
+    value = document.get("provenance")
+    if isinstance(value, Mapping):
+        absent = [k for k in FR_026_PROVENANCE_FIELDS if k not in value]
+        if not absent:
+            return {**document, "schema_version": "1.1.0"}
+        raise MigrationError(
+            f"{kind}: this 1.0.0 document carries a provenance record missing "
+            f"{absent}, so it cannot be brought to 1.1.0. Completing it would "
+            "invent the fields FR-026 requires as data, and dropping it would "
+            "discard the fields it does carry without saying so. Re-derive from "
+            "source; src/analysis/derived_record.py reads this document as it "
+            "stands and refuses the partial record there too."
+        )
+    raise MigrationError(
+        f"{kind}: this 1.0.0 document's provenance is {value!r}, which is not a "
+        "provenance record, so FR-026's six fields are not recoverable and no "
+        "1.1.0 document can be written from it. **An absent provenance reaches "
+        "this branch and is refused deliberately**: a 1.1.0 document carries "
+        "all six or it does not exist, and writing one with a null provenance "
+        "would store an artifact whose declared version is a lie. The absence "
+        "is held instead on the read-back object — "
+        "src/analysis/derived_record.py names it there, and re-deriving from "
+        "source is what produces a 1.1.0 document. See OD-32."
+    )
+
+
+DERIVED_CONTRACT_1_0_0 = Migration(
+    kind="derived_contract",
+    from_version="1.0.0",
+    to_version="1.1.0",
+    reason="OD-32 makes FR-026's six provenance fields a schema requirement "
+           "rather than a producer convention; a 1.0.0 derived contract "
+           "required provenance not at all, so the record is carried forward "
+           "where the document has it and the document is refused where it does "
+           "not — the absence is named on the read-back object instead, because "
+           "no 1.1.0 document may claim the version without the six fields.",
+    apply=lambda document: _derived_provenance_1_0_0_to_1_1_0(
+        document, "derived_contract"),
+)
+
+DERIVED_CHECK_1_0_0 = Migration(
+    kind="derived_check",
+    from_version="1.0.0",
+    to_version="1.1.0",
+    reason="OD-32, and for this kind `required` already named `provenance` — "
+           "what 1.0.0 did not constrain is the value, so the string "
+           "`\"signature\"` satisfied it. A complete record is carried forward "
+           "and every other value is refused, absence included.",
+    apply=lambda document: _derived_provenance_1_0_0_to_1_1_0(
+        document, "derived_check"),
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     LOCATION_SET_0_9_0,
     ADMISSION_DECISION_1_0_0,
     SERVED_OPERATION_SET_1_0_0,
+    DERIVED_CONTRACT_1_0_0,
+    DERIVED_CHECK_1_0_0,
 )
 
 _BY_SOURCE: dict[tuple[str, str], Migration] = {}

@@ -296,6 +296,62 @@ class Provenance:
             "validated_against": self.validated_against,
         }
 
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, Any]) -> "Provenance":
+        """Rebuild a record from a stored `provenance` field (OD-32).
+
+        Every field is read by name and nothing is defaulted, so a payload
+        missing one of FR-026's six fails here rather than arriving with a
+        constructor default standing where data should have been. That is the
+        same refusal `src/runtime/resume.py` makes of a journalled outcome that
+        does not carry what a response is made of, and it is why this is not a
+        `**payload` splat: a splat would take `analyzer_version` and
+        `validation_status` from the class defaults and the record would read as
+        this build's analyzer having produced it.
+
+        **There is deliberately no `from_payload_or_none`.** An absent provenance
+        is not this constructor's business; it is
+        `src/analysis/derived_record.py`'s, which is the only place that may hold
+        the absence and which names it. A permissive variant here is how the
+        absence would start reaching callers as a record.
+        """
+        status = payload.get("validation_status")
+        try:
+            validation_status = ValidationStatus(status)
+        except ValueError:
+            raise ProvenanceError(
+                f"validation_status {status!r} is not one of "
+                f"{[s.value for s in ValidationStatus]}. There is no third "
+                "member meaning *not looked at yet*, and an absent provenance "
+                "is a different fact from a provisional one — see OD-32."
+            ) from None
+        missing = [
+            name for name in (
+                "derivation_rule", "source_symbol", "source_file",
+                "analyzer_version", "content_hash",
+            )
+            if name not in payload
+        ]
+        if missing:
+            raise ProvenanceError(
+                f"this provenance payload is missing {missing}. FR-026's six "
+                "fields are read by name and none is defaulted: a default here "
+                "would put this build's analyzer version onto a record it did "
+                "not produce."
+            )
+        return cls(
+            derivation_rule=str(payload["derivation_rule"]),
+            source_symbol=str(payload["source_symbol"]),
+            source_file=str(payload["source_file"]),
+            content_hash=str(payload["content_hash"]),
+            analyzer_version=str(payload["analyzer_version"]),
+            validation_status=validation_status,
+            validated_against=(
+                None if payload.get("validated_against") is None
+                else str(payload["validated_against"])
+            ),
+        )
+
     @property
     def rule(self) -> DerivationRule:
         return DERIVATION_RULES[self.derivation_rule]

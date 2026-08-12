@@ -347,7 +347,7 @@ def test_the_envelope_accepts_an_artifact_with_no_anchor():
     `assert_anchored` notices.
     """
     document = {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "deployment_id": DEPLOYMENT,
         "operation_id": "get_part",
         "reads": ["parts"],
@@ -355,6 +355,19 @@ def test_the_envelope_accepts_an_artifact_with_no_anchor():
         "preconditions": [],
         "postconditions": [],
         "failure_taxonomy": ["not_found"],
+        # Required at 1.1.0 under OD-32. Present so this arm keeps testing what
+        # it is for — that the envelope accepts an artifact with no *anchor* —
+        # rather than failing on an unrelated requirement and reading as though
+        # the envelope had grown an anchor check.
+        "provenance": {
+            "derivation_rule": "raises_statement",
+            "source_symbol": "get_part",
+            "source_file": "parts.py",
+            "analyzer_version": "0.1.0",
+            "content_hash": "sha256:" + "c" * 64,
+            "validation_status": "provisional",
+            "validated_against": None,
+        },
     }
     wrapped = envelope.wrap("derived_contract", document)
     assert SOURCE_REF_FIELD not in wrapped.payload

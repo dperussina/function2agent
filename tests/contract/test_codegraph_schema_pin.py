@@ -134,6 +134,16 @@ _CONTRACT_DOCUMENT = {
     "preconditions": [],
     "postconditions": [],
     "failure_taxonomy": [],
+    # Required at 1.1.0 under OD-32, and its content still does not matter here.
+    "provenance": {
+        "derivation_rule": "raises_statement",
+        "source_symbol": "get_part",
+        "source_file": "parts.py",
+        "analyzer_version": "0.1.0",
+        "content_hash": "sha256:" + "c" * 64,
+        "validation_status": "provisional",
+        "validated_against": None,
+    },
 }
 
 

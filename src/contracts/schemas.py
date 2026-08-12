@@ -25,6 +25,22 @@ set be rolled back to a version whose deny list it never shipped with.
   address on one of these is what the drift detector treats as source change,
   which is why a non-canonical serializer is a false-alarm generator (FR-055's
   note) and why these kinds get the strictest volatility scan.
+- `required_provenance` is `required` one level down, and it exists because
+  `required` is a **presence test over top-level keys**. `derived_check` listed
+  `provenance` in `required` from its first version and was satisfied by the
+  string `"signature"`; `derived_contract` did not list it at all. OD-32 rules
+  both kinds to 1.1.0 with FR-026's six fields required, and this is the field
+  that holds it.
+
+**Why the six field names are written here rather than imported from
+`src/analysis/provenance.py`.** This module has no first-party imports, on
+purpose: `--root` may point at a fixture tree, and every consumer of the
+registry — the envelope, the store, the migrations — sits below it. Importing
+the analysis layer to read six strings would invert that. The cost is a second
+statement of one fact, and it is paid for by
+`tests/unit/test_derived_record.py`, which asserts the tuple here and the
+`Provenance` dataclass's own fields are the same set **in both directions** —
+the discipline `lifecycle-taxonomy` applies to `TAXONOMY`, one module over.
 """
 
 from __future__ import annotations
@@ -33,6 +49,23 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 SCHEMA_REGISTRY_VERSION = "1.0.0"
+
+#: FR-026's six, in the requirement's own order: *"the rule that derived it, the
+#: source symbol and file it came from, the analyzer version, a content hash,
+#: and its validation status"*.
+#:
+#: `validated_against` is deliberately **not** here. It is a seventh field and it
+#: is conditional — present exactly when the status is `validated` — so
+#: requiring it would make every provisional record invalid, and provisional is
+#: the status a static derivation is obliged to carry.
+FR_026_PROVENANCE_FIELDS: tuple[str, ...] = (
+    "derivation_rule",
+    "source_symbol",
+    "source_file",
+    "analyzer_version",
+    "content_hash",
+    "validation_status",
+)
 
 
 class SchemaError(ValueError):
@@ -56,6 +89,20 @@ class ArtifactSchema:
     # an undocumented escape hatch is how the FR-055 discipline erodes.
     stable_despite_appearance: Mapping[str, str] = field(default_factory=dict)
 
+    # The fields the `provenance` value must carry. Empty for the six kinds
+    # FR-026 says nothing about; `FR_026_PROVENANCE_FIELDS` for the two it does.
+    required_provenance: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.required_provenance and "provenance" not in self.required:
+            raise SchemaError(
+                f"{self.kind} declares required_provenance "
+                f"{list(self.required_provenance)} and does not list "
+                "'provenance' in `required`. The inner check reads a field the "
+                "outer check does not demand, so a payload omitting it "
+                "entirely would satisfy both."
+            )
+
     def validate(self, payload: Mapping[str, Any]) -> None:
         missing = [k for k in self.required if k not in payload]
         if missing:
@@ -70,6 +117,54 @@ class ArtifactSchema:
                 f"{declared!r}, registry holds {self.version!r}. A payload "
                 "whose schema version is absent or stale is not migrated "
                 "silently — see src/contracts/migrations/."
+            )
+        if self.required_provenance:
+            self._validate_provenance(payload["provenance"])
+
+    def _validate_provenance(self, value: Any) -> None:
+        """FR-026's six on the `provenance` value, under OD-32.
+
+        **`None` is refused, and refusing it is the whole of the requirement.**
+        A document declaring this schema version always carries all six fields.
+        There is no null carve-out for a legacy artifact, because a null here
+        would be a document *claiming* 1.1.0 while lacking what 1.1.0 requires —
+        and the next producer to write one would be a current one, not a legacy
+        one, with the schema unable to tell the two apart.
+
+        The absence a 1.0.0 artifact genuinely has lives on the **read-back
+        object** instead, in `src/analysis/derived_record.py`, where
+        `DerivedRecord.provenance` is `Provenance | None` and the `None` is
+        named. That is where `src/runtime/resume.py` puts the same distinction: a
+        revision-1 turn comes back with `spend_usd=None` from
+        `decode_model_outcome`, and no revision-1 payload is rewritten into a
+        revision-3 one to achieve it. Absence is a fact about a reading, not a
+        value a current-version document gets to assert.
+
+        An empty object and a value that is not a record are refused for the
+        adjacent reason: neither is an absence a reader can enumerate, and
+        reading either as one would discard whatever claim it does carry.
+        """
+        if not isinstance(value, Mapping):
+            raise SchemaError(
+                f"{self.kind}: provenance is {value!r}, which is not a "
+                f"provenance record. FR-026 requires "
+                f"{list(self.required_provenance)} as data, and under OD-32 a "
+                f"document at {self.version} carries all six or is refused. "
+                "`None` is not the escape: an unprovenanced legacy artifact is "
+                "read at its own version by src/analysis/derived_record.py, "
+                "which names the absence on the object, and it is never "
+                "rewritten into a document that claims this version."
+            )
+        absent = [k for k in self.required_provenance if k not in value]
+        if absent:
+            raise SchemaError(
+                f"{self.kind}: provenance is missing {absent}. FR-026 requires "
+                f"all of {list(self.required_provenance)} as data, and OD-32 "
+                "makes that a schema requirement rather than a producer "
+                "convention. An empty or partial record is refused rather than "
+                "read as an absence — a record that claims nothing is not the "
+                "same fact as no record, and this schema has no way to say the "
+                "second one, by design."
             )
 
 
@@ -140,10 +235,11 @@ SERVED_OPERATION_SET = ArtifactSchema(
 
 DERIVED_CONTRACT = ArtifactSchema(
     kind="derived_contract",
-    version="1.0.0",
-    requirement="FR-054, Principle I",
+    version="1.1.0",
+    requirement="FR-026, FR-054, OD-32, Principle I",
     required=("schema_version", "deployment_id", "operation_id", "reads",
-              "writes", "preconditions", "postconditions", "failure_taxonomy"),
+              "writes", "preconditions", "postconditions", "failure_taxonomy",
+              "provenance"),
     volatile=("derived_at", "source_path", "analyzer_host"),
     source_derived=True,
     description="What an operation requires and returns, derived from source. "
@@ -151,12 +247,26 @@ DERIVED_CONTRACT = ArtifactSchema(
     stable_despite_appearance={
         "provenance.source_file": _SOURCE_FILE_EXCUSAL,
     },
+    required_provenance=FR_026_PROVENANCE_FIELDS,
 )
+# **1.1.0 — FR-026's provenance stops being a producer convention (OD-32).** At
+# 1.0.0 this kind listed `provenance` in neither `required` nor `volatile`,
+# while FR-026 requires it on every derived contract *and* every derived check.
+# `src/analysis/derive.py` has attached all six fields since T121 and said so in
+# its own docstring, so what moved is the schema's enforcement over **any**
+# producer, not this repository's behaviour.
+#
+# MINOR rather than MAJOR because a consumer written against 1.0.0 reads every
+# field it knew; it is producers that must now supply more. A 1.0.0 document
+# migrates forward with the field explicitly `None` where its derivation
+# recorded nothing — an absence a reader enumerates, never a sentinel record,
+# because a sentinel would have to carry a `validation_status` and the only one
+# available reads `provisional`.
 
 DERIVED_CHECK = ArtifactSchema(
     kind="derived_check",
-    version="1.0.0",
-    requirement="FR-054, Principle I",
+    version="1.1.0",
+    requirement="FR-026, FR-054, OD-32, Principle I",
     required=("schema_version", "deployment_id", "operation_id",
               "check_kind", "expression", "provenance", "confidence"),
     volatile=("derived_at", "source_path"),
@@ -168,7 +278,14 @@ DERIVED_CHECK = ArtifactSchema(
     stable_despite_appearance={
         "provenance.source_file": _SOURCE_FILE_EXCUSAL,
     },
+    required_provenance=FR_026_PROVENANCE_FIELDS,
 )
+# **1.1.0 on the same ruling, and `required` does not move for this kind.**
+# `provenance` was already required here, which is exactly why the presence test
+# was not enough: `required` reads top-level keys, so the string `"signature"`
+# satisfied it and carried none of FR-026's six. What 1.1.0 adds is
+# `required_provenance`, and the version moves because two different shapes
+# would otherwise claim one schema version.
 
 EFFECT_GATE_RULE_SET = ArtifactSchema(
     kind="effect_gate_rule_set",

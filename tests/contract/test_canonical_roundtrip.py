@@ -32,8 +32,21 @@ DOCUMENTS: dict[str, dict] = {
         "source_url": "https://api.example.com/openapi.json",
         "analyzer_host": "runner-7",
     },
+    # **Both derived fixtures moved to 1.1.0 and gained a provenance record
+    # under OD-32, and the two shapes they used to carry are the demonstration
+    # that the gap was real.** This one carried no `provenance` key at all,
+    # because 1.0.0 listed it in neither `required` nor `volatile`; the one below
+    # carried the bare string `"signature"`, because `required` is a presence
+    # test over top-level keys and any value satisfied it. Both validated. The
+    # refusals are asserted in `tests/unit/test_derived_record.py` against these
+    # same shapes rather than left as history here.
+    #
+    # `provenance.source_file` is `orders.py` on purpose: that is hostname-shaped
+    # to `envelope.scan` (`name` plus a two-letter `tld`), so the fixture
+    # exercises the `stable_despite_appearance` excusal the schema declares for
+    # it instead of leaving the declaration dead.
     "derived_contract": {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "deployment_id": "d-1",
         "operation_id": "listOrders",
         "reads": ["orders"],
@@ -41,17 +54,34 @@ DOCUMENTS: dict[str, dict] = {
         "preconditions": ["page >= 1"],
         "postconditions": ["len(result) <= per_page"],
         "failure_taxonomy": ["not_found", "rate_limited"],
+        "provenance": {
+            "derivation_rule": "return_annotation",
+            "source_symbol": "list_orders",
+            "source_file": "orders.py",
+            "analyzer_version": "0.1.0",
+            "content_hash": "sha256:" + "b" * 64,
+            "validation_status": "provisional",
+            "validated_against": None,
+        },
         "derived_at": "2026-08-03T12:00:01Z",
         "source_path": "/srv/app/api/orders.py",
         "analyzer_host": "runner-7",
     },
     "derived_check": {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "deployment_id": "d-1",
         "operation_id": "listOrders",
         "check_kind": "return_type",
         "expression": "isinstance(result, list)",
-        "provenance": "signature",
+        "provenance": {
+            "derivation_rule": "return_annotation",
+            "source_symbol": "list_orders",
+            "source_file": "orders.py",
+            "analyzer_version": "0.1.0",
+            "content_hash": "sha256:" + "b" * 64,
+            "validation_status": "provisional",
+            "validated_against": None,
+        },
         "confidence": 0.9,
         "derived_at": "2026-08-03T12:00:01Z",
         "source_path": "/srv/app/api/orders.py",
