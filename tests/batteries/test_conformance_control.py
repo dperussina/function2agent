@@ -813,10 +813,14 @@ def test_the_control_reports_zero_over_the_whole_corpus_with_its_strata() -> Non
             },
             "detection_rate": None,
             "detection_rate_withheld_because": (
-                "SC-005's percentages are scored against the precision-ladder "
-                "extraction FR-024 property 4 leaves open (T125, T212). A rate "
-                "against an unfinished denominator is a figure nobody can "
-                "recompute. SC-006 asks for a count of zero, which is reported."
+                "SC-005 pre-registers 95% detection and 1% false alarms, and "
+                "both are computed over 'the faults injected into quantities "
+                "the precision ladder does not refuse'. That population is not "
+                "settled: FR-024's admissible sources are closed under T125, "
+                "and the caller-declared rung that decides which quantities "
+                "refuse is open under T212. A rate published now would be a "
+                "rate over a denominator T212 can still move. SC-006 asks for "
+                "a count of zero, which is what is reported."
             ),
         },
     )
