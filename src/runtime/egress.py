@@ -431,8 +431,13 @@ class EgressPlane:
         # deliberately wider than `socket`'s, which is the `assignment` half.
         socket.socket.connect = connect          # type: ignore[method-assign,assignment]
         socket.socket.connect_ex = connect_ex    # type: ignore[method-assign,assignment]
-        socket.getaddrinfo = getaddrinfo         # type: ignore[assignment]
-        socket.gethostbyname = gethostbyname     # type: ignore[assignment]
+        # No ignore on these two, and their absence is the finding. Both
+        # replacements are annotated `(*args: Any, **kwargs: Any) -> Any`, which
+        # is assignable to what `socket` declares, so nothing ever fired here and
+        # the ignores that used to sit on these lines suppressed nothing. The
+        # `method-assign` pair above is different: those are methods on a class.
+        socket.getaddrinfo = getaddrinfo
+        socket.gethostbyname = gethostbyname
         _set_current(self)
 
     def uninstall(self) -> None:
@@ -440,8 +445,11 @@ class EgressPlane:
             return
         socket.socket.connect = self._saved["connect"]            # type: ignore[method-assign]
         socket.socket.connect_ex = self._saved["connect_ex"]      # type: ignore[method-assign]
-        socket.getaddrinfo = self._saved["getaddrinfo"]           # type: ignore[assignment]
-        socket.gethostbyname = self._saved["gethostbyname"]       # type: ignore[assignment]
+        # Unignored for the reason `install` states: `self._saved` holds `Any`,
+        # so no `assignment` error fires on a module attribute. The two lines
+        # above keep theirs because they assign to methods on a class.
+        socket.getaddrinfo = self._saved["getaddrinfo"]
+        socket.gethostbyname = self._saved["gethostbyname"]
         self._saved = {}
         _set_current(None)
 
