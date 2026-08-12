@@ -154,7 +154,11 @@ def assert_declared_order(calls: Sequence[ToolCall]) -> None:
 
 def dispatch(
     calls: Sequence[ToolCall],
-    execute: Callable[[ToolCall], str],
+    # Both shapes, because `_run_one` already branches on which one arrived and
+    # names the FR-058 path as the reason. The annotation said `str` while the
+    # body accepted either, so the executor `AgentLoop` actually passes — which
+    # bounds the result as part of producing it — did not type-check here.
+    execute: Callable[[ToolCall], str | ToolResult],
     *,
     record: Callable[[ToolResult], None],
     max_workers: int | None = None,
@@ -207,7 +211,7 @@ def _as_they_finish(futures: Mapping[Future[ToolResult], int]):
 
 def _run_one(
     call: ToolCall,
-    execute: Callable[[ToolCall], str],
+    execute: Callable[[ToolCall], str | ToolResult],
     now: Callable[[], float],
 ) -> ToolResult:
     """Execute one branch, turning a raise into a typed outcome.

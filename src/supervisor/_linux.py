@@ -261,7 +261,15 @@ def set_no_new_privs() -> None:
     _check(_libc.prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0), "prctl(NO_NEW_PRIVS)")
 
 
-def seccomp(operation: int, flags: int, args: ctypes.Array | None) -> int:
+def seccomp(
+    operation: int,
+    flags: int,
+    # The kernel's third argument is a `void *`. This project passes two shapes
+    # through it — an `Array`, and a `POINTER(c_char)` cast over a `sock_fprog`
+    # — and the annotation named only the first, so the one caller that
+    # installs a filter did not type-check against it.
+    args: ctypes.Array | ctypes._Pointer | None,
+) -> int:
     ctypes.set_errno(0)
     rc = _libc.syscall(
         ctypes.c_long(syscall_number("seccomp")),

@@ -418,8 +418,12 @@ def plan_resume(journal: TurnJournal, session_id: str) -> ResumePlan:
     """
     steps = journal.steps(session_id)
     by_turn: dict[int, dict[int, JournalStep]] = {}
-    for step in steps:
-        by_turn.setdefault(step.turn_index, {})[step.step_index] = step
+    # `journalled` rather than `step`, so that the `step` below is first bound by
+    # the `.get()` that can return `None` and narrows from there. Renaming that
+    # one instead would move a line a removal proof's tamper names.
+    for journalled in steps:
+        by_turn.setdefault(
+            journalled.turn_index, {})[journalled.step_index] = journalled
 
     records: list[TurnRecord] = []
     abandoned: list[int] = []

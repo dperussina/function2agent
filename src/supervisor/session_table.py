@@ -54,7 +54,7 @@ import hashlib
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from src.contracts import terminal
 from src.contracts.ownership import ROLE_SUPERVISOR
@@ -271,7 +271,7 @@ class SessionTable:
             self._repo.select(TABLE, where={"capability_sha256": capability_sha256}))
 
 
-def _first(rows: list[Mapping[str, Any]]) -> SessionRow | None:
+def _first(rows: Sequence[Mapping[str, Any]]) -> SessionRow | None:
     if not rows:
         return None
     row = rows[0]

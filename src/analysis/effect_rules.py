@@ -439,7 +439,13 @@ class EffectRuleSet:
                 "can name."
             )
         seen: dict[str, str] = {}
-        for entry in (*self.rules, *self.deny_list):
+        # Annotated because the two lists hold unrelated types whose only common
+        # supertype is `object`, so an unannotated unpack loses `rule_id` — the
+        # one attribute this loop reads, and the shared identifier space it
+        # exists to police.
+        entries: tuple[ServedOperationRule | DenyListEntry, ...] = (
+            *self.rules, *self.deny_list)
+        for entry in entries:
             previous = seen.get(entry.rule_id)
             if previous is not None:
                 raise EffectRuleError(

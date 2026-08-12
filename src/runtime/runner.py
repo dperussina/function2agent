@@ -480,6 +480,14 @@ class Runner:
         if in_flight is None:
             raise RunnerError(message) from failure
         in_flight.add_note(f"runner teardown: {message}")
+        # Explicit, and deliberately `None` rather than `recorded`. This is the
+        # one path that neither raises nor returns, so it fell off the end and
+        # returned `None` implicitly; writing it down changes nothing and is
+        # what makes the value a decision rather than an omission. `recorded`
+        # is not returned here because an exception is already propagating and
+        # this frame's value is about to be discarded — a marker handed back
+        # from the leak path would read as a clean end of run.
+        return None
 
     def _loop(
         self,

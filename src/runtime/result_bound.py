@@ -341,6 +341,11 @@ class ResultBound:
         notice length is a bound the implementation does not honour.
         """
         proxy = self.tokenizer is None
+        # Derived from the same attribute `proxy` is, rather than from `proxy`
+        # itself. The two say the same thing, but only this form is a narrowing
+        # a checker can follow — `proxy` is a separate bool, so a reader had to
+        # hold the correlation and nothing was checking they held it right.
+        tokenizer_name = None if self.tokenizer is None else self.tokenizer.name
         unit = UNIT_BYTES if proxy else UNIT_TOKENS
         allowance = conservative_byte_ceiling(self.bound_tokens) if proxy \
             else self.bound_tokens
@@ -358,7 +363,7 @@ class ResultBound:
                     admitted=full_size,
                     disposition=DISPOSITION_RETAINED,
                     reference=None,
-                    tokenizer_name=None if proxy else self.tokenizer.name,
+                    tokenizer_name=tokenizer_name,
                 ),
             )
 
@@ -408,7 +413,7 @@ class ResultBound:
                 admitted=admitted,
                 disposition=disposition,
                 reference=reference,
-                tokenizer_name=None if proxy else self.tokenizer.name,
+                tokenizer_name=tokenizer_name,
             ),
         )
 

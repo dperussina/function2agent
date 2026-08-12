@@ -426,8 +426,11 @@ class EgressPlane:
             _require_numeric(plane, host)
             return saved["gethostbyname"](host)
 
-        socket.socket.connect = connect          # type: ignore[method-assign]
-        socket.socket.connect_ex = connect_ex    # type: ignore[method-assign]
+        # Both codes, because both errors fire on one line and `method-assign`
+        # alone suppressed only the first. The replacement's signature is
+        # deliberately wider than `socket`'s, which is the `assignment` half.
+        socket.socket.connect = connect          # type: ignore[method-assign,assignment]
+        socket.socket.connect_ex = connect_ex    # type: ignore[method-assign,assignment]
         socket.getaddrinfo = getaddrinfo         # type: ignore[assignment]
         socket.gethostbyname = gethostbyname     # type: ignore[assignment]
         _set_current(self)
