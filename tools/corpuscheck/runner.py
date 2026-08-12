@@ -46,6 +46,11 @@ def run_checks(
         "config": cfg,
         "search": index,
         "skip": lambda name, reason: result.skipped.append((name, reason)),
+        # Whether `--path` narrowed the walk, and to what. A check that reads an
+        # authority set elsewhere in the tree needs to tell "my input is outside
+        # this selection" from "my input is gone", and only the caller knows
+        # which. `None` means the walk was not narrowed.
+        "narrowed_paths": list(only_paths) if only_paths else None,
     }
 
     selected = select(names, skip)

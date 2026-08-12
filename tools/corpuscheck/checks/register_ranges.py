@@ -39,7 +39,7 @@ from ..corpus import Corpus
 from ..figures import inside_spans, struck_spans
 from ..registry import check
 from ..report import WARNING, Violation
-from .identifiers import _collect_definitions, _namespaces
+from .identifiers import _activation
 
 # "D-01 … D-19", "D-01 through D-19", "D-01–D-19", "D-01 to D-19", "OD-01 -- OD-05"
 _RANGE = re.compile(
@@ -49,17 +49,16 @@ _RANGE = re.compile(
 
 @check("register-range", "A quoted register range ends at the register's real last entry.")
 def run(corpus: Corpus, ctx: dict) -> list[Violation]:
-    config = ctx["config"]
-    defined = ctx.get("identifiers_defined")
-    if defined is None:
-        defined = _collect_definitions(corpus, _namespaces(config))
-        ctx["identifiers_defined"] = defined
+    # The same activation decision the identifier checks use. A namespace whose
+    # register is only partly in this run's corpus has no trustworthy last
+    # entry, so a range cannot be judged against it — under `--path` the
+    # "real" maximum would be whatever survived the narrowing. In a full run
+    # this selects exactly the namespaces the `min_definitions` filter used to.
+    defined, active, _reasons = _activation(corpus, ctx)
 
-    maxima: dict[str, int] = {}
-    for ns, ids in defined.items():
-        if len(ids) < config["min_definitions"]:
-            continue
-        maxima[ns] = max(int(re.sub(r"\D", "", i)) for i in ids)
+    maxima: dict[str, int] = {
+        ns: max(int(re.sub(r"\D", "", i)) for i in defined[ns]) for ns in active
+    }
 
     out: list[Violation] = []
     for doc in corpus.markdown():

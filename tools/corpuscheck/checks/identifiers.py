@@ -7,14 +7,30 @@ definition index built from the places this corpus actually defines things:
 
   * the first column of a register table — `| D-17 | ... |`, including struck
     and bolded forms like `| ~~**P-02**~~ |`
-  * a heading — `### OD-01 — ADK's role`
+  * a heading that *leads* with the identifier — `### OD-01 — ADK's role`
   * a bold-lead bullet — `- **FR-018**: Analysis MUST operate on copies`
+
+All three shapes are lead-anchored, and the heading shape is deliberately the
+strictest reading of the example above: only the identifier the heading opens
+with defines. A heading that merely *names* identifiers in prose — `### The
+execution environment — FR-048, FR-049 and FR-050's mechanisms` — announces a
+section about them, it does not define them. Counting those as definitions is
+not a harmless over-read: it manufactures exactly the phantom register that
+defeats the `min_definitions` guard below. See the note in `tools/README.md`
+under **Narrowing and the definition index** for the measurement.
 
 A namespace is only enforced once at least `min_definitions` of its members are
 found. If a register is deleted or renamed, the check turns itself off with a
 stated reason rather than reporting every reference in the corpus as dangling —
 a checker that produces two hundred violations gets switched off permanently,
 which costs more than the errors it found.
+
+That guard is load-bearing under `--path`: narrowing removes the register from
+the corpus, the namespace falls under the threshold, and the check declares
+itself skipped instead of reporting every surviving reference as unresolved.
+The cost of the guard is stated in the same README section — a skip cannot tell
+"narrowed away" from "deleted", so a green narrowed run is not evidence that
+the registers still exist.
 
 `identifier-gap` is the companion: a namespace with a hole in it (D-01…D-14,
 D-16…) usually means an entry was deleted rather than struck, and struck-with-a
@@ -25,12 +41,15 @@ from __future__ import annotations
 
 import re
 
-from ..corpus import Corpus, split_row
+from ..corpus import Corpus, load as load_corpus, split_row
 from ..registry import check
 from ..report import ERROR, WARNING, Violation
 
 _DECOR = re.compile(r"[*~`_\s]+")
 _HEADING = re.compile(r"^#{1,6}\s+(.*)$")
+# Leading decoration only — `### **OD-01** — role` and `### ~~D-05~~ superseded`
+# still lead with their identifier once the markup is stripped.
+_LEAD_DECOR = re.compile(r"^[*~`_\s]+")
 _BULLET_DEF = re.compile(r"^\s*[-*+]\s+\*\*([A-Za-z]{1,3}-?\d{1,3})\*\*\s*[:.\u2014-]")
 
 
@@ -57,13 +76,25 @@ def definitions_in(doc, patterns: dict[str, re.Pattern]) -> dict[str, set[str]]:
             for m in rx.finditer(text):
                 defined[ns].add(m.group(0))
 
+    def note_lead(text: str) -> None:
+        """Only an identifier the text *opens* with defines it.
+
+        The namespace patterns already carry a trailing boundary lookahead, so
+        an anchored `match` is the whole rule.
+        """
+        head = _LEAD_DECOR.sub("", text)
+        for ns, rx in patterns.items():
+            m = rx.match(head)
+            if m:
+                defined[ns].add(m.group(0))
+
     for i, line in enumerate(doc.lines):
         if i in doc.fenced:
             continue
 
         hm = _HEADING.match(line)
         if hm:
-            note(hm.group(1))
+            note_lead(hm.group(1))
             continue
 
         bm = _BULLET_DEF.match(line)
@@ -93,25 +124,94 @@ def _collect_definitions(corpus: Corpus, patterns: dict[str, re.Pattern]) -> dic
     return defined
 
 
+def _unnarrowed_definitions(
+    corpus: Corpus, config: dict, patterns: dict[str, re.Pattern]
+) -> dict[str, set[str]]:
+    """The definition index the *whole tree* yields, ignoring any `--path`.
+
+    Read off the filesystem under `corpus.root` rather than off the corpus that
+    was handed in, which is the same move `lifecycle-taxonomy` makes to tell a
+    missing document from a narrowed-away one. This is what keeps the skip
+    below from being vacuous: the deletion test is asked of the unnarrowed
+    tree, so no combination of `--path` arguments can answer it.
+    """
+    return _collect_definitions(load_corpus(corpus.root, config), patterns)
+
+
+def _activation(corpus: Corpus, ctx: dict) -> tuple[dict[str, set[str]], dict[str, re.Pattern], list[str]]:
+    """Which namespaces this run may enforce, decided once and shared.
+
+    Both checks in this module need the same answer, and the runner executes
+    them in name order, so `identifier-gap` runs *first*. The older arrangement
+    had `identifier-gap` read an index that `identifier-resolution` was
+    expected to have left in `ctx`; that handoff ran in the wrong direction and
+    the fallback branch was therefore the only branch ever taken, which is how
+    the gap check kept reporting on namespaces the resolution check had
+    disabled. Computing it here makes the order irrelevant.
+
+    Returns the narrowed definition index, the enforceable namespaces, and the
+    reasons for every namespace left out, for the caller to announce.
+    """
+    cached = ctx.get("_identifier_activation")
+    if cached is not None:
+        return cached
+
+    config = ctx["config"]
+    patterns = _namespaces(config)
+    minimum = config["min_definitions"]
+    defined = _collect_definitions(corpus, patterns)
+
+    # Under `--path`, `defined` is only what survived the narrowing. Every
+    # deletion test below is asked of `whole` instead, which is read off the
+    # unnarrowed tree, so narrowing can suppress a namespace but can never make
+    # a deleted register look present.
+    whole = (
+        _unnarrowed_definitions(corpus, config, patterns)
+        if ctx.get("narrowed_paths")
+        else defined
+    )
+
+    active: dict[str, re.Pattern] = {}
+    reasons: list[str] = []
+    for ns, rx in patterns.items():
+        if len(whole[ns]) < minimum:
+            # Asked of the whole tree: the register is absent, deleted or
+            # renamed, and this reads the same with or without `--path`.
+            reasons.append(
+                f"namespace {ns} disabled: found {len(whole[ns])} definition(s), "
+                f"need {minimum} ({config['identifier_namespaces'][ns]['what']})"
+            )
+            continue
+
+        missing = whole[ns] - defined[ns]
+        if missing:
+            # The register exists; this run just cannot see all of it. Resolving
+            # against a partial index would report every reference to the part
+            # that was narrowed away as dangling — hundreds of errors naming
+            # identifiers that resolve perfectly well in a full run.
+            reasons.append(
+                f"namespace {ns} not enforced: {len(missing)} of {len(whole[ns])} "
+                f"definition(s) are outside the --path selection, so the register "
+                f"({config['identifier_namespaces'][ns]['what']}) was only partly "
+                "read — a full run enforces it"
+            )
+            continue
+
+        active[ns] = rx
+
+    out = (defined, active, reasons)
+    ctx["_identifier_activation"] = out
+    ctx["identifiers_defined"] = defined
+    ctx["identifiers_active"] = set(active)
+    return out
+
+
 @check("identifier-resolution", "Register identifiers (D-17, U-40, OD-06, FR-018, E15) resolve.")
 def resolution(corpus: Corpus, ctx: dict) -> list[Violation]:
     config = ctx["config"]
-    patterns = _namespaces(config)
-    defined = _collect_definitions(corpus, patterns)
-    minimum = config["min_definitions"]
-
-    active: dict[str, re.Pattern] = {}
-    for ns, rx in patterns.items():
-        if len(defined[ns]) >= minimum:
-            active[ns] = rx
-        else:
-            ctx["skip"](
-                "identifier-resolution",
-                f"namespace {ns} disabled: found {len(defined[ns])} definition(s), "
-                f"need {minimum} ({config['identifier_namespaces'][ns]['what']})",
-            )
-    ctx["identifiers_defined"] = defined
-    ctx["identifiers_active"] = set(active)
+    defined, active, reasons = _activation(corpus, ctx)
+    for reason in reasons:
+        ctx["skip"]("identifier-resolution", reason)
 
     out: list[Violation] = []
     for doc in corpus.markdown():
@@ -144,12 +244,11 @@ def resolution(corpus: Corpus, ctx: dict) -> list[Violation]:
 @check("identifier-gap", "A register with a missing member usually means a deleted row.")
 def gaps(corpus: Corpus, ctx: dict) -> list[Violation]:
     config = ctx["config"]
-    defined = ctx.get("identifiers_defined")
-    if defined is None:
-        defined = _collect_definitions(corpus, _namespaces(config))
-    active = ctx.get("identifiers_active")
-    if active is None:
-        active = {ns for ns, ids in defined.items() if len(ids) >= config["min_definitions"]}
+    # Same activation decision `identifier-resolution` uses, so a namespace
+    # whose register was narrowed away is not reported here as a register full
+    # of holes. Announcing the reasons is left to that check, which is where
+    # they have always been printed.
+    defined, active, _reasons = _activation(corpus, ctx)
 
     out: list[Violation] = []
     for ns in sorted(active):
