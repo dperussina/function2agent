@@ -1,0 +1,182 @@
+{
+  "_comment": [
+    "Known-correct expected derivation for ./service.py, written by hand from",
+    "the source before the analyzer existed. The analyzer was then made to",
+    "match this file; this file was not recorded from a run of the analyzer.",
+    "See ../README.md, 'What known-correct means here'.",
+    "",
+    "`content_hash` is the one exception and it is labelled as such in the",
+    "README: it is a computed value recorded here, not a hand-derived one. Its",
+    "job is coupling \u2014 editing service.py turns these red, which is exactly",
+    "what FR-028 needs a source hash to do."
+  ],
+  "source_file": "service.py",
+  "contracts": [
+    {
+      "operation_id": "service:stock_report",
+      "reads": [
+        "lots"
+      ],
+      "writes": [],
+      "preconditions": [
+        {
+          "expression": "not lots",
+          "raises": "UnknownPart",
+          "derivation_rule": "precondition_guard"
+        }
+      ],
+      "postconditions": [
+        "lot_count == count(lots)",
+        "total_units == sum(lots[].quantity)"
+      ],
+      "failure_taxonomy": [
+        "UnknownPart"
+      ],
+      "provenance": {
+        "derivation_rule": "return_annotation",
+        "source_symbol": "stock_report",
+        "source_file": "service.py",
+        "analyzer_version": "0.1.0",
+        "content_hash": "sha256:1780ffee3833d88f66434a97af07a63b770d3d01b58c0099791f6bdc1f4d9b84",
+        "validation_status": "provisional",
+        "validated_against": null
+      },
+      "checks": [
+        {
+          "quantity": "<return>",
+          "check_kind": "shape",
+          "expression": "isinstance(<return>, dict)",
+          "recomputation": null,
+          "precision_source": null,
+          "derivation_rule": "return_annotation",
+          "source_symbol": "stock_report"
+        },
+        {
+          "quantity": "lot_count",
+          "check_kind": "recomputation",
+          "expression": "lot_count == count(lots)",
+          "recomputation": {
+            "operator": "count",
+            "over": "lots",
+            "element_field": null,
+            "reads": [
+              "lots"
+            ]
+          },
+          "precision_source": "aggregate_over:count",
+          "derivation_rule": "aggregate_binding",
+          "source_symbol": "stock_report"
+        },
+        {
+          "quantity": "total_units",
+          "check_kind": "recomputation",
+          "expression": "total_units == sum(lots[].quantity)",
+          "recomputation": {
+            "operator": "sum",
+            "over": "lots",
+            "element_field": "quantity",
+            "reads": [
+              "lots"
+            ]
+          },
+          "precision_source": "aggregate_over:sum",
+          "derivation_rule": "aggregate_binding",
+          "source_symbol": "stock_report"
+        }
+      ]
+    },
+    {
+      "operation_id": "service:oldest_lot_age",
+      "reads": [
+        "lots"
+      ],
+      "writes": [],
+      "preconditions": [],
+      "postconditions": [
+        "oldest == max(lots[].age_days)"
+      ],
+      "failure_taxonomy": [],
+      "provenance": {
+        "derivation_rule": "return_annotation",
+        "source_symbol": "oldest_lot_age",
+        "source_file": "service.py",
+        "analyzer_version": "0.1.0",
+        "content_hash": "sha256:75fedea9523543a8ffb73aa2fe08919fd39d8fd187a482b2bfddffc242057ebd",
+        "validation_status": "provisional",
+        "validated_against": null
+      },
+      "checks": [
+        {
+          "quantity": "<return>",
+          "check_kind": "shape",
+          "expression": "isinstance(<return>, int)",
+          "recomputation": null,
+          "precision_source": null,
+          "derivation_rule": "return_annotation",
+          "source_symbol": "oldest_lot_age"
+        },
+        {
+          "quantity": "oldest",
+          "check_kind": "recomputation",
+          "expression": "oldest == max(lots[].age_days)",
+          "recomputation": {
+            "operator": "max",
+            "over": "lots",
+            "element_field": "age_days",
+            "reads": [
+              "lots"
+            ]
+          },
+          "precision_source": "aggregate_over:max",
+          "derivation_rule": "postcondition_assert",
+          "source_symbol": "oldest_lot_age"
+        }
+      ]
+    },
+    {
+      "operation_id": "service:reserve",
+      "reads": [
+        "lots",
+        "wanted"
+      ],
+      "writes": [],
+      "preconditions": [
+        {
+          "expression": "wanted <= 0",
+          "raises": "OutOfStock",
+          "derivation_rule": "precondition_guard"
+        },
+        {
+          "expression": "not lots",
+          "raises": "UnknownPart",
+          "derivation_rule": "precondition_guard"
+        }
+      ],
+      "postconditions": [],
+      "failure_taxonomy": [
+        "OutOfStock",
+        "UnknownPart"
+      ],
+      "provenance": {
+        "derivation_rule": "return_annotation",
+        "source_symbol": "reserve",
+        "source_file": "service.py",
+        "analyzer_version": "0.1.0",
+        "content_hash": "sha256:dc9b984b5dea6c6527ad92c4e41e569895f245d4a9df1d1d964e1045593f951f",
+        "validation_status": "provisional",
+        "validated_against": null
+      },
+      "checks": [
+        {
+          "quantity": "<return>",
+          "check_kind": "shape",
+          "expression": "isinstance(<return>, int)",
+          "recomputation": null,
+          "precision_source": null,
+          "derivation_rule": "return_annotation",
+          "source_symbol": "reserve"
+        }
+      ]
+    }
+  ]
+}

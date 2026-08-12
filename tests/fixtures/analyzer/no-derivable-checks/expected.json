@@ -1,0 +1,13 @@
+{
+  "_comment": [
+    "The negative fixture. `opaque.py` carries no annotation, no guard, no",
+    "assert, no raise and no aggregate binding, so the correct derivation is",
+    "empty and the analyzer must produce nothing rather than something.",
+    "",
+    "An analyzer scored only where it succeeds cannot be told apart from one",
+    "that emits a contract for every function it sees, and a plausible wrong",
+    "contract is the failure class this corpus has measured twice."
+  ],
+  "source_file": "opaque.py",
+  "contracts": []
+}
