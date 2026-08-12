@@ -2220,6 +2220,50 @@ comes back empty, which is the only thing separating those two readings.
 Since the nested run's sweep reaps the child first, there was nothing of this run's for the unscoped
 kill to find — so every one of the ten decoy kills finding 039 recorded was **pure collateral**. The
 scan's entire observed effect was on other passes' processes.
+### Killing the PID you were handed can leave the measurement running, and a plant-and-restore loop then corrupts the tree it is measuring
+
+**Observed 2026-08-12 while measuring the FR/SC registers, and it invalidated a full 118-row pass
+before it was caught.** A census that deletes a register row, runs the gate, and restores the row was
+started, then stopped early to change how its output was buffered. The stop used the PID reported for
+the command. **That PID was the wrapper, not the Python process.** The wrapper died, the interpreter
+did not, and it went on planting and restoring for another ten minutes underneath a *second* census
+started in the same tree. Confirmed afterwards by listing processes by name rather than by the
+remembered PID: the reported id and the interpreter's id were different, and the interpreter was still
+there with a fourteen-minute elapsed time.
+
+**What it cost, and why it did not look like a failure.** The two loops each snapshot a file, mutate
+it, and write the snapshot back. Interleaved, one loop's restore writes back a snapshot the other loop
+took while a row was deleted, so a row is lost *permanently* and every later iteration is scored
+against a register that already has a hole in it. Feature 001's `FR-019` went missing that way. The
+run kept printing plausible per-row results for another eighty rows — the warning counts were simply
+inflated by the standing hole, which reads as a checker doing more work rather than as a corrupted
+input. **A silent-row census is exactly the measurement this failure cannot be seen in**, because its
+own success criterion is that nothing goes quiet, and a permanent extra hole makes things *louder*.
+
+**Three guards, and the middle one is the one that would have caught it.**
+
+* The row list must come to the expected total or the run refuses to start. This is what first
+  exposed it — the second census announced **118** rows where the register census says 119, and that
+  single missing row was the only visible symptom of ten minutes of interleaved corruption.
+* **Before each plant, assert the target register is at full strength.** A restore-and-continue loop
+  carries damage forward silently; asserting the precondition per iteration converts that into a halt
+  at the first bad row instead of a plausible report over all of them.
+* Exactly one definition must disappear per plant, so a fat edit is never recorded as a single-row
+  deletion. Checking only that *the token* is gone does not establish this.
+
+**And the loop must restore on a signal, because the signal is what breaks it.** A `finally` does not
+run on `SIGTERM`, so the default disposition leaves the tree mutated at whatever row was in flight.
+A handler that writes the held snapshots back and exits costs four lines.
+
+**The rule.** Do not stop a plant-and-restore loop by killing a remembered id; select it by name,
+confirm it is gone by name, and only then read the tree. This is the neighbouring case to the entry
+above — that one is about a scan selecting on something unique to *this* run, and this one is about a
+kill doing the same. In both, the id you have is not reliably the process that matters.
+
+**The restore discipline held, and is what made this recoverable.** The tree was restored from bytes
+and verified by presence — every one of feature 001's 22 `FR` tokens checked individually, not the row
+count alone. A count is not enough on its own here for a reason worth stating: had the interleaving
+lost one row and duplicated another, the count would have reconciled while the register was wrong.
 
 
 ### Reading an instrument is not measuring it — plant the case instead
