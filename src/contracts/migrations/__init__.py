@@ -2,7 +2,7 @@
 
 **Why a migration exists on day one.** A migration framework with no migration
 in it is untested scaffolding, and the first real migration is always written
-under pressure against data that already exists. The one registered here is not
+under pressure against data that already exists. The first one registered is not
 invented for the exercise: it is a schema change this repository actually made.
 `declared_location_set` entries did not originally carry `rule_id` and
 `justification`; they were added when FR-048's location set was required to name

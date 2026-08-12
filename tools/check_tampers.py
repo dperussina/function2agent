@@ -9,7 +9,7 @@ fails a tamper that matches nothing — but only once somebody runs the harness,
 which needs pytest, a Go toolchain, a Linux kernel and root, takes minutes, and
 is therefore not what the person who *caused* the rot runs.
 
-This is that check with everything expensive removed. It answers three
+This is that check with everything expensive removed. It answers four
 questions per proof and nothing else:
 
 1. Does the tamper still identify exactly one site in the file it names?
@@ -18,6 +18,10 @@ questions per proof and nothing else:
    source and that the proof is now surviving on tolerance rather than on
    accuracy?
 3. Does the test it runs still exist?
+4. Is the title the harness will record the title an author wrote? A proof
+   title is a double-quoted shell string, so anything the shell interprets in
+   one is interpreted, and the recorded identity of the proof silently stops
+   being the written one while the arm goes on scoring normally.
 
 Question 3 has no other guard anywhere and is the more dangerous of the two rot
 classes it covers. A `pytest` selector naming a test that has been renamed
@@ -111,14 +115,47 @@ _INVOCATION = re.compile(r"^(go_)?proof\s+\"")
 # cannot end at `proof` when a word character follows it.
 _DECLARATION_SHAPED = re.compile(r"^\s*\w*proof\b(?!\s*\(\))", re.M)
 
+# The title as *written*, read straight out of the source line and never through
+# a shell. Compared against the title bash produced, because a proof title is a
+# double-quoted shell string and the difference between the two is silent.
+#
+# Observed rather than reasoned, 2026-08-12. A title reading "so `required` is a
+# presence test again" is command substitution: the harness printed `required:
+# command not found` — which reads as a broken environment, not as a typo — and
+# recorded the title with the word deleted. The arm scored correctly either way,
+# so what was corrupt was the record of *which* mechanism had been proved, which
+# is the whole of what an archived verdict carries. `extract()` below runs the
+# same substitution *inside this gate*, with stderr captured and discarded, so
+# this tool was reporting the rewritten title as a healthy proof.
+#
+# The rule is deliberately not a list of shell constructs to refuse; such a list
+# falls behind bash. It refuses any difference between written and produced, so
+# command substitution, parameter expansion and whatever bash grows next are one
+# rule that cannot drift. A written title containing a backslash is **skipped**:
+# escape processing makes the two legitimately differ, and this check stays
+# looser than the shell rather than becoming a second implementation of it — the
+# ground `_DECLARATION_SHAPED` above is written on.
+_RAW_TITLE = re.compile(r'^(?:go_)?proof\s+"([^"]*)"')
+
 
 class Proof:
-    def __init__(self, kind: str, name: str, path: str, test: str, snippet: str):
+    def __init__(
+        self,
+        kind: str,
+        name: str,
+        path: str,
+        test: str,
+        snippet: str,
+        raw: str = "",
+    ):
         self.kind = kind
         self.name = name
         self.path = path
         self.test = test
         self.snippet = snippet
+        #: The declaration's own source text, unevaluated. Empty when the
+        #: caller had none to give, in which case the title check is skipped.
+        self.raw = raw
 
 
 def extract(proof_text: str) -> list[Proof]:
@@ -159,7 +196,19 @@ def extract(proof_text: str) -> list[Proof]:
     fields = out.split("\0")[:-1]
     if len(fields) % 5:
         raise SystemExit(f"the proof listing came back malformed: {len(fields)} fields")
-    return [Proof(*fields[i : i + 5]) for i in range(0, len(fields), 5)]
+    # One block emits exactly once, which is what lets each proof carry its own
+    # source text. A mismatch means a field was interpreted rather than
+    # recorded, so it is refused here instead of silently mispairing the two.
+    if len(fields) // 5 != len(blocks):
+        raise SystemExit(
+            f"{len(blocks)} declaration block(s) produced {len(fields) // 5} "
+            "proofs; a block emitted more or fewer than once, so a field is "
+            "being executed rather than recorded"
+        )
+    return [
+        Proof(*fields[i : i + 5], raw=blocks[i // 5])
+        for i in range(0, len(fields), 5)
+    ]
 
 
 def _go_test_names(root: pathlib.Path) -> set[str]:
@@ -176,6 +225,31 @@ def _python_test_names(path: pathlib.Path) -> set[str]:
     if not path.is_file():
         return set()
     return set(re.findall(r"^\s*def (test_\w+)\(", path.read_text(), re.M))
+
+
+def _written_title(proof: Proof) -> str | None:
+    """The title as it appears in the source, or None when it cannot be read.
+
+    None means "do not compare", never "they match". Two cases reach it: a
+    caller that supplied no source text, and a title carrying a backslash,
+    where the shell's escape processing makes the written and produced forms
+    legitimately differ.
+    """
+    if not proof.raw:
+        return None
+    match = _RAW_TITLE.match(proof.raw)
+    if match is None or "\\" in match.group(1):
+        return None
+    return match.group(1)
+
+
+def _trigger(written: str) -> str:
+    """Name the construct, because `command not found` names the wrong thing."""
+    if "`" in written:
+        return "a backtick, so the shell ran what it enclosed as a command"
+    if "$" in written:
+        return "a `$`, so the shell expanded what followed it"
+    return "something the shell interpreted"
 
 
 def check(
@@ -220,6 +294,17 @@ def check(
         ))
 
     for proof in proofs:
+        written = _written_title(proof)
+        if written is not None and written != proof.name:
+            findings.append((
+                "error", written,
+                f"the recorded title is not the written one — bash produced "
+                f"{proof.name!r}. The written title contains {_trigger(written)}, "
+                "and a proof title is a double-quoted shell string, so the "
+                "harness archives the rewritten result. The arm still scores; "
+                "what is wrong is the record of which mechanism it proved.",
+            ))
+
         target = root / proof.path
         if not target.is_file():
             findings.append(("error", proof.name, f"names {proof.path}, which does not exist"))
