@@ -21,8 +21,8 @@
 # supposed to depend on it, and reports UNPROVEN for any test that still passes.
 
 schema_version: "1.0.0"
-version: "1.4.0"
-updated: "2026-08-09"
+version: "1.5.0"
+updated: "2026-08-12"
 
 invariants:
   - id: INV-001
@@ -217,5 +217,55 @@ invariants:
       order-blind, drop the shipped-stage narrowing from the index-URL rule,
       stop joining line continuations, read the first FROM as the stage that
       ships, or start every scan with asserts_at_build_time already true.
+    runtime: milliseconds
+    model_in_loop: false
+
+  # T123. The runtime half of this sentence already existed in
+  # src/contracts/result.py and had done since T021, which is why this entry is
+  # about **unreachability** rather than about a second check. A caller can
+  # reach a runtime `if` with the forbidden pair already in hand; what it
+  # cannot do is construct a Verified with nothing to pass as issued_by.
+  - id: INV-012
+    discharges: constitution Principle I (v1.1.0), FR-026, FR-022
+    statement: >
+      A provisional derived contract can produce NOT VERIFIABLE and never
+      VERIFIED, and the prohibition is carried by the types rather than by a
+      check. ProvisionalContract and ValidatedContract are distinct types with
+      no inheritance between them, Verified names ValidatedContract in its own
+      constructor, and no method on ProvisionalContract returns Verified —
+      asserted by introspection over the annotations so a method added later
+      is covered without anyone updating a list.
+
+      Verified additionally requires a check that recomputes and a
+      RecomputationAgreement carrying two values it compares itself. That is
+      what keeps T124 and T132 open: a shape-and-type-only control verifier
+      holds no recomputation and so cannot reach VERIFIED at all, which is
+      what T132 will assert over an injected fault corpus. Conformance to a
+      declared shape is explicitly not verification (FR-022).
+
+      **Two halves, and one of them is not gated here.** The static half — a
+      type checker rejecting the forbidden program — is exercised by a planted
+      forbidden construction paired with a clean control, because a green
+      type-check is a positive result whose meaning is the absence of a failure
+      signal and needs a planted failure to mean anything. mypy is not in this
+      project's venv and no gate runs a type checker, so that arm **skips with
+      a named reason** where mypy is absent rather than passing over nothing.
+      The construction half needs no checker and is what the remaining arms
+      assert.
+
+      One residual is asserted rather than fixed: Result.provisional is a bool
+      defaulting to False, the unsafe value, so Result(VERIFIED, payload) with
+      the flag omitted stays constructible. The type that carries it is
+      T126/T127's, and the arm records the defect executably so it is not
+      rediscovered.
+    test: tests/invariants/test_provisional_never_verified.py
+    removal_proof: >
+      Five, all in tests/removal_proofs.sh. In src/analysis/validate.py: make
+      ProvisionalContract a subclass of ValidatedContract so every signature
+      demanding the second accepts the first; drop the issued_by type refusal
+      in Verified.__post_init__; drop the recomputes() refusal so a shape-only
+      check can reach VERIFIED; accept an unequal pair in
+      RecomputationAgreement; or drop its float refusal so an undefined
+      precision is compared silently.
     runtime: milliseconds
     model_in_loop: false

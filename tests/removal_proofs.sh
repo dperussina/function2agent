@@ -215,7 +215,13 @@ REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github 
 #: taken, invisibly, because no proof arm names it. It is in REQUIRED_PATHS now.
 #: The general lesson is the one this whole block is about: a path is on this
 #: list because somebody looked once, and "looked once" is not a guard.
-NOT_NEEDED_PATHS=".git .venv examples research docs README.md LICENSE .cursor .specify .pytest_cache .ruff_cache"
+# `.mypy_cache` joins the list with T123. That task's static half is exercised by
+# running a type checker over a planted forbidden construction; the test points
+# mypy at a temporary cache directory, but a developer reproducing it by hand
+# produces this one in the tree. Recorded as looked-at-and-not-needed so its
+# appearance is not an unrelated failure in the path-accounting guard. It cannot
+# mask a copy-list defect: nothing the suite reads lives in a type-checker cache.
+NOT_NEEDED_PATHS=".git .venv examples research docs README.md LICENSE .cursor .specify .pytest_cache .ruff_cache .mypy_cache"
 
 # unlisted_top_level <dir> -> the entries of <dir> in neither list, one per line.
 #
@@ -4238,6 +4244,123 @@ proof "OD-32 — the producer check type accepts an absent provenance, so a fres
   src/analysis/derive.py \
   "tests/unit/test_derived_record.py::test_a_derived_check_cannot_be_constructed_without_provenance" \
   's = s.replace("                f\"{self.operation_id}/{self.quantity}: no provenance. FR-026 \"", "                \"\")\n        if False:\n            raise DerivationError(")'
+
+# ---------------------------------------------------------------------------
+# T122 / T123 — promotion against the published specification, and the gate that
+# makes the distinction load-bearing. INV-012.
+#
+# The first three arms are the type-level gate. Each removes a *different* limb,
+# and they are not doubly covered: the subclass arm defeats the type distinction
+# while leaving both runtime refusals standing, the issued_by arm defeats the
+# runtime backstop while leaving the type distinction standing (which is why its
+# test is the construction arm and not the mypy arm), and the recomputes arm
+# leaves both of the others whole. A proof that cannot tell two guards apart
+# proves neither.
+
+# The type distinction itself. With ProvisionalContract a subclass of
+# ValidatedContract, every signature demanding the second accepts the first and
+# the whole gate reduces to a naming convention — and `isinstance` in
+# Verified.__post_init__ passes too, so this arm has to be scored by the test
+# that reads the class relationship rather than by one that constructs.
+proof "T123 — ProvisionalContract subclasses ValidatedContract, so the type distinction is a naming convention" \
+  src/analysis/validate.py \
+  "tests/invariants/test_provisional_never_verified.py::test_provisional_and_validated_are_unrelated_types" \
+  's = s.replace("class ProvisionalContract:", "class ProvisionalContract(ValidatedContract):")'
+
+# The runtime backstop for what Python permits and a checker would have caught.
+# Removing it leaves the annotations — and therefore the mypy arms — untouched,
+# which is exactly why the construction arm exists separately from them.
+proof "T123 — Verified accepts any issuer, so a provisional contract reaches VERIFIED at run time" \
+  src/analysis/validate.py \
+  "tests/invariants/test_provisional_never_verified.py::test_verified_cannot_be_constructed_from_a_provisional_contract" \
+  's = s.replace("        if not isinstance(self.issued_by, ValidatedContract):", "        if False:")'
+
+# The condition that keeps T132 satisfiable. Without it a shape-and-type-only
+# control verifier can report VERIFIED and stops being distinguishable from the
+# real one at the layer meant to separate them.
+proof "T123 — a shape-only check can produce VERIFIED, collapsing T132's control into the real verifier" \
+  src/analysis/validate.py \
+  "tests/invariants/test_provisional_never_verified.py::test_a_shape_only_check_cannot_produce_verified" \
+  's = s.replace("        if not self.check.recomputes():", "        if False:")'
+
+# The evidence itself. An agreement that does not compare its two values is a
+# boolean with extra steps, which is the failure the type is shaped against.
+proof "T123 — an agreement accepts two values that disagree, so agreement stops being evidence" \
+  src/analysis/validate.py \
+  "tests/invariants/test_provisional_never_verified.py::test_an_agreement_refuses_two_values_that_are_not_equal" \
+  's = s.replace("        if self.reported != self.recomputed:", "        if False:")'
+
+# No default tolerance (FR-024, T125). Removing the refusal makes a float pair
+# compare under exact equality silently, which is a precision decision taken by
+# accident in the one place T125 says must refuse with a named reason instead.
+proof "T125 — the float refusal goes, so an undefined precision is compared silently" \
+  src/analysis/validate.py \
+  "tests/invariants/test_provisional_never_verified.py::test_an_agreement_refuses_a_float_and_names_precision_as_undecided" \
+  's = s.replace("            if isinstance(value, float):", "            if False:")'
+
+# ---------------------------------------------------------------------------
+# T122 — absence is not agreement, at each of the three depths it can arrive.
+# Three arms rather than one, because the promotion bug is that a single
+# `promote unless contradicted` branch reads all three as agreement, and a proof
+# over only one of them would leave the other two able to promote.
+
+# The three absence arms below are titled for what the tamper actually
+# produces, which is **not** a promotion. With any one of these branches gone the
+# comparison runs against the absence itself and the function cannot answer at
+# all — so what each proves is that the branch is the only thing turning that
+# absence into a named `provisional`, not that its removal promotes. The
+# distinction is worth the words: a title claiming a promotion would describe a
+# failure mode the tamper does not reach, and the arm would then be evidence for
+# a sentence nobody had tested.
+proof "T122 — an absent specification is not turned into a named provisional, so the comparison runs against nothing" \
+  src/analysis/validate.py \
+  "tests/unit/test_validate.py::test_no_specification_at_all_yields_provisional_naming_the_absence" \
+  's = s.replace("    if specification is None or served_operation_id is None:", "    if False:")'
+
+proof "T122 — an unserved operation is not turned into a named provisional, so the comparison reads an absent entry" \
+  src/analysis/validate.py \
+  "tests/unit/test_validate.py::test_an_operation_the_specification_does_not_serve_is_provisional" \
+  's = s.replace("    if operation is None:", "    if False:")'
+
+proof "T122 — a silent entry is not turned into a named provisional, so the comparison reads an absent declaration" \
+  src/analysis/validate.py \
+  "tests/unit/test_validate.py::test_an_entry_that_declares_no_parameters_is_provisional_not_agreeing" \
+  's = s.replace("    if declared is None:\n        return ProvisionalContract(", "    if False:\n        return ProvisionalContract(")'
+
+# The comparison itself. Without it every operation the specification serves
+# promotes, whatever it declares — which is the FR-057 signal (a source
+# reference pointing at the wrong application) going undetected.
+proof "T122 — the parameter comparison goes, so every served operation promotes whatever it declares" \
+  src/analysis/validate.py \
+  "tests/unit/test_validate.py::test_a_specification_that_disagrees_yields_provisional_with_the_difference_named" \
+  's = s.replace("    if derived != published:", "    if False:")'
+
+# Principle I's independence clause at this module's one decision point: what
+# `validated_against` is allowed to name. Pointing it at the source file makes
+# every derivation self-validating, and the refusal that catches it lives in
+# Provenance — so this arm proves that this module is actually subject to it.
+proof "T122 — promotion names the derivation's own source file as its validator" \
+  src/analysis/validate.py \
+  "tests/unit/test_validate.py::test_promotion_cannot_name_the_source_file_as_its_own_validator" \
+  's = s.replace("        validated_against=specification.source_url,", "        validated_against=contract.provenance.source_file,")'
+
+# NOTE — `test_promotion_does_not_promote_the_contracts_checks` deliberately has
+# **no removal proof**, and the absence is the honest reading rather than an
+# oversight. The property is held by the *absence* of code: nothing in
+# `validate.py` touches a check's provenance, so there is no mechanism to edit
+# out. A removal proof needs a mechanism to remove, and the only way to make
+# that test fail is to *add* promotion code — which is not a removal and would
+# be a proof shaped to pass. The test stands as a guard against that future
+# edit; it is not evidence that a guard is running.
+
+# The bridge that passes the flag the unsafe default would otherwise leave
+# false. Without it a provisional contract yields a Result reading as
+# corroborated, and the pre-existing guard in src/contracts/result.py never
+# fires because it is never given anything to fire on.
+proof "T123 — the bridge stops marking a provisional result provisional, so the old guard never fires" \
+  src/analysis/validate.py \
+  "tests/invariants/test_provisional_never_verified.py::test_the_bridge_marks_a_provisional_result_provisional" \
+  's = s.replace("            provisional=True,\n        )", "            provisional=False,\n        )")'
 
 echo
 _verdict="$PASS proved, $FAIL unproven"
