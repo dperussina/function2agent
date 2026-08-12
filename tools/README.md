@@ -1227,7 +1227,7 @@ tool:
 |---|---:|
 | Deletions the whole gate was silent on before | **22** |
 | Newly caught — `FR-002` .. `FR-021` | **20** |
-| Still silent — `FR-001` and `FR-022` | **2** |
+| ~~Still silent — `FR-001` and `FR-022`~~ **Closed 2026-08-12 by a count claim in that feature's `VERDICT.md`; see the entry below** | ~~**2**~~ **0** |
 | Rows the repair newly makes *gap*-visible across all four registers, whatever else covered them | **58** |
 | Rows the union reading catches that the per-feature reading does not | **0** |
 
@@ -1238,8 +1238,12 @@ all 119 rows, not inferred from two totals agreeing.
 over-trusts it: a gap check sees holes, not truncations — and at *both* ends, not just the top.** The
 range is computed from the members that are present, so deleting either endpoint shrinks it instead
 of perforating it. All eight endpoints of the four registers were planted: `definition-count` catches
-six of them and `identifier-resolution` two of those six as well, and the two that fire nothing are
-**feature 001's `FR-001` and `FR-022`** — the endpoints of the one register no prose counts. The
+six of them and `identifier-resolution` two of those six as well, and ~~the two that fire nothing are
+**feature 001's `FR-001` and `FR-022`** — the endpoints of the one register no prose counts~~ **the
+two that fired nothing were feature 001's `FR-001` and `FR-022`, the endpoints of the one register no
+prose counted; that register now carries a count claim and all eight endpoints fire *(closed
+2026-08-12, entry below)*. The blindness described here is unchanged — it is a property of every
+density check, and `identifier-gap` still cannot see any of the eight**. The
 brief for this pass named only the top of the range; the bottom is exactly as invisible, because
 `min(nums)` moves as readily as `max(nums)`.
 
@@ -1290,6 +1294,101 @@ citations at all. Measured rather than assumed: of the 7 documents holding those
 in this corpus sits under `specs/<feature>/`, so there is no ownerless register for this check to be
 unable to place. That is the whole asymmetry — the resolution rule's hard population is empty for the
 gap rule.
+
+#### The two endpoints closed with prose rather than a mechanism, and the site was not the one the sibling suggested
+
+**Measured 2026-08-12 at `6e70bf5`, Darwin arm64, Python 3.12.11, in a throwaway worktree.** The
+entry above leaves feature 001's `FR-001` and `FR-022` uncovered and says why: a density check reads
+holes, not truncations. Both were confirmed still silent before anything changed — each deleted in
+turn with the whole gate run against it, **0 errors and 0 warnings** each time, which reproduces that
+entry's finding at the bottom end as well as the top.
+
+**No new mechanism was added, and that is the ruling.** A truncation is undetectable from the register
+alone: the extent is computed from the members present, so closing it needs an *external* declaration
+of where the register ends. This corpus has exactly four places such a declaration can live, and
+three of them were already refused:
+
+| Where the declaration could live | Disposition |
+|---|---|
+| A prose count of the register | **Taken.** `definition-count` already reads it, and it covered the other three registers, which is why they were never exposed |
+| A prose *range* of the register | Refused. The entry below measures `register-range` firing **0** times over **48** candidate sites, and no correct single-feature extent claim can pass it in the separators it reads |
+| The citations of the register | Refused. Feature-scoped `identifier-resolution`, declined two entries above at **153** false positives to **2** |
+| A constant in `config.json` | Refused. `definition-count` carries no threshold on purpose, a constant is one more thing `threshold_probe.py` must pin, and a figure no reader ever sees is the register-provenance trap rather than an escape from it |
+
+So the fourth option is not a rival mechanism; it is the first option with the declaration moved
+somewhere a person cannot read it. **Teaching `identifier-gap` a declared extent reduces to choosing
+one of these four, and three are already closed on measured grounds.** Nothing about the gap check
+changed: no code was touched, and therefore no self-test row was added — there is no new behaviour for
+one to hold, and the claim below is held by the plants and by `definition-count`'s own existing rows.
+
+**The site is `VERDICT.md`, and the obvious candidate was wrong.** The sibling claim lives at
+`specs/001-discovery-validation/checklists/requirements.md:91` — *"all nine success criteria"*, count
+word on one line and noun on the next — so the parallel site for `FR` looked like the same file.
+**The parallel sentence cannot be written there, because it would be false.** That claim is sayable
+about `SC` only because `VERDICT.md` adjudicates every one of the nine; it adjudicates **3** of the
+`FR` register's **22** rows and says so in the section heading it sits under. *"It rules on all
+twenty-two functional requirements"* would be a fabricated claim that happened to satisfy a checker,
+which is the defect this repository refuses under its own name.
+
+**What the claim is doing as prose, which is the test it had to pass.** The section already opened
+*"FRs are not adjudicated exhaustively here"* — a disclaimer with no scale on it. A reader could not
+tell whether "not exhaustively" meant three of four or three of sixty, and the denominator is the
+whole content of that warning. The sentence added supplies it and closes the misreading in the same
+breath: the unnamed rows carry no verdict rather than a passing one. It is guarded because it is worth
+reading, not written in order to be guarded.
+
+**Both endpoints, planted before and after.**
+
+| Plant | Before | After |
+|---|---|---|
+| Delete feature 001's `FR-001` | 0 errors, 0 warnings | **1 warning** `definition-count`, expecting 21, hint *the register runs to FR-022* |
+| Delete feature 001's `FR-022` | 0 errors, 0 warnings | **1 warning** `definition-count`, expecting 21, hint *the register runs to FR-021* |
+
+The hints differ, which is the check reading the surviving register rather than echoing a constant.
+That the claim is *read at all* was established the same way and not by grep: this file's own
+`definition-count` extractor reports the site at `VERDICT.md:403` resolving against
+`specs/001-discovery-validation/spec.md`, the right register, through `_target_of`. Grep is not
+evidence here — the `SC` sibling escaped two independent greps because its count word sits on a
+different line from its noun.
+
+**Every row of all four registers, planted, not reasoned about.** Each of the 119 `FR` and `SC` rows
+in the two specifications was deleted in turn with the full check set run against it, in the same
+`run_checks` path the gate uses:
+
+| Register | rows | caught | silent |
+|---|---:|---:|---:|
+| `specs/001-discovery-validation/spec.md` `FR` | 22 | **22** | **0** |
+| `specs/001-discovery-validation/spec.md` `SC` | 9 | **9** | **0** |
+| `specs/002-spec-aware-agent-runtime/spec.md` `FR` | 58 | **58** | **0** |
+| `specs/002-spec-aware-agent-runtime/spec.md` `SC` | 30 | **30** | **0** |
+
+**119 of 119 caught, 0 silent**, and the split confirms the mechanism rather than merely the total:
+in each register exactly **2** rows are caught by `definition-count` alone and the rest by
+`definition-count` together with `identifier-gap`. Those 2 are the endpoints, in all four registers.
+No register in this corpus now has a row that can be deleted silently.
+
+**The residue, which is narrower than what it replaces and is measured rather than inferred.** A
+count claim is satisfied by advancing the count, so the honest question is what a pass that deletes a
+row *and* makes the edit it would actually make can still hide. Planted:
+
+| Compound plant — delete the row **and** advance the count | Result |
+|---|---|
+| Endpoint `FR-001`, count advanced | **0 errors, 0 warnings** — still silent |
+| Endpoint `FR-022`, count advanced | **0 errors, 0 warnings** — still silent |
+| Interior `FR-015`, count advanced | **1 warning** `identifier-gap` |
+
+So the endpoints are covered against a *deletion* and not against a deletion plus a matching prose
+edit, while every interior row is covered against both. That is the defence-in-depth argument in the
+entry above, read from the other side: `identifier-gap` is what survives the count being advanced, and
+it is exactly what cannot see an endpoint. **Feature 001 is CLOSED with a `VERDICT.md` and its
+register is frozen**, so the compound edit is not a maintenance path anyone is on — which is why this
+is recorded as a limit rather than chased with a fifth mechanism. It is also the reason a
+hand-maintained figure is safe here and would not be in a live register.
+
+**One thing this does not buy, stated because the number appears in this file.** A count of feature
+001's requirements written in *this* document is not checked — `definition-count` resolves its target
+through the claiming document's own `specs/<feature>/` directory, and `tools/README.md` has none, so
+the figures quoted in this entry are unread prose like every other figure here.
 
 #### No correct statement of one feature's FR or SC extent can pass `register-range`, and the relaxation stays declined
 
@@ -2121,6 +2220,7 @@ comes back empty, which is the only thing separating those two readings.
 Since the nested run's sweep reaps the child first, there was nothing of this run's for the unscoped
 kill to find — so every one of the ten decoy kills finding 039 recorded was **pure collateral**. The
 scan's entire observed effect was on other passes' processes.
+
 
 ### Reading an instrument is not measuring it — plant the case instead
 

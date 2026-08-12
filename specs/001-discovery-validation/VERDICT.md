@@ -399,7 +399,9 @@ arrived, and the reading was never taken before OD-07 closed the feature.
 
 ### Functional requirements not met
 
-FRs are not adjudicated exhaustively here; these are the ones that failed or partly failed.
+FRs are not adjudicated exhaustively here; these are the ones that failed or partly failed. That is
+three of the twenty-two functional requirements [`spec.md`](./spec.md) defines, so the nineteen
+unnamed ones carry no individual verdict in this document rather than a passing one.
 
 - **FR-012 — measure preliminary effect-classification precision, reporting critical
   misclassifications separately: UNMET.** Never measured. [finding 004](./findings/004-recall-against-authoritative-key.md)
