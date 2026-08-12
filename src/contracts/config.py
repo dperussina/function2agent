@@ -190,6 +190,16 @@ _NO_DEFAULT_OPERATOR_PRICES = (
     "to a declaration file, or to the literal 'none' to declare nothing."
 )
 
+_NO_DEFAULT_REPORTING_WINDOW = (
+    "FR-045 states no default for the reporting window and cites Q-10 by name. "
+    "An unset window is not a number nobody measured — it is a single window "
+    "covering all of time, which FR-045 rules out along with 'unbounded' and "
+    "'a figure this specification invented'. SC-019 is not evaluable until an "
+    "operator sets it, and that is a precondition rather than a defect: a "
+    "share is a share OF an interval, and an interval nobody declared makes "
+    "two consecutive reports incomparable while looking identical."
+)
+
 _NO_DEFAULT_RESULT_BOUND = (
     "FR-058 states the bound is required configuration and states no default. "
     "An unset per-result bound is not a number nobody measured; it is the "
@@ -250,6 +260,19 @@ RUNTIME_KEYS: tuple[Key, ...] = (
         "write, and a model neither this key nor the table prices fails at "
         "startup rather than at its first call",
         no_default_reason=_NO_DEFAULT_OPERATOR_PRICES),
+    # FR-045 — no default, Q-10 again, and **in the runtime's container rather
+    # than a fourth one**. `ANALYSIS_KEYS` exists because the runtime never
+    # reads a source reference, and the test that distinction has to pass is
+    # whether the process would be made to set a value it never uses. The
+    # runtime is the process that *produces* the results this window counts, so
+    # it fails the test in the other direction: a reporting window resolved
+    # anywhere else would be a window over somebody else's traffic.
+    Key("REPORTING_WINDOW_SECONDS", Kind.FLOAT, "FR-045",
+        "the fixed length of the interval a not-verifiable share is a share "
+        "of. Fixed rather than per-report so consecutive reports are "
+        "comparable — a share over an interval the reader cannot see is a "
+        "number without a denominator",
+        no_default_reason=_NO_DEFAULT_REPORTING_WINDOW),
     Key("F2A_STATE_DIR", Kind.PATH, "FR-033",
         "directory holding the runtime's own store — the journal, the ledger "
         "and the ceilings. Outside the session's mount namespace"),

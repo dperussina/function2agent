@@ -58,6 +58,7 @@ RUNTIME_ENV = {
     "MODEL_PROVIDER": "anthropic",
     "MODEL_ID": "claude-sonnet-4-5-20250929",
     "MODEL_PRICES_OPERATOR": "none",
+    "REPORTING_WINDOW_SECONDS": "3600",
     "F2A_TENANT_ID": "t-1",
     "F2A_DEPLOYMENT_ID": "d-1",
 }
@@ -113,14 +114,21 @@ def on_linux(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_all_twelve_no_default_reasons_are_reachable_from_an_entry_point() -> None:
+def test_every_no_default_reason_is_reachable_from_an_entry_point() -> None:
     """The claim the seam was recorded against, as an accounting.
 
-    Twelve keys carry a `no_default_reason`. A reason declared on a key that no
-    entry point resolves is machinery that cannot run, which is the state the
-    whole tree was in.
+    Thirteen keys carry a `no_default_reason`. A reason declared on a key that
+    no entry point resolves is machinery that cannot run, which is the state
+    the whole tree was in.
+
+    The count moved from twelve on 2026-08-12 when T130 declared
+    `REPORTING_WINDOW_SECONDS` (FR-045, Q-10). **The number came out of the
+    census rather than the census out of the number** — the key was added to
+    `RUNTIME_KEYS`, this arm reported thirteen, and thirteen was then written
+    down. The name no longer carries the count for that reason: a census whose
+    own title has to be edited invites the count to be edited with it.
     """
-    assert len(STATES_A_REASON) == 12, (
+    assert len(STATES_A_REASON) == 13, (
         f"the reason-carrying set moved to {len(STATES_A_REASON)}: "
         f"{sorted(k.name for k in STATES_A_REASON)}"
     )
