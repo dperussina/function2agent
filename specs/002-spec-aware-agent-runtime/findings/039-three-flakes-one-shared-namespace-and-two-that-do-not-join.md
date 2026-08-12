@@ -411,6 +411,12 @@ figure.
 | go outcomes | `226`, 0 not passing | `226`, 0 not passing |
 | verdict | `337 proved, 0 unproven, 13 skipped` | `338 proved, 0 unproven, 13 skipped` |
 
+**Confirmed on CI, on the platform §9.3 confirmed the floor on.** The `removal proofs` job at
+`b7b4254` printed `baseline 1888 python outcomes (0 not passing), 226 go outcomes (0 not
+passing)`, and all six jobs of that run concluded success. §9.3 read the same job at **2**;
+Linux and macOS agree before and after, so neither the floor nor its repair is a property of
+one platform. The new guard's arm scored `proved` there too.
+
 **Compared arm for arm and not on totals**, from each run's own JSON record: **0** arms lost,
 **0** arms changed outcome, **1** arm added — the new guard's, and it scored `proved`. The one
 extra Python outcome is that guard's own test. A change that moved one arm from proved to
