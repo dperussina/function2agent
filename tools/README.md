@@ -2633,6 +2633,47 @@ mentions of that entry, of which this file carries two more — one applying its
 planted tamper needle, and one explicitly declining membership as complementary rather than
 duplicate.
 
+### Refinement, 2026-08-12 — the pre-staging read has a shelf life, and the check that actually holds runs *after* the commit
+
+**This refines [the index entry](#staging-explicit-paths-protects-you-from-another-passs-working-tree-not-from-its-index)
+rather than replacing it. That entry's rule — read `git status` for staged entries you did not create
+before staging anything — is still right, and it is still the only signal available at the moment it
+prescribes. What it is not is sufficient, and the gap is temporal rather than logical.**
+
+**A pass followed it and still swept up a concurrent pass's work, because the contamination arrived
+mid-run.** The read was taken, the tree was clean of anything that pass had not written, and the
+other pass's content landed in the interval between that inspection and the pass's own `git add`.
+Hunk-scoping the other files bought nothing, because the new content landed in a file the pass had
+already cleared — the clearance was accurate when it was taken and stale when it was used.
+
+**So a pre-staging inspection is a reading with a shelf life, and the shelf life is the length of
+your own edit.** This is the same shape as the ` M` direction problem two entries up and as the
+[emptiness-test inversion](#the-emptiness-test-inversion--git-diff-cannot-tell-unchanged-from-changed-back)
+above it: an instrument that was correct when read, consulted later as though it still were. `git
+status` cannot report a write that has not happened yet, and no amount of reading it more carefully
+closes that.
+
+**The check that works is post-commit, and it is a presence test over the commit itself: verify the
+commit touches exactly the files you intended, by count and by name, before pushing.** `git show
+--stat HEAD` and `git show --name-only --format= HEAD` both answer it; the count matters as much as
+the names, because a file you did intend to touch can arrive carrying a hunk you did not write. This
+runs *after* the window the pre-staging read cannot cover, which is the entire point — it is the
+first reading taken at a moment when nothing further can be absorbed.
+
+**The recovery, when it fires, is local and non-destructive, and it was exercised.** The pass read
+the commit stat, saw a file it had not intended, and ran `git reset --mixed HEAD~1`, restaged the one
+hunk that was its own, and recommitted. **`--mixed` and not `--hard`**: the other pass's work stayed
+intact in the working tree, and that pass committed it itself. Nothing was lost and nothing needed to
+be reconstructed, because the commit had not been pushed. That is the whole reason this check is
+specified as running *before* the push — after it, the same discovery is
+[a range problem](#use-a-detached-worktree-names-no-path-so-two-passes-share-one-and-the-collision-is-silent-in-the-direction-that-matters)
+and the remedies stop being local.
+
+**This does not license skipping the pre-staging read.** The two catch different things: the read
+catches an index you should not touch at all, which is a reason not to start; the stat catches
+content that arrived while you worked, which is a reason to redo one commit. The first is cheaper and
+the second is the only one with no blind interval.
+
 ### One worktree per pass, because every defence above is a read a pass has to remember to take
 
 **Ruled by the owner on 2026-08-11: each non-trivial concurrent pass gets its own git worktree.**
@@ -4837,6 +4878,68 @@ against 184 ablated clean cases, and rejected. Wiring an advisory into a gate
 rebuilds exactly that rejected rule. Running it ungated on every push emits a
 permanent listing a reader learns to scroll past, which is how its one true
 positive gets lost. It stays a human-run audit aid.
+
+### The hand-run gate list said eight and CI carries nine, and the ninth was missing from the venv rather than from the repository
+
+**Recorded 2026-08-12, after three consecutive red CI runs that nobody noticed.**
+`31644411424` (`ef2d048`), `31644481193` (`5c63ada`) and `31647148033`
+(`27edac4`) all concluded `failure`; the last green was `31641243189`
+(`84f2a56`). Every one failed on the same step — `type check` in the
+`invariants` job — and **there is no branch protection on this repository**
+(`protected` false, rulesets empty), so a red job blocks nothing and is
+invisible to anyone who does not open the run. Two consecutive passes reported
+*"all eight gates green"* over it, and both reports were true about the eight.
+
+**The corrected list is nine, and this is it:**
+
+| # | gate | how it is run |
+|---:|---|---|
+| 1 | corpus checks | `python tools/check_corpus.py` |
+| 2 | check self-test | `python tools/selftest.py` |
+| 3 | generated claims | `python tools/gen_claims.py --check` |
+| 4 | tamper rot | `python tools/check_tampers.py` |
+| 5 | the census | `python tools/instruments.py --check` |
+| 6 | invariants | `python tests/invariants/runner.py` |
+| 7 | the suite | `python -m pytest tests -q` |
+| 8 | removal proofs | `bash tests/removal_proofs.sh` |
+| 9 | **type check** | `python -m mypy --no-incremental --cache-dir="$(mktemp -d)"` |
+
+**Two paths that travel in briefs are wrong and cost a pass a cycle each:** there
+is no `tools/corpuscheck/check_corpus.py` and no `tools/corpuscheck/selftest.py`.
+Both live at the top of `tools/`. `tools/corpuscheck/` is the library package the
+entry points import, and it holds `corpus.py` — it is not a gate directory.
+
+**The tempting reading of why the ninth was missing is wrong, and the correct one
+is cheaper to fix.** It is *not* a gate that no local pass can run, and the
+repository was not silent about it. `tools/instruments.py` has declared it since
+2026-08-11 as the `type check` entry, anchored on `python -m mypy
+--no-incremental`, and `--check` reconciles that entry against `ci.yml` — the
+census was complete and green throughout. `requirements.lock` declares
+`mypy==2.3.0` with hashes, and every CI job that needs it runs `pip install
+--require-hashes -r requirements.lock`. **What was stale was the shared `.venv`,
+which had never been synced to the lock that already named the dependency**, so
+`python -m mypy` answered `No module named mypy` and the gate silently left the
+list. Scope, invocation and expected error count were all declared and all
+correct; the only missing thing was an install.
+
+**So the fix to the class is one command and not a ninth checklist line: sync
+`.venv` to `requirements.lock` before reporting gate numbers.** Installing the
+pinned `mypy==2.3.0` made the gate locally runnable on the spot — 88 source
+files, ~2 s, and it reproduced CI's failure exactly. A gate list assembled from
+what the environment happens to answer to will always be a list of the gates
+whose dependencies are installed, which is a different set from the gates that
+exist and drifts silently in only one direction.
+
+**One neighbour is genuinely not locally runnable, and the contrast is the
+point.** `tests/invariants/runner.py` ends by printing *"Second arms this runner
+cannot execute — run them yourself: `src/proxy/conformance_test.go`"*. That gate
+is also absent from the eight, and it is **not** invisible, because the
+instrument that cannot reach it says so in its own output. The type check said
+nothing, because a missing module is not a skip an instrument reports — it is an
+instrument that was never invoked. **An instrument that announces what it could
+not do is a gap; one that is simply absent from the environment is the
+[vacuity](#the-vacuity-floor-and-the-declaration-cross-check) this file is
+written against, one level up from the checks it usually catches it in.**
 
 ### The renderer is watched, and watching it may not gate
 
