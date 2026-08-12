@@ -145,7 +145,21 @@ EXPECTED: list[tuple[str, str, int | None, str]] = [
     # this row goes quiet.
     ("link-label", "README.md", 133, "a filename beginning 01-"),
     ("identifier-resolution", "research/14-fixture-synthesis.md", 16, "D-99"),
-    ("identifier-gap", None, None, "D-03"),
+    # `path` is pinned to a relpath, which the row above it deliberately left
+    # unpinned with `None`. Until 2026-08-12 this violation carried the
+    # configured `what` prose in the field every other violation prints an
+    # openable file in, so the report's own grouping heading read `decision
+    # register, research/14 §3.1` — a document that does not exist in this
+    # fixture tree, whose register is `research/14-fixture-synthesis.md`. Revert
+    # `path` to the config string and this row fails on the path alone.
+    ("identifier-gap", "research/14-fixture-synthesis.md", 0, "D-03"),
+    # And the label has to survive the move rather than be dropped: it now reads
+    # in `found`, where prose belongs. Delete it from the message and this fails.
+    ("identifier-gap", "research/14-fixture-synthesis.md", 0, "decision register, research/14 §3.1"),
+    # The single-document branch of the register's own address, computed from
+    # this run's corpus rather than read from config — which is what makes it
+    # right in a fixture tree at all.
+    ("identifier-gap", "research/14-fixture-synthesis.md", 0, "defined in research/14-fixture-synthesis.md"),
     # 4 — findings numbering
     ("findings-numbering", "specs/001-fixture/findings/005-epsilon.md", None, "prefix 005"),
     ("findings-numbering", "specs/001-fixture/findings/005-zeta.md", None, "prefix 005"),
@@ -931,6 +945,94 @@ def _definition_shape_selftest(verbose: bool) -> list[str]:
     return failures
 
 
+def _gap_path_selftest(verbose: bool) -> list[str]:
+    """Prove `identifier-gap` names an openable file for a register that has none.
+
+    Neither fixture tree can hold this. Measured 2026-08-12, no namespace spans
+    more than one document in either of them — every register there is defined by
+    exactly one file — so the corpus rows above hold only the single-document
+    branch, and reverting the plural branch leaves them all green. The real
+    corpus is where the plurality lives: seven of its nine namespaces are defined
+    by more than one document and `E` by thirty, which is the same reason the
+    namespace-to-owning-document map recorded in `tools/README.md` cannot have
+    one document per namespace as its schema.
+
+    Two properties, and the first is the one the repair is for: `path` carries a
+    relpath, never the configured `what` prose. The second is that a register
+    with no single file says so instead of picking one silently.
+    """
+    from corpuscheck.corpus import ROLE_CONSUMER, Corpus, Document, build_masked
+    from corpuscheck.checks.identifiers import gaps
+    from corpuscheck.runner import load_config
+
+    config = load_config()
+
+    def doc(relpath: str, body: str) -> Document:
+        lines = body.split("\n")
+        masked, fenced = build_masked(lines)
+        return Document(
+            path=Path(relpath), relpath=relpath, role=ROLE_CONSUMER,
+            text=body, lines=lines, masked_lines=masked, fenced=fenced,
+        )
+
+    # D-02 is defined nowhere, so the union D-01, D-03, D-04 has a hole in it,
+    # and the three definitions are split across two documents on purpose.
+    corpus = Corpus(
+        root=Path("/nonexistent-selftest-root"),
+        documents=[
+            doc("beta/second-register.md", "- **D-04**: split across two files\n"),
+            doc("alpha/first-register.md", "- **D-01**: one\n- **D-03**: three\n"),
+        ],
+    )
+    skips: list[tuple[str, str]] = []
+    ctx = {"config": config, "skip": lambda c, r: skips.append((c, r))}
+    found = gaps(corpus, ctx)
+
+    failures: list[str] = []
+    print("\nidentifier-gap — a register with no single file still names a file")
+    checks: list[tuple[str, bool, str]] = []
+    if len(found) != 1:
+        failures.append(f"identifier-gap returned {len(found)} violation(s) on the split register, expected 1")
+        print(f"  FAIL  one violation for the split D register  got {len(found)}")
+        return failures
+    v = found[0]
+    checks.append((
+        "`path` is the densest defining document, not the config prose",
+        v.path == "alpha/first-register.md",
+        v.path,
+    ))
+    checks.append((
+        "`path` is not the configured `what` string",
+        v.path != config["identifier_namespaces"]["D"]["what"],
+        v.path,
+    ))
+    checks.append((
+        "the plural branch says the register has no single file",
+        "has no single file: 2 documents" in v.expected,
+        v.expected,
+    ))
+    checks.append((
+        "both defining documents are named",
+        "alpha/first-register.md defines 2" in v.expected
+        and "beta/second-register.md defines 1" in v.expected,
+        v.expected,
+    ))
+    checks.append((
+        "the `what` label survives the move, in the message",
+        config["identifier_namespaces"]["D"]["what"] in v.found,
+        v.found,
+    ))
+    checks.append(("the gap itself is still reported", "D-02" in v.found, v.found))
+    width = max(len(why) for why, _, _ in checks)
+    for why, ok, shown in checks:
+        print(f"  {'PASS' if ok else 'FAIL'}  {why:<{width}}")
+        if not ok:
+            failures.append(f"identifier-gap: {why} — got {shown!r}")
+        if verbose:
+            print(f"        {shown!r}")
+    return failures
+
+
 def _matches(v, path, line, needle) -> bool:
     if path is not None and v.path != path:
         return False
@@ -1011,6 +1113,11 @@ def main(argv: list[str] | None = None) -> int:
     # heading mentions it". That conflation is what let a prose heading stand in
     # for a register under `--path`.
     failures.extend(_definition_shape_selftest(args.verbose))
+
+    # Direction 8: `identifier-gap`'s `path` field, and its plural-register
+    # branch. Neither fixture tree defines any namespace in more than one
+    # document, so the corpus rows reach only the single-document branch.
+    failures.extend(_gap_path_selftest(args.verbose))
 
     print()
     if failures:
