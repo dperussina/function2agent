@@ -24,7 +24,7 @@ not rebuild it.
 | `--warnings-as-errors` | Warnings fail the run too. |
 | `--check NAME` | Run only these checks. Repeatable. |
 | `--skip NAME` | Run everything except these. Repeatable. |
-| `--path GLOB` | Restrict the corpus. Repeatable. Checks that lose their inputs report as `skipped` rather than passing silently. |
+| `--path GLOB` | Restrict the corpus. Repeatable. Checks that lose their inputs report as `skipped` rather than passing silently — so a narrowed run checks *less* than the gate and never stands in for it. |
 | `--format text\|json\|summary` | `summary` is one line per check, for comparing runs. `json` is for tooling. |
 | `--no-hints` | Drop the hint line. |
 | `--config PATH` | Use a different `config.json`. |
@@ -34,6 +34,19 @@ Narrowing with `--path` is the reason checks announce themselves as skipped:
 `--path README.md` removes every findings document, so `numeric-provenance` has
 no authority set. Reporting that as "no violations" would be the false-negative
 this tool exists to prevent, so it says so instead.
+
+**Corrected 2026-08-12 — the sentence above was true of `numeric-provenance` and
+was never true of every check, and `identifier-resolution` failed it in the
+loud direction rather than the silent one.** At `2979c31`, `--path
+specs/002-spec-aware-agent-runtime/tasks.md` reported **304 errors, all
+`identifier-resolution`**, against the `FR` register the narrowing had removed —
+two checks losing their authority set for the identical reason under the
+identical flag, one declaring itself skipped and the other emitting hundreds of
+false errors. `identifier-resolution` was the only check that erred loudly;
+`identifier-gap` and `register-range` produced the same defect as warnings. All
+three are repaired, and the measurement, the two ways the existing guard was
+defeated, and the cost of the repair are in
+[**Narrowing and the definition index**](#narrowing-and-the-definition-index).
 
 ## The one thing to read first
 
@@ -169,6 +182,110 @@ arithmetically correct, correctly transcribed, and computed from inputs that do
 not exist.** Nothing upstream of it is wrong. `numeric-provenance` traces the
 figure to its source and finds one. The defect is entirely in what the figure is
 called.
+
+### Narrowing and the definition index
+
+**Measured 2026-08-12 on Darwin arm64, Python 3.12.11, unprivileged (uid 501),
+against `2979c31`.** `--path` is the obvious way to gate a single edited file
+quickly, and until this pass it was the one flag that could make
+`identifier-resolution` emit hundreds of errors naming identifiers that resolve
+perfectly well in a full run.
+`python3 tools/check_corpus.py --path specs/002-spec-aware-agent-runtime/tasks.md`
+reported **304 errors, every one `identifier-resolution`, every one in the `FR`
+namespace** — against a register the narrowing had itself removed from the walk.
+A pass that saw that flood would either distrust the instrument or believe its
+own edit had broken the corpus, and both readings are wrong.
+
+The guard that should have caught it was already present and already firing.
+`min_definitions` is `3`, and in that same run **eight of the nine namespaces
+disabled themselves with a stated reason**. `FR` was the ninth, and why it
+survived is the part worth keeping: `min_definitions` counts *definitions in the
+corpus that was walked*, and never asks whether the register itself is there.
+Two independent things defeat it.
+
+**A prose heading was read as three definitions.** The heading rule accepted any
+identifier anywhere in the heading text, so `tasks.md:1134` —
+
+```
+### The execution environment — FR-048, FR-049 and FR-050's mechanisms
+```
+
+— defined `FR-048`, `FR-049` and `FR-050`. It was the **sole** source of `FR`
+definitions in that narrowed run, and three is exactly `min_definitions`. A
+heading that *names* identifiers announces a section about them; it does not
+define them. The rule is now lead-anchored, like the bullet and table-cell rules
+beside it, which is the strictest reading of the shape the module docstring had
+always given as its example (`### OD-01 — ADK's role`). **Measured over the whole
+corpus the tightening costs nothing:** the nine namespaces define `C` 21, `D` 22,
+`E` 19, `FR` 58, `O` 6, `OD` 31, `P` 10, `SC` 30 and `U` 52 entries under the old
+rule and under the new one, identically. Every genuine definition already led its
+heading; the loose rule was contributing only phantoms.
+
+**A document that legitimately defines part of a register keeps the whole
+namespace active.** Fixing the heading rule cleared the reported case and left
+the general one, which the same survey then exposed: narrowing to
+`specs/002-spec-aware-agent-runtime/spec.md` keeps `OD` enforced on the four
+entries that document happens to define, while the 31-entry register in
+`specs/001-discovery-validation/plan.md` sits outside the walk — 147 false errors,
+with 8 more for `D` and 7 for `U` by the same mechanism. A count threshold cannot
+separate "this corpus holds the register" from "this corpus holds three of its
+members". Narrowing to `specs/001-discovery-validation/plan.md` showed the
+converse: `E19` is defined by `# E19 — verifier vs judge` in the
+`verifier-vs-judge` harness README, and the only thing naming it in `plan.md` is
+a heading that *leads* with `OD-31` and cites `E19` in passing, so tightening the
+heading rule turned a masked false positive into a visible one — 0 errors before,
+8 after, all `E19`.
+
+So the activation decision is now asked of the **unnarrowed** tree. Under
+`--path`, the check builds a second definition index by walking `corpus.root` on
+disk, and enforces a namespace only when the narrowed corpus contains *every*
+definition the whole tree contains. A namespace holding part of its register is
+announced as `not enforced`; a namespace whose register is gone reads exactly as
+it did before, because that test is asked of the tree rather than of the
+selection.
+
+**That distinction is the only reason this was a check repair and not a
+documentation one.** A guard that goes quiet whenever the register it resolves
+against is absent goes quiet on precisely the condition it exists to catch, and
+this repository has hit that vacuity failure in four instruments in one week. The
+distinction survives here because no combination of `--path` arguments changes
+what is on disk under `corpus.root` — the same move `lifecycle-taxonomy` makes to
+tell a missing document from a narrowed-away one. `ctx["narrowed_paths"]`, set by
+the runner, is what tells the check which of the two questions it is being asked.
+
+**The residual cost, stated plainly: a narrowed run checks fewer identifiers than
+the gate does, and is not a substitute for it.** Planting `FR-999` in
+`tasks.md` and running the full check exits 1 and names it. Running `--path` on
+that same file exits 0, does *not* name it, and prints `namespace FR not
+enforced: 58 of 58 definition(s) are outside the --path selection`. That is the
+fail-safe direction — it says so rather than passing silently — but it means
+`--path` gates links, tables, arithmetic and provenance on the edited file, and
+does **not** gate its identifiers unless the register is in the selection too.
+
+The removal control is the other half, and it is the one that matters most.
+Deleting all 58 `FR` definition bullets from
+`specs/002-spec-aware-agent-runtime/spec.md` and running the full check reports
+**1181 errors**, not a quiet pass: the surviving `FR` references across the
+corpus go dangling and are reported as such. Restoration in both plants was
+verified by reading the original bytes back — SHA-256 over the whole file, plus a
+named line confirmed present in it — rather than by an empty `git diff`, which is
+what a clean tree prints and also what a destroyed one prints.
+
+**One ordering defect surfaced on the way, and it had never fired.** The runner
+executes checks in name order, so `identifier-gap` runs *before*
+`identifier-resolution`; the handoff through `ctx["identifiers_defined"]` that the
+gap check was written to consume therefore never happened, and its fallback
+branch was the only branch ever taken. That is why it kept reporting holes in
+registers the resolution check had already disabled. `identifier-gap`,
+`identifier-resolution` and `register-range` now share one `_activation` result,
+so execution order no longer decides the answer. In a full run that result
+selects exactly the namespaces the old per-check threshold selected, so the gate
+is unchanged.
+
+Across fourteen single-file narrowings — four READMEs, both `spec.md`, both
+`plan.md`, `tasks.md`, `research.md`, `quickstart.md`, `data-model.md`,
+`VERDICT.md` and `research/14` — the tool now reports **0 errors and 0 warnings**,
+with every namespace it declined to enforce named in a skip line.
 
 ### Why `dry-run-verdict` demands a line-local disclosure
 
@@ -3103,6 +3220,17 @@ undocumented gets switched off the first time it is wrong.
   `dry_run` marker and only fires where it is `true`. `known-good` contains a
   live run stating the same three claims the dry run beside it is forbidden to
   state.
+- *A register the corpus was narrowed away from.* The largest false positive
+  this tool has produced: **304 `identifier-resolution` errors** from `--path
+  specs/002-spec-aware-agent-runtime/tasks.md` at `2979c31`, every one naming an
+  `FR` identifier that resolves in a full run. A heading naming three
+  identifiers in prose was read as three definitions, which is exactly
+  `min_definitions`, so the namespace stayed enforced against a three-member
+  phantom register. Heading definitions are lead-anchored now, and the decision
+  to enforce a namespace is taken against the unnarrowed tree rather than
+  against whatever `--path` left behind. The reasoning, the second mechanism the
+  first fix exposed, and the planted controls are under
+  [**Narrowing and the definition index**](#narrowing-and-the-definition-index).
 
 **Accepted.** ~~And live in the current output.~~ **Corrected 2026-08-03 — the gate
 is at zero and this section described a state it had left.** Re-run against the
