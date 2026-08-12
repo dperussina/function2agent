@@ -39,6 +39,17 @@ from pathlib import Path
 # different code, and a digest taken from it would not match. The disclosure is
 # in the value because the value is what appears in `verify()`'s error message,
 # which a reader reaches without ever seeing this comment.
+#
+# **Measured 2026-08-11, and it converts the reasoning above from argued to
+# demonstrated.** That paragraph infers the hazard from `git describe`. The
+# binary has now been asked directly: `node
+# examples/codegraph/dist/bin/codegraph.js --version` prints a bare `1.5.0`,
+# which is exactly the value this string exists to refuse, and it is the
+# release seven commits *behind* the tree that produced the digest below. So
+# the misleading form is not hypothetical and it is not this repository's
+# invention — it is what upstream's own build reports about itself, and a pin
+# that trusted that self-report would name a release shipping different code.
+# Same host and same build as the re-verification recorded below.
 CODEGRAPH_VERSION = (
     "git 49c11fc2e0c02170742be8411e66a31af611f4b7 "
     "(describe v1.5.0-7-g49c11fc; unreleased revision, not an npm version)"
