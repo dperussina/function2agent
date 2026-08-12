@@ -4873,3 +4873,45 @@ report reads as unreadable for a reason that has nothing to do with the
 reports. It exits **2** with `CANNOT RUN` rather than reporting findings it did
 not earn. This is not hypothetical — the system `python3` on the development
 host has no `expat`, exactly as it has no `pytest`.
+
+### Piping a suite run to `tail` discards the identity of what failed, and a transient is the case where identity is the whole finding
+
+**Established 2026-08-12.** The full suite was run five consecutive times on
+one tree. One run reported `1 failed, 2042 passed`; the other four were clean.
+**Which test failed is not recoverable, because the run was piped to `tail -1`
+and only the summary line survived.** No cause is attributed to it and no rate
+is stated — see [finding
+039](../specs/002-spec-aware-agent-runtime/findings/039-three-flakes-one-shared-namespace-and-two-that-do-not-join.md)
+§12, which is where the incident itself is recorded.
+
+**This is the `BROKEN` defect one level up, and it is the reason that entry is
+worth generalising.** Incident 3 in that finding classified an outcome and then
+discarded the output the classification was computed from, which left an
+unparseable tamper and an environment flake indistinguishable — and those want
+opposite responses, one a repair and one a re-run. A suite run piped to `tail`
+does the same thing to a whole suite: the *count* of failures survives and the
+*identity* does not, so a genuine regression and a flake arrive in the same
+sentence.
+
+**The rule, and it costs nothing.** A full-suite run whose failure identity may
+matter must not be piped to `tail`. Any one of these keeps it:
+
+- `-rf`, which names the failures in a short-summary block;
+- `--junitxml`, which names them durably in an artifact — the CI pytest job
+  already does this, and it is why the same accident is not available there;
+- reading the summary *lines*, plural, rather than the last one.
+
+**Pair it with the rule about not reading `$?` through a pipe** — stated for CI
+at `.github/workflows/ci.yml`'s preflight step, where every `run:` executes
+under `bash -e` **without** `pipefail`, so a pipeline's left-hand status is
+discarded unless `PIPESTATUS` asks for it. The two are one mistake in two
+dimensions: a pipe silently drops the exit status in the first and the failure
+identity in the second, and both were walked into on 2026-08-12.
+
+**No gate script or CI step was found doing this, and that was checked rather
+than assumed.** The CI pytest steps run with `-rs` and `--junitxml` and are read
+back by `pytest_outcomes.py`, so failure identity is durable there regardless of
+what the log shows. `tests/removal_proofs.sh` writes its baseline to a retained
+file with `-v -rs`, so its `tail -20` is a display truncation of a file that
+still exists rather than a discarded reading. **Nothing in CI is restructured
+for this**; the finding is a working rule for interactive runs.

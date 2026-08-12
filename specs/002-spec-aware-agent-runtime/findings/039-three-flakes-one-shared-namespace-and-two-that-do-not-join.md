@@ -73,6 +73,7 @@ re-checked free immediately before saving. A concurrent pass owns `038`.
 | 1 | `test_the_crash_arms_child_does_not_outlive_a_failing_test` failed once in a full-suite run, passed on isolation and on re-run | the test file itself, added `4eb66be` | 2026-08-09 11:09:53 −0600 |
 | 2 | A sweep took a baseline with **234 of 1653 outcomes failing**, reported *"236 proved, 58 unproven"* | `tests/removal_proofs.sh:344`, added `f3f1c89` | 2026-08-10 08:00:14 −0600 |
 | 3 | One arm reported `BROKEN` on a first run and not on three subsequent ones; the classifying output had been discarded | `tests/removal_proofs.sh:813`, added `ce64490` | 2026-08-05 12:47:25 −0600 |
+| 4 | One full-suite run in five reported `1 failed, 2042 passed`; the run was piped to `tail -1`, so the failing test's identity was discarded. **§12** | this table and §12 | 2026-08-12 |
 
 *(Both line numbers were `297` and `766` when this table was written; §10's repair inserted
 lines above each, and they are repointed rather than left to rot. The commits they are
@@ -574,3 +575,45 @@ recorded incident keeps all its value — it is why `unusable` was split out of 
 Not closed, and distinct: the second baseline failure in the two committed records at
 `10:17:54` and `10:29:15`, which §10.5 states and prices in one sentence rather than
 investigating.
+
+## 12. Amendment — a fourth incident, recorded 2026-08-12, with its identity discarded by the reader rather than by the harness
+
+**What was observed, and nothing beyond it.** The full suite was run five consecutive times
+on `2a5cdbf` on one host. The first exited 0. The second reported **`1 failed, 2042
+passed`**. The third, fourth and fifth each read **`2043 passed, 83 skipped`**.
+
+**What is not known: which test failed.** The run was piped to `tail -1`, so only the
+summary line survived and the failing node id was never written anywhere. It is not
+recoverable — pytest was not asked for `-rf`, no JUnit report was written, and the run's
+output is gone.
+
+**What is deliberately not claimed.**
+
+- **No cause.** Nothing here attributes the failure to a mechanism, to this finding's shared
+  namespace, to a work-tree residue, or to anything else. The identity is the input every
+  such attribution would need, and it is absent.
+- **No rate.** One in five is not a rate at *n* = 5, and this corpus has already had a rate
+  at this *n* decline on re-measurement — §4 states the concurrency conditions per arm for
+  exactly that reason.
+- **No join to incidents 1–3.** It is tabled beside them because it is the same *family* — a
+  full-suite failure that does not reproduce — and not because a shared cause is proposed.
+  §5's ranking is not reopened.
+
+**The one inference the record does support, and its limit.** `1 failed, 2042 passed` totals
+2043, which is the passing count of all four clean runs. So the collected set did not move:
+this was one test that ordinarily passes reporting a failure, and **not** a collection error,
+an import explosion, or a marker expression that stopped selecting. That is the same clock
+§11.1 used — an outcome total lands where it lands — and it bounds the shape of the incident
+without naming the test. It does **not** narrow which test, and it is not evidence that the
+tree was clean.
+
+**Why this is worth a row rather than a shrug: it is incident 3's defect one level up.**
+Incident 3 classified an outcome `BROKEN` and discarded the output the classification came
+from, leaving an unparseable tamper and an environment flake indistinguishable — and those
+want opposite responses. Piping a suite run to `tail -1` does that to an entire suite: the
+count survives, the identity does not, and a genuine regression and a flake arrive in the
+same sentence. **The working rule is recorded in
+[`tools/README.md`](../../../tools/README.md)** beside the `pytest_outcomes.py` section,
+paired with the existing rule about not reading `$?` through a pipe, which is the same
+mistake in the exit-status dimension. No gate script or CI step was found discarding failure
+identity this way, and no CI change was made.
