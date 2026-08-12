@@ -813,6 +813,53 @@ SLUG_ROLES = [
 RENDERED_IDS = 6
 
 
+#: What *defines* an identifier, pinned in both directions. No fixture corpus can
+#: hold these: the failure they pin is a heading contributing a definition, and a
+#: fixture that contains the heading also contains the definition, so the corpus
+#: run cannot tell the two readings apart. The first row is the regression that
+#: produced 304 false `identifier-resolution` errors under `--path` at `2979c31`
+#: — a heading naming three identifiers in prose read as three definitions, which
+#: is exactly `min_definitions`, so the namespace stayed enforced against a
+#: phantom register. Each row is (markdown, namespace, expected identifiers, why).
+DEFINITION_SHAPES: list[tuple[str, str, set[str], str]] = [
+    (
+        "### The execution environment — FR-048, FR-049 and FR-050's mechanisms",
+        "FR",
+        set(),
+        "a heading naming identifiers in prose defines none",
+    ),
+    ("### OD-01 — ADK's role", "OD", {"OD-01"}, "a heading leading with one defines it"),
+    ("### **OD-02** — a bolded lead", "OD", {"OD-02"}, "bold markup on the lead"),
+    ("### ~~D-05~~ — superseded", "D", {"D-05"}, "a struck lead keeps its row"),
+    ("# E19 — verifier vs judge", "E", {"E19"}, "the harness README form"),
+    (
+        "### OD-31 — the experiment is renumbered **E19** and keeps **E8**",
+        "E",
+        set(),
+        "a lead of one namespace does not define another it cites",
+    ),
+    (
+        "- **FR-018**: Analysis MUST operate on copies",
+        "FR",
+        {"FR-018"},
+        "the bold-lead bullet",
+    ),
+    ("| D-17 | a register row |", "D", {"D-17"}, "the register table's first cell"),
+    (
+        "| a cell of prose mentioning D-17 | x |",
+        "D",
+        set(),
+        "prose in a first cell does not define",
+    ),
+    (
+        "```\n### FR-001 — inside a fence\n```",
+        "FR",
+        set(),
+        "a fenced heading defines nothing",
+    ),
+]
+
+
 def _slug_role_selftest(verbose: bool) -> list[str]:
     """Prove `slugify` separates a character's markup role from its literal one."""
     from corpuscheck.corpus import slugify
@@ -846,6 +893,41 @@ def _slug_role_selftest(verbose: bool) -> list[str]:
             "if one was added or demoted on purpose, update RENDERED_IDS and name the "
             "run it came from."
         )
+    return failures
+
+
+def _definition_shape_selftest(verbose: bool) -> list[str]:
+    """Prove which markdown shapes define an identifier, and which only cite one."""
+    from corpuscheck.corpus import ROLE_CONSUMER, Document, build_masked
+    from corpuscheck.checks.identifiers import _namespaces, definitions_in
+    from corpuscheck.runner import load_config
+
+    patterns = _namespaces(load_config())
+    failures: list[str] = []
+    print("\ndefinition shapes — what defines an identifier and what merely cites one")
+    width = max(len(why) for _, _, _, why in DEFINITION_SHAPES)
+    for markdown, ns, expected, why in DEFINITION_SHAPES:
+        lines = markdown.split("\n")
+        masked, fenced = build_masked(lines)
+        doc = Document(
+            path=Path("fixture.md"),
+            relpath="fixture.md",
+            role=ROLE_CONSUMER,
+            text=markdown,
+            lines=lines,
+            masked_lines=masked,
+            fenced=fenced,
+        )
+        got = definitions_in(doc, patterns)[ns]
+        ok = got == expected
+        shown = ", ".join(sorted(got)) if got else "—"
+        print(f"  {'PASS' if ok else 'FAIL'}  {why:<{width}}  {ns}: {shown}")
+        if not ok:
+            failures.append(
+                f"{markdown!r} defines {sorted(got)} in {ns}, expected {sorted(expected)}"
+            )
+        if verbose:
+            print(f"        markdown {markdown!r}")
     return failures
 
 
@@ -922,6 +1004,13 @@ def main(argv: list[str] | None = None) -> int:
     # directions at once — a fixture proves a link resolves, and a link that
     # resolves to a wrong-but-self-consistent slug is exactly the failure here.
     failures.extend(_slug_role_selftest(args.verbose))
+
+    # Direction 7: the definition index's shapes. A fixture corpus cannot pin
+    # these — a fixture holding the heading holds the definition too, so the
+    # corpus run cannot separate "this heading defines FR-048" from "this
+    # heading mentions it". That conflation is what let a prose heading stand in
+    # for a register under `--path`.
+    failures.extend(_definition_shape_selftest(args.verbose))
 
     print()
     if failures:
