@@ -4080,6 +4080,128 @@ proof "T121 — validated may be claimed with no artifact, so Principle I holds 
   "tests/unit/test_provenance.py::test_validated_cannot_be_claimed_without_naming_the_artifact" \
   's = s.replace("        if validated and not self.validated_against:", "        if False:")'
 
+# ---------------------------------------------------------------------------
+# OD-32 — provenance required at contract schema 1.1.0, behind a version gate.
+#
+# Fourteen arms, in three groups, because the decision is three mechanisms and
+# each fails in its own direction:
+#
+#   - the schema requires FR-026's six as data (four arms), and the interesting
+#     one is that a NULL provenance is refused — permitting it is the cheap way
+#     to make the backward direction work and it silently un-requires the field
+#     for every producer willing to write one;
+#   - a 1.0.0 artifact stays readable and its unprovenanced state is named on the
+#     object a caller holds (six arms), including the arm for the leniency being
+#     scoped to provenance and to nothing else;
+#   - absent and provisional never collapse (four arms) — the `spend_usd: 0.0`
+#     defect one field over, guarded on the producer side, in the migration and
+#     in the record reconstruction.
+#
+# Every arm below was observed failing under its tamper before it was written
+# here.
+
+proof "OD-32 — the inner provenance check is never called, so `required` is a presence test again" \
+  src/contracts/schemas.py \
+  "tests/unit/test_derived_record.py::test_a_current_document_with_an_empty_provenance_object_is_refused" \
+  's = s.replace("        if self.required_provenance:", "        if False:")'
+
+# The cheap implementation of the backward direction, and the reason OD-32 limb
+# ④ rejects it: a document then declares 1.1.0 without satisfying 1.1.0, and the
+# schema loses the one capability the bump was made to add.
+proof "OD-32 — a null provenance is admitted at 1.1.0, so a document may claim the version without the fields" \
+  src/contracts/schemas.py \
+  "tests/unit/test_derived_record.py::test_a_current_document_may_not_declare_its_provenance_absent" \
+  's = s.replace("        if not isinstance(value, Mapping):\n            raise SchemaError(\n                f\"{self.kind}: provenance is {value!r}, which is not a \"", "        if value is None:\n            return\n        if not isinstance(value, Mapping):\n            raise SchemaError(\n                f\"{self.kind}: provenance is {value!r}, which is not a \"")'
+
+proof "OD-32 — a partial provenance record satisfies the schema, so five of the six become optional" \
+  src/contracts/schemas.py \
+  "tests/unit/test_derived_record.py::test_a_current_document_with_a_partial_provenance_record_is_refused" \
+  's = s.replace("        absent = [k for k in self.required_provenance if k not in value]", "        absent = []")'
+
+# The two halves declared apart: an inner requirement over a field the outer
+# `required` permits omitting is satisfied by a payload with no provenance at
+# all — the 1.0.0 defect reconstructed one level down.
+proof "OD-32 — the inner requirement may be declared without the outer, so omitting the field satisfies both" \
+  src/contracts/schemas.py \
+  "tests/unit/test_derived_record.py::test_a_schema_cannot_require_inner_fields_of_a_field_it_permits_omitting" \
+  's = s.replace("        if self.required_provenance and \"provenance\" not in self.required:", "        if False:")'
+
+# Finding 016's defect arriving through the artifact store: a document from a
+# revision this build never saw has fields this build recognises.
+proof "OD-32 — the version gate goes, so a later revision is read for the fields that happen to parse" \
+  src/analysis/derived_record.py \
+  "tests/unit/test_derived_record.py::test_a_later_revision_is_refused_rather_than_partially_read" \
+  's = s.replace("        if declared not in READABLE_SCHEMA_VERSIONS:", "        if False:")'
+
+# The disposition itself. Refusing a 1.0.0 artifact does not make it compliant;
+# it makes its non-compliance unreadable, and FR-054's rollback then restores
+# something the runtime cannot load.
+proof "OD-32 — a 1.0.0 artifact is read under the current schema, so it becomes unloadable rather than unprovenanced" \
+  src/analysis/derived_record.py \
+  "tests/unit/test_derived_record.py::test_a_legacy_contract_is_readable_and_comes_back_unprovenanced" \
+  's = s.replace("        if declared == PROVENANCE_REQUIRED_FROM:", "        if True:")'
+
+# The placeholder this decision forbids, reached by the accessor rather than by a
+# helper: returning the absence is what makes an unprovenanced artifact readable
+# as a provenanced one at every call site.
+proof "OD-32 — require_provenance answers with the absence instead of refusing" \
+  src/analysis/derived_record.py \
+  "tests/unit/test_derived_record.py::test_asking_an_unprovenanced_artifact_for_its_provenance_raises" \
+  's = s.replace("            raise UnprovenancedArtifactError(", "            pass\n        if False:\n            raise UnprovenancedArtifactError(")'
+
+# 1.0.0 `derived_check` could satisfy `required` with the bare string
+# "signature". Read as an absence, the claim it makes is discarded silently.
+proof "OD-32 — a legacy non-record provenance is read as an absence, so a claim is discarded" \
+  src/analysis/derived_record.py \
+  "tests/unit/test_derived_record.py::test_a_legacy_provenance_value_that_is_neither_is_refused" \
+  's = s.replace("    if not isinstance(value, Mapping):", "    if False:")'
+
+# The leniency is scoped to the one field 1.0.0 did not require. Widened, this
+# gate stops being a version gate and becomes a general loosening of the schema.
+proof "OD-32 — the 1.0.0 leniency widens past provenance, so any missing required field reads as old" \
+  src/analysis/derived_record.py \
+  "tests/unit/test_derived_record.py::test_a_legacy_document_missing_a_field_1_0_0_did_require_is_refused" \
+  's = s.replace("            if missing:", "            if False:")'
+
+# The disclosure and the records are one fact written twice. Uncross-checked, the
+# direction it drifts in is the one where an unprovenanced artifact stops being
+# named.
+proof "OD-32 — the disclosure stops being cross-checked against the records it summarises" \
+  src/analysis/derived_record.py \
+  "tests/unit/test_derived_record.py::test_the_disclosure_cannot_disagree_with_the_records" \
+  's = s.replace("        if self.unprovenanced_operations != expected:", "        if False:")'
+
+# The same rejected implementation as the null-provenance arm above, reached from
+# the other side: the migration is where the three registered neighbours would
+# put a marked unrecoverable field, and it is the one place that could mint a
+# false-versioned document.
+proof "OD-32 — the migration writes a null provenance at 1.1.0, minting a document whose version is a lie" \
+  src/contracts/migrations/__init__.py \
+  "tests/unit/test_derived_record.py::test_the_migration_refuses_to_produce_an_unprovenanced_current_document" \
+  's = s.replace("    value = document.get(\"provenance\")\n    if isinstance(value, Mapping):", "    value = document.get(\"provenance\")\n    if value is None:\n        return {**document, \"schema_version\": \"1.1.0\", \"provenance\": None}\n    if isinstance(value, Mapping):")'
+
+# The subtlest of the fourteen: `Provenance` has defaults for `analyzer_version`
+# and `validation_status`, so a partial payload read without this check comes
+# back claiming THIS build's analyzer produced it, provisionally. Invented
+# provenance, arriving through a constructor default.
+proof "OD-32 — a stored partial provenance is rebuilt from constructor defaults, so the record invents its analyzer" \
+  src/analysis/provenance.py \
+  "tests/unit/test_derived_record.py::test_a_legacy_partial_provenance_record_is_refused" \
+  's = s.replace("        if missing:", "        if False:")'
+
+# The producer/reader asymmetry, which is where this decision improves on the
+# pricing precedent: one nullable type served both there, two types exist here,
+# and these two arms are what keep the nullable one confined to the reader.
+proof "OD-32 — the producer contract type accepts an absent provenance, so a fresh derivation can omit it" \
+  src/analysis/derive.py \
+  "tests/unit/test_derived_record.py::test_a_derived_contract_cannot_be_constructed_without_provenance" \
+  's = s.replace("                f\"{self.operation_id}: no provenance. FR-026 requires it on \"", "                \"\")\n        if False:\n            raise DerivationError(")'
+
+proof "OD-32 — the producer check type accepts an absent provenance, so a fresh check can omit it" \
+  src/analysis/derive.py \
+  "tests/unit/test_derived_record.py::test_a_derived_check_cannot_be_constructed_without_provenance" \
+  's = s.replace("                f\"{self.operation_id}/{self.quantity}: no provenance. FR-026 \"", "                \"\")\n        if False:\n            raise DerivationError(")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
