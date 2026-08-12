@@ -10,7 +10,9 @@ deliberately — see §7 for why a repair is owed an owner and not this pass. **
 part: §8 records the repair landing later the same day, and corrects two things §3 and §7
 got wrong. §9 measures one of incident 2's two candidates and rules it out, and confirms a
 work-tree baseline floor that neither candidate names. §10 REPAIRS that floor and reports it
-at 0, which supersedes §9.5's "owed an owner" and §9.3's present-tense count of 2.**
+at 0, which supersedes §9.5's "owed an owner" and §9.3's present-tense count of 2. §11 DATES
+incident 2 to a 30-minute window and reports its cause as bounded and probably permanently
+unrecoverable, which supersedes §9.2's "remains undetermined".**
 **User Story**: none. Prompted by a brief asking whether three separately-recorded
 non-reproducing failures share a mechanism.
 **Owner decision**: **none is minted here and no register was edited.** §7 states the one
@@ -302,6 +304,12 @@ arm's **tamper target** is `specs/002-spec-aware-agent-runtime/contracts/egress-
 The pre-registration enumerated every test that *reads* `specs/` and did not ask which arms
 *write* there.
 
+> **§11 dates the sweep and corroborates this.** The tree it ran on is bounded to a
+> 30-minute window, and at the commit that opens it the candidate's own condition was live —
+> which leaves the ruling-out standing on the counts below rather than reopening it. "Remains
+> undetermined" below is superseded: §11 reports it as **bounded and probably permanently
+> unrecoverable**, which is a terminal state and not an open question.
+
 **Candidate A is ruled out as the cause of the 234/58 sweep.** 3 arms against 58 and 14
 outcomes against 234 — one and a half to two orders of magnitude short in both dimensions,
 in the direction that cannot be closed by a larger tree. This is also the prediction
@@ -469,3 +477,94 @@ an investigation: a sweep's baseline transcript from that window, which nothing 
 would have to be reconstructed by running the suite in a work tree built the way the harness
 built one at those commits, which is a measurement nobody has asked for. **Left open,
 deliberately, and cheap to close if a reason appears.**
+
+## 11. Amendment — incident 2 is **dated**, and its cause is bounded and probably permanently unrecoverable
+
+**Date**: 2026-08-11. §9.2 left incident 2's cause *"undetermined"*, which invited the next
+pass to look for a fourth mechanism. It should not, and this section says why: the question is
+closed not by finding a mechanism but by finding the **tree**, and the tree was a *working*
+tree. Two independent clocks put the sweep inside a **30-minute window**, and the commit that
+opens that window measures **clean** on this host today. So the 234 failures were carried by
+uncommitted changes that no longer exist and that git never held. **Bounded, and probably
+permanently unrecoverable** — a terminal state, and a more useful one than "open".
+
+**Platform**: `macOS-26.2-arm64`, euid `501`, CPython `3.12.11` from
+`/Users/djperussina/Code/function2agent/.venv/bin/python`. Every count below was re-measured
+for this section in **detached worktrees** at the named commits, each in a work tree built
+from *that revision's own copy list*, never in the shared tree. Commit times are `git log
+--date=iso-local`. Nothing here is transcribed from a brief.
+
+### 11.1 Clock one — the outcome total lands on exactly one commit
+
+The sweep recorded **1653** Python outcomes. Re-measured today:
+
+| Commit | Committed | Python outcomes | not passing |
+|---|---|---|---|
+| `37eca80` | 2026-08-09 15:56:59 −0600 | 1612 | 0 |
+| **`d816d1d`** | **2026-08-10 06:44:45 −0600** | **1653** | **0** |
+| `4904d70` | 2026-08-10 07:14:57 −0600 | 1747 | 11 |
+
+One condition on the third row, stated because it was not set on purpose: that work tree was
+built from the **pre-`specs`** copy list, and its 11 failures are that artifact. All 11 are
+`FAILED` and **none** is a collection error — checked, `0` matching ` ERROR` — so they are
+counted in the 1747 either way and the total is not affected by the omission.
+
+The two `0 not passing` readings are a second thing worth having. §9.3's floor does not exist
+at these revisions: its first row's test arrives with `f3f1c89` at `08:00:14` and its second
+with `73e9af3` at `16:47:20`, both later. §9.4 dated that from the commits; this reproduces it
+from the other side, by measurement.
+
+### 11.2 Clock two — the declared arm count agrees, and it is independent
+
+The sweep reported `236 proved, 58 unproven`, so **294** arms were scored. This host skips
+**13** — read off both of tonight's end-to-end runs, which each print `13 skipped` — and
+294 + 13 = **307**. `EXPECTED_PROOFS`, the pinned declaration count:
+
+| Commit | `EXPECTED_PROOFS` |
+|---|---|
+| `37eca80` | 292 |
+| **`d816d1d`** | **307** |
+| `4904d70` | 324 |
+| `f3f1c89` | 330 |
+
+This is independent of clock one: one quantity is a property of the *test* set and the other
+of the *proof* set, and the two move on different commits. Both land uniquely on `d816d1d`.
+
+**What the two clocks do and do not establish.** Together they pin the swept tree's collected
+test set and its declared proof set to `d816d1d` exactly. The **window** — `06:44:45` to
+`07:14:57`, 30 minutes 12 seconds — additionally assumes work proceeded forward from one
+commit to the next rather than doubling back to an older checkout. The 17 proofs `4904d70`
+adds inside that half hour make that the natural reading; it is not proved, and it is the one
+assumption in this section.
+
+### 11.3 Candidate A: corroborated, not reopened
+
+At `d816d1d` there is **no `REQUIRED_PATHS` declaration at all** — three inline `cp -r` lines
+covering `src tests tools pyproject.toml deploy requirements.lock .github`, with `specs`
+**absent**, added later by `4904d70` (whose subject says so). So candidate A's condition was
+live at the dated state, which is the direction that could have reopened it and does not:
+§9.2 measured that condition at **3 arms and 14 outcomes** against 58 and 234. Dating it
+removes the last way it could have been bigger than measured, because the tree it would have
+been bigger in is now named.
+
+### 11.4 The residue was a working tree, and git cannot recover it
+
+`d816d1d`'s committed content produces **0** failures on this host. The sweep's 234 therefore
+came from **uncommitted** changes on top of it — and from changes that broke tests without
+adding or removing any, since the collected total still matched the commit exactly. That is
+the signature of work in progress: source edited, tests not yet updated or not yet passing,
+mid-half-hour.
+
+Uncommitted changes are not in the object database. They are not in the reflog, not in
+`stash`, and not in any summary record — the harness keeps its transcripts under a `mktemp -d`
+removed by a trap, and only counts reach the JSON. **There is no artifact left to read**, so
+the specific 234 cannot be enumerated by any means available now, and no future pass will do
+better by trying harder.
+
+**What is closed and what is not.** Closed: incident 2 was a dirty *working* tree in a
+30-minute window on 2026-08-10, not a defect in the instrument and not a fourth flake. The
+recorded incident keeps all its value — it is why `unusable` was split out of `unproven` in
+`f3f1c89`, and that repair stands on the sweep's *shape*, never on which 234 tests failed.
+Not closed, and distinct: the second baseline failure in the two committed records at
+`10:17:54` and `10:29:15`, which §10.5 states and prices in one sentence rather than
+investigating.
