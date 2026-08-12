@@ -35,6 +35,19 @@ the registers still exist.
 `identifier-gap` is the companion: a namespace with a hole in it (D-01…D-14,
 D-16…) usually means an entry was deleted rather than struck, and struck-with-a
 -tombstone is this corpus's own convention.
+
+**The gap check reads the union, and for FR and SC that is a hole in it.** Both
+checks resolve against `_collect_definitions`, which unions definitions by
+token. `FR` and `SC` are one register per feature and their tokens COLLIDE —
+feature 001 defines FR-001…FR-022 and feature 002 defines FR-001…FR-058, so
+001's register is a token subset of 002's. Deleting feature 001's `FR-015`
+requirement outright, which is exactly the defect this check is for, leaves the
+union contiguous because 002's FR-015 fills the hole: measured 2026-08-12 by
+planting that deletion, `identifier-gap` and `identifier-resolution` together
+reported **0 errors, 0 warnings**. `tools/README.md` under **The FR/SC register
+collision** carries that measurement, the resolution-side asymmetry, and why
+scoping `identifier-resolution` per feature was declined on numbers while this
+gap-side case has no false-positive population at all.
 """
 
 from __future__ import annotations
@@ -122,6 +135,36 @@ def _collect_definitions(corpus: Corpus, patterns: dict[str, re.Pattern]) -> dic
         for ns, ids in definitions_in(doc, patterns).items():
             defined[ns] |= ids
     return defined
+
+
+def _definition_sites(
+    corpus: Corpus, patterns: dict[str, re.Pattern]
+) -> dict[str, list[tuple[str, int]]]:
+    """Map namespace -> `(relpath, members defined there)`, densest document first.
+
+    `identifier-gap` needs this and `_collect_definitions` cannot supply it,
+    because a union of sets has forgotten which file each member came from.
+    That is the whole reason the gap violation used to print a configured prose
+    label where every other violation prints an openable relpath: there was no
+    computed answer to put there.
+
+    Read off this run's corpus rather than off `config`, which is what makes it
+    correct in all three trees the checks run against. The configured `what`
+    string names the real corpus's addresses, so in either fixture tree it named
+    a document that does not exist — the known-bad register is
+    `research/14-fixture-synthesis.md` and the label said `research/14 §3.1`.
+
+    Ties break on relpath so the chosen document does not depend on walk order.
+    """
+    counts: dict[str, dict[str, int]] = {ns: {} for ns in patterns}
+    for doc in corpus.markdown():
+        for ns, ids in definitions_in(doc, patterns).items():
+            if ids:
+                counts[ns][doc.relpath] = len(ids)
+    return {
+        ns: sorted(per_doc.items(), key=lambda kv: (-kv[1], kv[0]))
+        for ns, per_doc in counts.items()
+    }
 
 
 def _unnarrowed_definitions(
@@ -249,6 +292,7 @@ def gaps(corpus: Corpus, ctx: dict) -> list[Violation]:
     # of holes. Announcing the reasons is left to that check, which is where
     # they have always been printed.
     defined, active, _reasons = _activation(corpus, ctx)
+    sites = _definition_sites(corpus, active)
 
     out: list[Violation] = []
     for ns in sorted(active):
@@ -260,14 +304,39 @@ def gaps(corpus: Corpus, ctx: dict) -> list[Violation]:
             continue
         width = len(re.sub(r"\D", "", sorted(defined[ns])[0]))
         pretty = ", ".join(f"{ns}-{n:0{width}d}" if "-" in sorted(defined[ns])[0] else f"{ns}{n}" for n in missing)
+
+        label = config["identifier_namespaces"][ns]["what"]
+        where = sites[ns]
+        # `path` is the column a reader expects to be able to open, so it gets a
+        # relpath even where the register has no single file. Three of the nine
+        # namespaces are plural — FR and SC are one register per feature with
+        # COLLIDING tokens, and E is a ladder plus one index per non-ladder
+        # experiment — so for those there is no one document to name and saying
+        # so is the honest answer rather than a silent pick.
+        if len(where) == 1:
+            spans = f"defined in {where[0][0]}"
+        else:
+            # Bounded, because `E` spans 30 documents — a ladder in one plan.md
+            # plus one index per non-ladder experiment plus every committed run
+            # report that heads a section with an identifier. An unbounded list
+            # would put thirty paths on one line and stop being read.
+            named = ", ".join(f"{rel} defines {n}" for rel, n in where[:3])
+            rest = len(where) - 3
+            spans = (
+                f"the {ns} register has no single file: {len(where)} documents "
+                f"define members of it ({named}"
+                + (f", and {rest} more" if rest > 0 else "")
+                + "), and this is filed against the one defining most of them"
+            )
+
         out.append(
             Violation(
                 check="identifier-gap",
                 severity=WARNING,
-                path=config["identifier_namespaces"][ns]["what"],
+                path=where[0][0],
                 line=0,
-                found=f"{ns} register has no definition for {pretty}",
-                expected=f"a contiguous {ns} register from {min(nums)} to {max(nums)}",
+                found=f"{ns} register ({label}) has no definition for {pretty}",
+                expected=f"a contiguous {ns} register from {min(nums)} to {max(nums)}; {spans}",
                 hint="a superseded entry should keep its row with a strike-through, "
                 "so a gap usually means a deleted row that is still cited elsewhere",
             )

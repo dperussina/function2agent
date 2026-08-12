@@ -1070,6 +1070,156 @@ that was constructed, measured and declined. The human search remains the only
 instrument, and it has to read headings as well as register rows, which the
 one-command-per-namespace form above does not do.
 
+#### The FR/SC register collision — scoping declined at 153 to 2, and the gap check is where the defect actually bites
+
+**Measured 2026-08-12 at `a2eafa3`.** `FR` and `SC` are one register per feature and their tokens
+collide: `specs/001-discovery-validation/spec.md` defines FR-001..FR-022 and SC-001..SC-009,
+`specs/002-spec-aware-agent-runtime/spec.md` defines FR-001..FR-058 and SC-001..SC-030, the two FR-001s
+are different requirements, and `_collect_definitions` unions them by token. **Feature 001's register
+is a proper token subset of feature 002's** — 22 of 22 and 9 of 9, nothing in 001 that 002 lacks —
+which is what makes the collision total rather than partial and is the fact the rest of this entry
+turns on.
+
+**The false green is real, and confirmed by planting rather than by reading.** `FR-045` planted into
+feature 001's own `spec.md`, whose register stops at FR-022, produces **no violation at all**;
+`FR-099` planted on the same line, outside the union, is the only firing. So a dangling FR in one
+feature does resolve against the other's register, exactly as alleged.
+
+**And repairing it by scoping resolution per feature is disqualified, because the false greens and the
+legitimate citations are the same 153 sites.** Both directions were measured before the choice:
+
+| | sites | population |
+|---|---:|---|
+| Direction A — citations resolving *only* via the union | **153** | 7 documents, all under `specs/001-discovery-validation/` |
+| Direction B — citations of a token defined *only* by the other feature | **153** | the identical set; `A − B` and `B − A` are both empty |
+
+The two are not merely equal in count; they are the same sites, asserted as a set comparison rather
+than inferred from two totals agreeing. Every citation that resolves only because of the union is a
+deliberate cross-feature citation — feature 001 is the discovery feature and its `plan.md` *authorises*
+the production specification's requirements, in sentences like *"**Authorises** the production
+specification's **FR-025** and **FR-045**"*. **The brief's own example token was one of the legitimate
+cases**: FR-045 is cited three times in feature 001 and every one is correct.
+
+131 of the 153 are in `specs/001-discovery-validation/plan.md`; the rest are 7 in
+`findings/017-evaluation-contemporaneity.md`, 5 in `findings/016-provider-sdk-roundtrip.md`, 4 in
+`findings/031-provider-state-chain-measured.md`, 3 in `VERDICT.md`, 2 in
+`harness/provider-sdk-roundtrip/README.md` and 1 in `findings/006-graph-loop-primitives.md`, over 28
+distinct tokens. **Only 30 of the 153 name the target feature or "production spec" on the same line**,
+so a rule that admitted a cross-feature citation only where the line says so would still reject 123
+correct ones.
+
+**Scoped resolution was built and run rather than costed on paper**, in a throwaway copy of the tree:
+FR and SC resolved against the claiming document's own `specs/<feature>/spec.md` and every other
+namespace left alone. It reports **153 errors on the clean corpus**, matching the independent
+measurement exactly. With the `FR-045` / `FR-099` plant added it reports **155** — so the trade is
+**2 real firings inside a report of 153 false ones**, which is the `register-range` and
+duplicate-register-row disposition at a worse ratio than either. Its violation text is also actively
+misleading under scoping: the hint prints `FR currently runs to FR-058`, the union's ceiling, which
+tells the reader the token they were just faulted for does exist.
+
+**And 95 citations have no owning feature at all, so the rule's only available answer for them is the
+behaviour being repaired.** FR and SC are cited 73 and 22 times outside any `specs/<feature>/`
+directory — `research/14-architecture-synthesis.md` (35 FR, 15 SC),
+`research/15-nvidia-oo-agents.md` (13, 3), `tools/README.md` (22, 2),
+`docs/spec-kit-workflow.md` (2, 0), `research/README.md` (1, 0),
+`research/06-examples-inventory.md` (0, 1) and `research/07-product-vision.md` (0, 1). A scoping rule
+must either fall back to the union for those — leaving the defect live for the largest single
+population — or stop reading them, which is how a check goes quiet over 95 citations. Neither is worth
+153 false positives.
+
+**The precedent holds, and it was verified by planting.** `definition-count` does resolve
+`definition_count_target` through `_target_of` against the claiming document's own
+`specs/<feature>/` directory, so feature-scoped resolution already exists in this repository. A claim
+of *"58 functional requirements and 30 success criteria"* planted into
+`specs/001-discovery-validation/plan.md` — a document that carries no such claim, so the plant could
+not be satisfied by an existing site — is compared against **22** and **9**, feature 001's own
+register, and not against the union's 58 and 30. The precedent is real; what it does not carry is a
+reason to extend it, because a count claim names one target document while a citation names none.
+
+**Where the defect actually bites is `identifier-gap`, and there the false-positive population is
+empty.** The gap check reads the same union. Deleting feature 001's `FR-015` requirement bullet
+outright — a deleted row rather than a struck one, which is the precise defect `identifier-gap` exists
+to catch — leaves the union contiguous, because feature 002's FR-015 fills the hole.
+`identifier-gap` and `identifier-resolution` together reported **0 errors, 0 warnings** on that plant.
+Unlike the resolution case this one has no legitimate counterpart: a deleted requirement row is never
+correct, and all four per-feature ranges are dense today (FR-001..FR-022, SC-001..SC-009, FR-001..FR-058,
+SC-001..SC-030), so a per-feature gap check would fire **zero** times on the clean corpus and catch
+this plant. **It is not built here**, and the reason is the shape rather than the cost: a per-feature
+gap check acquires a new silence mode — a feature whose `spec.md` is absent or narrowed away simply
+has no register to find a hole in — and that is the class this repository has now reintroduced twice
+while closing it once, at `preserved-evidence`'s two keyings. It needs the `corpus.root` move that
+`_unnarrowed_definitions` makes, and designing that is a pass, not a paragraph.
+
+**`register-range` is the third check the collision reaches, and this entry tripped it while being
+written.** The paragraph above originally wrote the two registers as `FR-001…FR-022` and
+`SC-001…SC-009` on one line, and `register-range` reported **4 warnings** calling both an under-count
+of `FR-001 … FR-058` and `SC-001 … SC-030`. The sentence is true and the check has no way to be right
+about it: `maxima` is read from `defined[ns]`, the union, so **no correct statement of one feature's FR
+or SC extent can pass this check in the `…`, `–`, `--`, `to` or `through` form** whenever a second
+namespace's range shares the line. The ranges here are written `..` instead, which `_RANGE`'s separator
+alternation does not match — the same dodge `config.json`'s `_comment_identifiers` already takes for
+the identical sentence, and it is recorded here rather than left as a formatting habit, because the
+next author writing a true per-feature range will hit it and should know the check is wrong rather
+than the prose.
+
+**The residue, stated so it is not mistaken for coverage.** Nothing distinguishes a feature-001
+citation of a feature-002 requirement from a feature-001 citation of a requirement that does not
+exist; nothing will notice a deleted FR or SC row in either feature while the other still defines that
+token; and no true per-feature range claim can be written in the form `register-range` reads. The
+declination above is about the first of those and not the other two.
+
+#### The namespace-to-owning-document map cannot have one document per namespace, and the census falsifies its schema
+
+[Why this is documentation and not a check](#why-this-is-documentation-and-not-a-check) envisages *"a
+mapping from each namespace to the one document and section that owns it"* as the artifact that would
+let the duplicate-register-row guard be restricted to the authoritative register. **That schema is
+wrong, and the correction is a measurement rather than a caveat.** Asked of this corpus with the
+tool's own `definitions_in` on 2026-08-12, **seven of the nine namespaces are defined by more than one
+document**: `E` by **30**, `FR` by **5**, `D` by **3**, `OD` by **3**, `SC` by **3**, `C` by **2**,
+`U` by **2**. Only `P` and `O` have a single owning document, and it is the same file for both. The map
+must therefore be namespace → **list** of owning sites.
+
+**And for `FR` and `SC` nothing mechanical can tell you the list has two entries.** Their tokens
+collide, so asking which single document defines a namespace's whole union names
+`specs/002-spec-aware-agent-runtime/spec.md` for both — correctly as far as the token set goes, and
+wrongly, because feature 001's FR-001..FR-022 are a subset of 002's FR-001..FR-058 while meaning
+different requirements. A derived map would erase feature 001's register and look verified doing it.
+`config.json`'s `_comment_identifiers` records the same trap for the hand-written `what` strings and
+is why they stay hand-written; the map inherits it. `E` is the only plural namespace whose plurality
+that test can see, because no one document covers its union.
+
+This is recorded because it is the obstacle a future pass would otherwise discover after building the
+wrong schema. **The map is not built here and neither is the guard.**
+
+#### The duplicate-register-row declination rests on a measurement that could not see this class
+
+The declination above records the candidate guard firing **12 times, all well-formed**, and declines it
+on that basis. **That measurement used the first-cell rule only** — `| U-52 |` and nothing else —
+which is the narrowest of the three shapes `definitions_in` treats as defining and is not the shape
+`FR` and `SC` are written in. Re-derived on 2026-08-12 under the full `definitions_in`, so bold-lead
+bullets and identifier-leading headings count too, the same population yields **59** identifiers
+defined in more than one document, against **3** under the first-cell rule alone.
+
+Of the 59, **46 span more than one feature** — 22 `FR`, 9 `SC`, 5 `D`, 5 `OD`, 4 `U`, 1 `C` — and the
+remaining 13 are 11 `E` and 2 `FR` within one feature. **The `FR` and `SC` entries are the collision
+rather than restatements**: they are the same numbers meaning different requirements in two different
+specifications, which is the one class in this population that a duplicate guard would be right about.
+
+**Two corrections to the figures this was relayed with, both established here rather than accepted.**
+The 59 reproduces exactly and so does the namespace breakdown. The cross-feature total does **not**:
+it is **46**, not 41, and the relayed breakdown says so itself — 22 + 9 + 5 + 5 + 4 + 1 sums to 46.
+No definition of "cross-feature" available over this population yields 41: treating every non-`specs/`
+file as one shared bucket gives 46, requiring two *actual* `specs/<feature>` directories gives **39**,
+and requiring two top-level directories gives **10**. The 41 is a transcription, not a reading of the
+corpus under some third rule.
+
+This **reopens the declination on a wider measurement; it does not overturn it.** Whether the guard is
+worth building now turns on a firing count nobody has taken at the shapes that matter, and 46 of the
+59 being cross-feature says nothing yet about how many are defects — the `D`, `U`, `C` and `OD` ones
+are the legitimate cross-document restatements the original measurement already found and declined
+on. **The guard is not built here.** What has changed is that the number it was declined at was 12 and
+the number it would now be judged at is unmeasured.
+
 ## Every rule, measured against its own scope
 
 ~~Six~~ ~~**Seven**~~ **Eight** of this tool's ~~seventeen~~ ~~**eighteen**~~ **nineteen** checks are
