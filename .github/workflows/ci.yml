@@ -227,6 +227,18 @@ jobs:
           # a gate. It is deliberately NOT suppressed with an inline `type:
           # ignore`, because that would erase the only signal anybody has.
           #
+          # **The task is T046 and T048 in
+          # specs/002-spec-aware-agent-runtime/tasks.md, and until 2026-08-12
+          # the sentence above was false.** It said the question was routed and
+          # it was not: `LifecycleGateway`, `runner.py:252` and the phrase
+          # "ownership question" appeared nowhere under specs/ at 8e0bbef, so
+          # the only record of it was this comment and the KNOWN= string below
+          # — a CI step nobody reads unless it fails, which this one does not.
+          # It is now written at both ends of the boundary, T046 owning the
+          # caller and T048 the Protocol, with both readings stated and neither
+          # taken. A claim that something is recorded elsewhere is worth exactly
+          # as much as the elsewhere.
+          #
           # Declared instead, so this step fails on any movement: a second error
           # fails it, and resolving this one fails it too and forces the number
           # down. That is `check_tampers.py`'s EXPECTED_PROOFS discipline, and
