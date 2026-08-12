@@ -162,8 +162,10 @@ def test_at_least_one_derived_check_expresses_a_recomputation() -> None:
     recomputing = [c for c in checks if c.recomputes()]
     assert recomputing, (
         "every derived check is a shape assertion. A shape-only derivation "
-        "makes T132's negative control unsatisfiable and reproduces the 8 "
-        "schema-blind numeric false successes feature 001 measured"
+        "makes T132's negative control unsatisfiable and reproduces the 9 "
+        "schema-blind numeric false successes feature 001 measured "
+        "(E8-VIABILITY.md section 6; an earlier 8 is superseded), along with "
+        "the 2 set-typed ones the same arm also misses"
     )
 
 

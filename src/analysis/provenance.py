@@ -155,9 +155,13 @@ DERIVATION_RULES: dict[str, DerivationRule] = _rules(
         emits="shape_check",
         description=(
             "The declared return type becomes a shape check. Weak on purpose "
-            "and labelled as such: finding 001 measured 11 false successes, 8 "
-            "of them numeric-typed and schema-blind — right shape, wrong value "
-            "— so a check of this kind can never be the only one on a quantity."
+            "and labelled as such: feature 001 measured 11 false successes, 9 "
+            "of them numeric-typed and 2 set-typed, and a schema-derived arm "
+            "is blind to both — right shape, wrong value — so a check of this "
+            "kind can never be the only one on a quantity. The split is "
+            "recorded in E8-VIABILITY.md section 6, which supersedes an "
+            "earlier 8-and-3; read it there rather than from any count quoted "
+            "beside a rule."
         ),
     ),
     DerivationRule(
