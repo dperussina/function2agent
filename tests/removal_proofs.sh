@@ -3198,6 +3198,36 @@ proof "census — a gate wired into CI and missing from the list is not reported
   "tests/unit/test_instrument_census.py::test_a_gate_wired_into_ci_and_missing_from_the_census_is_reported" \
   's = s.replace("                if reference not in named:", "                if False:")'
 
+# Direction 4, the second population — the job census by `name:`. Directions 1
+# and 2 above read the mapping key; nothing read the `name:` value, and the two
+# are different strings with different audiences. Measured at `8d74942`:
+# renaming a job's `name:` left seven instruments silent, this one among them,
+# and appending a seventh job was invisible to everything. Each arm below
+# removes one condition and leaves a reconciliation that still exits 0 over the
+# perturbation it was built to catch.
+
+proof "job census — a renamed job name reads as agreement" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_renamed_job_name_is_reported" \
+  's = s.replace("        elif found.group(1) != job.name:", "        elif False:")'
+
+proof "job census — a job added to CI and missing from the list is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_job_added_to_ci_and_missing_from_the_census_is_reported" \
+  's = s.replace("        if not any(job.key == key for job in declared):", "        if False:")'
+
+proof "job census — a job whose figures carry no kernel is not reported" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_a_job_that_drops_the_runner_identity_action_is_reported" \
+  's = s.replace("        if IDENTITY_ACTION not in block:", "        if False:")'
+
+# The vacuity floor, and it is the arm that would leave direction 4 green
+# forever: a census over nothing reconciles perfectly with any workflow.
+proof "job census — an empty declaration reconciles cleanly" \
+  tools/instruments.py \
+  "tests/unit/test_instrument_census.py::test_the_job_census_is_not_empty" \
+  's = s.replace("    if not declared:", "    if False:")'
+
 # The opposite direction, and the one that gets the checker switched off. The
 # workflow discusses several tools in prose, including one it deliberately does
 # not wire; a scanner that matched comment text would report the reverse of the

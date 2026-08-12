@@ -152,7 +152,8 @@ than an index edit, so the row stands and this sentence is what a reader meets f
 ## Index
 
 The table below carries one row per finding filed in this directory. ~~There are eighteen~~ ~~there
-are nineteen, from 2026-08-11~~ **there are twenty, later the same day**; the corpus-wide total
+are nineteen, from 2026-08-11~~ ~~there are twenty, later the same day~~ **there are twenty-one,
+later the same day again**; the corpus-wide total
 across both namespaces is stated in the root
 [`README.md`](../../../README.md), which is where `inventory-count`'s `findings` rule reads it.
 
@@ -165,10 +166,11 @@ why the number never identified a feature.
 ~~**Six of the eighteen carry a dated in-place supersession, and two of those six supersede their own
 headline.**~~ **Eight of the eighteen carry a dated in-place supersession, and two of the eight
 supersede their own headline** *(recounted 2026-08-11 over the eighteen documents this directory then
-held; the earlier six was low by two)*. **The denominator moved to nineteen and then to twenty later
-the same day and the numerator did not**:
-[finding 038](./038-corpus-check-branch-population-and-the-instrument-declined.md) and
-[finding 039](./039-three-flakes-one-shared-namespace-and-two-that-do-not-join.md) each carry no
+held; the earlier six was low by two)*. **The denominator moved to nineteen, then to twenty, then to
+twenty-one later the same day and the numerator did not**:
+[finding 038](./038-corpus-check-branch-population-and-the-instrument-declined.md),
+[finding 039](./039-three-flakes-one-shared-namespace-and-two-that-do-not-join.md) and
+[finding 040](./040-ci-job-names-unreconciled-and-the-prose-rule-declined.md) each carry no
 in-place supersession, so the eight are unchanged and the sentence above is a dated
 reading of eighteen documents rather than a live proportion. A row that restated an original claim where the document has
 since struck it would
@@ -208,3 +210,4 @@ one line at a time reports seven rather than eight.
 | [037](./037-the-contract-stage-with-no-gate-stage.md) | The egress contract numbers **eight** request-pipeline stages and the enforcement point registers **six gate stages and one final stage**. The stage with no counterpart is stage 4, the address class, and its absence is **sound only because FR-016 pins exactly one address** — a conditional nobody had written down, so a future widening of FR-016 would open a hole no test named | `$0.0000` |
 | [038](./038-corpus-check-branch-population-and-the-instrument-declined.md) | `pytest` is **blind to the entire corpus checker** — all eighteen checks stubbed to return nothing still gives `1745 passed, 83 skipped` — so `tools/selftest.py` is the sole instrument, and against it **55 of 279 (19.7%)** of the checker's decision branches can be neutralised with the self-test still green. Three unheld branches are live defects, each an arm passing for the wrong reason, and **all three are repaired with each repair probed** by neutralising the branch it now claims to hold. The sweep is **declined** on the composition of the unheld set rather than its cost: 25 of 32 are one fixture each, and a gate would need 55 accepted exceptions on day one. Records that its own harness took a contaminated baseline from the working tree, and that **unreachable-as-written is not defective-as-written** | `$0.0000` |
 | [039](./039-three-flakes-one-shared-namespace-and-two-that-do-not-join.md) | Three non-reproducing failures, asked whether they share a cause: **they do not**. Today's lease-revocation flake is not a race but a **machine-wide process-table namespace keyed on a constant string** — `10 of 10` failures on demand with a decoy carrying that string, and the test **SIGKILLs a concurrent run's supervisor `10 of 10`** in the same arm, both halves planted rather than argued. The second incident has two candidate mechanisms already on the record, neither of them this one and **neither bound to the sweep that produced it**, so its cause stays open — and §9 measures one of the two and **rules it out at 3 arms and 14 outcomes against 58 and 234**, while confirming a **work-tree baseline floor of 2 that no arm names, so a green verdict sits over a non-zero baseline-failure count on both macOS and CI**; the third **predates `e4ef6e6` by 67 minutes**, which bounds the shared-basetemp story off it. Serialising runs is **the wrong fix** for the one mechanism that is established. Repairs nothing, and records that a full-suite run taken beside a concurrent one is not evidence for this test | `$0.0000` |
+| [040](./040-ci-job-names-unreconciled-and-the-prose-rule-declined.md) | `ci.yml` declares **six** named jobs and nothing read one of those names. Renaming a job's `name:` left **seven instruments silent** and appending a seventh job was invisible to all of them, both **planted**; renaming the mapping *key* fires the census's direction 1 and always did, which locates the blindness at the string a run page and a required status check read. The prose exposure is **one** wrong site rather than six — the runner-identity note said *"all five jobs"* while **six** use it — and on it the prose rule is **declined** at 1 real defect out of 34 firings, **4** of them on dated readings that must stay frozen, which is the register-range disposition. The **reconciliation is built** as a fourth direction over a second population, kept out of `INSTRUMENTS` because a documented `19 + 6 + 2` would have become a mixture | `$0.0000` |

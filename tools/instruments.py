@@ -33,6 +33,30 @@ each closes a different way the two drift apart:
    names at all. This is what catches a tool arriving in the tree before
    anybody decides whether it gates anything.
 
+## The second population, and the second claim
+
+Directions 1–3 are over `INSTRUMENTS`. **Direction 4 is over `JOBS`, a separate
+census of the workflow's jobs, and it is separate on a measurement rather than
+on taste** — see the comment on `JOBS`. It makes one more machine-checkable
+claim: **the declared job set and `ci.yml`'s agree, by mapping key *and* by
+`name:`.**
+
+Directions 1 and 2 have always read the mapping key. Nothing read the `name:`
+value, and those are different strings with different audiences — the key is what
+`needs:` and every `job=` field point at, the name is what a run page shows, what
+`gh run view` reports per job, and what a required status check is matched on.
+Measured at `8d74942`: renaming a job's `name:` left **seven instruments silent**,
+including this one. Renaming its *key* fired direction 1 and always did. Adding a
+seventh job was invisible to everything. Direction 4's four sub-directions are a
+declared job absent from the workflow, a declared name disagreeing with the
+workflow's, a job missing the runner-identity action, and a workflow job the
+census does not declare.
+
+The two populations are counted separately and printed on separate lines.
+`tools/README.md` documents the instrument split as `19 + 6 + 2` read off
+`--check`, so a job entry in `INSTRUMENTS` would move a documented figure and
+make it a mixture of two things.
+
 What it does **not** claim: that any instrument is correct, that the set is
 sufficient, or that a green `--run` means anything about the repository. It is
 a census, not a verdict. Direction 3 in particular forces a *classification*,
@@ -119,6 +143,63 @@ class Instrument:
     #: Display override for the census table, for the one entry that runs in
     #: every job and so is neither `job`-shaped nor hand-run.
     where: str = ""
+
+
+@dataclass(frozen=True)
+class Job:
+    """One CI job, declared by both the names it has.
+
+    `key` is the mapping key under `jobs:` — what `needs:` and every `job=`
+    field in `INSTRUMENTS` point at. `name` is the `name:` value, which is a
+    different string with a different audience: it is what a run page shows,
+    what `gh run view` reports per job, and what a required status check is
+    matched on. Directions 1 and 2 have always read `key`. Nothing read `name`.
+    """
+
+    key: str
+    name: str
+
+
+#: The CI job census — **a second population, deliberately not folded into
+#: `INSTRUMENTS`**, and the separation is measured rather than tidy.
+#: `tools/README.md` states the instrument split as `19 + 6 + 2` and says it is
+#: read off `--check` rather than counted by hand; a job entry added to
+#: `INSTRUMENTS` would move that total and silently make a documented figure a
+#: mixture of two things being counted. So the two censuses share this file's
+#: workflow parser and nothing else, and `--check` prints them on separate
+#: lines.
+#:
+#: **What it closes, and it is the same defect one level out.** This file exists
+#: because a hand-maintained list of gates and the actual set of gates came
+#: apart with nothing whose job was to notice. The job *names* were in exactly
+#: that state: measured at `8d74942`, a job's `name:` was renamed in a scratch
+#: tree and **seven instruments stayed silent** — `check_corpus.py` 0 errors 0
+#: warnings, `gen_claims.py --check` 0 stale, `check_tampers.py` 0 errors,
+#: `tools/selftest.py` all passed, `instruments.py --check` census OK,
+#: `tests/invariants/runner.py` exit 0, and `pytest` 1796 passed. A seventh job
+#: appended with a `name:` of its own was equally invisible. Renaming a job
+#: *key* fires direction 1 and always did; renaming what a human reads fired
+#: nothing, which is silence indistinguishable from success.
+#:
+#: `ci.yml` is the source of truth and this list is the declaration checked
+#: against it, never the other way round.
+JOBS: tuple[Job, ...] = (
+    Job("invariants", "invariants (milliseconds, no model)"),
+    Job("corpus", "corpus gates (consistency, no model)"),
+    Job("slug-differential", "slugify vs GitHub's renderer (non-gating observation)"),
+    Job("python", "pytest (kernel mechanisms included)"),
+    # No `?`, and `ci.yml`'s comment on this job says why: GitHub strips it from
+    # the paths inside a run's log archive, so `gh run view --job ... --log`
+    # returned zero bytes with no error while the name carried one.
+    Job("removal-proofs", "removal proofs (do the tests catch removal)"),
+    Job("go", "go test (the enforcement point)"),
+)
+
+#: Every job records the kernel, arch, image and euid its figures are a property
+#: of, per `ci.yml`'s fifth stated rule. Checked against the job census rather
+#: than transcribed as a count: the note on the `runner identity` entry below
+#: read "all five jobs" at `8d74942`, when six jobs used it.
+IDENTITY_ACTION = "uses: ./.github/actions/runner-identity"
 
 
 INSTRUMENTS: list[Instrument] = [
@@ -399,8 +480,10 @@ INSTRUMENTS: list[Instrument] = [
                "labels.",
         job=None,
         where="CI, every job",
-        notes="A composite action used by all five jobs; direction 1 does not "
-              "apply because it is a `uses:` and not a `run:`.",
+        notes="A composite action used by every job in the JOBS census, which "
+              "direction 4 checks rather than this note counting. It said "
+              "\"all five jobs\" while six used it. Direction 1 does not apply "
+              "because it is a `uses:` and not a `run:`.",
     ),
     # -- hand-run ------------------------------------------------------------
     Instrument(
@@ -497,6 +580,91 @@ _REFERENCE = re.compile(
     r"tools/[\w-]+\.py|tests/[\w./-]+\.(?:py|sh)|src\.supervisor\.[\w.]+"
 )
 
+#: A job-level `name:` in this workflow. Four spaces is the only indentation at
+#: which a job's own keys sit — a step's name is `      - name:` — so this cannot
+#: match a step, and matching a step would compare the wrong string.
+_JOB_NAME = re.compile(r"^    name:\s*(.+?)\s*$", re.M)
+
+
+def reconcile_jobs(text: str | None = None,
+                   declared: tuple[Job, ...] | None = None) -> list[str]:
+    """Direction 4 — the declared job set against the workflow's, by name.
+
+    Both arguments exist so each sub-direction can be shown to fire against a
+    perturbed workflow or a perturbed declaration;
+    `tests/unit/test_instrument_census.py` does that. A reconciliation with no
+    such test is the validator-that-never-matches failure this file is named
+    after, and it would be no less embarrassing in the second population than in
+    the first.
+    """
+    problems: list[str] = []
+    text = WORKFLOW.read_text() if text is None else text
+    declared = JOBS if declared is None else declared
+    blocks = _jobs(text)
+
+    # A census over nothing reconciles perfectly with anything. `check_tampers.py`
+    # treats zero extracted proofs as an error for the same reason.
+    if not declared:
+        problems.append(
+            "the job census is empty, so every sub-direction below passes over "
+            "nothing. Zero declared jobs is not a clean reconciliation."
+        )
+        return problems
+
+    for job in declared:
+        block = blocks.get(job.key)
+
+        # 4a. Declared and absent — the job key went away or was renamed.
+        if block is None:
+            problems.append(
+                f"job {job.key!r} is declared here and the workflow does not "
+                "define it. Either it was renamed or it is gone; a census "
+                "pointing at a job that does not exist advertises a check "
+                "nothing runs."
+            )
+            continue
+
+        # 4c. The name disagrees, which is the whole reason this direction
+        #     exists. Direction 1 reads the key and is blind to this string.
+        found = _JOB_NAME.search(block)
+        if found is None:
+            problems.append(
+                f"job {job.key!r} declares no `name:`, so GitHub falls back to "
+                f"the key and the declared name {job.name!r} is a name nothing "
+                "carries."
+            )
+        elif found.group(1) != job.name:
+            problems.append(
+                f"job {job.key!r} is named {found.group(1)!r} in the workflow "
+                f"and {job.name!r} here. The workflow is the source of truth: "
+                "update this census. A job name is what a run page shows, what "
+                "`gh run view` reports per job, and what a required status "
+                "check is matched on, so a rename detaches every reference to "
+                "it silently."
+            )
+
+        # 4d. Every job carries the kernel its figures are a property of.
+        if IDENTITY_ACTION not in block:
+            problems.append(
+                f"job {job.key!r} does not use {IDENTITY_ACTION!r}, so its "
+                "figures do not carry the kernel, arch, image and euid they are "
+                "a property of. That is `ci.yml`'s fifth stated rule, and it is "
+                "recorded per job on purpose."
+            )
+
+    # 4b. Present and undeclared — a job added to CI cannot stay off the list.
+    #     This is direction 2's argument applied to the second population.
+    for key in blocks:
+        if not any(job.key == key for job in declared):
+            problems.append(
+                f"the workflow defines job {key!r}, which this census does not "
+                "declare. A job added to CI and missing from the list is the "
+                "defect this file exists to close, one population over."
+            )
+
+    return problems
+
+
 #: Everything that could be an entry point, for direction 3. `tools/fixtures/`
 #: and `tools/corpuscheck/` are excluded because they are a corpus and a
 #: package respectively, neither invoked as a program.
@@ -569,6 +737,12 @@ def reconcile(text: str | None = None,
                 f"{GATE}, {ADVISORY} or {LIBRARY}. `{LIBRARY}` is a real "
                 "answer; not deciding is not."
             )
+
+    # 4. The job census, over the same parsed workflow. Reported into the same
+    #    list because a disagreement is a disagreement; the two *populations*
+    #    stay separate in `JOBS` versus `INSTRUMENTS` and in what `--check`
+    #    prints, which is where conflating them would move a documented figure.
+    problems.extend(reconcile_jobs(text))
 
     return problems
 
@@ -644,6 +818,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(INSTRUMENTS)} instrument(s): "
               f"{counts[GATE]} gate, {counts[ADVISORY]} advisory, "
               f"{counts[LIBRARY]} library")
+        # A separate line for a separate population. Folding the two totals
+        # together is what would make `tools/README.md`'s `19 + 6 + 2` a
+        # mixture, and that figure is documented as read off this output.
+        print(f"{len(JOBS)} CI job(s), reconciled by key and by `name:`")
         if problems:
             print("\nThe census and .github/workflows/ci.yml disagree:")
             for problem in problems:

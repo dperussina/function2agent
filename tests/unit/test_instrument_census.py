@@ -40,6 +40,15 @@ def test_the_committed_tree_reconciles() -> None:
     assert instruments.reconcile() == []
 
 
+def test_the_job_census_reconciles_on_the_committed_tree() -> None:
+    """Direction 4's negative control, separate from direction 1-3's.
+
+    Without it every planted case below could pass over a reconciliation that
+    reports a problem for any input at all.
+    """
+    assert instruments.reconcile_jobs() == []
+
+
 def test_the_census_is_not_empty_and_classifies_everything_it_lists() -> None:
     """Zero entries would satisfy directions 1 and 2 trivially.
 
@@ -154,6 +163,118 @@ def test_the_entry_point_scan_reads_the_filesystem() -> None:
     assert "tools/check_corpus.py" in candidates
     assert "tests/removal_proofs.sh" in candidates
     assert "tests/invariants/runner.py" in candidates
+
+
+# ---------------------------------------------------------------------------
+# Direction 4 — the job census, by key and by `name:`.
+#
+# These fixtures live here rather than in `tools/selftest.py` because
+# `selftest.py` runs the corpus check set against the two fixture corpora and
+# carries no instruments arm at all; every direction of this reconciliation has
+# been held from this file since finding 036. The arms below are the two plants
+# that measured the gap at `8d74942`, where seven instruments stayed silent.
+
+
+def test_the_job_census_is_not_empty() -> None:
+    """A census over nothing reconciles perfectly with any workflow.
+
+    The same vacuity floor `check_tampers.py` applies to zero extracted proofs,
+    and the reason `reconcile_jobs` reports on an empty declaration rather than
+    returning clean.
+    """
+    assert len(instruments.JOBS) >= 5
+    assert len({j.key for j in instruments.JOBS}) == len(instruments.JOBS)
+    assert len({j.name for j in instruments.JOBS}) == len(instruments.JOBS)
+    problems = instruments.reconcile_jobs(declared=())
+    assert any("census is empty" in p for p in problems), problems
+
+
+def test_a_renamed_job_name_is_reported(workflow: str) -> None:
+    """The plant nothing saw.
+
+    Renaming a job's `name:` left `check_corpus.py`, `gen_claims.py --check`,
+    `check_tampers.py`, `tools/selftest.py`, `instruments.py --check`,
+    `tests/invariants/runner.py` and `pytest` all silent — measured at
+    `8d74942`. Direction 1 reads the mapping key and cannot see this string.
+    """
+    perturbed = workflow.replace(
+        "    name: go test (the enforcement point)",
+        "    name: go test (the egress enforcement point)",
+    )
+    assert perturbed != workflow, "the go job's name has moved"
+    problems = instruments.reconcile_jobs(perturbed)
+    assert any("is named" in p and "here" in p for p in problems), problems
+
+
+def test_a_job_with_no_name_at_all_is_reported(workflow: str) -> None:
+    """`name:` is optional in Actions; GitHub falls back to the key. A declared
+    name that nothing carries must not read as agreement."""
+    perturbed = workflow.replace(
+        "    name: go test (the enforcement point)\n", ""
+    )
+    assert perturbed != workflow
+    problems = instruments.reconcile_jobs(perturbed)
+    assert any("declares no `name:`" in p for p in problems), problems
+
+
+def test_a_job_added_to_ci_and_missing_from_the_census_is_reported(
+    workflow: str,
+) -> None:
+    """Direction 2's argument in the second population, and the other plant
+    that nothing saw."""
+    perturbed = workflow + (
+        "\n  lint:\n"
+        "    name: shellcheck (a seventh job nobody enumerated)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - uses: actions/checkout@v4\n"
+    )
+    problems = instruments.reconcile_jobs(perturbed)
+    assert any("'lint'" in p and "does not declare" in p
+               for p in problems), problems
+
+
+def test_a_declared_job_the_workflow_does_not_define_is_reported(
+    workflow: str,
+) -> None:
+    perturbed = workflow.replace("\n  go:\n", "\n  gotest:\n")
+    assert perturbed != workflow, "the go job key has moved"
+    problems = instruments.reconcile_jobs(perturbed)
+    assert any("'go'" in p and "does not define it" in p
+               for p in problems), problems
+
+
+def test_a_job_that_drops_the_runner_identity_action_is_reported(
+    workflow: str,
+) -> None:
+    """`ci.yml`'s fifth stated rule: every measurement carries the kernel it was
+    taken on, recorded per job. This is what makes the `runner identity` entry's
+    note a check rather than a transcribed count — it read "all five jobs" while
+    six jobs used it."""
+    first = workflow.index(instruments.IDENTITY_ACTION)
+    perturbed = (
+        workflow[:first]
+        + workflow[first + len(instruments.IDENTITY_ACTION) + 1:]
+    )
+    assert instruments.IDENTITY_ACTION in perturbed, (
+        "the perturbation removed every use, so this would not be testing "
+        "a per-job reading"
+    )
+    problems = instruments.reconcile_jobs(perturbed)
+    assert any("does not use" in p for p in problems), problems
+
+
+def test_the_job_name_pattern_cannot_match_a_step_name(workflow: str) -> None:
+    """The way direction 4 reads the wrong string.
+
+    A step's name is `      - name:` at six spaces. If the pattern loosened to
+    match those, a job would be compared against whichever step happened to sit
+    first in its block, and the comparison would fail on the committed tree —
+    or worse, pass by coincidence.
+    """
+    found = instruments._JOB_NAME.findall(workflow)
+    assert found, "the pattern matched nothing, so it asserted nothing"
+    assert sorted(found) == sorted(j.name for j in instruments.JOBS)
 
 
 # ---------------------------------------------------------------------------

@@ -148,7 +148,7 @@ agent claiming success it did not achieve.
 
 | Path | What it is |
 |---|---|
-| [`specs/`](specs/) | Two features, each with an authority namespace under `findings/`: 39 findings across the two directories. `001-discovery-validation` is closed — the spec, the experiment ladder, one committed harness per experiment position that ran, and the [closing verdict](specs/001-discovery-validation/VERDICT.md). `002-spec-aware-agent-runtime` is the production feature, and its findings carry [an index](specs/002-spec-aware-agent-runtime/findings/README.md). |
+| [`specs/`](specs/) | Two features, each with an authority namespace under `findings/`: 40 findings across the two directories. `001-discovery-validation` is closed — the spec, the experiment ladder, one committed harness per experiment position that ran, and the [closing verdict](specs/001-discovery-validation/VERDICT.md). `002-spec-aware-agent-runtime` is the production feature, and its findings carry [an index](specs/002-spec-aware-agent-runtime/findings/README.md). |
 | [`research/`](research/) | 15 research documents + an index with reading paths. The evidence base. |
 | [`.specify/`](.specify/) | GitHub Spec Kit 0.15.1 scaffolding. Contains the ratified [constitution](.specify/memory/constitution.md). |
 | [`.cursor/skills/`](.cursor/skills/) | 18 project skills encoding the research as decision procedures, plus 10 Spec Kit phase prompts. See the [roster](.cursor/skills/README.md). |
