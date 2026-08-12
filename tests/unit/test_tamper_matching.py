@@ -63,7 +63,7 @@ sys.path.insert(0, str(REPO / "tools"))
 #: The illustration used to read `66 to 65`, figures from a revision this
 #: constant left behind, which made the coupling read as an example of the rule
 #: rather than as the rule operating on the number directly above.
-EXPECTED_PROOFS = 392
+EXPECTED_PROOFS = 404
 
 from tamper import (  # noqa: E402
     AMBIGUOUS,

@@ -4419,6 +4419,129 @@ proof "T123 — the bridge stops marking a provisional result provisional, so th
   "tests/invariants/test_provisional_never_verified.py::test_the_bridge_marks_a_provisional_result_provisional" \
   's = s.replace("            provisional=True,\n        )", "            provisional=False,\n        )")'
 
+# ---------------------------------------------------------------------------
+# T124, T125 and T129 — the recomputing verifier.
+#
+# Every arm below was observed failing by planting before it was written down,
+# and the failure each produces was read rather than assumed. Ten of the twelve
+# fail on an assertion naming the wrong outcome; two fail on a wrong refusal
+# reason. None fails on an import, a crash or an unrecognised selector, which
+# are the failures any tamper produces and which prove nothing.
+#
+# One arm in this module has NO proof and the absence is declared rather than
+# quiet — see the note at the end of this block.
+
+# The whole of FR-022 in one branch. Without it, two values read out of ONE
+# retrieval are compared, which is an identity that agrees whatever the value
+# is. The planted run returns Verified.
+proof "T124 — the independence refusal goes, so one retrieval supplies both values and the comparison verifies itself" \
+  src/runtime/verify.py \
+  "tests/contract/test_independent_derivation.py::test_a_path_whose_retrieval_is_the_reported_one_is_refused_by_name" \
+  's = s.replace("    if reported.retrieval == recomputed.retrieval:", "    if False:")'
+
+# FR-024's own case, and the reason this is not a doubly-covered guard:
+# RecomputationAgreement also refuses a float, by raising, and this module turns
+# a raise into a Disagreement. So removing this branch does not restore the
+# refusal through a fallback — it converts an honest not-verifiable into a FALSE
+# ALARM, and the result carries no list of consulted sources at all. The planted
+# run returns Disagreement.
+proof "T125 — the float refusal goes, so a quantity with no stated precision is reported as a failure instead of refused" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_float_pair_refuses_with_a_named_reason_naming_the_silent_sources" \
+  's = s.replace("        if isinstance(sourced.value, float):", "        if False:")'
+
+# The same branch against the arm that matters more: two floats that are exactly
+# equal. Without the refusal this PASSES, which is a comparison whose precision
+# nobody stated reading as verification — the accident FR-024 exists to prevent.
+proof "T125 — the float refusal goes, so two exactly equal floats verify under a precision nobody stated" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_the_float_refusal_is_not_a_disagreement_even_when_the_values_agree" \
+  's = s.replace("        if isinstance(sourced.value, float):", "        if False:")'
+
+# True == 1 in Python. The planted run returns Disagreement rather than the
+# named refusal, so a boolean reported against a count is triaged as the target
+# being wrong instead of as a quantity that is not a magnitude.
+proof "T125 — the boolean refusal goes, so a boolean reported quantity is compared against a count" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_boolean_reported_quantity_refuses_rather_than_agreeing_with_one" \
+  's = s.replace("        if isinstance(sourced.value, bool):", "        if False:")'
+
+# The sharpest false success available to a recomputing verifier: the
+# independent path returns nothing, sum of nothing is 0, and a reported 0
+# agrees. The planted run returns Verified over a collection with no rows.
+proof "T124 — the empty-aggregate guard goes, so an aggregate over no rows is zero and a reported zero verifies" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_an_empty_collection_refuses_rather_than_aggregating_to_zero" \
+  's = s.replace("    if not values:", "    if False:")'
+
+# T122's rule one level down: a join between two derived artifacts is declared,
+# never inferred. Without it a check is run against a contract it does not
+# belong to and the result is attributed to the wrong operation.
+proof "T124 — the join guard goes, so a check is run against a contract it does not belong to" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_check_from_another_contract_is_refused_rather_than_joined" \
+  's = s.replace("    if check.operation_id != contract.contract.operation_id:", "    if False:")'
+
+# FR-024's closing sentence. A refusal that names no consulted source says only
+# that it refused, which is the half of the requirement that is easy to miss.
+proof "T125 — the consulted-source requirement goes, so a refusal that looked at nothing is constructible" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_every_refusal_names_at_least_one_consulted_source" \
+  's = s.replace("        if not self.consulted:", "        if False:")'
+
+# FR-024 property 4 fixes the admissible sources. Without this a refusal can
+# cite a source nobody consulted, which is finding 007s fabricated-provenance
+# defect arriving in a refusal instead of in a contract.
+proof "T125 — the admissible-source check goes, so a refusal can cite a source FR-024 does not admit" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_refusal_cannot_name_a_source_outside_fr_024s_admissible_set" \
+  's = s.replace("        if self.artifact_class not in ADMISSIBLE_PRECISION_SOURCES:", "        if False:")'
+
+# Reachable by a direct constructor call rather than through verify_quantity,
+# and held because T126 and T127 will build records from these types without
+# going through this modules entry point.
+proof "T129 — the disagreement guard goes, so two values out of one retrieval can be recorded as a disagreement about the target" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_disagreement_between_two_values_from_one_retrieval_is_refused" \
+  's = s.replace("        if self.reported.retrieval == self.recomputed.retrieval:", "        if False:")'
+
+# An empty source is not equal to any paths source, so a reported result naming
+# no producer passes the independence comparison BY OMISSION while having been
+# read from anywhere, including from the path itself.
+proof "T129 — the reported-source requirement goes, so an unnamed source passes the independence comparison by omission" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_reported_result_with_no_named_source_is_refused_at_construction" \
+  's = s.replace("        if not self.source.strip():", "        if False:")'
+
+# The two arms below are RELABELS rather than removals, and they are written
+# that way on purpose. Deleting either branch produces an AttributeError — the
+# provisional contract has no `verified` method, and a shape check has no
+# recomputation to read — which is a crash and not a scoreable failure. What is
+# scoreable, and what actually matters downstream, is the reason: T130 reports
+# the share of not-verifiable results BROKEN DOWN BY these members, so a
+# refusal filed under the wrong one is a wrong row in that report.
+proof "T125 — a provisional contract refuses under the wrong reason, so T130 files it in the wrong row" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_provisional_contract_refuses_and_never_verifies" \
+  's = s.replace("            reason=RefusalReason.CONTRACT_PROVISIONAL,", "            reason=RefusalReason.NO_RECOMPUTING_CHECK,")'
+
+proof "T125 — a quantity absent from the reported result refuses under the wrong reason, so nothing-was-claimed reads as nothing-was-derived" \
+  src/runtime/verify.py \
+  "tests/unit/test_verify.py::test_a_quantity_absent_from_the_reported_result_refuses" \
+  's = s.replace("            reason=RefusalReason.QUANTITY_ABSENT_FROM_RESULT,", "            reason=RefusalReason.NO_RECOMPUTING_CHECK,")'
+
+# NOTE — the shape-check refusal in `recompute` has NO removal proof, and the
+# absence is a finding about this module rather than an oversight. Its condition
+# is `not check.recomputes() or check.recomputation is None`, and over any
+# CONSTRUCTIBLE DerivedCheck the two disjuncts are equivalent: T120s constructor
+# refuses a recomputation check carrying no recomputation, and refuses any other
+# kind carrying one. So dropping the first disjunct was planted and the named
+# test still passed — a doubly-covered guard whose fallback satisfies the
+# assertion, which is the vacuous-proof shape this file exists to refuse. Both
+# are kept: the first is FR-022s statement and the second is what narrows the
+# type. Named here rather than proved, because a proof shaped to pass is worse
+# than a declared gap.
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
