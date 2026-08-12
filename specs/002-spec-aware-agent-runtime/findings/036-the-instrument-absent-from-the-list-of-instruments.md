@@ -289,12 +289,57 @@ is inherited from `ci.yml`'s own stated argument. And `--run` is **not wired int
 runs these in jobs whose bounds were derived for them, and collapsing that split would make a
 four-minute instrument mandatory in a nine-second job.
 
-**Where the authority lives.** `tools/README.md` is **not** read by `check_corpus.py` — the include
+**Where the authority lives.** ~~`tools/README.md` is **not** read by `check_corpus.py` — the include
 list is `README.md`, `research`, `docs`, `specs`, `.cursor/skills`, `.specify/memory`, and `tools/`
 is never walked. Verified by reading `tools/corpuscheck/config.json`'s `include` and `search_roots`
-keys directly. So a census maintained in that README would have been a second folklore list with
-better prose. The authority is the Python table, reconciled by a gate; the only pointer outside it is
-in the top-level `README.md`, which *is* in the include list and therefore has its link checked.
+keys directly.~~ So a census maintained in that README would have been a second folklore list with
+better prose. The authority is the Python table, reconciled by a gate; ~~the only pointer outside it is
+in the top-level `README.md`, which *is* in the include list and therefore has its link checked.~~
+
+**Superseded 2026-08-12. The struck first sentence is false, the struck last one is void, and the
+conclusion between them survives on a different ground.** `tools` sits in the `include` list in
+`tools/corpuscheck/config.json`, and `tools/*.md` additionally carries the `consumer` role there. The
+passage is struck in place rather than rewritten because it stood as a live claim and a reader of the
+argument around it has to be able to see what was believed.
+
+**Established by planting, not by reading the config a second time — the method the struck text names
+is the defect.** Three checks were observed firing against `tools/README.md` on 2026-08-12, each from
+prose appended to that file and then removed: a fragment with no matching heading is `link-anchor`; a
+relative link to a file that does not exist is `link-target`; and a four-decimal ratio, a cent-precise
+dollar amount or a multiplier occurring in no `specs/*/findings/*.md` is `numeric-provenance`,
+reported as `expected: the same figure in some specs/*/findings/*.md`. Half of the struck reading was
+correct and was generalised past its evidence: `tools` genuinely is absent from `search_roots`, so a
+figure in that README corroborates nothing elsewhere — which is not the same property as the file
+never being walked.
+
+**The scope is narrower than "and therefore its claims are gated", and that limit was measured too.**
+The corpus extensions are `.md` and `.markdown`, so nothing under `tools/` that is not markdown is
+read at all: a false four-decimal ratio and a cent-precise amount planted in
+[`tools/check_tampers.py`](../../../tools/check_tampers.py)'s module docstring produced `0 error(s), 0
+warning(s)`, and so did a broken link and a broken anchor planted in the same docstring.
+`check_corpus` reads this README for link resolution, anchor resolution and figure provenance. It
+reads no source docstring, and it reconciles no census against anything.
+
+**The conclusion survives, on the second of those facts rather than the first.** A census maintained
+in `tools/README.md` would still be folklore — not because the file is unread, but because *nothing
+that reads it reconciles a count*. `link-target`, `link-anchor` and `numeric-provenance` establish
+that links resolve and that figures have a source; none of them compares a list of instruments against
+[`tools/instruments.py`](../../../tools/instruments.py)'s table or against `ci.yml`. That is not
+hypothetical — this README's own instrument split has rotted twice and stands struck in
+`instruments.py`'s docstring. So the authority remains the Python table reconciled by
+[`tests/unit/test_instrument_census.py`](../../../tests/unit/test_instrument_census.py) and
+`instruments.py --check`, and that half of the paragraph needed no repair.
+
+**Why the last sentence is void rather than merely wrong.** Its contrast — the top-level `README.md`
+being the pointer whose link is checked — rested entirely on this README's own links being unchecked.
+They are checked, and `tools/README.md` names `instruments.py` throughout, so it is neither the only
+pointer nor an unchecked one.
+
+[`tools/README.md`](../../../tools/README.md) § *Where the authority lives, and why not here* carries
+the same supersession, dated 2026-08-11 against `4118950`, and reached it independently and by the
+same planting method. **This finding was the second site**, and a note that closed the correction on
+the ground that the falsehood lived only in one author's briefs, with no second site to correct, was
+wrong about that.
 
 ## 6. What everything reads at `6beb9ae` + this change
 
