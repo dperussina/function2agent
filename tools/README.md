@@ -106,7 +106,7 @@ the author may have made deliberately.
 | `link-anchor` | error | A `#fragment` names no heading in the target file. ~~Slugs follow GitHub's algorithm including its `-1`/`-2` duplicate suffixes.~~ **The `-1`/`-2` duplicate suffixes are implemented in `_anchors_for` and are correct. The slug itself is now measured against GitHub's renderer rather than described from its documented algorithm: `slugify` reproduces the emitted `id` on all 2,534 headings the corpus walked at `7a60dd3` on 2026-08-10 — the 2,425 anchored at `^#` and the 109 written inside a blockquote, both populations named because an earlier figure of this kind named neither. That is a dated count over a named set rather than a live ratio; the walked set grows whenever the corpus does. `_anchors_for` enumerates blockquoted headings as of the same commit.** *(corrected 2026-08-10, twice. The struck sentence was true about the suffixes and unmeasured about everything else, and the unmeasured half is what licensed two links to be written wrong — see [why a false positive is the worse failure](#a-checker-false-positive-is-more-dangerous-than-a-checker-gap-the-remedy-corrupts-the-correct-artifact-and-then-it-passes).)* |
 | `link-label` | warning | The link *text* names a different document than the link *target*: `[finding 010](.../011-reachability...)`. The link works, so no existence check catches it, and a reader following the prose lands somewhere else. |
 | `identifier-resolution` | error | `D-17`, `U-40`, `OD-06`, `FR-018`, `E15` and friends resolve to a definition. Dangling identifiers are how a superseded decision keeps getting cited. |
-| `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. |
+| `identifier-gap` | warning | A register with a hole in it. This corpus strikes superseded entries and keeps the row, so a gap usually means a deleted row that something still cites. **Reads one register per feature since 2026-08-12** for a namespace marked `per_feature` — `FR` and `SC`, whose tokens collide across features — because the corpus-wide union it read before was filled by the other feature's unrelated requirement of the same number, and all 22 rows of `specs/001-discovery-validation/spec.md`'s `FR` register could be deleted, individually or all at once, with every gate green. Zero firings on the clean corpus; the two rows it still cannot see are that register's endpoints, because a density reading sees holes and not truncations. See [the per-feature gap repair](#the-per-feature-gap-repair-and-the-22-rows-it-was-measured-against). |
 | `findings-numbering` | error / warning | Duplicate numeric prefixes in `findings/` (**error**), a citation of a finding number that does not exist (**error**), and a gap in the sequence (**warning**). |
 | `register-range` | warning | A prose summary of a register — `(D-01 … D-19)` — that stops short of the register's real last entry. **`gen_claims.py` now writes the standalone ones**; this rule is what fires when it has not been run, and is the *only* mechanism at the narrated sites the generator refuses. |
 | `inventory-count` | warning | A prose count of repository contents that no longer matches the filesystem: `"eleven committed harnesses" when there are thirteen`. Six rules, each reading only the documents its own `files` glob names. A rule with no live site in that scope reports nothing, which is also what a rule that passes reports, so the check announces a skip per silent rule — see [the sweep](#every-rule-measured-against-its-own-scope). The `findings` rule had no live site in **any** revision of its scope until 2026-08-11, when the corpus-wide total arrived in the repository map. ~~The `findings` rule had no site in any document until 2026-08-03, because alone among the six its pattern required a trailing comma and so read `15 findings,` but not `15 findings and an index`; it has none again.~~ **Corrected 2026-08-11, and it was false in both halves.** No rule's pattern has ever contained a comma, in any revision, and the pattern as written matches `15 findings and an index` — replayed against the rule's own masking over all `14` revisions of `README.md` and `research/README.md`, seven each, it read nothing in every one of them, so there was no 2026-08-03 site to lose. *(The denominator read `266` until 2026-08-11, which is the repository's total commit count at `c9e42ad` rather than a revision count of either document; the replay's conclusion is unaffected.)* Widening its `files` to the findings index was measured and declined: see [the sweep](#every-rule-measured-against-its-own-scope). A rule whose subject is not in the tree at all declares that as a `precondition` and announces being out of scope rather than disabled — see [the `vendored-repos` disposition](#vendored-repos-is-out-of-scope-in-ci-by-construction-and-says-so-rather-than-reporting-an-incident). |
@@ -1164,9 +1164,212 @@ than the prose.
 
 **The residue, stated so it is not mistaken for coverage.** Nothing distinguishes a feature-001
 citation of a feature-002 requirement from a feature-001 citation of a requirement that does not
-exist; nothing will notice a deleted FR or SC row in either feature while the other still defines that
-token; and no true per-feature range claim can be written in the form `register-range` reads. The
-declination above is about the first of those and not the other two.
+exist; ~~nothing will notice a deleted FR or SC row in either feature while the other still defines
+that token;~~ and no true per-feature range claim can be written in the form `register-range` reads.
+The declination above is about the first of those and not the other two. **The struck clause was
+repaired 2026-08-12 — `identifier-gap` now reads one register per feature; see the entry below. The
+third clause was measured and stands, at a firing count, two entries down.**
+
+#### The per-feature gap repair, and the 22 rows it was measured against
+
+**Measured 2026-08-12 at `af36453`, Darwin arm64, Python 3.12.11, in a throwaway worktree.** The
+entry above establishes that deleting feature 001's `FR-015` row leaves every gate green. That is one
+row; this is the population, and it is **not** the region the defect was expected to occupy.
+
+**The exposure is 22 rows, and it is not the 31-row overlap region.** The brief for this pass
+proposed that the exposed set was the region where feature 001's register is a proper token subset of
+feature 002's — FR-001..FR-022 and SC-001..SC-009, so 31 rows. Three things are wrong with that
+framing and each was measured rather than argued:
+
+- **The collision is symmetric, so the overlap region holds 62 rows and not 31.** Deleting feature
+  *002*'s `FR-015` is equally invisible to the gap reading, because feature 001's `FR-015` fills the
+  hole. Simulated over every one of the 119 `FR` and `SC` rows in the two specifications and then
+  planted in both directions: **64** rows leave `identifier-gap` and `identifier-resolution` silent —
+  the 62 in the overlap region, plus feature 002's `FR-048` and `FR-049`, which three findings
+  documents under `specs/002-spec-aware-agent-runtime/findings/` restate in bold-lead bullets.
+- **`definition-count` is a third guard and it already covered three of the four registers.** A
+  deleted row shrinks the register the prose counts, so any register with a live count claim is
+  guarded against every one of its rows. Feature 002's `FR` and `SC` are claimed by `plan.md:6` and
+  `tasks.md:6`; feature 001's `SC` is claimed by `checklists/requirements.md:91`, *"all nine success
+  criteria"*, whose count word sits on the line above the noun and is read through that check's
+  two-line window. **Feature 001's `FR` register is the only one of the four with no prose count
+  claim anywhere in the corpus**, and it is therefore the whole exposure.
+- So the measured figure is **22**: every row of `specs/001-discovery-validation/spec.md`'s `FR`
+  register. Each of the 22 was deleted in turn and the full gate run against it — 22 runs, **22 of 22
+  reporting 0 errors and 0 warnings**. That is why the brief's own example, `FR-015`, was the one that
+  reproduced: it is in the only register nothing was counting.
+
+**Worse than any single row, and found while measuring it: deleting the whole register is also
+silent.** Removing all 22 `- **FR-...**` bullets from that file at once — the entire register, not a
+hole in it — also reported **0 errors, 0 warnings** before this repair.
+
+**What the repair is.** A namespace marked `per_feature` in `config.json` is read register by
+register, each register being the `definition_count_target` in its own `specs/<feature>/` directory —
+the same per-feature resolution `definition-count` already performs through `_target_of`, so there is
+one convention for "which specification owns this claim" and not two. The union reading is kept for
+every other namespace, and for a `per_feature` namespace only when the per-feature pass could not
+speak, because it still covers one thing no per-feature reading does: a definition-shaped row for
+that namespace **outside** every feature's specification, which puts a hole in the union and in no
+register.
+
+**The register is the feature's `spec.md` and not its feature directory, and that choice is
+load-bearing rather than arbitrary.** `specs/001-discovery-validation/VERDICT.md` adjudicates all
+nine of feature 001's success criteria in a first-cell table, so it *defines* SC-001..SC-009 under
+`definitions_in`. A directory-keyed register would have had feature 001's `SC` register filled by its
+own verdict document and stayed silent on every row of it — the same masking as the cross-feature
+collision, one directory down. Keyed on `spec.md` it does not. The same is true of `FR-048` and
+`FR-049` and the three findings documents that restate them.
+
+**What it buys, stated so the excluded case is visible.** Planted row by row against the repaired
+tool:
+
+| | rows |
+|---|---:|
+| Deletions the whole gate was silent on before | **22** |
+| Newly caught — `FR-002` .. `FR-021` | **20** |
+| Still silent — `FR-001` and `FR-022` | **2** |
+| Rows the repair newly makes *gap*-visible across all four registers, whatever else covered them | **58** |
+| Rows the union reading catches that the per-feature reading does not | **0** |
+
+The last row is what makes the change additive rather than a trade: asserted as a set comparison over
+all 119 rows, not inferred from two totals agreeing.
+
+**The limit, named because a coverage claim that quietly excludes a case is how the next reader
+over-trusts it: a gap check sees holes, not truncations — and at *both* ends, not just the top.** The
+range is computed from the members that are present, so deleting either endpoint shrinks it instead
+of perforating it. All eight endpoints of the four registers were planted: `definition-count` catches
+six of them and `identifier-resolution` two of those six as well, and the two that fire nothing are
+**feature 001's `FR-001` and `FR-022`** — the endpoints of the one register no prose counts. The
+brief for this pass named only the top of the range; the bottom is exactly as invisible, because
+`min(nums)` moves as readily as `max(nums)`.
+
+**And it is defence in depth rather than a duplicate of `definition-count`, which is why all four
+registers are read and not just the exposed one.** The compound plant is the demonstration: delete
+feature 002's `FR-015` **and** advance both count claims from 58 to 57 — the honest edit, the one a
+pass making that deletion would actually make. `definition-count` then agrees and goes quiet. Against
+the unrepaired tool that plant reports **0 errors, 0 warnings**; against the repaired one it reports
+**1 warning**, and the per-feature gap reading is the only thing left holding the register.
+
+**The new silence mode, and why it is a closure rather than a swap.** A per-feature check must find a
+register to look for holes in, and a feature whose `spec.md` is absent — or narrowed away by `--path`
+— has none. Answering "no register, therefore no gaps" would install one silence while removing
+another, which is the class this repository has reintroduced twice while closing it once. Three
+states are distinguished and only the third is ever a pass:
+
+| State | What the tool says |
+|---|---|
+| Outside the narrowed selection | `specs/001-discovery-validation/spec.md: 22 of 22 FR definition(s) are outside the --path selection … a full run checks it` |
+| Absent from the repository | `specs/001-discovery-validation has no spec.md, so its FR register … was not read for holes — this is absent from the repository rather than narrowed away, and it is not a clean result` |
+| Present, and every row of the register gone | `specs/001-discovery-validation/spec.md defines no FR members while 1 other feature specification(s) do, so there is no FR register … there to find holes in` |
+
+The first two are separated by asking the question of the **unnarrowed tree** under `corpus.root`,
+which is the `_unnarrowed_definitions` move the narrowing repair at `aaa1283` made for the
+namespace-level decision; the pattern transfers unchanged, and it is now a cached corpus rather than a
+cached union because the per-feature walk needs the documents and not just the tokens. The third state
+is a bonus the shape paid for: it turns the whole-register deletion above from a silent `0/0` into an
+announced skip. **None of the three fails the gate** — `identifier-gap` is a warning and a skip is not
+a violation at all — so what they buy is a line in the report, which is what this repository means by
+not passing silently.
+
+**Held by five self-test rows that fail against the unrepaired module, and by two targeted tampers.**
+No pytest-scored removal proof was written, and the reason is the precedent: finding 038 measured
+pytest blind to the entire corpus checker, so a pytest-scored proof for a corpus-checker helper is
+vacuous by construction. Reverting `checks/identifiers.py` and `config.json` to `af36453` and leaving
+`selftest.py` in place fails **5** of the 12 new assertions, with the collision fixture reporting `0
+violation(s)`. Reading the register off the narrowed corpus instead of the tree fails exactly the
+narrowed-away row; keying it on the feature directory instead of the `spec.md` fails **4**, the
+primary one among them, because the fixture's restatement is complete and fills the hole.
+
+**The 95 citations with no owning feature are not in scope here, and this is the answer the resolution
+attempt could not give.** The entry above records `FR` and `SC` cited 73 and 22 times outside any
+`specs/<feature>/` directory, and that population is what disqualified feature-scoped *resolution*: a
+citation names no feature, so scoping it either abandons the union or stops reading those documents. A
+gap check asks a different question — whether a register is dense — and takes no interest in
+citations at all. Measured rather than assumed: of the 7 documents holding those 95 citations,
+**0 define any `FR` or `SC` member** under `definitions_in`. Every definition-shaped `FR` or `SC` row
+in this corpus sits under `specs/<feature>/`, so there is no ownerless register for this check to be
+unable to place. That is the whole asymmetry — the resolution rule's hard population is empty for the
+gap rule.
+
+#### No correct statement of one feature's FR or SC extent can pass `register-range`, and the relaxation stays declined
+
+**Measured 2026-08-12 at `af36453`.** The entry two above reports `register-range` firing 4 warnings
+on its own true sentence and dodging with `..`. That claim reproduces, is **wider** than it was
+stated, and the relaxation is nonetheless declined — on a firing count, and on the same ground every
+previous `register-range` relaxation was declined on.
+
+**The claim, re-measured in every separator form.** A line reading *"Feature 001 defines FR-001 …
+FR-022 and SC-001 … SC-009 today"* was planted into this file in each form `_RANGE` accepts:
+
+| Form | Warnings |
+|---|---:|
+| `…`, `...`, `–`, `--`, `to`, `through` | **2** each |
+| `..` — the dodge this file and `config.json` both take | **0** |
+| one namespace, parenthesised: `(FR-001 … FR-022)` | **1** |
+| one namespace, bare prose: `defines FR-001 … FR-022 today` | **0** |
+
+**The stated qualifier is too narrow, and the correction matters to the next author.** The previous
+entry attributes the failure to a second namespace's range sharing the line. It is not that:
+`_is_whole_register_claim` requires the range to start at `01` and then accepts **either** a
+parenthesis **or** two namespaces on the line, so a correct parenthesised statement of a single
+feature's extent cannot pass either. What actually escapes is a range that is not read as a
+whole-register claim at all — bare, unparenthesised, alone on its line — or a separator `_RANGE` does
+not match.
+
+**And the obvious repair helps zero sites, which is what settles it.** Now that `identifier-gap`
+resolves a `per_feature` namespace against `_target_of`, the analogous move for `register-range` is to
+read `maxima` from the claiming document's own feature register. Censused over the loaded corpus,
+`_RANGE` matches **48** `FR`/`SC` range strings, and:
+
+- **all 48 are inside `specs/002-spec-aware-agent-runtime/`**, and **all 48 are subset ranges** —
+  not one starts at `001`, so `_is_whole_register_claim` rejects every one and `register-range`'s
+  firing count on `FR` and `SC` today is **0 over 48 candidate sites**;
+- the sites the complaint is about are the **10** written `..`, and **all 10 are in `tools/README.md`**
+  — a document with no owning feature, where `_target_of` returns `None` and a per-feature `maxima`
+  falls back to the union it was meant to replace. The repair would leave them exactly where they are.
+
+**The cost side is the recorded one, and it is why this is a decline and not a deferral.** Making
+those sentences *matchable* means relaxing `_is_whole_register_claim`, and `specs/002-spec-aware-agent-runtime/checklists/requirements.md`
+— one of the two files [the earlier declination](#the-sites-it-refuses-and-why-the-two-rules-were-kept)
+names as records that must stay frozen — holds **13** of the 48 subset ranges. A relaxation that read
+them would demand a dated validation record advance, which is not noise but a wrong answer. The
+markup-tolerant variant carries the separate recorded trap of reading `OD-01 through ~~OD-14` and
+stopping at the struck bound.
+
+**One thing the dodge is doing right, and it is not a formatting habit.** The 10 `..` sites all sit
+inside dated measurement entries. Were `register-range` to read them it would require them to advance
+to `FR-058`, which would destroy the record. For a frozen per-feature claim the unmatched separator is
+functioning as the strike convention's analogue, and that is a reason to keep it rather than an
+embarrassment to work around.
+
+#### Three answers to "how many namespaces are plural", and which one a given site needs
+
+**Two figures for this were in the corpus by 2026-08-12 with nothing saying how they differ, and a
+third was in the code.** A reader meeting them concludes one is stale and picks the wrong one, and
+which is correct depends entirely on the purpose. All three are re-derived here with the tool's own
+`definitions_in` over the loaded corpus:
+
+| Reading | Answer | Which namespaces |
+|---|---:|---|
+| Documents containing definition-shaped rows for it | **7 of 9** | E 30, FR 5, D 3, OD 3, SC 3, C 2, U 2; only P and O are single, and it is the same file for both |
+| Documents contributing a token no other document contributes | **1 of 9** | `E` alone |
+| Logically more than one register — an editorial reading, not a census | **3 of 9** | `FR` and `SC`, one register per feature with colliding tokens; `E`, a ladder plus one index per non-ladder experiment |
+
+**The middle row corrects a figure this pass was handed.** The 3 was relayed as resting on unique
+token contribution. It does not: under that test the answer is **1**, because every secondary site for
+`D`, `C`, `U`, `OD`, `FR` and `SC` is a strict *subset* of a primary one — including both of the
+per-feature namespaces, since feature 001's registers are subsets of feature 002's. The 3 is not
+derivable from any token census; it is a statement about the corpus's register *convention*.
+
+**Which site needs which.** A duplicate-register-row guard needs the **7**: it must visit every site
+a definition-shaped row can hide at. `identifier-gap`'s plural-register branch is decided by the
+**7** as well, because it counts defining documents — its own comment gave the 3, which had it
+describing four fewer namespaces than the code reaches, and that is corrected in place. `per_feature`
+and `config.json`'s hand-written `what` strings turn on the **3**, which is why they stay
+hand-written: a label derived from the union names `specs/002-spec-aware-agent-runtime/spec.md` for
+both `FR` and `SC` and erases feature 001's register while looking verified. The **1** is the figure
+`_comment_identifiers` is already stating when it says `E` is the only namespace whose plurality that
+test can see.
 
 #### The namespace-to-owning-document map cannot have one document per namespace, and the census falsifies its schema
 
