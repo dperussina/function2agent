@@ -1355,7 +1355,10 @@ question.
 
   **Where precision is stated, pinned 2026-08-03.** A precision is **stated** when it is attributable
   to a **named source artifact**, and the admissible sources MUST be fixed by an **ordered precision
-  ladder** with all four of the following properties:
+  ladder** with all ~~four~~ **six** of the following properties: *(the word read `four` until
+  2026-08-12, which was correct when written and went stale the moment **OD-23** added properties 5
+  and 6 on 2026-08-03; the enumeration below has carried six ever since, so this is the count being
+  brought back to the list rather than any change to what the ladder must do)*
 
   1. It MUST be **committed before any derivation is written against it**, and MUST be versioned
      configuration under FR-012 — reviewable by the operator before it takes effect, and outside the

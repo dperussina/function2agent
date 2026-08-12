@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ **thirty-two** owner decisions
-(OD-01 through OD-32, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ ~~thirty-two~~ **thirty-three** owner decisions
+(OD-01 through OD-33, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -80,7 +80,10 @@ reported *thirty* against `OD-01 through OD-31` on the day it was live; it is th
 looks at both halves. **Extended 2026-08-12 with OD-32**, which makes provenance required in the
 derived-contract and derived-check schemas at 1.1.0 behind a version gate; the count and the range
 moved together in the same act this time, which is the whole of what the 2026-08-11 correction asked
-of the next entry, and the headings run unbroken to OD-32.)*
+of the next entry, and the headings run unbroken to OD-32. **Extended 2026-08-12 with OD-33**, which
+declines to mint FR-024's precision ladder as a ninth artifact kind and defers its FR-012 gating
+against a named future producer; the count and the range moved together in that act too, and the
+headings run unbroken to OD-33.)*
 
 *(**The count in the sentence below was resolved 2026-08-11 by counting its own members, and it did
 not move.** Three passes read it as arithmetic in doubt, because the anchor was inferred from the
@@ -102,8 +105,12 @@ post-dates the closure recorded at OD-07 and neither re-opens what that closure 
 **Extended 2026-08-12 with OD-32, enumerated below in the same act that moved the count**, and tested
 against the sentence's claim on the same footing: OD-32 settles a schema question belonging to feature
 002's T121 and T133, so it post-dates the OD-07 closure and re-opens nothing that closure
-adjudicated. The enumeration now runs OD-10 through OD-32, contiguous.)*
-~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ ~~**The last twenty**~~ ~~**The last twenty-two**~~ **The last twenty-three
+adjudicated. The enumeration now runs OD-10 through OD-32, contiguous. **Extended 2026-08-12 with
+OD-33, enumerated below in the same act that moved the count**, and tested on the same footing:
+OD-33 settles an artifact-kind question belonging to feature 002's T125 and T082, so it post-dates
+the OD-07 closure and re-opens nothing that closure adjudicated. The enumeration now runs OD-10
+through OD-33, contiguous.)*
+~~**The last twelve**~~ ~~**The last fourteen**~~ ~~**The last sixteen**~~ ~~**The last seventeen**~~ ~~**The last eighteen**~~ ~~**The last nineteen**~~ ~~**The last twenty**~~ ~~**The last twenty-two**~~ ~~**The last twenty-three**~~ **The last twenty-four
 post-date the feature's closure and do not re-open it** — OD-10 makes v1 read-only, ~~OD-11 blocks the
 production specification on one further experiment~~ **OD-11's blocking condition is retired by
 OD-14**, **OD-12 routes all egress through one mandatory
@@ -158,7 +165,11 @@ assessments keep the name they were recorded under**, and **OD-32 makes provenan
 artifact stays readable and comes back with its provenance explicitly absent and named rather than as
 an empty record or as `provisional` — the sentinel form being the limb the decision turns on, because
 a sentinel must carry a validation status and the only one available would make a missing record
-indistinguishable from a weak one**.
+indistinguishable from a weak one**, and **OD-33 declines to mint FR-024's precision ladder as a
+ninth artifact kind, leaving its FR-012 gating deferred and property 1 carried as a recorded limit
+rather than by a task, with the deferral expiring the moment a second producer writes a
+`precision_source` — the count FR-054 and `KINDS` both assert at eight is left where it stands, and
+the refusal FR-024 requires is built and is not what this entry defers**.
 
 **This document is the pre-registration required by FR-006.** Every threshold below was recorded
 before its experiment ran. Revising one after results are visible requires a dated entry naming who
@@ -4407,6 +4418,47 @@ made into. Three things remain true and are recorded rather than left to be foun
   `derived_check` — where `provenance` was already listed — the added-field guard returns early and the
   migration guard is what fires. The gap is in that instrument, this entry authorises no instrument
   change, and it is named in the baseline's own comment rather than papered over.
+
+### OD-33 — FR-024's precision ladder is **not** minted as a ninth artifact kind; its FR-012 gating stays **deferred**, property 1 is carried as a recorded limit rather than by a task, and the deferral **expires** the moment a second producer writes a `precision_source`
+
+**Decided 2026-08-12.** FR-024 fixes an ordered precision ladder with six properties. Property 1
+requires that ladder to be *"committed before any derivation is written against it"* and to be
+*"versioned configuration under FR-012 — reviewable by the operator before it takes effect, and
+outside the agent's write path."* Nothing in this repository carries it, and the ordering the
+property states is **already inverted**: `src/analysis/derive.py` sets `precision_source` on every
+recomputation it emits, so a derivation is written against a ladder that does not exist as a
+reviewable artifact.
+
+**Why this is a decision and not a task.** `src/analysis/review_gate.py` keys its FR-012 gate on
+**artifact kind**, so gating the ladder means first making the ladder an artifact. That module
+already states the same problem for FR-056's confused-deputy catalogue and names the three routes
+available: *"a schema, a ninth kind or a home inside an existing one — and FR-054 asserts eight."*
+Choosing among the three is a design choice with a specification cost attached to one of them, which
+is what separates it from ordinary implementation.
+
+**① The ninth-kind route is available and is not taken here.** FR-054 enumerates its kinds in prose
+and `src/contracts/schemas.py` implements them as a closed `KINDS` set; both read **eight**, and the
+two agree — the prose reads as nine only if *"the effect-gate rule set and its deny list"* is counted
+as two, which `KINDS` settles by holding one `effect_gate_rule_set`. Advancing a count both a
+requirement and a frozen set assert is a specification amendment. **This entry does not make one**,
+and no count anywhere is edited by it.
+
+**② The deferral is bounded rather than open, and the bound is mechanical.** The cost of not carrying
+property 1 today is small and measurable: `precision_source` has exactly one producer, and the values
+it writes are source names rather than numeric constants — which is **property 2**, and property 2 is
+independently enforced at `derive.py`'s `_is_numeric` guard, so the failure property 1 exists to
+prevent cannot arrive silently through the one producer that exists. That argument is a statement
+about **one** producer. It stops holding at the second, because two producers can disagree about what
+names a rung and nothing would adjudicate them. **The deferral therefore expires the moment a second
+producer writes a `precision_source`**, on OD-28's precedent, which deferred a migration against a
+named future construction rather than against a date.
+
+**③ What property 1's absence does not excuse.** The refusal FR-024 requires is built and is not
+deferred by this entry: an unstated precision refuses, with a named reason and a list of consulted
+sources, in `src/runtime/verify.py`. What is deferred is the **reviewable artifact behind** that
+behaviour, not the behaviour. The distinction is recorded because a reader of the loose-requirement
+row would otherwise take the whole requirement as unbuilt, which is the opposite error from taking it
+as finished.
 
 ## Open items this plan does not resolve
 

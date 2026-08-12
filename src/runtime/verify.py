@@ -63,17 +63,29 @@ fact about the source rather than about a review.
 
 ⚠️ **What is built here is FR-024's refusal, and not FR-024's ladder.** The
 requirement also fixes an **ordered precision ladder** with six properties, and
-four of them are not discharged by anything in this repository: property 1
-requires the ladder to be *versioned configuration under FR-012, committed
-before any derivation is written against it*; property 3 requires its last rung
-to be refusal; property 5 (added and then narrowed by **OD-23**) governs a
-caller-declared precision; property 6 requires a verification whose precision
-came from the request to be marked provisional. T082's note already records
-that gating the ladder under FR-012 means first making it one of FR-054's
-artifact kinds, which FR-054's count forbids doing casually. **No task line
-carries properties 3, 5 or 6** — `OD-23` appears nowhere in `tasks.md`. What
-this module does instead is refuse, and name what it consulted, which is
-property 3's behaviour without property 1's reviewable artifact behind it.
+**three** of them are discharged by nothing here: properties **1, 5 and 6**.
+
+- **Property 1** requires the ladder to be *versioned configuration under
+  FR-012, committed before any derivation is written against it* — and the
+  ordering is already inverted, because `derive.py` writes a `precision_source`
+  against a ladder that is not a reviewable artifact. Its disposition is an
+  owner decision rather than a task: gating it under FR-012 means making it an
+  artifact kind first, and `OD-33` declines to mint a ninth kind, defers the
+  gating, and expires that deferral at the second producer to write a
+  `precision_source`.
+- **Properties 5 and 6** govern the caller-declared rung — admissible only where
+  no artifact source supplies a precision, and provisional wherever admitted.
+  They are carried by `T212`, which is `OD-23`'s task.
+
+**Properties 2, 3 and 4 are carried.** Property 2 is `derive.py`'s refusal of a
+numeric `precision_source`; property 4 is `ADMISSIBLE_PRECISION_SOURCES` and the
+`ConsultedSource` constructor below. Property 3 — *its last rung MUST be
+refusal* — is carried **in behaviour and not as structure**: an unstated
+precision does reach refusal, through `_admissible_precision`, and what is
+absent is a ladder object for that refusal to be the last rung *of*. An earlier
+revision of this paragraph counted property 3 among the undischarged and then
+conceded its behaviour two sentences later; the census was redone
+property-by-property on 2026-08-12 and this is its result.
 
 ## Why the verified path is exercised but never with both halves real
 
