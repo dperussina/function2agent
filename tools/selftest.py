@@ -952,10 +952,18 @@ def _gap_path_selftest(verbose: bool) -> list[str]:
     more than one document in either of them — every register there is defined by
     exactly one file — so the corpus rows above hold only the single-document
     branch, and reverting the plural branch leaves them all green. The real
-    corpus is where the plurality lives: seven of its nine namespaces are defined
-    by more than one document and `E` by thirty, which is the same reason the
-    namespace-to-owning-document map recorded in `tools/README.md` cannot have
-    one document per namespace as its schema.
+    corpus is where the plurality lives: **seven** of its nine namespaces contain
+    definition-shaped rows in more than one document and `E` in thirty, which is
+    the same reason the namespace-to-owning-document map recorded in
+    `tools/README.md` cannot have one document per namespace as its schema.
+
+    Seven is the reading this branch needs, and it is not the only reading of
+    "plural" in the corpus: asked instead which namespaces have more than one
+    document contributing a token no other document contributes, the answer is
+    **one**, `E` alone. Three separate figures are reconciled in `tools/README.md`
+    under **Three answers to "how many namespaces are plural"**; quoting the wrong
+    one here would understate the branch by four namespaces, which an earlier
+    revision of the comment at the branch itself did.
 
     Two properties, and the first is the one the repair is for: `path` carries a
     relpath, never the configured `what` prose. The second is that a register
@@ -1028,6 +1036,185 @@ def _gap_path_selftest(verbose: bool) -> list[str]:
         print(f"  {'PASS' if ok else 'FAIL'}  {why:<{width}}")
         if not ok:
             failures.append(f"identifier-gap: {why} — got {shown!r}")
+        if verbose:
+            print(f"        {shown!r}")
+    return failures
+
+
+def _per_feature_gap_selftest(verbose: bool) -> list[str]:
+    """Prove `identifier-gap` reads one register per feature, and says when it cannot.
+
+    Neither fixture tree can hold this: both have exactly one feature
+    directory, and the defect needs two, because it *is* the collision — a row
+    deleted from one feature's register is filled in the corpus-wide union by
+    the other feature's unrelated requirement of the same number. Measured
+    2026-08-12 on the real corpus, deleting any of the 22 rows of
+    `specs/001-discovery-validation/spec.md`'s `FR` register left the whole gate
+    at 0 errors and 0 warnings, and so did deleting all 22 at once.
+
+    The tree below is that shape at fixture scale. `001-alpha` is missing
+    `FR-003` and `002-beta` defines it, so the union is contiguous and the union
+    reading — every reading this check had before — is silent on the hole.
+
+    Five properties, and the first is the repair while the other four are the
+    things that make it worth having rather than a second way to go quiet:
+
+      1. the hole in one feature's register is reported, against that register's
+         own file;
+      2. the register is the feature's `spec.md` and not its directory, so a
+         restatement elsewhere under the same feature does not fill it — the
+         real corpus has one, `VERDICT.md`, which adjudicates all nine of
+         feature 001's `SC` criteria in a first-cell table;
+      3. a register narrowed away by `--path` is announced, not passed, and the
+         test that distinguishes it is asked of `corpus.root` on disk. This is
+         the property an implementation that walked only the narrowed corpus
+         would fail silently, which is the silence this check would otherwise
+         have acquired while removing another;
+      4. a feature whose `spec.md` is gone from the tree says so, in different
+         words, so the two states above are never collapsed into one;
+      5. a density reading sees **holes and not truncations** — `003-gamma`
+         starts at `FR-002` and is dense from there, and nothing is filed
+         against it. Deleting the first or last row of a register shrinks its
+         range instead of perforating it, and this row is what stops the
+         coverage claim from being read as covering that.
+    """
+    from corpuscheck.runner import run_checks
+
+    def write(root: Path, rel: str, body: str) -> None:
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(body)
+
+    def build(tmp: Path, *, alpha_spec: str | None) -> None:
+        write(tmp, "README.md", "# Fixture\n\nA two-feature tree.\n")
+        if alpha_spec is not None:
+            write(tmp, "specs/001-alpha/spec.md", alpha_spec)
+        # A restatement inside the same feature directory, and a *complete* one:
+        # it still adjudicates `FR-003`, which is the row the specification has
+        # lost. That is the real shape — a verdict written while the row existed
+        # outliving the row — and it is what makes this fixture discriminate. A
+        # register keyed on the feature *directory* is filled by this document
+        # and reports nothing; keyed on the feature's `spec.md` it is not.
+        write(
+            tmp,
+            "specs/001-alpha/VERDICT.md",
+            "# Verdict\n\n| id | ruling |\n|---|---|\n"
+            "| FR-001 | met |\n| FR-002 | met |\n| FR-003 | met |\n| FR-004 | met |\n",
+        )
+        write(
+            tmp,
+            "specs/002-beta/spec.md",
+            "# Beta\n\n- **FR-001**: one\n- **FR-002**: two\n- **FR-003**: three\n"
+            "- **FR-004**: four\n- **FR-005**: five\n",
+        )
+        write(
+            tmp,
+            "specs/003-gamma/spec.md",
+            "# Gamma\n\n- **FR-002**: two\n- **FR-003**: three\n- **FR-004**: four\n",
+        )
+
+    HOLED = "# Alpha\n\n- **FR-001**: one\n- **FR-002**: two\n- **FR-004**: four\n"
+
+    failures: list[str] = []
+    checks: list[tuple[str, bool, str]] = []
+    print("\nidentifier-gap — one register per feature, and the three states of not having one")
+
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        build(tmp, alpha_spec=HOLED)
+
+        full, _ = run_checks(tmp, names=["identifier-gap"])
+        found = [v for v in full.violations if v.check == "identifier-gap"]
+        checks.append((
+            "exactly one hole is reported across three features",
+            len(found) == 1,
+            f"{len(found)} violation(s): {[ (v.path, v.found) for v in found ]}",
+        ))
+        if len(found) == 1:
+            v = found[0]
+            checks.append((
+                "it is filed against the feature's own spec.md",
+                v.path == "specs/001-alpha/spec.md",
+                v.path,
+            ))
+            checks.append((
+                "the missing member is named",
+                "FR-003" in v.found,
+                v.found,
+            ))
+            checks.append((
+                "the owning feature is named",
+                "specs/001-alpha" in v.found,
+                v.found,
+            ))
+            checks.append((
+                "the restatement under the same feature is not the register",
+                "VERDICT" not in v.path,
+                v.path,
+            ))
+            checks.append((
+                "nothing is filed against the truncated register (holes, not truncations)",
+                "003-gamma" not in v.path,
+                v.path,
+            ))
+        # The union of all three registers is FR-001..FR-005 with no hole, so
+        # every reading this check had before the per-feature one is silent here.
+        union_holed = any("register (" in v.found and "003" in v.found for v in found)
+        checks.append((
+            "the corpus-wide union is contiguous, so only the per-feature reading sees this",
+            len(found) == 1 and union_holed,
+            f"{len(found)} violation(s)",
+        ))
+
+        # 3 — narrowed away. `002-beta` defines the whole union, so the
+        # namespace-level activation still enforces FR and the per-feature pass
+        # is reached with `001-alpha` outside the walk.
+        narrowed, _ = run_checks(
+            tmp, names=["identifier-gap"], only_paths=["specs/002-beta/spec.md"]
+        )
+        reasons = [r for c, r in narrowed.skipped if c == "identifier-gap"]
+        checks.append((
+            "a narrowed-away register is announced rather than passed",
+            any("001-alpha/spec.md" in r and "--path selection" in r for r in reasons),
+            "; ".join(reasons) or "(no skip)",
+        ))
+        checks.append((
+            "and no hole is reported for the register this run could not read",
+            not [v for v in narrowed.violations if "001-alpha" in (v.path or "")],
+            str([v.path for v in narrowed.violations]),
+        ))
+
+        # 4 — no members at all, with a sibling feature that has them.
+        build(tmp, alpha_spec="# Alpha\n\nNo requirements here any more.\n")
+        emptied, _ = run_checks(tmp, names=["identifier-gap"])
+        reasons = [r for c, r in emptied.skipped if c == "identifier-gap"]
+        checks.append((
+            "a register emptied of every row is announced, not silently absent",
+            any("defines no FR members" in r for r in reasons),
+            "; ".join(reasons) or "(no skip)",
+        ))
+
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        build(tmp, alpha_spec=None)
+        gone, _ = run_checks(tmp, names=["identifier-gap"])
+        reasons = [r for c, r in gone.skipped if c == "identifier-gap"]
+        checks.append((
+            "a feature with no spec.md at all says so, in its own words",
+            any("has no spec.md" in r and "absent from the repository" in r for r in reasons),
+            "; ".join(reasons) or "(no skip)",
+        ))
+        checks.append((
+            "the absent and the narrowed-away wordings are not the same string",
+            not any("--path selection" in r for r in reasons),
+            "; ".join(reasons) or "(no skip)",
+        ))
+
+    width = max(len(why) for why, _, _ in checks)
+    for why, ok, shown in checks:
+        print(f"  {'PASS' if ok else 'FAIL'}  {why:<{width}}")
+        if not ok:
+            failures.append(f"identifier-gap per-feature: {why} — got {shown!r}")
         if verbose:
             print(f"        {shown!r}")
     return failures
@@ -1118,6 +1305,13 @@ def main(argv: list[str] | None = None) -> int:
     # branch. Neither fixture tree defines any namespace in more than one
     # document, so the corpus rows reach only the single-document branch.
     failures.extend(_gap_path_selftest(args.verbose))
+
+    # Direction 9: `identifier-gap`'s per-feature register reading, and the
+    # three states in which a feature has no register to read. Neither fixture
+    # tree holds two features, and two is the minimum the defect needs — the
+    # hole this catches is one that the corpus-wide union fills from the other
+    # feature's register.
+    failures.extend(_per_feature_gap_selftest(args.verbose))
 
     print()
     if failures:
