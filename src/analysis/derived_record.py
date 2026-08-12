@@ -75,11 +75,12 @@ six fields that were never recorded.
 evidence, and there is no evidence-claim meaning *no record exists*. So the third
 state belongs here, to the reader, as `ProvenanceState`:
 
-| state | what it means | how a reader reaches it |
-| --- | --- | --- |
-| `ABSENT` | no derivation recorded a provenance | `is_provenanced` is false; `require_provenance()` raises |
-| `PROVISIONAL` | a derivation recorded one and compared it to nothing | `require_provenance().validation_status` |
-| `VALIDATED` | a derivation recorded one and named an independent artifact | the same, plus `validated_against` |
+- `ABSENT` — no derivation recorded a provenance. A reader reaches it as
+  `is_provenanced is False`, and `require_provenance()` raises.
+- `PROVISIONAL` — a derivation recorded one and compared it to nothing. Reached
+  as `require_provenance().validation_status`.
+- `VALIDATED` — a derivation recorded one and named an independent artifact.
+  Reached the same way, plus `validated_against`.
 
 Three mechanisms carry the ABSENT/PROVISIONAL distinction rather than one, because
 a single accessor is a single place for it to be lost: the boolean, the raising
