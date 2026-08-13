@@ -1827,6 +1827,61 @@ index that states them has gone stale more than once, and the
 [harness index](../specs/001-discovery-validation/harness/README.md) now carries its position
 count in dated sentences for that reason.
 
+### A stale figure can be confirmable against a true neighbour, which is how this one survived being checked
+
+Everything above is about whether a figure *can* be checked. This entry is about one that **was**
+checked, and passed, because the wrong number was simultaneously the right number of something
+adjacent to it. *(It is a sibling of the two subsections above and deliberately adds no third case
+to the ungateable list, which two documents outside this file cite by its count of two.)*
+
+`src/contracts/config.py` declares two populations whose sizes sat one apart:
+
+- the **runtime's required-with-no-default set** — what `_report` counts in its own
+  `"N required value(s) unset:"` header. `RUNTIME_KEYS` only, and it includes keys that state no
+  `no_default_reason` at all: `MODEL_PROVIDER`, `MODEL_ID`, `F2A_STATE_DIR`, `F2A_TENANT_ID`,
+  `F2A_DEPLOYMENT_ID`.
+- the **reason-carrying set** — `STATES_A_REASON` in
+  `tests/contract/test_startup_entry_points.py`: the union of `SUPERVISOR_KEYS` and `RUNTIME_KEYS`
+  deduplicated by name and filtered to keys that state a reason, so it contains the four sandbox
+  bounds the runtime never reads and omits the five identity and model keys above.
+
+**One commit moved both, in opposite documents.** `a9f1570`, 2026-08-12, declared
+`REPORTING_WINDOW_SECONDS` (FR-045, **Q-10**) and took the reason-carrying set from 12 to 13 *and*
+the runtime's emitted count from 13 to 14 — established by computing both populations at
+`a9f1570^` and at `a9f1570` rather than by reading the diff. From that commit the prose figure
+`13` was wrong about the report and exactly right about its neighbour, and the neighbour is the
+one with a live `assert len(STATES_A_REASON) == 13` behind it and a docstring recording the day it
+moved.
+
+**So a reader who sanity-checks the prose finds confirmation.** Searching the tree for `13` reaches
+a real, tested, correctly-dated 13, and concludes the prose is sound. The one check that would
+have falsified it is the only one nobody ran: executing the command the prose quotes. On
+2026-08-13 the figure rotted into two further committed files within a day — a live present-tense
+bullet in [`tasks.md`](../specs/002-spec-aware-agent-runtime/tasks.md), and an OD-36 limb in
+[`plan.md`](../specs/001-discovery-validation/plan.md) that **attested a re-reading at `4a46914`
+that was never performed**. `4a46914` postdates `a9f1570` by under six hours on the same day, so
+the attested run would have returned 14; the supervisor's `12` quoted in the same sentence *was*
+right at that commit, which is how a half-false attestation reads as a whole-true one.
+
+**Nothing here was gateable, and the absence is a shape rather than a hole in coverage.**
+`numeric_kinds` in `corpuscheck/config.json` enables `ratio4`, `money_cents` and `multiplier`, so
+`numeric-provenance` never sees a bare integer: the figure was not an unsourced measurement that
+slipped past a rule, it was never a candidate for one. Both carrying documents sit in the walked
+corpus and hold the `consumer` role, so this is **not** the `tools/`-shaped miss recorded under
+[Where the authority lives](#where-the-authority-lives-and-why-not-here) — the paths were read and
+the shape was not matched.
+
+**A bare-integer rule is declined on a measured count, not on taste.** The 44 `consumer` markdown
+documents hold **7,800** bare one-to-three-digit integers outside fenced blocks, **75** of them the
+literal `13`, and exactly one of those 75 was the defect. That is over two hundred times the
+firings of the count-of-jobs prose sweep declined under [the census](#the-census--instrumentspy) at
+1 real defect in 34, and the same disposition as the duplicate-definition guard and the
+register-range relaxation, both declined on false alarms they could not shed. **What is
+constructible is narrower than a rule and is not a rule**: the honest form is the one this section
+already prescribes, a count with a date and a commit beside it, which is what both sites now carry.
+The residue is that a prose figure quoting a program's own output has no mechanical tie to that
+program, and the only tie available is running it.
+
 ## The advisory — `cite_advisor.py`
 
 The gate rule described under [What this cannot catch](#what-this-cannot-catch)

@@ -4702,10 +4702,19 @@ false.** *"There is no Python process entry point"* is **wrong** and a census ru
 that answer would confirm it. `src/runtime/main.py:125` and `src/supervisor/main.py:96` both define
 `main` under `if __name__ == "__main__"`; **T211** built them on 2026-08-08, and the T029 section
 note calls them *"the assembly point"* **in terms** and strikes its own earlier *"No task in this
-file creates that assembly point"*. Measured there and re-read at `4a46914`: `python -m
-src.runtime.main` emits the *"13 required value(s) unset"* report and exits 1, and `python -m
-src.supervisor.main` emits the platform refusal and the *"12 required value(s) unset"* report
-together. **So `config.py::_report` is not a report without a vehicle** — it has had one for five
+file creates that assembly point"*. Measured there, and re-measured at `2415c8b` on 2026-08-13 rather than inherited: `python -m
+src.runtime.main` emits its required-values-unset report and exits 1, and `python -m
+src.supervisor.main` emits the platform refusal and its own report together. Both counts are
+carried as dated readings — `14` for the runtime and `12` for the supervisor at that commit —
+because nothing recomputes either and the runtime's moves whenever a required key is declared.
+**An earlier form of this sentence attested a re-reading at `4a46914` and quoted *"13"* for the
+runtime.** The re-reading was not performed: the figure was inherited from the T029 section
+note's 2026-08-08 measurement, where it was correct. `a9f1570` declared `REPORTING_WINDOW_SECONDS`
+(FR-045, **Q-10**) at 15:44 on 2026-08-12, under six hours before `4a46914` at 21:25 the same day,
+so the run this sentence claimed to have made would have returned `14`. It is corrected in place
+rather than struck because it was never true as written — and the supervisor's `12` beside it *was*
+right at `4a46914`, which is part of why a half-false attestation read as a whole-true one.
+**So `config.py::_report` is not a report without a vehicle** — it has had one for five
 days, and the fail-loud startup path the Go side anchors is built on both sides of the language
 boundary. **What is absent is the next step and only the next step**, and this entry names it
 `Registry`-and-bind rather than *assembly point* precisely because the unqualified term is spoken
