@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ ~~thirty-two~~ ~~thirty-three~~ **thirty-four** owner decisions
-(OD-01 through OD-34, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ ~~thirty-two~~ ~~thirty-three~~ ~~thirty-four~~ **thirty-five** owner decisions
+(OD-01 through OD-35, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -83,7 +83,14 @@ moved together in the same act this time, which is the whole of what the 2026-08
 of the next entry, and the headings run unbroken to OD-32. **Extended 2026-08-12 with OD-33**, which
 declines to mint FR-024's precision ladder as a ninth artifact kind and defers its FR-012 gating
 against a named future producer; the count and the range moved together in that act too, and the
-headings run unbroken to OD-33.)*
+headings run unbroken to OD-33. **Extended 2026-08-12 with OD-34**, the verification seam, whose
+count and range moved together but which **did not extend this note** — recorded here on 2026-08-12
+rather than passed over, because this note is the register's own account of how it grew and an entry
+missing from it is the same silence the 2026-08-11 correction was about, one level up. **Extended
+2026-08-12 with OD-35**, which is different in kind a sixth way: it is the first entry here that
+**overturns a row of its immediate predecessor**, and it overturns it on grounds the predecessor's
+own flag got partly wrong — two of that flag's three arguments were re-verified and hold, the third
+was refuted by measurement and replaced with a larger one. The headings run unbroken to OD-35.)*
 
 *(**The count in the sentence below was resolved 2026-08-11 by counting its own members, and it did
 not move.** Three passes read it as arithmetic in doubt, because the anchor was inferred from the
@@ -4489,10 +4496,14 @@ simultaneously without inverting anything. **T213** carries it.
 **③ The mapping is fixed here, because one arm of it is not free.** `VerificationReport` is a
 four-member union at `verify.py:547` — `Verified | ProvisionallyVerified | Disagreement | Refusal` —
 and `Result` takes a `VerificationOutcome` *and* a `Corroboration`, so the join is a map into a
-product and not a rename. `ProvisionallyVerified` **must** map to `NOT_VERIFIABLE` with
+product and not a rename. ~~`ProvisionallyVerified` **must** map to `NOT_VERIFIABLE` with
 `Corroboration.PROVISIONAL`: constitution Principle I (v1.1.0) forbids the other reading, and
 `Result.__post_init__` already refuses `VERIFIED` with `PROVISIONAL`, so a mapping that tried it would
-raise rather than mislead. The remaining three are fixed as `Verified → VERIFIED/CORROBORATED`,
+raise rather than mislead.~~ **⚠️ STRUCK 2026-08-12 by `OD-35` below, which reads
+`ProvisionallyVerified → VERIFIED / CORROBORATED / precision basis DECLARED`.** Struck and not
+deleted, on OD-24's precedent: ⑤'s third bullet below is a dated verdict measured against this
+sentence *as worded*, and a register holding only the corrected row would leave that verdict —
+including the part of it OD-35 refutes — pointing at nothing. The remaining three are fixed as `Verified → VERIFIED/CORROBORATED`,
 `Disagreement → FAILED`, `Refusal → NOT_VERIFIABLE`, each non-verified arm carrying the report's own
 named reason rather than a synthesised one. **`MODEL_ASSESSED` has no source in this union and must
 not acquire one here** — nothing in `verify.py` produces it, and a join that could emit it would be
@@ -4560,6 +4571,114 @@ the disposition is an owner decision.**
   they stand — `ProvisionallyVerified.outcome()` is `VERIFIED`, the seam's row is `NOT_VERIFIABLE` —
   so a later edit that silently aligns one to the other fails and has to say which it chose. A
   reversal is one row in `JOINED_OUTCOME`, one in `JOINED_CORROBORATION` and two arms.
+  - ✅ **SETTLED 2026-08-12 by `OD-35`, and the flag was right for two of its three reasons.** The
+    first two grounds were re-verified against source and hold. **The third — the one this bullet
+    calls *"measured rather than argued"* — is refuted**: `reason_not_recorded` **is** true of the
+    record, on the key's own definition (*"returned a not-verifiable result and named no
+    `RefusalReason`"*, whose justification names free text explicitly), so the record files rather
+    than misfiles. It was read by its name and not by its text. The harm OD-35 measured in its place
+    is larger: the row puts every agreed comparison at a declared precision into FR-045's
+    not-verifiable **numerator** — a 0.667 share against 0.0 where three quantities were counted —
+    which is SC-019's metric. **And the obvious correction this bullet implies was also wrong**:
+    `VERIFIED`/`CORROBORATED` alone is *plain verified*, which FR-024 property 5 forbids. OD-35 mints
+    the third field the pair needed. The reversal was three rows and three arms rather than two.
+
+### OD-35 — a caller-declared precision is **verified and corroborated**, and the rung it rests on becomes a **field of its own** on `Result`; OD-34 ③'s `ProvisionallyVerified` row is struck because the union of its two constraints was unsatisfiable with the fields `Result` had
+
+**Decided 2026-08-12**, settling the flag OD-34 ⑤ raised the same day and could not resolve. The row
+now reads `ProvisionallyVerified → VERIFIED / CORROBORATED / precision basis DECLARED`.
+
+**Both of OD-34 ③'s grounds were checked against source and both fail.** ③ said Principle I (v1.1.0)
+forbids the other reading: Principle I is about a provisional **contract**, and
+`ProvisionallyVerified.__post_init__` at `src/runtime/verify.py:520-528` refuses anything but a
+`ValidatedContract`, so no provisional contract is ever in hand at this row and
+`Corroboration.PROVISIONAL` — documented at `src/contracts/result.py:121` as *"The contract was marked
+provisional under FR-026"* — asserts something false about the contract that is. ③'s second ground,
+that `Result.__post_init__` would raise, holds only once `PROVISIONAL` is assumed:
+`src/contracts/result.py:269-274` refuses `VERIFIED` **only when** `corroboration is
+Corroboration.PROVISIONAL`. That is T213's reading and it is confirmed here.
+
+**③'s third ground, which T213 recorded as *measured*, is REFUTED and is corrected rather than
+carried forward.** ⑤ says the row creates a not-verifiable stratum the breakdown can only misfile,
+because both `UNATTRIBUTED` keys in `src/runtime/reports/not_verifiable.py` are false of it. Measured
+by construction on 2026-08-12: the mechanism holds — `ReportedOutcome.__post_init__` refuses a
+not-verifiable record carrying neither a `RefusalReason` nor an `UNATTRIBUTED` key — and
+`model_assessed` is indeed false of it. But **`reason_not_recorded` is true of it, on the key's own
+words**: the key is defined as *"The producer returned a not-verifiable result and named no
+`RefusalReason`"*, and its justification contemplates exactly this record — *"free text satisfies the
+type while naming nothing this breakdown can key on."* The record files, correctly, under a key
+minted for its shape. **T213 read the key by its name and not by its definition.**
+
+**What replaces it is worse for ③ rather than better.** The measured harm is not misfiling, it is
+**share inflation**. Under ③ every agreed comparison at a declared precision enters FR-045's
+not-verifiable numerator: two such quantities beside one plain-verified one report a share of
+**0.667**, against **0.0** under this entry. That is the metric SC-019 reads, and it directly
+falsifies T212's *"can only ever move a quantity out of the not-verifiable population"* — T212's
+sentence is true of the **ladder**, whose `RefusalReason` set ③ leaves at seven, and false of the
+**record** the moment ③'s row exists.
+
+**The obvious correction is also wrong, and this is what neither pass reached.** FR-024 property 5 at
+[`spec.md`](../002-spec-aware-agent-runtime/spec.md) constrains the **state** — *"the resulting state
+is provisional and never plain verified"*, *"where it is admitted it MUST still be marked
+provisional"* — and `src/contracts/result.py:118-120` documents `CORROBORATED` as *"The only value a
+VERIFIED result may carry."* So `VERIFIED`/`CORROBORATED` alone yields a record that **is** plain
+verified, separable from a contract-corroborated one only by free text in `Result.reason` — and free
+text is the carrier `reason_not_recorded` exists to mark as insufficient. **The union of property 5
+and FR-025 was unsatisfiable with the fields `Result` had**, which is why both original rows were
+wrong and why this is a new decision rather than a reworded one.
+
+**① The rung becomes a field, on the `Staleness` precedent.** `Result` gains
+`precision: Precision`, a small frozen dataclass carrying a `PrecisionBasis` and the declaration's
+own source text. Its subject is the **precision**, sitting beside `verification` (the state) and
+`corroboration` (the contract). Three subjects, three fields, none of them a value of another —
+which is FR-047's *"MUST NOT become a fourth value of it"* applied one field over.
+
+**② It defaults, and the default is `NOT_STATED`.** `src/contracts/result.py`'s module docstring
+already states the rule this raises: a field may default **iff its default makes no claim**.
+`staleness` may default to `NOT_STATED`; a default of `FRESH` *"would be the boolean defect moved one
+field over"*, and `corroboration` may not default at all because every available value is a claim.
+Applied here: a default meaning *no declaration was acted on* would be a claim, asserted by every
+producer that never saw a declaration — the missing-quantity-indistinguishable-from-a-measured-zero
+shape. `PrecisionBasis.NOT_REACHED` **is** that claim and is therefore not the default;
+`NOT_STATED` — *nobody told this record* — is, exactly as `STALENESS_NOT_STATED` is. Two
+independent confirmations that defaulting is right rather than convenient: `validate.py`'s two
+`to_result` sites genuinely know nothing about a precision, so a required field would force them to
+state a fact they cannot earn; and `tests/removal_proofs.sh:4516-4522` records, measured 2026-08-12,
+that **a required field added after `corroboration` degrades the T126 proof to
+`tamper-broke-collection`** — so the defaulted form is also the one that keeps an existing guard
+scoreable.
+
+**③ It is a dataclass and not a bare enum, for `Staleness`'s own reason.** A `DECLARED` basis that
+cannot say *where the declaration came from* records the exposure without recording what lets a
+reader weigh it. FR-024 property 5 names both nouns — *"the declaration and its source text"* — and
+the source text is already on the record today as free text inside `Result.reason`, so this promotes
+an existing fact to structure rather than minting an obligation. **The recording obligation itself
+lands on the verifier and is discharged there**: `DeclaredPrecision.__post_init__` refuses a blank
+`declared_in` citing property 5 by name. What lands on the `Result` is property 5's *disclosure*,
+which names the result explicitly — *"an ignored declaration MUST be disclosed on the result"* — and
+FR-058's distinction, which cost this corpus a pass: a reader arrives at the result and nowhere else.
+`decimal_places` is **not** carried: it is the comparison's strictness, not the provenance exposure,
+and nothing writes it to the record today.
+
+**④ The inconsistent pair is unconstructible rather than discouraged.** `Result.__post_init__`
+refuses `precision.basis is DECLARED` alongside `corroboration is Corroboration.PROVISIONAL`, in a
+named loud refusal on `MissingVerification`'s pattern. The two assert contradictory things about one
+contract — a declared precision is only ever admitted against a contract the ladder validated, and a
+`ProvisionalContract` refuses at `CONTRACT_PROVISIONAL` before the precision question is reached — so
+the pair is unreachable in fact and is now unreachable in the type. It is load-bearing rather than
+decorative: it makes a **half-revert** to OD-34 ③ fail at construction rather than pass quietly.
+
+**⑤ `PrecisionBasis` is total over `DeclarationDisposition` plus one.** `src/contracts/` is the
+bottom of the import graph and cannot import `src/runtime/verify.py`, so the correspondence is a
+map — `PRECISION_BASIS` in `src/runtime/result_join.py`, where both enums are visible — with a
+totality arm, on `REPORTED_STATE`'s construction. This is the treatment `SPECIFICATION_STATES` gets
+for the same layering reason, with a check where an import would be an assumption.
+
+**⑥ What this does not repair.** `Result.reason` remains free text and no breakdown keys on it;
+`reason_not_recorded` stays reachable and stays named. T130's breakdown is **untouched** — no
+`RefusalReason` was minted and no route to `NOT_VERIFIABLE` was added or removed by ①—⑤, which is
+what returns T212's *"out of the not-verifiable population"* sentence to being true of the record as
+well as of the ladder.
 
 ## Open items this plan does not resolve
 
