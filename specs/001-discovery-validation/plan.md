@@ -13,8 +13,8 @@ carries a question, a method, a pre-registered gate, and a statement of what it 
 were appended after the ladder was first written, numbered rather than inserted so existing
 references stay valid. ~~**Eight are resolved and the ceiling test is in flight**~~ **Nine of the
 fifteen positions were reached and the feature is closed on OD-07** *(status corrected 2026-08-03;
-adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ ~~thirty-two~~ ~~thirty-three~~ ~~thirty-four~~ **thirty-five** owner decisions
-(OD-01 through OD-35, all of them taken) were recorded during execution and are set out below.
+adjudication in [`VERDICT.md`](./VERDICT.md))*; ~~five~~ ~~eleven~~ ~~thirteen~~ ~~fourteen~~ ~~seventeen~~ ~~twenty~~ ~~twenty-one~~ ~~twenty-three~~ ~~twenty-five~~ ~~twenty-six~~ ~~twenty-seven~~ ~~twenty-eight~~ ~~twenty-nine~~ ~~thirty~~ ~~thirty-one~~ ~~thirty-two~~ ~~thirty-three~~ ~~thirty-four~~ ~~thirty-five~~ **thirty-six** owner decisions
+(OD-01 through OD-36, all of them taken) were recorded during execution and are set out below.
 *(Count corrected 2026-08-03, late: it previously read eleven because **OD-12 was a drafted proposal
 and not a decision**. It has since been ratified, and **OD-13** was added with it. **Extended
 2026-08-03 with OD-14**, which is an addition rather than a correction. **Extended again 2026-08-03
@@ -90,7 +90,14 @@ missing from it is the same silence the 2026-08-11 correction was about, one lev
 2026-08-12 with OD-35**, which is different in kind a sixth way: it is the first entry here that
 **overturns a row of its immediate predecessor**, and it overturns it on grounds the predecessor's
 own flag got partly wrong — two of that flag's three arguments were re-verified and hold, the third
-was refuted by measurement and replaced with a larger one. The headings run unbroken to OD-35.)*
+was refuted by measurement and replaced with a larger one. The headings run unbroken to OD-35.
+**Extended 2026-08-13 with OD-36**, which settles a routing question a task note had explicitly left
+unsettled and mints the serving assembly point against it; the count and the range moved together in
+that act, and the headings run unbroken to OD-36. It is different in kind a seventh way: it is the
+first entry here whose **first substantive limb is a correction of the absence it was called to
+decide** — the brief it answers described an entry point that does not exist as missing, when what is
+missing is the `Registry`-and-bind step *after* the entry point T211 already built. The narrower
+claim is the one recorded.)*
 
 *(**The count in the sentence below was resolved 2026-08-11 by counting its own members, and it did
 not move.** Three passes read it as arithmetic in doubt, because the anchor was inferred from the
@@ -4679,6 +4686,104 @@ for the same layering reason, with a check where an import would be an assumptio
 `RefusalReason` was minted and no route to `NOT_VERIFIABLE` was added or removed by ①—⑤, which is
 what returns T212's *"out of the not-verifiable population"* sentence to being true of the record as
 well as of the ladder.
+
+### OD-36 — v1 builds the **serving** assembly point: something that constructs a `Registry`, admits sessions into it and binds a surface; the configuration assembly point already exists and is not what this entry is about, and `src/runtime/main.py`'s closing line is superseded in place rather than left standing as a position
+
+**Decided 2026-08-13**, answering the one question the T070 note in
+[`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) raised for an owner and deliberately declined
+to answer: ***"whether it is a task or an owner decision is not settled here."*** It is answered as
+**both, in that order** — the entry is taken first and **T215** is minted against it below. A note
+recording something as unsettled is a live instruction to the next reader to re-open it, and the
+routing has already been got wrong twice: T070 routed this absence to Phase 4's admission and
+lifecycle, and Phase 4 then ticked complete with the absence intact.
+
+**① The absence is narrower than the words usually used for it, and the wider reading is already
+false.** *"There is no Python process entry point"* is **wrong** and a census run in the shape of
+that answer would confirm it. `src/runtime/main.py:125` and `src/supervisor/main.py:96` both define
+`main` under `if __name__ == "__main__"`; **T211** built them on 2026-08-08, and the T029 section
+note calls them *"the assembly point"* **in terms** and strikes its own earlier *"No task in this
+file creates that assembly point"*. Measured there and re-read at `4a46914`: `python -m
+src.runtime.main` emits the *"13 required value(s) unset"* report and exits 1, and `python -m
+src.supervisor.main` emits the platform refusal and the *"12 required value(s) unset"* report
+together. **So `config.py::_report` is not a report without a vehicle** — it has had one for five
+days, and the fail-loud startup path the Go side anchors is built on both sides of the language
+boundary. **What is absent is the next step and only the next step**, and this entry names it
+`Registry`-and-bind rather than *assembly point* precisely because the unqualified term is spoken
+for.
+
+**② What is absent, stated so its arrival is checkable.** `src/runtime/serving.py:205` defines
+`Registry`; `build_server(registry, *, host, port)` at `:405` takes *"a `Registry` and a bind address
+from its caller"*, and `SessionView` at `:175` is *"handed over already built"*. At `4a46914`
+**`Registry` is constructed nowhere in `src/` and `register` is called nowhere in `src/`** — verified
+by searching for `Registry(` and for `.register(` across the tree, both zero. So every consumer of a
+live session exists and nothing fills them. The condition this entry is discharged against: a
+process in `src/` constructs a `Registry`, puts at least one `SessionView` into it by an admission
+path rather than by a fixture, and binds.
+
+**③ The Go asymmetry is real but is not the one usually cited.** `src/proxy/main.go:359` is
+`func main()`, and it calls `LoadConfig(os.Getenv)` then `logger.Fatalf("startup refused: %v")`
+before binding — but **that half now has a Python counterpart**, which is exactly what ① records.
+The asymmetry that survives is the last statement: `src/supervisor/main.py`'s own docstring states it
+without needing to be interpreted — ***"Go's `main()` ends in `ServeEnforcement`; this one ends in a
+report and exits."*** That sentence, and not the configuration report, is what this entry closes.
+
+**④ The stance being superseded is a *routing claim*, and it is dated and falsified rather than
+merely reversed.** `src/runtime/main.py:135-142` tells an operator that *"no agent loop is started
+and no surface is bound"* and attributes the remainder: *"the loop, the runner and the provider
+drivers are Phase 3 and Phase 4 work."* `src/supervisor/main.py:125-131` does the same against
+*"Phase 4's (T105-T112)"*, and adds *"When the workload lands, it replaces that line."* **Both
+attributions are now false**: Phase 3 and Phase 4 are ticked complete, Phase 4's admission sequence
+is built at T073 through T080, and the absence is intact — which is the T070 note's own measured
+finding at `7192b38`. So the operator text is not a considered position that assembly should not
+happen; it is a **forward pointer whose destination closed underneath it**, and it says in terms that
+it expects to be replaced. This entry is recorded as an owner decision because **no task owns the
+correction and the file said so**, not because a deliberate refusal is being overturned. Recording
+it the other way would be this register's own recurring error — a claim about intent resting on a
+reading of prose.
+
+**⑤ Scope: the runtime, not the supervisor, and the narrower reading is taken deliberately.** The
+two are different processes with different jobs and the evidence points at one of them. Everything
+T214 names as its blocking precondition is runtime-side — `Registry`, `src/runtime/main.py`'s
+operator text, `serving.py`'s `SessionView` — and T214 itself lands *"under `src/runtime/`"*. The
+supervisor's remaining gap is a **different** absence, named on its own line as *"no session workload
+is built"* and covering admission, the runner handshake and the session lifecycle. **That one is not
+authorised here.** Its store-opening half is already done and is not owed to this entry: OD-28 was
+discharged 2026-08-06 and confirmed 2026-08-08 by the artifact arriving, and `src/supervisor/main.py`
+constructs a `SessionTable` on every successful startup.
+
+**What this decision does not license.**
+- **Not** a licence to build a logging facility. The T029 note settled this by measurement on
+  2026-08-06 and the conclusion is unchanged: `src/` contains no `logging`, no `getLogger` and no
+  `warnings.warn`, confirmed by an AST walk and a regex sweep at zero matches each, and the fail-loud
+  configuration path *"is not waiting on a logging facility."* `OperatorLog` is the channel and it
+  exists. A pass that reads this entry as authorising one is amending it, not implementing it.
+- **Not** a discharge of any task that this absence blocks. **T214** stays open and stays owned by
+  its own line; this entry removes its stated blocking precondition and buys nothing else. The same
+  holds for **T171**, which *"presupposes the path rather than building it"* and whose bundle half
+  remains owed.
+- **Not** a licence to build the supervisor's session workload, per ⑤. Admission, the runner
+  handshake and the session lifecycle are a separate absence and would need their own routing.
+- **Not** a re-opening of **OD-28**, which is discharged and confirmed, nor of **T016**, whose tick
+  is clean. Neither is contingent on this entry and neither is annotated by it.
+- **Not** a claim that any Phase 6 task is blocked by this. No task in Phase 6 names this absence —
+  **T214**'s own note records that *"Phase 6's 22, T137 through T158, name it nowhere"*, and that was
+  re-verified here. A dependency may well exist by construction for the tasks that write to a result
+  or terminate an in-flight session, but it is **not recorded anywhere**, and minting it as a ground
+  would be this register asserting as read what it in fact derived.
+
+**Authorises** one task, **T215**, minted in
+[`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) against condition ② and carrying no estimate,
+on T211's ground that the pass which does the work does not have to predict it. It authorises **no
+requirement text**, no threshold, no figure and no second task. `EXPECTED_PROOFS` does not move,
+because nothing here is code.
+
+**Propagated to** [`specs/002-spec-aware-agent-runtime/tasks.md`](../002-spec-aware-agent-runtime/tasks.md)
+(**T215** minted in Phase 5; the T070 note's *"not settled here"* sentence closed with a dated note;
+**T214**'s blocking-precondition bullet annotated with its owner) and to this file's own header count
+and growth note. **No file under `specs/001-discovery-validation/` other than this one is touched**,
+and the two `tasks.md` are named by full path because `plan.md`, `tasks.md`, `spec.md` and
+`data-model.md` each exist under both feature directories and a sibling-relative link has already let
+a falsified inference sit live in this register for a day.
 
 ## Open items this plan does not resolve
 
