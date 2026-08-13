@@ -74,6 +74,7 @@ from src.runtime.verify import (
     Refusal,
     RefusalReason,
     ReportedResult,
+    VerificationReport,
     verify_declared_quantity,
     verify_quantity,
 )
@@ -454,19 +455,33 @@ def test_the_seam_does_not_read_the_reports_own_outcome_method() -> None:
     report's own say-so is the thing being recorded, not the thing that decides
     what is recorded.
 
-    **One behavioural arm survives, and it is not among the four row arms.**
-    `test_the_backstop_refuses_an_outcome_the_table_should_never_hold`
-    manufactures the disagreement `OD-35` removed, by monkeypatching a row to
-    `MODEL_ASSESSED` — a value no `outcome()` returns — so a *wholesale*
-    delegation fails there too. It does not cover a **partial** one: it patches
-    the `Refusal` row and says nothing about a seam that consults
-    `ProvisionallyVerified.outcome()` alone, and for that edit this arm is the
-    only thing left. Both halves were measured by planting the delegation and
-    reading which arms went red, not reasoned about.
+    **The behavioural arms are test-side, and they now cover every member.**
+    `test_the_backstop_refuses_an_outcome_the_table_should_never_hold` and
+    `test_each_rows_outcome_is_read_from_the_table_and_not_from_that_report`
+    both manufacture the disagreement `OD-35` removed, by monkeypatching a row
+    to `MODEL_ASSESSED` — a value no `outcome()` returns. The backstop patches
+    the `Refusal` row only, so it catches a *wholesale* delegation and a
+    `Refusal`-only one and nothing else; the per-member arm patches one row at
+    a time over `get_args(VerificationReport)` and closes the other three.
+    Measured by planting and reading which arms went red, not reasoned about:
+    a delegation on `ProvisionallyVerified` alone, and one on `Disagreement`
+    alone, each left the backstop green; before the per-member arm existed,
+    each failed this arm and nothing else in the unprivileged suite.
 
-    Restoring behavioural discrimination for the natural members would mean
-    reopening `OD-35`'s row, so it is an owner decision and not a repair. This
-    docstring records the weakening rather than closing it.
+    ⚠️ **An earlier revision of this docstring said restoring behavioural
+    discrimination "would mean reopening `OD-35`'s row, so it is an owner
+    decision and not a repair". That was wrong**, and the backstop arm was
+    already the counterexample sitting beside it: the disagreement can be
+    manufactured test-side, which touches neither the mapping nor the
+    register. Per-member cover cost one parametrised arm and no owner
+    decision.
+
+    What survives of the weakening is narrower, and this arm is still the only
+    thing holding it: every behavioural arm above works from a disagreement
+    the *test* introduced, so none of them says anything about a seam that
+    calls `outcome()` outside `_outcome`'s returned value, or discards the
+    result of the call. The table's *authority* — a report's own say-so is
+    what is recorded, not what decides what is recorded — is held here.
 
     Parsed rather than grepped. The module's docstrings discuss `outcome()` at
     length — they have to, since the weakening is the thing being recorded —
@@ -573,6 +588,95 @@ def test_the_backstop_refuses_an_outcome_the_table_should_never_hold(
         VerificationOutcome.MODEL_ASSESSED,
     )
 
+    with pytest.raises(UnjoinableReport, match="not an outcome it may emit"):
+        result_from_report(report, payload=None)
+
+
+def _produced_report_per_member() -> dict[type, VerificationReport]:
+    """One **verifier-produced** report for each member of the union.
+
+    Produced rather than hand-built, on this file's own discipline: a
+    hand-made token would score the seam against the four types rather than
+    against the four states the verifier can actually reach.
+    """
+    return {
+        Verified: verify_quantity(**_integer_case(reported=3, rows=3)),
+        ProvisionallyVerified: verify_declared_quantity(
+            **_float_case(reported=3.20), declared=_declaration()
+        ).report,
+        Disagreement: verify_quantity(**_integer_case(reported=4, rows=3)),
+        Refusal: verify_quantity(**_float_case(reported=3.23)),
+    }
+
+
+@pytest.mark.parametrize("member", REPORT_MEMBERS, ids=lambda member: member.__name__)
+def test_each_rows_outcome_is_read_from_the_table_and_not_from_that_report(
+    member: type, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Per member: **this** row's outcome comes from the table, not the report.
+
+    The same manufactured disagreement the backstop arm above uses, applied
+    one row at a time and over every member of the union. `OD-35` left the
+    table and `outcome()` agreeing on all four, so no report the verifier can
+    produce tells a delegating seam from a transcribing one. Patching this row
+    to `MODEL_ASSESSED` — a value no `outcome()` returns — puts the
+    disagreement back **in the test**, which costs the product mapping
+    nothing and needs no row of `OD-35` reopened.
+
+    **What this arm discriminates**, measured by planting rather than argued:
+    a seam whose `_outcome` takes *this* member's value from
+    `report.outcome()` while the other three still come from the table. With
+    that delegation planted for `ProvisionallyVerified` alone, the whole
+    unprivileged suite failed exactly
+    `test_the_seam_does_not_read_the_reports_own_outcome_method` and this
+    arm's `ProvisionallyVerified` case; planted for `Disagreement` alone, the
+    same two. The backstop arm above stayed green for both, because it
+    patches the `Refusal` row and a delegation on another member never
+    reaches it — planted for `Refusal` it does go red, which is the whole of
+    the cover it was providing. This arm is what closes the other three rows.
+
+    **What it does not discriminate.** Three things, and
+    `test_the_seam_does_not_read_the_reports_own_outcome_method` holds all
+    three:
+
+    - a `.outcome()` call anywhere but the value `_outcome` returns —
+      `_corroboration`, `_precision`, `_reason` and both entry points are
+      outside this arm's reach entirely;
+    - a call whose result is discarded, since only the returned value is
+      observed here;
+    - the table's *authority* as such. The disagreement above is
+      manufactured, so this arm says nothing about whether the table and
+      `outcome()` agree in the product — under `OD-35` they do, and that
+      agreement is exactly why the source arm cannot be retired.
+
+    **And it is deliberately not the backstop arm widened.** That one asks
+    whether `_refuse_unjoinable` fires at all, which a single row answers and
+    four rows only pad; this one asks whether every row is consulted, which
+    needs all four. One arm holding both subjects would announce only the
+    first in its name, so a reader retiring the backstop — or narrowing it
+    once the table-image arm above is judged to cover the exclusion — would
+    take per-member delegation cover with it and never be warned.
+    """
+    report = _produced_report_per_member().get(member)
+    assert report is not None, (
+        f"{member.__name__} is a member of VerificationReport with no "
+        "verifier-produced report here, so this arm would pass over the row "
+        "in silence. The parametrisation is REPORT_MEMBERS, which is "
+        "get_args(VerificationReport), so a fifth member arrives as a failing "
+        "case rather than as a gap."
+    )
+    assert isinstance(report, member), report
+
+    monkeypatch.setitem(
+        JOINED_OUTCOME,  # type: ignore[arg-type]
+        member,
+        VerificationOutcome.MODEL_ASSESSED,
+    )
+
+    # No raise here means `_outcome` returned something it did not read out of
+    # `JOINED_OUTCOME` for this member — the report's own say-so deciding what
+    # is recorded rather than being what is recorded. The defect is in
+    # `_outcome`'s routing, not in `_refuse_unjoinable`, which never saw it.
     with pytest.raises(UnjoinableReport, match="not an outcome it may emit"):
         result_from_report(report, payload=None)
 
