@@ -281,11 +281,22 @@ def _outcome(report: VerificationReport) -> VerificationOutcome:
     weakens this arm rather than retiring it and the weakening is stated: while
     `OD-34` ③ stood, calling `outcome()` would have silently taken the
     verifier's reading for one member and the register's for the rest, and the
-    disagreement made that visible. Now it would be invisible. What the table
-    still buys is authority — a report's own say-so is the thing being recorded,
-    not the thing that decides what is recorded — and
-    `test_the_seam_does_not_read_the_reports_own_outcome_method` is now the only
-    thing holding it, where before the two answers held it themselves.
+    disagreement made that visible. Now it would be invisible, and it stays
+    invisible — no report the verifier can build tells a delegating seam from a
+    transcribing one. What the table still buys is authority — a report's own
+    say-so is the thing being recorded, not the thing that decides what is
+    recorded — and **three arms hold it now, where the two answers once held it
+    themselves**. `test_the_seam_does_not_read_the_reports_own_outcome_method`
+    parses **this whole module** and fails on any `.outcome()` attribute call
+    anywhere in it, not only one in this function: `_corroboration`,
+    `_precision`, `_reason` and both entry points are in reach, the receiver is
+    not examined, and a call whose result is discarded still counts. Beside it,
+    `test_the_backstop_refuses_an_outcome_the_table_should_never_hold` and
+    `test_each_rows_outcome_is_read_from_the_table_and_not_from_that_report`
+    manufacture **test-side** the disagreement `OD-35` removed from the
+    product, which took no change to the mapping and no row of `OD-35`
+    reopened. Which of them catches what, and what none of them catches, is in
+    their own docstrings and is not restated here.
     """
     outcome = JOINED_OUTCOME.get(type(report))
     if outcome is None:
