@@ -433,14 +433,43 @@ def test_the_precision_basis_map_is_total_over_the_disposition() -> None:
 def test_the_seam_does_not_read_the_reports_own_outcome_method() -> None:
     """Which of the two answers the seam transcribes, as a property of the source.
 
-    The three other members' `outcome()` agrees with the table, so an arm
-    comparing them proves nothing about which one was consulted. This reads the
-    module's own syntax instead: a seam that called `report.outcome()` would
-    silently take the verifier's reading for `ProvisionallyVerified` and the
-    register's for everything else, which is the worst of the two.
+    ⚠️ **`OD-35` weakened this arm, and it is now green for a weaker reason
+    than it was written for.** While `OD-34` ③ stood the seam's table and
+    `ProvisionallyVerified.outcome()` **disagreed** — the table said
+    `NOT_VERIFIABLE`, the method said `VERIFIED` — so a seam that delegated
+    produced a visibly different record and a behavioural arm could catch it.
+    `OD-35` struck that row, and all four members now agree. Measured at HEAD
+    against reports the verifier produced, not read off the table:
+
+    | member                  | table            | `outcome()`      |
+    | ----------------------- | ---------------- | ---------------- |
+    | `Verified`              | `VERIFIED`       | `VERIFIED`       |
+    | `ProvisionallyVerified` | `VERIFIED`       | `VERIFIED`       |
+    | `Disagreement`          | `FAILED`         | `FAILED`         |
+    | `Refusal`               | `NOT_VERIFIABLE` | `NOT_VERIFIABLE` |
+
+    So delegation is undetectable from **any report the verifier can actually
+    produce**, and no arm above this one would move if the seam started calling
+    `outcome()`. What this arm still holds is the table's *authority*: a
+    report's own say-so is the thing being recorded, not the thing that decides
+    what is recorded.
+
+    **One behavioural arm survives, and it is not among the four row arms.**
+    `test_the_backstop_refuses_an_outcome_the_table_should_never_hold`
+    manufactures the disagreement `OD-35` removed, by monkeypatching a row to
+    `MODEL_ASSESSED` — a value no `outcome()` returns — so a *wholesale*
+    delegation fails there too. It does not cover a **partial** one: it patches
+    the `Refusal` row and says nothing about a seam that consults
+    `ProvisionallyVerified.outcome()` alone, and for that edit this arm is the
+    only thing left. Both halves were measured by planting the delegation and
+    reading which arms went red, not reasoned about.
+
+    Restoring behavioural discrimination for the natural members would mean
+    reopening `OD-35`'s row, so it is an owner decision and not a repair. This
+    docstring records the weakening rather than closing it.
 
     Parsed rather than grepped. The module's docstrings discuss `outcome()` at
-    length — they have to, since the disagreement is the thing being recorded —
+    length — they have to, since the weakening is the thing being recorded —
     and a substring search would report the explanation as the defect.
     """
     import ast
@@ -458,9 +487,12 @@ def test_the_seam_does_not_read_the_reports_own_outcome_method() -> None:
     ]
     assert calls == [], (
         "the seam calls a report's own outcome() at line(s) "
-        f"{[node.lineno for node in calls]}. OD-34 ③ fixes the record's "
-        "outcome and ProvisionallyVerified.outcome() disagrees with it, so a "
-        "call here picks a reading without saying so."
+        f"{[node.lineno for node in calls]}. Under OD-35 all four members' "
+        "outcome() agrees with the table, so this call changes no record the "
+        "verifier can produce and none of the four row arms above would "
+        "notice it — which is why it has to be caught on the source. The "
+        "table is the register's transcription; a report's say-so is what is "
+        "being recorded, not what decides what is recorded."
     )
 
 
