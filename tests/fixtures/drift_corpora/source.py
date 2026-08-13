@@ -59,9 +59,10 @@ interchangeable:
 
 `C-008` is **not** T156. T156 is a battery at `tests/batteries/
 test_drift_negative.py` that scores repeated re-analysis of held-constant
-source for SC-029's second clause, and it is not built. `C-008` is one
-identical-input revision inside the population SC-008 is measured over, so that
-population is not made exclusively of revisions where something moved.
+source for SC-029's second clause. `C-008` is one identical-input revision
+inside the population SC-008 is measured over, so that population is not made
+exclusively of revisions where something moved. Scoring C-008 quiet does not
+discharge T156.
 
 `C-010` is the mixed revision — one breaking change and one non-breaking change
 in the same commit — which is what stops the corpus from being separable into a
@@ -82,6 +83,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
+from src.analysis import source_drift as _detector
+from src.analysis.source_drift import SourceDriftError
 from tests.fixtures.drift_corpora import CorpusInconsistent
 
 FIXTURES = Path(__file__).resolve().parent.parent
@@ -92,31 +95,43 @@ CORPUS_FILE = FIXTURES / "drift-source" / "corpus.json"
 #: consistent and about nothing.
 SERVED_OPERATIONS_FILE = FIXTURES / "reference-app" / "served_operations.json"
 
-#: A change that invalidates a caller which was correct against the parent
-#: revision. Derived from the atomic diff and never read from the corpus.
-BREAKING_KINDS = frozenset({
-    "operation_removed",
-    "operation_renamed",
-    "required_parameter_added",
-    "parameter_removed",
-    "parameter_type_changed",
-    "parameter_made_required",
-    "return_field_removed",
-    "return_field_type_changed",
-})
+#: The breaking verdict lives in `src.analysis.source_drift`, which is the
+#: detector SC-008 scores. Re-exporting the same objects is what keeps the
+#: loader from growing a second classifier that can disagree with it.
+BREAKING_KINDS = _detector.BREAKING_KINDS
+NON_BREAKING_KINDS = _detector.NON_BREAKING_KINDS
+ALL_KINDS = _detector.ALL_KINDS
 
-#: A change a correct caller survives. The two sets are asserted disjoint and
-#: exhaustive over everything `classify_diff` can emit, so a kind added to the
-#: classifier without a verdict fails rather than defaulting to non-breaking.
-NON_BREAKING_KINDS = frozenset({
-    "operation_added",
-    "optional_parameter_added",
-    "parameter_made_optional",
-    "return_field_added",
-    "summary_changed",
-})
 
-ALL_KINDS = BREAKING_KINDS | NON_BREAKING_KINDS
+def _as_corpus(exc: SourceDriftError) -> CorpusInconsistent:
+    return CorpusInconsistent(str(exc))
+
+
+def diff_contracts(
+    before: Mapping[str, Any],
+    after: Mapping[str, Any],
+    renamed: tuple[tuple[str, str], ...] = (),
+) -> tuple[tuple[str, str], ...]:
+    """The atomic change set, via T138's classifier — not a second one."""
+    try:
+        return _detector.diff_contracts(before, after, renamed)
+    except SourceDriftError as exc:
+        raise _as_corpus(exc) from exc
+
+
+def classify_diff(diff: tuple[tuple[str, str], ...]) -> frozenset[str]:
+    try:
+        return _detector.classify_diff(diff)
+    except SourceDriftError as exc:
+        raise _as_corpus(exc) from exc
+
+
+def is_breaking(kinds: frozenset[str]) -> bool:
+    return _detector.is_breaking(kinds)
+
+
+def drifted_operations(diff: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
+    return _detector.drifted_operations(diff)
 
 
 @dataclass(frozen=True)
@@ -133,139 +148,6 @@ class Revision:
     expected_detection_run: str | None
     renamed: tuple[tuple[str, str], ...]
     why: str
-
-
-def _parameters(op: Mapping[str, Any]) -> Mapping[str, Mapping[str, Any]]:
-    return op.get("parameters", {})
-
-
-def _returns(op: Mapping[str, Any]) -> Mapping[str, str]:
-    return op.get("returns", {})
-
-
-def _signature(op: Mapping[str, Any]) -> tuple[Any, ...]:
-    """Everything a caller binds to. Deliberately excludes `summary`.
-
-    A rename claim is verified by comparing this between the vanished operation
-    and the appeared one. Including the summary would let a renamed operation
-    whose prose was also touched read as an unrelated remove-plus-add.
-    """
-    params = tuple(sorted(
-        (name, spec["type"], bool(spec["required"]))
-        for name, spec in _parameters(op).items()
-    ))
-    returns = tuple(sorted(_returns(op).items()))
-    return (params, returns)
-
-
-def diff_contracts(
-    before: Mapping[str, Any],
-    after: Mapping[str, Any],
-    renamed: tuple[tuple[str, str], ...] = (),
-) -> tuple[tuple[str, str], ...]:
-    """The atomic change set, as `(kind, operation_id)` pairs.
-
-    `renamed` is the corpus's claim, and it is *verified* rather than trusted:
-    a pair whose two signatures differ raises, because a rename that changes
-    the signature is a rename and a breaking signature change, and reporting it
-    as one thing loses the other.
-    """
-    out: list[tuple[str, str]] = []
-    renamed_from = {old for old, _ in renamed}
-    renamed_to = {new for _, new in renamed}
-
-    for old, new in renamed:
-        if old not in before:
-            raise CorpusInconsistent(
-                f"rename claims {old!r} was present before, and it was not"
-            )
-        if new not in after:
-            raise CorpusInconsistent(
-                f"rename claims {new!r} is present after, and it is not"
-            )
-        if _signature(before[old]) != _signature(after[new]):
-            raise CorpusInconsistent(
-                f"{old!r} to {new!r} is declared a rename, but the two "
-                "signatures differ. A rename that also changes the signature "
-                "carries two changes and must declare both."
-            )
-        # Both sides. The vanished name is what existing callers are bound to,
-        # and the appeared name is what a drift signal has to point them at;
-        # FR-031 wants the before and the after, so naming only one of them
-        # would report half the change.
-        out.append(("operation_renamed", old))
-        out.append(("operation_renamed", new))
-
-    for op_id in sorted(set(after) - set(before) - renamed_to):
-        out.append(("operation_added", op_id))
-    for op_id in sorted(set(before) - set(after) - renamed_from):
-        out.append(("operation_removed", op_id))
-
-    for op_id in sorted(set(before) & set(after)):
-        was, now = before[op_id], after[op_id]
-        old_params, new_params = _parameters(was), _parameters(now)
-
-        for name in sorted(set(new_params) - set(old_params)):
-            kind = ("required_parameter_added"
-                    if new_params[name]["required"]
-                    else "optional_parameter_added")
-            out.append((kind, op_id))
-        for name in sorted(set(old_params) - set(new_params)):
-            out.append(("parameter_removed", op_id))
-        for name in sorted(set(old_params) & set(new_params)):
-            if old_params[name]["type"] != new_params[name]["type"]:
-                out.append(("parameter_type_changed", op_id))
-            was_required = bool(old_params[name]["required"])
-            now_required = bool(new_params[name]["required"])
-            if was_required != now_required:
-                out.append((
-                    "parameter_made_required" if now_required
-                    else "parameter_made_optional",
-                    op_id,
-                ))
-
-        old_returns, new_returns = _returns(was), _returns(now)
-        for field in sorted(set(new_returns) - set(old_returns)):
-            out.append(("return_field_added", op_id))
-        for field in sorted(set(old_returns) - set(new_returns)):
-            out.append(("return_field_removed", op_id))
-        for field in sorted(set(old_returns) & set(new_returns)):
-            if old_returns[field] != new_returns[field]:
-                out.append(("return_field_type_changed", op_id))
-
-        if was.get("summary") != now.get("summary"):
-            out.append(("summary_changed", op_id))
-
-    return tuple(out)
-
-
-def classify_diff(diff: tuple[tuple[str, str], ...]) -> frozenset[str]:
-    """The set of change kinds present. Unknown kinds raise rather than pass."""
-    kinds = frozenset(kind for kind, _ in diff)
-    unknown = kinds - ALL_KINDS
-    if unknown:
-        raise CorpusInconsistent(
-            f"{sorted(unknown)} has no breaking verdict. Every kind the "
-            "classifier can emit must sit in exactly one of BREAKING_KINDS "
-            "and NON_BREAKING_KINDS, or a new kind silently defaults to safe."
-        )
-    return kinds
-
-
-def is_breaking(kinds: frozenset[str]) -> bool:
-    return bool(kinds & BREAKING_KINDS)
-
-
-def drifted_operations(diff: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
-    """Only the operations a BREAKING kind touched.
-
-    An operation touched exclusively by a non-breaking change is not drifted,
-    which is what makes `C-010` — one breaking and one non-breaking change in
-    the same commit — score differently from a revision carrying either alone.
-    """
-    return tuple(sorted({
-        op_id for kind, op_id in diff if kind in BREAKING_KINDS
-    }))
 
 
 def _check_run_bijection(raw: list[Mapping[str, Any]]) -> None:

@@ -85,11 +85,11 @@ positive half and a clean negative half.
 ## `C-008` is not T156
 
 T156 is a battery at `tests/batteries/test_drift_negative.py` scoring SC-029's
-second clause over repeated re-analysis of held-constant source, and **it is not
-built**. `C-008` is one identical-input revision inside the population SC-008 is
-measured over, so that population is not made exclusively of revisions where
-something moved. The false-alarm figure T156 exists to produce is not produced
-here and is not claimed here.
+second clause over repeated re-analysis of held-constant source. `C-008` is one
+identical-input revision inside the population SC-008 is measured over, so that
+population is not made exclusively of revisions where something moved. The
+false-alarm figure T156 exists to produce is not produced here and is not claimed
+here.
 
 ## E13's three mutations, and the experiment that never ran
 
@@ -99,13 +99,14 @@ change a parameter type, delete an endpoint* — and says in bold that **E13 nev
 ran at all**. All three are present here as `C-003`, `C-001` and `C-002`, and
 `test_e13s_three_named_mutations_are_all_present` keeps them present.
 
-⚠️ **That is coverage of the mutation set, not a measurement.**
+⚠️ **That is coverage of the mutation set, not a measurement of rate or latency.**
 [`VERDICT.md` line 162](../../../specs/001-discovery-validation/VERDICT.md)
 records that drift detection has *"no detection rate, no false-alarm rate, no
-latency to detect, on either of its two clocks"*. This corpus produces none of
-those three and cannot: T138, the source-drift detector SC-008 scores, is open,
-as is every other Phase 6 module. Committing an instrument is not taking a
-reading.
+latency to detect, on either of its two clocks"* as a **production** figure —
+T182/T183/T184 are the Phase 8 harness. T138, the source-drift detector SC-008
+scores, now consumes this corpus as a falsification test in
+`tests/contract/test_source_drift.py`. Committing an instrument is not taking
+the Phase 8 reading.
 
 ## This file is not gated, and the claims are held by tests instead
 

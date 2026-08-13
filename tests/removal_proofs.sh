@@ -3902,6 +3902,54 @@ proof "T139/T140 — the discriminant is dropped, so which shape a record is mus
   's = s.replace("            \x22signal_kind\x22: FAILED_REFETCH,\n", "")'
 
 # ---------------------------------------------------------------------------
+# T138 — source-drift detection in the same automated check run (FR-028, SC-008).
+#
+# FR-028 detects a source change that INVALIDATES a derived contract, in the
+# same analysis run as the commit. Two cheap detectors would score SC-008
+# perfectly and both are wrong: fire on every source-clock move (C-005/C-006/
+# C-007 all move the contract hash), and fire on the whole commit as one blob
+# (C-010 carries a breaking change and a non-breaking one). The arms below
+# remove the filters that stop those, and the comparison T137 already owns is
+# not re-stated — a second version_before != version_after here could disagree
+# with compare_each, so the proofs target the SOURCE slice, the invalidation
+# filter, and the operation list, not the clock comparison.
+#
+# The SOURCE slice is Movement.clock == SOURCE, not schemas.source_derived.
+# That flag is the union of both clocks; served_operation_set is flagged
+# source_derived=True and is the deployment-derived artifact. Filtering on it
+# would report a deployment-clock move as source drift.
+
+proof "T138 — a deployment-clock movement is kept as a source-clock movement" \
+  src/analysis/source_drift.py \
+  "tests/contract/test_source_drift.py::test_a_deployment_clock_move_is_not_source_drift" \
+  's = s.replace("        if movement.clock == SOURCE", "        if True")'
+
+proof "T138 — a non-breaking contract change still raises a source-drift finding" \
+  src/analysis/source_drift.py \
+  "tests/contract/test_source_drift.py::test_a_detector_that_fires_on_a_signature_change_fails_this_corpus" \
+  's = s.replace("    if not invalidated:", "    if False:")'
+
+proof "T138 — a breaking diff against an unmoved source clock is reported as a quiet miss" \
+  src/analysis/source_drift.py \
+  "tests/contract/test_source_drift.py::test_a_breaking_diff_against_an_unmoved_clock_is_refused" \
+  's = s.replace("    if not signals:", "    if False:")'
+
+proof "T138 — an operation touched only by a non-breaking kind is named as drifted" \
+  src/analysis/source_drift.py \
+  "tests/contract/test_source_drift.py::test_drifted_operations_ignores_operations_touched_only_by_a_non_breaking_kind" \
+  's = s.replace("        op_id for kind, op_id in diff if kind in BREAKING_KINDS", "        op_id for kind, op_id in diff if True")'
+
+proof "T138 — an unknown change kind is classified rather than refused" \
+  src/analysis/source_drift.py \
+  "tests/contract/test_source_drift.py::test_an_unknown_change_kind_is_refused" \
+  's = s.replace("    if unknown:", "    if False:")'
+
+proof "T138 — a source-drift finding is accepted on the deployment clock" \
+  src/analysis/source_drift.py \
+  "tests/contract/test_source_drift.py::test_a_finding_on_the_deployment_clock_is_refused" \
+  's = s.replace("        if self.signal.clock != SOURCE:", "        if False:")'
+
+# ---------------------------------------------------------------------------
 # T079 — FR-020's confused-deputy inspection, FR-056's procedure.
 #
 # Every arm here guards the same failure from a different side: a procedure
@@ -5365,8 +5413,12 @@ proof "T154 corpus — the declared breaking verdict stops being recomputed, so 
   "tests/unit/test_drift_fixtures.py::test_a_declared_breaking_verdict_that_disagrees_with_the_diff_is_refused" \
   's = s.replace("    if bool(entry[\x22breaking\x22]) != breaking:", "    if False:")'
 
+# The classifier this arm named moved to src/analysis/source_drift.py with T138,
+# so the loader can import it rather than restate it. The claim did not fall:
+# a rename that also changes the signature still has to declare both. Path
+# substitution, not a strike.
 proof "T154 corpus — a rename may change the signature, so two changes are reported as one" \
-  tests/fixtures/drift_corpora/source.py \
+  src/analysis/source_drift.py \
   "tests/unit/test_drift_fixtures.py::test_a_rename_whose_signature_moved_is_refused" \
   's = s.replace("        if _signature(before[old]) != _signature(after[new]):", "        if False:")'
 

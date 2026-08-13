@@ -22,13 +22,18 @@ ablations below is a real function applied to the real corpus, not a comment
 claiming one would fail.
 
 **Not asserted, and not obtainable from here**: any detection rate, any
-false-alarm rate, any latency. No Phase 6 detector exists to score.
+false-alarm rate, any latency. ~~No Phase 6 detector exists to score.~~
+**Superseded 2026-08-13 — T138 now scores this corpus in
+`tests/contract/test_source_drift.py`.** What this file still does not produce
+is a Phase 8 rate or latency; T182 is that measurement. This file remains the
+assertion that the corpora recompute to their declarations and that a trivially
+wrong detector fails them.
 [`VERDICT.md`](../../specs/001-discovery-validation/VERDICT.md) line 162 records
 that drift detection has *"no detection rate, no false-alarm rate, no latency
-to detect, on either of its two clocks"*, and
+to detect, on either of its two clocks"* as the production figure, and
 [`plan.md`](../../specs/002-spec-aware-agent-runtime/plan.md) line 831 records
-in bold that **E13 never ran at all**. Committing an instrument is not taking a
-reading, and nothing in this file may be cited as though it were.
+in bold that **E13 never ran at all**. Committing an instrument is not taking
+that reading, and nothing in this file may be cited as though it were.
 
 ## The ablations, which are Rule 8 in executable form
 
