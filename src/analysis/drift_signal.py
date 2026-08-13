@@ -94,6 +94,25 @@ records the state that was found and refuses only the one that would make the
 record false. The gap is visible here rather than silently resolved in either
 direction.
 
+## Three fields `data-model.md` §2.6 lists that are deliberately not built here
+
+§2.6 gives `DriftSignal` a `detected_at`, a `trigger` — *"scheduled, event, or
+path-level probe (FR-046)"* — and a `change_at`, *"present on the synthetic
+corpora, which control it; generally absent for the deployment clock on real
+traffic"*. None of the three is a term of FR-031, and none is built here.
+
+That is a scope statement rather than an oversight. `trigger`'s vocabulary is
+FR-046's, and the scheduler that would produce a value for it is **T141**;
+inventing the three names now would fix a vocabulary with no producer against
+it, which is how a field ends up meaning whatever the first caller assumed.
+`change_at` is a property of a corpus that controls the change time, and the
+same §2.6 says it is generally absent on real traffic — a field that is absent
+in production and present in fixtures is one the tests would assert on and
+nothing would supply.
+
+Adding them later is an addition to these two shapes and not a rewrite of them,
+because neither is part of the before/after distinction the sum encodes.
+
 ## Where this deliberately stops: the caller-visible marking is T148's
 
 `src/contracts/result.py` carries `Staleness`, FR-047's *"What the caller
