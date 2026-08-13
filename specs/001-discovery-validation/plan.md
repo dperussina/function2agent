@@ -4509,6 +4509,58 @@ Whichever route T213 takes, **nothing today would catch a fabricated outcome**, 
 construction-site arm that would. This is recorded rather than fixed here because the arm cannot be
 written before the join it would range over exists.
 
+**⑤ BUILT 2026-08-12 as T213, and one arm of ③ is implemented under protest rather than diverged
+from.** The seam is `src/runtime/result_join.py`, route ② as this entry fixes it, and the four rows
+are transcribed rather than re-derived. ④'s owed arm is built:
+`tests/invariants/test_result_constructor.py` now enumerates every `Result` construction site under
+`src/` against a declared set and requires each declared module to hold a verification artifact. It
+was measured, not asserted — ④'s plant 2 was re-planted in the working tree at this revision and
+**fails two of the new arms while passing all nine of the older ones and all four static gates**,
+which is the same asymmetry ④ recorded, now with the arms on the other side of it.
+
+**Two things ③ does not settle and one it appears to get wrong. Recorded here, not corrected here:
+the disposition is an owner decision.**
+
+- **Under-determined, decided in T213 and defended there.** ③ fixes the *outcome* column for all four
+  members and the *corroboration* column for two. `Disagreement` and `Refusal` carry no
+  corroboration in this entry, and the seam applies a stated rule rather than an improvised table:
+  *it claims corroboration only where the report object itself carries the contract that earns it.*
+  `Verified` and `ProvisionallyVerified` carry `issued_by: ValidatedContract`; `Disagreement` and
+  `Refusal` carry no contract at all, so both take `NOT_STATED` — with one exception,
+  `RefusalReason.CONTRACT_PROVISIONAL`, which is produced only where the contract *was* a
+  `ProvisionalContract` and therefore takes `PROVISIONAL`, making the seam **agree with**
+  `ProvisionalContract.to_result` rather than merely not contradict it.
+- **Under-determined, and ③ could not have known.** ③ fixes `ProvisionallyVerified` at
+  `NOT_VERIFIABLE`, which `Result.__post_init__` refuses without a **reason** — and
+  `ProvisionallyVerified` is the one member of the union with **no reason field**. The seam composes
+  one from fields already on the report (the check's operation and quantity, and the declaration's
+  own source text) and states only the rung's own admissibility premise. It is not the *"report's own
+  named reason"* this entry asks for, because there is none to be had.
+- ⚠️ **Apparently wrong, implemented as written, and flagged.** ③ says `ProvisionallyVerified`
+  **must** map to `NOT_VERIFIABLE` with `Corroboration.PROVISIONAL`. Three things stand against it.
+  **First**, it contradicts a ruling taken the same day: T212's notes in
+  [`tasks.md`](../002-spec-aware-agent-runtime/tasks.md) rule explicitly that *"'Provisional' is NOT
+  `Corroboration`"*, because `Corroboration`'s subject is the **contract** and property 6 marks the
+  **precision**, and warn that reusing it *"would make the admitted rung unconstructible as anything
+  but a non-verification — collapsing it back into the refusal it exists to displace"*. **Second**,
+  ③'s stated ground does not reach the case: constitution Principle I (v1.1.0) is about a provisional
+  **contract**, and `ProvisionallyVerified.__post_init__` refuses anything but a `ValidatedContract`,
+  so no provisional contract is ever in hand here. ③'s second ground — that `Result.__post_init__`
+  would raise — is an argument that ③'s own pair is the only constructible one, which holds only if
+  `PROVISIONAL` is already assumed. **Third, and measured rather than argued**: mapping this member
+  onto `NOT_VERIFIABLE` puts a record in FR-025's not-verifiable state carrying **no**
+  `RefusalReason`, and `ReportedOutcome` in `src/runtime/reports/not_verifiable.py` admits such a
+  record only under an `UNATTRIBUTED` key — of which the two available are `model_assessed` (false of
+  it) and `reason_not_recorded` (also false: the reason is recorded, just not as a `RefusalReason`).
+  So this row creates a stratum of T130's not-verifiable share that the breakdown can only **misfile**,
+  and it contradicts T212's note that the rung *"can only ever move a quantity out of the
+  not-verifiable population"*. **The seam follows this entry anyway**, because a join that quietly
+  took the other reading would leave the register and the code disagreeing with nothing recording it.
+  `test_the_two_readings_of_a_provisionally_verified_report_are_both_named` asserts **both** facts as
+  they stand — `ProvisionallyVerified.outcome()` is `VERIFIED`, the seam's row is `NOT_VERIFIABLE` —
+  so a later edit that silently aligns one to the other fails and has to say which it chose. A
+  reversal is one row in `JOINED_OUTCOME`, one in `JOINED_CORROBORATION` and two arms.
+
 ## Open items this plan does not resolve
 
 - ~~**The deployment model** — self-hosted, hosted, or local analysis with a hosted runtime. No
