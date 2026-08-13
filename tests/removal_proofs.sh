@@ -5690,6 +5690,85 @@ proof "T153 — no newly appearing operation is recorded, so additions never bec
   "tests/contract/test_reinspect.py::test_every_operation_added_scenario_matches_the_loader" \
   's = s.replace("    newly = appearing(fetched, inspected)", "    newly = ()")'
 
+# --- T145 — path-level reachability backstop, not a trigger -------------------
+#
+# Records a failing precondition on a user-facing call. Does not emit
+# path-level probe as a CheckResult.trigger. tick's refusal is left intact
+# (T144's proof). The record is not ArtifactDrift or FailedRefetch: FR-031's
+# terms cannot be stated without inventing versions that were not obtained.
+
+proof "T145 — an empty operation id is recorded as a path-level backstop" \
+  src/runtime/drift/backstop.py \
+  "tests/contract/test_drift_backstop.py::test_an_empty_operation_id_is_refused" \
+  's = s.replace("    if not operation_id:", "    if False:")'
+
+proof "T145 — an empty deployment id is recorded as a path-level backstop" \
+  src/runtime/drift/backstop.py \
+  "tests/contract/test_drift_backstop.py::test_an_empty_deployment_id_is_refused" \
+  's = s.replace("    if not deployment_id:", "    if False:")'
+
+proof "T145 — an empty observation is recorded as a path-level backstop" \
+  src/runtime/drift/backstop.py \
+  "tests/contract/test_drift_backstop.py::test_an_empty_observation_is_refused" \
+  's = s.replace("    if not observed:", "    if False:")'
+
+proof "T145 — a backstop with no detected_at is recorded" \
+  src/runtime/drift/backstop.py \
+  "tests/contract/test_drift_backstop.py::test_an_empty_detected_at_is_refused" \
+  's = s.replace("    if not detected_at:", "    if False:")'
+
+proof "T145 — the backstop document carries trigger=path-level probe" \
+  src/runtime/drift/backstop.py \
+  "tests/contract/test_drift_backstop.py::test_the_document_is_not_a_trigger" \
+  's = s.replace("            \x22detected_at\x22: self.detected_at,", "            \x22detected_at\x22: self.detected_at,\n            \x22trigger\x22: \x22path-level probe\x22,")'
+
+# --- T146 — disable the observed affected operation (FR-030, SC-009) ----------
+#
+# Disable what the signal (or the consecutive served-id sets the movement
+# was built from) names. FailedRefetch disables nothing. Source-clock
+# ArtifactDrift without a finding names no operation. T150 is not a second
+# deny-all here.
+
+proof "T146 — a withdrawal disables the whole served set, including health" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_bulk_withdrawal_leaves_health_enabled" \
+  's = s.replace("    return tuple(sorted(frozenset(served_before) - frozenset(served_after)))", "    return tuple(sorted(frozenset(served_before)))")'
+
+proof "T146 — list_shipments takes list_parts with it by prefix" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_a_prefix_match_cannot_take_the_neighbour" \
+  's = s.replace("    return tuple(sorted(frozenset(served_before) - frozenset(served_after)))", "    return tuple(sorted(op for op in served_before if op.startswith(\x22list_\x22)))")'
+
+proof "T146 — a FailedRefetch disables the served set it was handed" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_a_failed_refetch_disables_no_operation" \
+  's = s.replace("                disabled=(),", "                disabled=tuple(sorted(served_before or ())),")'
+
+proof "T146 — a source-clock signal with no named operation disables health" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_a_source_signal_that_cannot_name_an_operation_disables_nothing" \
+  's = s.replace("                        disabled=NO_NAMED_OPERATION,", "                        disabled=(\x22health\x22),")'
+
+proof "T146 — C-010 disables the non-breaking half because the finding named any operation" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_c010_does_not_disable_the_non_breaking_half" \
+  's = s.replace("                    disabled=source_finding.operations,", "                    disabled=source_finding.operations + (\x22health\x22),")'
+
+proof "T146 — a deployment-clock ArtifactDrift without served sets invents the affected set" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_deployment_artifact_drift_without_served_sets_is_refused" \
+  's = s.replace("                if served_before is None or served_after is None:", "                if False:")'
+
+proof "T146 — remaining keeps the disabled operations working" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_bulk_withdrawal_leaves_health_enabled" \
+  's = s.replace("        operation_id for operation_id in served if operation_id not in blocked", "        operation_id for operation_id in served")'
+
+proof "T146 — identical served sets are reported as a total withdrawal" \
+  src/runtime/drift/disable.py \
+  "tests/contract/test_drift_disable.py::test_the_negative_control_disables_nothing" \
+  's = s.replace("    return tuple(sorted(frozenset(served_before) - frozenset(served_after)))", "    return tuple(sorted(frozenset(served_before)))")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
