@@ -3995,6 +3995,59 @@ proof "T142 — a scheduler with no enforcement point is constructed" \
   's = s.replace("        if not enforcement_point.strip():", "        if False:")'
 
 # ---------------------------------------------------------------------------
+# T143 / T144 — on-demand either clock, and the two additional triggers.
+#
+# The Plane A refusal stays in scheduler.py (T142's proofs). These arms are
+# the new guards: mixing the two inputs, recording trigger=manual rather than
+# scheduled, not assuming a pipeline event, and refusing path-level probe as
+# a trigger. Session-start is a callable, not a loop.py call site.
+
+proof "T143 — a transport is accepted on the source-clock on-demand path" \
+  src/runtime/drift/manual.py \
+  "tests/contract/test_drift_manual.py::test_a_transport_on_the_source_clock_path_is_refused" \
+  's = s.replace("        if scheduler is not None:", "        if False:")'
+
+proof "T143 — artifacts are accepted on the deployment-clock on-demand path" \
+  src/runtime/drift/manual.py \
+  "tests/contract/test_drift_manual.py::test_artifacts_on_the_deployment_clock_path_are_refused" \
+  's = s.replace("        if before is not None or after is not None:", "        if False:")'
+
+proof "T143 — a manual deployment check records trigger=scheduled" \
+  src/runtime/drift/manual.py \
+  "tests/contract/test_drift_manual.py::test_a_manual_check_runs_when_a_tick_is_not_due" \
+  's = s.replace("return scheduler.tick(now=now, trigger=MANUAL)", "return scheduler.tick(now=now, trigger=\"scheduled\")")'
+
+proof "T143 — a breaking source revision is quiet on demand" \
+  src/runtime/drift/manual.py \
+  "tests/contract/test_drift_manual.py::test_every_breaking_revision_is_detected_on_demand" \
+  's = s.replace("        finding=finding,", "        finding=None,")'
+
+proof "T144 — an unconfigured deployment event is honoured as a trigger" \
+  src/runtime/drift/triggers.py \
+  "tests/contract/test_drift_triggers.py::test_an_unconfigured_deployment_event_is_refused" \
+  's = s.replace("        if not self._selection.deployment_event:", "        if False:")'
+
+proof "T144 — an unconfigured session-start re-check is honoured as a trigger" \
+  src/runtime/drift/triggers.py \
+  "tests/contract/test_drift_triggers.py::test_an_unconfigured_session_start_is_refused" \
+  's = s.replace("        if not self._selection.session_start:", "        if False:")'
+
+proof "T144 — a deployment event records trigger=scheduled" \
+  src/runtime/drift/triggers.py \
+  "tests/contract/test_drift_triggers.py::test_a_configured_deployment_event_re_fetches_through_plane_a" \
+  's = s.replace("return self._scheduler.tick(now=now, trigger=EVENT)", "return self._scheduler.tick(now=now, trigger=\"scheduled\")")'
+
+proof "T144 — a session-start check records trigger=scheduled" \
+  src/runtime/drift/triggers.py \
+  "tests/contract/test_drift_triggers.py::test_a_configured_session_start_is_a_deployment_clock_re_fetch" \
+  's = s.replace("return self._scheduler.tick(now=now, trigger=SESSION_START)", "return self._scheduler.tick(now=now, trigger=\"scheduled\")")'
+
+proof "T144 — path-level probe is accepted as a trigger" \
+  src/runtime/drift/scheduler.py \
+  "tests/contract/test_drift_triggers.py::test_path_level_probe_is_refused_as_a_trigger" \
+  's = s.replace("        if trigger not in ALLOWED_TRIGGERS:", "        if False:")'
+
+# ---------------------------------------------------------------------------
 # T079 — FR-020's confused-deputy inspection, FR-056's procedure.
 #
 # Every arm here guards the same failure from a different side: a procedure

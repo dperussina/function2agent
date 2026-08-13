@@ -94,14 +94,20 @@ is T149's and is not enforced here.
 ## `trigger`, and why it is not on the sum type
 
 `data-model.md` §2.6 lists `trigger` ("scheduled, event, or path-level probe
-(FR-046)"). T139 deferred it because there was no producer. There is one now.
-Adding `trigger` to `ArtifactDrift` / `FailedRefetch` would not collapse the
-sum — `FailedRefetch` would still have no `version_after` — but
-`ArtifactDrift.from_movement` is also T138's constructor, and a source-clock
-finding has no FR-046 trigger. A field that can hold only one value on this
-producer and the wrong vocabulary on the other is a field that should not
-join the sum. `CheckResult.trigger` is `scheduled`. T144's additional
-triggers are not built here.
+(FR-046)"). T139 deferred it because there was no producer. T141 put it on
+`CheckResult` rather than on the sum: `from_movement` is also T138's
+constructor, and a source-clock finding has no FR-046 trigger.
+
+`tick` is that producer, parameterised by trigger so T143 and T144 do not
+grow a second Plane A refusal. The default remains `scheduled`. Admissible
+names are `scheduled`, `manual`, `event`, and `session_start`. `path-level
+probe` is refused — it is T145's backstop, not a trigger this slice emits.
+
+Two of those names are a named residual against §2.6's three-word list:
+`manual` is FR-029's, not FR-046's, and `session_start` is FR-046's additional
+trigger with no slot in the list. Ruling the list incomplete is an owner act;
+the field carries the honest names rather than stuffing either into
+`scheduled` or into `event`.
 """
 
 from __future__ import annotations
@@ -118,8 +124,22 @@ from src.analysis.drift_signal import (
     signals_from_movements,
 )
 
-#: FR-046 / data-model.md §2.6. The only trigger this producer emits.
+#: FR-046 / data-model.md §2.6. The default this producer emits.
 SCHEDULED = "scheduled"
+#: FR-029 / OD-20. On-demand, either clock. Not in §2.6's three-word list —
+#: named residual, not a silent widening of the data model.
+MANUAL = "manual"
+#: FR-046 / §2.6. A customer-emitted deployment event. Must not be assumed
+#: available; T144's selection defaults it off.
+EVENT = "event"
+#: FR-046's additional trigger. Not in §2.6's three-word list — named residual,
+#: same disposition as MANUAL. A deployment-clock re-fetch, not a source
+#: re-analysis.
+SESSION_START = "session_start"
+#: §2.6 lists this. T145's backstop. Refused as a trigger, never emitted.
+PATH_LEVEL_PROBE = "path-level probe"
+
+ALLOWED_TRIGGERS = frozenset({SCHEDULED, MANUAL, EVENT, SESSION_START})
 
 #: The header the sandbox presents as its authority to reach the enforcement
 #: point. Named so a grep finds both ends: `src/supervisor/capability.py`
@@ -216,10 +236,11 @@ class CheckResult:
     """One tick's outcome. Not a stale marking, not a disablement.
 
     `trigger` lives here rather than on `DriftSignal` — see the module
-    docstring. `detected_at` is the wall-clock instant this check observed,
-    a fact about the check, not about the change. `change_at` is not stored:
-    T155 controls it on the corpus, and real deployment-clock traffic
-    generally has no observable change time (T184).
+    docstring. Default is `scheduled`. T143 and T144 pass `manual`, `event`,
+    or `session_start` through the same path. `detected_at` is the wall-clock
+    instant this check observed, a fact about the check, not about the change.
+    `change_at` is not stored: T155 controls it on the corpus, and real
+    deployment-clock traffic generally has no observable change time (T184).
     """
 
     deployment_id: str
@@ -299,7 +320,7 @@ class Scheduler:
         self.interval_seconds = interval_seconds
         self.interval_unvalidated = interval_unvalidated
 
-    def tick(self, *, now: str) -> CheckResult:
+    def tick(self, *, now: str, trigger: str = SCHEDULED) -> CheckResult:
         """One check: fetch through Plane A, classify, compare or fail.
 
         On an admissible fetch: a deployment `Reading`, `compare` against the
@@ -308,7 +329,26 @@ class Scheduler:
         from the last successful reading. The last-known-good is updated
         only on success — a failed re-fetch does not invent an after-version
         and does not move the timestamp FR-047's ceiling is measured from.
+
+        `trigger` parameterises the same path so T143 and T144 do not grow a
+        second peer check. The default is `scheduled`. `path-level probe` is
+        refused.
         """
+        if trigger not in ALLOWED_TRIGGERS:
+            if trigger == PATH_LEVEL_PROBE:
+                raise SchedulerError(
+                    "path-level probe is FR-046's backstop, not a trigger. "
+                    "T145 records a failing path-level reachability "
+                    "precondition as a drift signal; relying on it as a "
+                    "trigger design is the thing FR-046 forbids."
+                )
+            raise SchedulerError(
+                f"trigger={trigger!r} is not a drift-check trigger this "
+                "producer emits. data-model.md §2.6 lists scheduled, event, "
+                "or path-level probe; FR-029's manual and FR-046's "
+                "session_start are additional names this field carries, and "
+                "path-level probe is refused rather than emitted."
+            )
         fetched = self._transport.fetch()
         if any(name.lower() == "authorization" for name in fetched.request_headers):
             raise SchedulerError(
@@ -344,6 +384,7 @@ class Scheduler:
                 detected_at=now,
                 interval_seconds=self.interval_seconds,
                 interval_unvalidated=self.interval_unvalidated,
+                trigger=trigger,
             )
 
         after = deployment_reading(
@@ -362,4 +403,5 @@ class Scheduler:
             detected_at=now,
             interval_seconds=self.interval_seconds,
             interval_unvalidated=self.interval_unvalidated,
+            trigger=trigger,
         )
