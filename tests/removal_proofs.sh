@@ -3682,6 +3682,116 @@ proof "FR-057 — a source reference is attachable with no declared marking besi
   's = s.replace("    if not status:", "    if False:")'
 
 # ---------------------------------------------------------------------------
+# T137 — the two clocks (FR-027, OD-06).
+#
+# FR-027 asks for the source-derived and deployment-derived artifacts as two
+# INDEPENDENTLY versioned things, with drift detected in each SEPARATELY. Both
+# halves are removable in ways that leave a module which still returns clock
+# readings and still reports movement, so the arms below are grouped by which
+# half they carry.
+#
+# Independence is held by `reading()` refusing a version for a kind that is not
+# on the clock being read. That refusal is not hygiene: with it gone, a source
+# reading can be built carrying the served surface, and the day the deployment
+# moves while the source does not, both clocks report movement — which is the
+# fused artifact OD-06 separated the stages to prevent, reassembled one layer up.
+#
+# The partition guards are three separate branches and not one, because they
+# fail in three different directions and only the first is visible to a reader:
+# a kind on both clocks, a drift-relevant kind on neither, and a kind on a clock
+# that no drift channel reads. The middle one is the silent case — a detector
+# iterating the clocks never visits it and nothing anywhere says so.
+
+proof "T137 — a kind sits on both clocks, so *which clock moved* has two answers" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_kind_on_both_clocks_is_refused" \
+  's = s.replace("            if kind in assigned:", "            if False:")'
+
+proof "T137 — a kind drift reads sits on neither clock, so nothing reads it and nothing says so" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_kind_drift_reads_and_no_clock_reads_is_refused" \
+  's = s.replace("    if unassigned:", "    if False:")'
+
+proof "T137 — a clock reads a kind no drift channel publishes, so it moves for an uncovered cause" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_clock_kind_the_registry_does_not_read_for_drift_is_refused" \
+  's = s.replace("    if unknown:", "    if False:")'
+
+# The independence mechanism itself.
+proof "T137 — a deployment version enters the source clock's reading, so one change moves both" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_deployment_version_is_refused_on_the_source_clock" \
+  's = s.replace("    if foreign:", "    if False:")'
+
+proof "T137 — a clock is read over a subset of its kinds, so it is silent for what it skipped" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_clock_read_over_a_subset_of_its_kinds_is_refused" \
+  's = s.replace("    if missing:", "    if False:")'
+
+proof "T137 — a blank version is admitted, so two uncomputed readings compare equal" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_blank_version_is_refused" \
+  's = s.replace("    if blank:", "    if False:")'
+
+proof "T137 — the source clock is read with no anchor, so a signal cannot say which source moved" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_the_source_clock_is_refused_with_no_anchor" \
+  's = s.replace("    if clock == SOURCE and not (source_ref or \x22\x22).strip():", "    if False:")'
+
+proof "T137 — the deployment clock is anchored to a commit, putting the two clocks in one field" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_the_deployment_clock_is_refused_with_an_anchor" \
+  's = s.replace("    if clock == DEPLOYMENT and source_ref is not None:", "    if False:")'
+
+proof "T137 — a clock name outside the two is accepted, so movement is attributed to nothing" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_third_clock_is_refused" \
+  's = s.replace("    if clock not in KINDS_ON_CLOCK:", "    if False:")'
+
+proof "T137 — a reading is taken for no deployment, so FR-031's identity term has no source" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_reading_for_no_deployment_is_refused" \
+  's = s.replace("    if not deployment_id:", "    if False:")'
+
+# Separate detection. The comparison is where *separately* is either honoured or
+# quietly lost, and the last arm here is the detector-never-fires failure rather
+# than a false alarm: with the difference test gone every clock reads unmoved
+# forever, which is the one outcome a drift detector must never produce silently.
+proof "T137 — the two clocks are compared against each other, so a system at rest reports drift" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_the_two_clocks_are_not_comparable_against_each_other" \
+  's = s.replace("    if before.clock != after.clock:", "    if False:")'
+
+proof "T137 — two deployments are compared on one clock, so a difference between targets reads as movement" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_two_deployments_are_not_comparable_on_one_clock" \
+  's = s.replace("    if before.deployment_id != after.deployment_id:", "    if False:")'
+
+proof "T137 — a clock absent from one side is reported as unmoved rather than unread" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_clock_absent_from_one_side_is_not_reported_as_unmoved" \
+  's = s.replace("        if absent:", "        if False:")'
+
+proof "T137 — the version comparison stops discriminating, so no clock ever moves" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_a_deployment_change_moves_the_deployment_clock_only" \
+  's = s.replace("        if before_versions.get(kind) != after_versions.get(kind)", "        if False")'
+
+# The two clocks composed from versions that already exist, rather than from two
+# new hash functions. The first arm is the T077 proof above, one level down: with
+# the served surface unread, every deployment reading carries one version and the
+# clock stops being a function of what the target serves.
+proof "T137 — the deployment clock stops reading the served surface, so every capture reads the same" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_the_deployment_clock_reads_the_version_t077_defines" \
+  's = s.replace("        versions={\x22served_operation_set\x22: set_version_of(operations)},", "        versions={\x22served_operation_set\x22: set_version_of(())},")'
+
+proof "T137 — the declared anchor is hashed into the source clock, so re-declaring configuration reports drift" \
+  src/analysis/clocks.py \
+  "tests/contract/test_clocks.py::test_the_anchor_is_beside_the_version_and_not_inside_it" \
+  's = s.replace("        return content_address({kind: value for kind, value in self.versions})", "        return content_address({\x22source_ref\x22: self.source_ref, **{kind: value for kind, value in self.versions}})")'
+
+# ---------------------------------------------------------------------------
 # T079 — FR-020's confused-deputy inspection, FR-056's procedure.
 #
 # Every arm here guards the same failure from a different side: a procedure
