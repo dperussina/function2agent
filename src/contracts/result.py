@@ -51,6 +51,34 @@ state which *"MUST NOT become a fourth value of it"*. It defaults, where
 `NOT_STATED`, which **makes no claim**. A default of `FRESH` would be the
 boolean defect moved one field over — silence reading as an assertion that the
 served-operation set was current.
+
+## `precision`, and the third subject
+
+Three fields, three subjects, and `OD-35` is where that became explicit.
+`verification` is about the **state**. `corroboration` is about the
+**contract** — its `PROVISIONAL` member names FR-026's contract state and
+nothing else. `precision` is about the **precision the comparison was made
+at**, which FR-024 properties 5 and 6 mark independently of both.
+
+The field exists because the union of two requirements was unsatisfiable
+without it. Property 5 says an admitted caller-declared precision produces a
+state that is *"provisional and never plain verified"*; FR-025 admits three
+states and `CORROBORATED` is the only value a `VERIFIED` result may carry. So
+`VERIFIED`/`CORROBORATED` alone is *plain verified*, and the only thing left to
+distinguish it was free text in `reason` — which
+`src/runtime/reports/not_verifiable.py` already names as a carrier a consumer
+cannot key on. Reusing `Corroboration.PROVISIONAL` was the other candidate and
+is worse: it states something false about a contract that is necessarily
+validated.
+
+**It defaults, and the rule above is what decides that rather than
+convenience.** A field may default iff its default makes no claim.
+`PrecisionBasis.NOT_REACHED` — *a declaration was in hand and the ladder never
+reached it* — is a claim, and defaulting to it would be the `FRESH` defect a
+third time: a producer that never saw a declaration would be recorded as having
+resolved one. `NOT_STATED` is *nobody told this record*, which is what silence
+actually means here, and it is the honest value at `validate.py`'s two
+`to_result` sites, neither of which can see a precision at all.
 """
 
 from __future__ import annotations
@@ -123,6 +151,40 @@ class Corroboration(Enum):
     PROVISIONAL = "provisional"
     #: Nobody said. Not a claim that nothing corroborated it — a claim that the
     #: question was not answered, which is what the old `False` hid.
+    NOT_STATED = "not_stated"
+
+
+class PrecisionBasis(Enum):
+    """FR-024's rung, on the record. What supplied the precision, as a member.
+
+    Four members and not two, because property 5 asks the record to disclose
+    three different things about a declaration — it was used, it was displaced,
+    it was never reached — and the fourth is the absent case, named.
+
+    The first three correspond to `DeclarationDisposition` in
+    `src/runtime/verify.py`, and the correspondence is a **map** rather than an
+    import: `src/contracts/` is the bottom of the import graph, the same reason
+    `SPECIFICATION_STATES` above is duplicated. `PRECISION_BASIS` in
+    `src/runtime/result_join.py` holds it, where both enums are visible, and a
+    totality arm is what makes it a check instead of an assumption.
+    """
+
+    #: The caller's own declaration was admitted, because no artifact source
+    #: supplied a precision for the quantity (FR-024 property 5). Property 6
+    #: marks such a verification provisional **on its own provenance**, and this
+    #: member is that marking: a record carrying it is not plain verified.
+    DECLARED = "declared"
+    #: An artifact source supplied the precision and the declaration was
+    #: ignored — tighter, equal or looser alike. Property 5's closing
+    #: sub-bullet, *"an ignored declaration MUST be disclosed on the result, not
+    #: silently dropped"*, carried by a member rather than by free text.
+    ARTIFACT_DISPLACED_DECLARATION = "artifact_displaced_declaration"
+    #: A declaration was in hand and the ladder never reached the precision
+    #: question. Distinct from the member above, because claiming an artifact
+    #: displaced a declaration when none did is fabricated provenance.
+    DECLARATION_NOT_REACHED = "declaration_not_reached"
+    #: Nobody said. **Not** a claim that no declaration was made — a claim that
+    #: this record was not told, which is the only reading a default can carry.
     NOT_STATED = "not_stated"
 
 
@@ -220,6 +282,59 @@ STALENESS_NOT_STATED = Staleness(StaleMarking.NOT_STATED)
 
 
 @dataclass(frozen=True)
+class Precision:
+    """FR-024's two facts: what supplied the precision, and whose word it was.
+
+    A dataclass and not a bare enum, for `Staleness`'s reason one field over. A
+    `DECLARED` basis that cannot say **where** the declaration came from records
+    the exposure — this comparison rests on the caller's own word — without
+    recording the thing that lets a reader weigh it. Property 5 names both
+    nouns, *"the declaration and its source text"*.
+
+    **The recording obligation itself is the verifier's and is discharged
+    there**: `DeclaredPrecision.__post_init__` refuses a blank source text
+    citing property 5. What lands here is the *disclosure*, which property 5
+    puts on the result in as many words, and which was travelling as free text
+    inside `Result.reason` until `OD-35`. `decimal_places` is deliberately not
+    carried: it is how strict the comparison was, not where its authority came
+    from, and nothing writes it to a record.
+    """
+
+    basis: PrecisionBasis
+    #: The declaration's own source text. Set on `DECLARED` and nothing else.
+    declared_in: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.basis, PrecisionBasis):
+            raise ValueError(
+                "Precision.basis must be a PrecisionBasis member; got "
+                f"{type(self.basis).__name__}"
+            )
+        declared = self.basis is PrecisionBasis.DECLARED
+        if declared and not (self.declared_in or "").strip():
+            raise ValueError(
+                "a declared basis must carry the source text the declaration "
+                "was made in. FR-024 property 5 requires the declaration and "
+                "its source text recorded as the precision's provenance, and a "
+                "record saying a comparison rests on the caller's own word "
+                "without saying whose word states the exposure and withholds "
+                "what closes it."
+            )
+        if not declared and self.declared_in is not None:
+            raise ValueError(
+                f"a {self.basis.value} basis names {self.declared_in!r} as the "
+                "text a precision was declared in. Nothing was declared into "
+                "this comparison, and a source cited for a declaration that "
+                "did not act is fabricated provenance."
+            )
+
+
+#: The absent case, named, on `STALENESS_NOT_STATED`'s pattern. A producer that
+#: cannot see a precision says this rather than saying no declaration was made.
+PRECISION_NOT_STATED = Precision(PrecisionBasis.NOT_STATED)
+
+
+@dataclass(frozen=True)
 class Result:
     """A caller-visible result. One constructor, and it takes the provenance.
 
@@ -241,6 +356,10 @@ class Result:
     # FR-047. Defaults to the marking that makes no claim — see the module
     # docstring on why this one may default and `corroboration` may not.
     staleness: Staleness = field(default=STALENESS_NOT_STATED)
+    # FR-024 properties 5 and 6, `OD-35`. Same asymmetry, same reason: the
+    # default is the basis that makes no claim, and `NOT_REACHED` would be the
+    # one that does.
+    precision: Precision = field(default=PRECISION_NOT_STATED)
 
     def __post_init__(self) -> None:
         if not isinstance(self.verification, VerificationOutcome):
@@ -259,6 +378,25 @@ class Result:
             raise MissingVerification(
                 "Result.staleness must be a Staleness; got "
                 f"{type(self.staleness).__name__}"
+            )
+        if not isinstance(self.precision, Precision):
+            raise MissingVerification(
+                "Result.precision must be a Precision; got "
+                f"{type(self.precision).__name__}"
+            )
+        if (
+            self.precision.basis is PrecisionBasis.DECLARED
+            and self.corroboration is Corroboration.PROVISIONAL
+        ):
+            raise MissingVerification(
+                "this result says the precision came from the caller's own "
+                "declaration and that the contract behind it was provisional. "
+                "Both cannot be true of one contract: a declaration is "
+                "admissible only against a contract the ladder validated, and "
+                "a provisional one refuses at CONTRACT_PROVISIONAL before the "
+                "precision question is reached. The two fields have different "
+                "subjects, and this pair is OD-34 ③'s struck row half-restored "
+                "beside OD-35's."
             )
         if self.verification is not VerificationOutcome.VERIFIED and not self.reason:
             raise MissingVerification(

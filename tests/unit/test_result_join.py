@@ -1,6 +1,7 @@
 """T213 — the verification seam, scored against reports the verifier produced.
 
-**Requirement**: FR-025. **Decision**: `OD-34`.
+**Requirement**: FR-025. **Decisions**: `OD-34`, and `OD-35` for the
+`ProvisionallyVerified` row `OD-34` ③ fixed wrongly and struck.
 
 ## Every report here is produced, not hand-built
 
@@ -43,7 +44,11 @@ from src.analysis.validate import (
 )
 from src.contracts.result import (
     Corroboration,
+    MissingVerification,
+    Precision,
+    PrecisionBasis,
     ReportedState,
+    Result,
     StaleMarking,
     Staleness,
     VerificationOutcome,
@@ -52,6 +57,8 @@ from src.runtime.result_join import (
     JOINABLE_OUTCOMES,
     JOINED_CORROBORATION,
     JOINED_OUTCOME,
+    JOINED_PRECISION,
+    PRECISION_BASIS,
     REFUSAL_CORROBORATION,
     REPORT_MEMBERS,
     UnjoinableReport,
@@ -309,18 +316,15 @@ def test_a_refusal_becomes_a_not_verifiable_record_naming_its_own_reason() -> No
     assert report.detail in record.reason
 
 
-def test_a_provisionally_verified_report_reaches_no_verified_record() -> None:
-    """`OD-34` ③'s one arm that *"cannot be chosen freely"*, as it fixes it.
+def test_a_provisionally_verified_report_reaches_a_verified_record_marked_declared() -> None:
+    """`OD-35`'s row, and the three cells that make it true rather than two.
 
-    ⚠️ **This arm pins a reading the register and the verifier disagree about,
-    and the disagreement is recorded rather than resolved here.**
-    `ProvisionallyVerified.outcome()` returns `VERIFIED`; `OD-34` ③ fixes the
-    *record* at `NOT_VERIFIABLE` with `PROVISIONAL`. The seam follows the
-    register because it is the register, and
-    `test_the_two_readings_of_a_provisionally_verified_report_are_both_named`
-    below names the other reading and what would change under it. Whichever way
-    the owner rules, it is one row in `JOINED_OUTCOME`, one in
-    `JOINED_CORROBORATION` and these two arms.
+    The record is `VERIFIED` because a comparison was made and it agreed, and
+    `CORROBORATED` because the token carries a `ValidatedContract` and that is
+    the only subject `Corroboration` has. **What keeps it from being a plain
+    verification is the third cell**, and this arm asserts it beside the other
+    two rather than in a test of its own: the whole of `OD-35` is that the first
+    two are insufficient alone.
     """
     verification = verify_declared_quantity(
         **_float_case(reported=3.20), declared=_declaration()
@@ -330,26 +334,41 @@ def test_a_provisionally_verified_report_reaches_no_verified_record() -> None:
 
     record = result_from_report(verification.report, payload={"unit_cost_high": 3.20})
 
-    assert record.verification is VerificationOutcome.NOT_VERIFIABLE
-    assert record.corroboration is Corroboration.PROVISIONAL
-    assert not record.is_verified
-    # OD-34 fixes the member at NOT_VERIFIABLE, and `Result` refuses that
-    # outcome without a reason. `ProvisionallyVerified` carries no reason field,
-    # so the seam composes one out of fields already on the report.
+    assert record.verification is VerificationOutcome.VERIFIED
+    assert record.corroboration is Corroboration.CORROBORATED
+    assert record.is_verified
+    # The cell that carries FR-024 property 5's "never plain verified". Without
+    # it this record's first two cells are byte-identical to a `Verified` one.
+    assert record.precision.basis is PrecisionBasis.DECLARED
+    assert record.precision.declared_in == _declaration().declared_in
+    # And it is not plain verified, stated as the comparison rather than left
+    # to be read off the member: a `Verified` report through the same seam.
+    plain = result_from_report(
+        verify_quantity(**_integer_case(reported=3, rows=3)), payload=None
+    )
+    assert plain.precision.basis is PrecisionBasis.NOT_STATED
+    assert record.precision != plain.precision
+    # `Result` permits a reason on VERIFIED and requires none. It is kept
+    # because no enum member can say *which quantity, against what*.
     assert record.reason is not None
     assert "unit_cost_high" in record.reason
     assert _declaration().declared_in in record.reason
 
 
-def test_the_two_readings_of_a_provisionally_verified_report_are_both_named() -> None:
-    """The contradiction, executable rather than only written down.
+def test_the_two_readings_of_a_provisionally_verified_report_are_reconciled() -> None:
+    """The contradiction, settled — and pinned so neither original row returns.
 
-    The verifier says `VERIFIED`. The register says the record is
-    `NOT_VERIFIABLE`. This asserts **both facts as they stand today**, so a
-    later edit that silently aligns one to the other fails here and has to say
-    which it chose. It is not an assertion that the current disposition is
-    right — `OD-34` and T212 are the documents that argue that, and they argue
-    opposite ways.
+    T212 said the verifier's `VERIFIED` was right and that *"'Provisional' is
+    NOT `Corroboration`"*. `OD-34` ③ said the record was `NOT_VERIFIABLE` with
+    `PROVISIONAL`. `OD-35` rules that T212 was right about **both subjects** and
+    that its implied correction was still wrong, because
+    `VERIFIED`/`CORROBORATED` alone is *plain verified* and FR-024 property 5
+    forbids exactly that. The resolution is a third field.
+
+    This asserts all three cells **and the reason there are three**. A pass
+    reverting to `OD-34` ③ fails on two of them; a pass taking the naive
+    correction — dropping the precision row — fails on the third. Either way it
+    has to come here and say which reading it chose.
     """
     verification = verify_declared_quantity(
         **_float_case(reported=3.20), declared=_declaration()
@@ -357,9 +376,58 @@ def test_the_two_readings_of_a_provisionally_verified_report_are_both_named() ->
     report = verification.report
     assert isinstance(report, ProvisionallyVerified)
 
+    # The verifier's reading, unchanged since T212, and now the table's too.
     assert report.outcome() is VerificationOutcome.VERIFIED
-    assert JOINED_OUTCOME[ProvisionallyVerified] is VerificationOutcome.NOT_VERIFIABLE
-    assert JOINED_CORROBORATION[ProvisionallyVerified] is Corroboration.PROVISIONAL
+    assert JOINED_OUTCOME[ProvisionallyVerified] is VerificationOutcome.VERIFIED
+    # `OD-34` ③'s struck cell. `PROVISIONAL` says the contract was not
+    # validated; `ProvisionallyVerified.__post_init__` refuses any contract but
+    # a validated one, so the struck cell asserted something false about it.
+    assert JOINED_CORROBORATION[ProvisionallyVerified] is Corroboration.CORROBORATED
+    # And the cell that is neither reading's, without which the two above are a
+    # plain verification.
+    assert JOINED_PRECISION[ProvisionallyVerified] is PrecisionBasis.DECLARED
+    assert JOINED_PRECISION[Verified] is PrecisionBasis.NOT_STATED
+
+    # The half-revert, which is the failure mode a table alone would not catch:
+    # `OD-34` ③'s corroboration restored beside `OD-35`'s precision is
+    # unconstructible, so it cannot be reached by editing one row.
+    with pytest.raises(MissingVerification, match="Both cannot be true"):
+        Result(
+            VerificationOutcome.NOT_VERIFIABLE,
+            payload=None,
+            corroboration=Corroboration.PROVISIONAL,
+            reason="a half-revert to OD-34 (3)",
+            precision=Precision(
+                PrecisionBasis.DECLARED, declared_in="caller request"
+            ),
+        )
+
+
+def test_the_precision_basis_map_is_total_over_the_disposition() -> None:
+    """`OD-35` ⑤'s map, in place of an import `src/contracts/` cannot make.
+
+    `PrecisionBasis` lives at the bottom of the import graph and cannot see
+    `DeclarationDisposition`. The correspondence is therefore a table, and a
+    table nothing checks is a copy that drifts — which is the treatment
+    `SPECIFICATION_STATES` gets one module over for the same reason.
+
+    Totality in the domain **and** injectivity in the image: a second
+    disposition mapped onto the same basis would make two disclosures
+    indistinguishable on the record, which is the thing the enum being total
+    exists to prevent.
+    """
+    assert set(PRECISION_BASIS) == set(DeclarationDisposition)
+    assert len(set(PRECISION_BASIS.values())) == len(PRECISION_BASIS)
+    # `NOT_STATED` is *nobody said* and no disposition means that: every member
+    # of `DeclarationDisposition` is a disclosure, by that enum's own docstring.
+    assert PrecisionBasis.NOT_STATED not in set(PRECISION_BASIS.values())
+    # And the two entry points agree where both can answer.
+    verification = verify_declared_quantity(
+        **_float_case(reported=3.20), declared=_declaration()
+    )
+    through_report = result_from_report(verification.report, payload=None)
+    through_provenance = result_from_quantity_verification(verification, payload=None)
+    assert through_report.precision == through_provenance.precision
 
 
 def test_the_seam_does_not_read_the_reports_own_outcome_method() -> None:
@@ -547,8 +615,9 @@ def test_the_admitted_declaration_reaches_the_record_carrying_its_disposition() 
         verification, payload={"unit_cost_high": 3.20}
     )
 
-    assert record.verification is VerificationOutcome.NOT_VERIFIABLE
-    assert record.corroboration is Corroboration.PROVISIONAL
+    assert record.verification is VerificationOutcome.VERIFIED
+    assert record.corroboration is Corroboration.CORROBORATED
+    assert record.precision.basis is PrecisionBasis.DECLARED
     assert record.reason is not None
     assert DeclarationDisposition.ADMITTED.value in record.reason
 

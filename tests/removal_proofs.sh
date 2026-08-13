@@ -4569,6 +4569,48 @@ proof "T128 — the staleness default becomes fresh, so silence reads as a curre
   "tests/invariants/test_result_constructor.py::test_the_staleness_default_makes_no_claim" \
   's = s.replace("    staleness: Staleness = field(default=STALENESS_NOT_STATED)", "    staleness: Staleness = field(default=Staleness(StaleMarking.FRESH))")'
 
+# --- OD-35's third subject ----------------------------------------------------
+#
+# The same asymmetry a THIRD time, and the member that makes it a claim.
+# `NOT_REACHED` says a declaration was in hand and the ladder never got to it,
+# so a producer that never saw one — `Verified.to_result`, which cannot see a
+# precision at all — would be recorded as having resolved a question nobody
+# asked. That is `FRESH` again, and the wall-clock numerator defect again: a
+# quantity nobody measured, indistinguishable from one somebody did.
+proof "OD-35 — the precision default becomes not-reached, so silence reads as a declaration the ladder resolved" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_the_precision_default_makes_no_claim" \
+  's = s.replace("    precision: Precision = field(default=PRECISION_NOT_STATED)", "    precision: Precision = field(default=Precision(PrecisionBasis.DECLARATION_NOT_REACHED))")'
+
+# `Staleness`'s stale-needs-an-age refusal, on the field OD-35 ③ modelled on it.
+# Without it a record can say the comparison rests on the caller's own word and
+# be unable to say WHOSE — the exposure recorded and the thing that closes it
+# withheld. FR-024 property 5 names both nouns and this is the one that makes
+# the disclosure actionable rather than merely present.
+proof "OD-35 — a declared precision no longer has to say where it was declared, so provenance is claimed and not carried" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_a_declared_precision_must_say_where_it_was_declared" \
+  's = s.replace("        if declared and not (self.declared_in or \x22\x22).strip():", "        if False:")'
+
+# The mirror, and `PrecisionProvenance`'s own words one layer down: a source
+# cited for a displacement that did not happen is fabricated provenance. Here
+# it is a declaration cited for a comparison it did not act on, which is a
+# record asserting the caller's word carried a rung the artifact ladder carried.
+proof "OD-35 — a non-declared basis may carry a source text, so a record cites a declaration that did not act" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_a_basis_that_is_not_declared_carries_no_source_text" \
+  's = s.replace("        if not declared and self.declared_in is not None:", "        if False:")'
+
+# OD-35 ④, and the arm that makes a HALF-REVERT to OD-34 ③ fail at construction
+# rather than pass quietly. The two fields have different subjects, and the pair
+# asserts contradictory things about one contract: a declaration is admissible
+# only against a validated contract, and a provisional one refuses at
+# CONTRACT_PROVISIONAL before the precision question is reached.
+proof "OD-35 — the contradictory pair is admitted, so one record says the contract was both validated and provisional" \
+  src/contracts/result.py \
+  "tests/contract/test_result_record.py::test_a_declared_precision_cannot_sit_beside_a_provisional_contract" \
+  's = s.replace("            and self.corroboration is Corroboration.PROVISIONAL\n        ):", "            and False\n        ):")'
+
 # ---------------------------------------------------------------------------
 # INV-013 — the layering pin.
 #
@@ -4842,28 +4884,49 @@ proof "T212 — the displacement-naming requirement goes, so a declaration repor
 #     shape as the 48-proved-having-tested-nothing failure this file opens with.
 #
 # Every tamper below produces a working module and a named assertion. NONE of
-# them is scored on a crash, and two candidate arms were DROPPED for being
-# crashes rather than retargeted to something weaker:
+# them is scored on a crash, and one candidate arm was DROPPED for being a
+# crash rather than retargeted to something weaker:
 #
-#   - mapping `ProvisionallyVerified` onto VERIFIED leaves `PROVISIONAL` beside
-#     it, and `Result.__post_init__` refuses that pair. OD-34 ③ names exactly
-#     that — *"a mapping that tried it would raise rather than mislead"* — so
-#     the defect is UNCONSTRUCTIBLE and there is no scoreable arm. This is the
-#     `test_the_declared_rung_reaches_no_not_verifiable_state` treatment above:
-#     a declared gap, not an arm shaped to pass.
 #   - mapping `Refusal` onto MODEL_ASSESSED is caught by `_refuse_unjoinable`
 #     and raises. The exclusion is proved through the table and the backstop
 #     separately instead, which is two arms and not one.
+#
+# ⚠️ A SECOND candidate was dropped under OD-34 ③ and is RESTORED, in a
+# different shape, by OD-35. The old note read: *mapping `ProvisionallyVerified`
+# onto VERIFIED leaves `PROVISIONAL` beside it and `Result.__post_init__`
+# refuses that pair, so the defect is unconstructible.* Under OD-35 that row IS
+# VERIFIED/CORROBORATED and the defect moved: what is now unconstructible is the
+# old row, and what is now REACHABLE AND SILENT is dropping the third cell. The
+# arm below is the one that could not be written while ③ stood.
 
-# The Principle I half of OD-34 ③, and the row the register and T212 disagree
-# about. Under this variant the record says an INDEPENDENT ARTIFACT validated a
-# precision that only the caller's own request states — which is the one thing
-# `Corroboration.CORROBORATED` means, and the admitted rung's own admissibility
-# premise is that no artifact source supplies one.
-proof "T213 — the provisionally-verified corroboration row goes, so a caller-declared precision reads as independently corroborated" \
+# OD-35's third cell, and the sharpest arm in this block because the tampered
+# record is VALID. Without the DECLARED basis a caller-declared precision
+# produces VERIFIED/CORROBORATED/NOT_STATED, which is BYTE-IDENTICAL to a plain
+# `Verified` record — FR-024 property 5's *"never plain verified"* violated with
+# nothing raising, no reason field lost and no breakdown moved. That silence is
+# the whole reason OD-35 minted a field instead of trusting `Result.reason`.
+proof "T213/OD-35 — the declared-precision row goes, so a caller-declared precision is indistinguishable from a plain verification" \
   src/runtime/result_join.py \
-  "tests/unit/test_result_join.py::test_a_provisionally_verified_report_reaches_no_verified_record" \
-  's = s.replace("    ProvisionallyVerified: Corroboration.PROVISIONAL,", "    ProvisionallyVerified: Corroboration.CORROBORATED,")'
+  "tests/unit/test_result_join.py::test_a_provisionally_verified_report_reaches_a_verified_record_marked_declared" \
+  's = s.replace("    ProvisionallyVerified: PrecisionBasis.DECLARED,", "    ProvisionallyVerified: PrecisionBasis.NOT_STATED,")'
+
+# ⚠️ DECLARED GAP, on the `test_the_declared_rung_reaches_no_not_verifiable_state`
+# treatment: dropping the SOURCE TEXT at the seam — `Precision(basis)` in place
+# of `Precision(basis, declared_in=…)` — makes `Precision.__post_init__` raise,
+# so the arm would score on the tamper crashing rather than on a named
+# assertion. It is not reshaped into something weaker here because the guard it
+# would prove is proved directly at `src/contracts/result.py` below, where the
+# same defect fails as a `pytest.raises` that did not raise.
+
+# OD-35 ⑤'s map, in place of an import the layering forbids. With ADMITTED
+# rerouted the two entry points disagree about one verification: the record
+# reached through `result_from_quantity_verification` says an artifact displaced
+# a declaration that was in fact admitted, which is finding 007's fabricated
+# provenance arriving in a disclosure.
+proof "T213/OD-35 — the admitted disposition is mapped onto the displaced basis, so a disclosure names a displacement that did not happen" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_the_precision_basis_map_is_total_over_the_disposition" \
+  's = s.replace("    DeclarationDisposition.ADMITTED: PrecisionBasis.DECLARED,", "    DeclarationDisposition.ADMITTED: PrecisionBasis.ARTIFACT_DISPLACED_DECLARATION,")'
 
 # A DOWNGRADE rather than an upgrade, and it is the sharper direction: VERIFIED
 # is unconstructible here (see the block note), where NOT_VERIFIABLE is legal

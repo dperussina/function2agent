@@ -60,10 +60,13 @@ from src.analysis import admission
 from src.contracts import result as result_module
 from src.contracts.result import (
     FR_025_PHRASES,
+    PRECISION_NOT_STATED,
     REPORTED_STATE,
     STALENESS_NOT_STATED,
     Corroboration,
     MissingVerification,
+    Precision,
+    PrecisionBasis,
     ReportedState,
     Result,
     StaleMarking,
@@ -466,3 +469,93 @@ def test_the_absent_case_is_a_named_member_and_not_a_falsy_value() -> None:
     assert Corroboration.NOT_STATED in set(Corroboration)
     assert len({c.value for c in Corroboration}) == len(list(Corroboration))
     assert not isinstance(Corroboration.NOT_STATED.value, bool)
+
+
+# ---------------------------------------------------------------------------
+# FR-024 properties 5 and 6 — `OD-35`'s third subject.
+
+
+def test_a_declared_precision_must_say_where_it_was_declared() -> None:
+    """`Staleness`'s stale-needs-an-age arm, one field over.
+
+    A record saying *this comparison rests on the caller's own word* and unable
+    to say whose word records the exposure and withholds what closes it. FR-024
+    property 5 names both nouns, *"the declaration and its source text"*.
+    """
+    for absent in (None, "", "   "):
+        with pytest.raises(ValueError, match="source text"):
+            Precision(PrecisionBasis.DECLARED, declared_in=absent)
+
+
+def test_a_basis_that_is_not_declared_carries_no_source_text() -> None:
+    """The mirror. Two fields that can disagree will.
+
+    `PrecisionProvenance` refuses the same shape one layer up and calls it
+    fabricated provenance: a source cited for a displacement that did not
+    happen. Here it is a declaration cited for a comparison it did not act on.
+    """
+    for basis in set(PrecisionBasis) - {PrecisionBasis.DECLARED}:
+        with pytest.raises(ValueError, match="fabricated provenance"):
+            Precision(basis, declared_in="caller request: 2 decimal places")
+
+
+def test_the_precision_default_makes_no_claim() -> None:
+    """The `staleness` asymmetry a third time, and the member it is not.
+
+    `NOT_REACHED` is a **claim** — a declaration was in hand and the ladder
+    never got to it — so defaulting to it would be `FRESH` again: a producer
+    that never saw a declaration recorded as having resolved one. `NOT_STATED`
+    is *nobody told this record*, which is what omitting the argument means.
+    """
+    record = Result(
+        VerificationOutcome.VERIFIED,
+        payload={"answer": 1},
+        corroboration=Corroboration.CORROBORATED,
+    )
+
+    assert record.precision is PRECISION_NOT_STATED
+    assert record.precision.basis is PrecisionBasis.NOT_STATED
+    assert record.precision.basis is not PrecisionBasis.DECLARATION_NOT_REACHED
+    assert record.precision.declared_in is None
+
+
+def test_a_declared_precision_cannot_sit_beside_a_provisional_contract() -> None:
+    """`OD-35` ④ — the pair that is unconstructible rather than discouraged.
+
+    The two fields have different subjects and this pair asserts contradictory
+    things about one contract: a declaration is admissible only against a
+    contract the ladder validated, and a provisional one refuses at
+    `CONTRACT_PROVISIONAL` before the precision question is reached.
+
+    It is what makes a **half-revert** to `OD-34` ③ fail at construction —
+    restoring the struck corroboration cell while leaving `OD-35`'s precision
+    cell in place raises here rather than producing a quietly wrong record.
+    """
+    with pytest.raises(MissingVerification, match="Both cannot be true"):
+        Result(
+            VerificationOutcome.NOT_VERIFIABLE,
+            payload={"answer": 1},
+            corroboration=Corroboration.PROVISIONAL,
+            reason="contract_provisional: nothing validated it",
+            precision=Precision(
+                PrecisionBasis.DECLARED, declared_in="caller request"
+            ),
+        )
+
+
+def test_a_provisional_contract_record_with_no_declaration_is_constructible() -> None:
+    """The positive control for the arm above.
+
+    Without it that refusal is satisfied by a `Result` that rejects every
+    `PROVISIONAL` record, which is not the property being asserted:
+    `ProvisionalContract.to_result` builds exactly this and must keep working.
+    """
+    record = Result(
+        VerificationOutcome.NOT_VERIFIABLE,
+        payload={"answer": 1},
+        corroboration=Corroboration.PROVISIONAL,
+        reason="contract_provisional: nothing validated it",
+    )
+
+    assert record.state is ReportedState.NOT_VERIFIABLE
+    assert record.precision.basis is PrecisionBasis.NOT_STATED

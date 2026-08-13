@@ -28,15 +28,22 @@ the caller-visible record of it, with no independent step between them.
 ## The mapping, and which arms were free
 
 `VerificationReport` is a four-member union and `Result` takes a
-`VerificationOutcome` **and** a `Corroboration`, so this is a map into a product
-and not a rename. `OD-34` ③ fixes the outcome column for all four:
+`VerificationOutcome`, a `Corroboration` **and**, since `OD-35`, a `Precision`,
+so this is a map into a product and not a rename:
 
-| report                  | outcome          | corroboration | fixed by |
-| ----------------------- | ---------------- | ------------- | -------- |
-| `Verified`              | `VERIFIED`       | `CORROBORATED`| `OD-34`  |
-| `ProvisionallyVerified` | `NOT_VERIFIABLE` | `PROVISIONAL` | `OD-34`  |
-| `Disagreement`          | `FAILED`         | `NOT_STATED`  | here     |
-| `Refusal`               | `NOT_VERIFIABLE` | *by reason*   | here     |
+| report                  | outcome          | corroboration | precision    | fixed by |
+| ----------------------- | ---------------- | ------------- | ------------ | -------- |
+| `Verified`              | `VERIFIED`       | `CORROBORATED`| `NOT_STATED` | `OD-34`  |
+| `ProvisionallyVerified` | `VERIFIED`       | `CORROBORATED`| `DECLARED`   | `OD-35`  |
+| `Disagreement`          | `FAILED`         | `NOT_STATED`  | `NOT_STATED` | here     |
+| `Refusal`               | `NOT_VERIFIABLE` | *by reason*   | `NOT_STATED` | here     |
+
+`Verified`'s `NOT_STATED` precision is not an oversight and is the whole force
+of the third column being separate: `Verified` carries a `ValidatedContract` and
+a `RecomputationAgreement` and **nothing about where its precision came from**,
+so the honest value is *nobody said*. A caller who wants that answered reaches
+`result_from_quantity_verification`, which holds a `PrecisionProvenance` and can
+say.
 
 **The corroboration column is fixed by `OD-34` for the first two rows only**,
 and the rule this module applies to the other two is stated rather than
@@ -56,20 +63,21 @@ maps it to `PROVISIONAL`, which makes this module agree with
 `test_the_join_agrees_with_the_bridge_validate_py_already_had` asserts that over
 both bridges as records, not as prose.
 
-⚠️ **`OD-34` ③'s `ProvisionallyVerified` row contradicts T212's ruling, is
-implemented as the register fixes it, and is flagged rather than diverged
-from.** `ProvisionallyVerified.outcome()` in `verify.py` returns **`VERIFIED`**,
-and `tasks.md`'s T212 notes rule explicitly that *"'Provisional' is NOT
-`Corroboration`"* on the ground that `Corroboration`'s subject is the
-**contract** — necessarily a `ValidatedContract` here, since
+✅ **The `ProvisionallyVerified` row was `OD-34` ③'s and is now `OD-35`'s, and
+neither of the two original readings was right.** ③ fixed it at
+`NOT_VERIFIABLE`/`PROVISIONAL`; T212 ruled that *"'Provisional' is NOT
+`Corroboration`"* because `Corroboration`'s subject is the **contract** —
+necessarily a `ValidatedContract` here, since
 `ProvisionallyVerified.__post_init__` refuses anything else — where property 6
-marks the **precision**. So the register and the module it maps disagree about
-the same object. This module follows the register, because a join that quietly
-took the other reading would leave the two disagreeing with nothing recording
-it. `test_the_two_readings_of_a_provisionally_verified_report_are_both_named`
-pins the reading actually shipped and names the other, so a reversal is one row
-and one arm. The disposition is an owner decision and is recorded as a dated
-annotation at `OD-34` and at T213.
+marks the **precision**. T212 was right about the subject and `OD-35` adopts it.
+But the correction ③'s refutation implies, `VERIFIED`/`CORROBORATED`, produces a
+record that is *plain verified*, which FR-024 property 5 forbids in as many
+words. With the fields `Result` had, the two requirements had no common
+solution. `OD-35` mints the third column above, and the row becomes true about
+the contract **and** distinguishable from a plain verification at the record.
+`test_the_two_readings_of_a_provisionally_verified_report_are_reconciled` pins
+all three cells and the reason, so a pass reverting to either original row fails
+and has to say which reading it took.
 
 ## `MODEL_ASSESSED` has no source here and must not acquire one
 
@@ -91,12 +99,16 @@ took `qv.report` and threw the provenance away would perform that silent drop at
 the precise moment the record becomes caller-visible, which is the FR-058
 distinction T212 was careful about: a disclosure in a trace does not discharge a
 disclosure on the result. `result_from_quantity_verification` is therefore a
-separate entry point that carries the disposition into `Result.reason`, and it
-is the only way to turn a `QuantityVerification` into a record.
+separate entry point that carries the disposition onto the record, and it is the
+only way to turn a `QuantityVerification` into one.
 
-`Result` has no field for a precision disposition and this task does not mint
-one: the payload schema is still owed (see `src/contracts/result.py`'s module
-docstring), and `reason` is the field FR-025 already reserves for *why*.
+It carries it **twice**, and the redundancy is deliberate rather than left over:
+into `Result.precision` as a member a consumer can key on, and into
+`Result.reason` as the detail behind it. `OD-35` minted the field precisely
+because free text is a carrier
+`src/runtime/reports/not_verifiable.py`'s `reason_not_recorded` already names as
+insufficient — but the detail says *against which sources*, and no enum member
+carries that.
 """
 
 from __future__ import annotations
@@ -107,11 +119,14 @@ from src.analysis.validate import Verified
 from src.contracts.result import (
     STALENESS_NOT_STATED,
     Corroboration,
+    Precision,
+    PrecisionBasis,
     Result,
     Staleness,
     VerificationOutcome,
 )
 from src.runtime.verify import (
+    DeclarationDisposition,
     Disagreement,
     ProvisionallyVerified,
     QuantityVerification,
@@ -124,6 +139,8 @@ __all__ = [
     "JOINABLE_OUTCOMES",
     "JOINED_CORROBORATION",
     "JOINED_OUTCOME",
+    "JOINED_PRECISION",
+    "PRECISION_BASIS",
     "REFUSAL_CORROBORATION",
     "REPORT_MEMBERS",
     "UnjoinableReport",
@@ -155,11 +172,14 @@ class UnjoinableReport(TypeError):
 #: the same construction one layer down.
 REPORT_MEMBERS: tuple[type, ...] = get_args(VerificationReport)
 
-#: `OD-34` ③ fixes every row. Not re-derived here — the entry is the authority
-#: and this table is its transcription.
+#: `OD-34` ③ fixes three rows and `OD-35` fixes the fourth. Not re-derived
+#: here — the entries are the authority and this table is their transcription.
 JOINED_OUTCOME: Mapping[type, VerificationOutcome] = {
     Verified: VerificationOutcome.VERIFIED,
-    ProvisionallyVerified: VerificationOutcome.NOT_VERIFIABLE,
+    # `OD-35`, replacing `OD-34` ③'s struck NOT_VERIFIABLE. A comparison was
+    # made and it agreed; what keeps it from reading as plain verification is
+    # `JOINED_PRECISION` below and not a downgrade of the outcome.
+    ProvisionallyVerified: VerificationOutcome.VERIFIED,
     Disagreement: VerificationOutcome.FAILED,
     Refusal: VerificationOutcome.NOT_VERIFIABLE,
 }
@@ -173,15 +193,53 @@ JOINED_CORROBORATION: Mapping[type, Corroboration] = {
     # published specification agreed with. This is the value `Verified.to_result`
     # already writes, and the two are asserted to produce the same record.
     Verified: Corroboration.CORROBORATED,
-    # `OD-34` ③. See the module docstring on the contradiction with T212 that
-    # this row implements rather than resolves.
-    ProvisionallyVerified: Corroboration.PROVISIONAL,
+    # `OD-35`, replacing `OD-34` ③'s struck PROVISIONAL. This token carries the
+    # same `issued_by: ValidatedContract` the row above does — its
+    # `__post_init__` refuses anything else — so `CORROBORATED` is the true
+    # statement about *the contract*, which is the only subject this field has.
+    # What was provisional is the precision, and that is the next table's.
+    ProvisionallyVerified: Corroboration.CORROBORATED,
     # A `Disagreement` carries the two values and their retrievals and **no
     # contract**. The comparison was independent — `__post_init__` refuses a pair
     # out of one retrieval — but independence of the comparison is not the claim
     # `CORROBORATED` makes, which is about the contract the result was checked
     # against. Nobody said, and that is what is recorded.
     Disagreement: Corroboration.NOT_STATED,
+}
+
+#: `OD-35`'s third column, over the union. The one row that is not `NOT_STATED`
+#: is `ProvisionallyVerified`, and it is what FR-024 property 5's *"never plain
+#: verified"* is carried by on the record: without it that row's outcome and
+#: corroboration are byte-identical to `Verified`'s.
+#:
+#: The three `NOT_STATED` rows are *nobody said* and not *no declaration was
+#: made*. None of those three report objects carries a declaration at all — a
+#: `Disagreement` reached through `verify_declared_quantity` was compared at one
+#: and the token does not record it — so this entry point cannot answer the
+#: question and says so. `result_from_quantity_verification` can, and does.
+JOINED_PRECISION: Mapping[type, PrecisionBasis] = {
+    Verified: PrecisionBasis.NOT_STATED,
+    ProvisionallyVerified: PrecisionBasis.DECLARED,
+    Disagreement: PrecisionBasis.NOT_STATED,
+    Refusal: PrecisionBasis.NOT_STATED,
+}
+
+#: Total over `DeclarationDisposition`, and the map `OD-35` ⑤ requires in place
+#: of an import: `src/contracts/` is the bottom of the import graph and cannot
+#: see `src/runtime/verify.py`, so the two enums are related here, where both
+#: are visible, and `test_the_precision_basis_map_is_total_over_the_disposition`
+#: is what makes it a check rather than an assumption.
+#:
+#: `PrecisionBasis.NOT_STATED` has **no row and must not acquire one**. Every
+#: disposition is a disclosure — `DeclarationDisposition` has no member meaning
+#: *nothing happened* — so a route from one of them to *nobody said* would drop
+#: property 5's disclosure at the boundary it exists to survive.
+PRECISION_BASIS: Mapping[DeclarationDisposition, PrecisionBasis] = {
+    DeclarationDisposition.ADMITTED: PrecisionBasis.DECLARED,
+    DeclarationDisposition.IGNORED_ARTIFACT_SUPPLIED: (
+        PrecisionBasis.ARTIFACT_DISPLACED_DECLARATION
+    ),
+    DeclarationDisposition.NOT_REACHED: PrecisionBasis.DECLARATION_NOT_REACHED,
 }
 
 #: Total over `RefusalReason`. A member with no row is a failing arm, not a
@@ -218,12 +276,16 @@ JOINABLE_OUTCOMES: frozenset[VerificationOutcome] = frozenset(
 def _outcome(report: VerificationReport) -> VerificationOutcome:
     """This report's outcome, from the table. Never from the report's own say-so.
 
-    `Verified`, `Disagreement` and `Refusal` each carry an `outcome()` method,
-    and this deliberately does not call it: `ProvisionallyVerified.outcome()`
-    returns `VERIFIED` where `OD-34` ③ fixes the record at `NOT_VERIFIABLE`, so
-    the two answers exist and the seam has to say which one it is transcribing.
-    It is the register's, and the disagreement is recorded rather than hidden
-    behind a method call that would silently pick the other.
+    Every member of the union carries an `outcome()` method and this
+    deliberately does not call one. **Under `OD-35` all four now agree**, which
+    weakens this arm rather than retiring it and the weakening is stated: while
+    `OD-34` ③ stood, calling `outcome()` would have silently taken the
+    verifier's reading for one member and the register's for the rest, and the
+    disagreement made that visible. Now it would be invisible. What the table
+    still buys is authority — a report's own say-so is the thing being recorded,
+    not the thing that decides what is recorded — and
+    `test_the_seam_does_not_read_the_reports_own_outcome_method` is now the only
+    thing holding it, where before the two answers held it themselves.
     """
     outcome = JOINED_OUTCOME.get(type(report))
     if outcome is None:
@@ -283,6 +345,29 @@ def _corroboration(report: VerificationReport) -> Corroboration:
     return corroboration
 
 
+def _precision(report: VerificationReport) -> Precision:
+    """Which rung this report's comparison rested on (`OD-35`).
+
+    The basis comes out of `JOINED_PRECISION` and never off the report's type
+    directly, for the reason `_outcome` gives: the table is the transcription of
+    the register and the register is the authority. The **source text** does
+    come off the report, because `ProvisionallyVerified` is the only member that
+    carries a declaration and property 5 requires the text recorded beside the
+    basis.
+    """
+    basis = JOINED_PRECISION.get(type(report))
+    if basis is None:
+        raise UnjoinableReport(
+            f"{type(report).__name__} has no precision row. A record that "
+            "cannot say what supplied the precision it was checked at is one "
+            "FR-024 property 5 cannot distinguish from a plain verification, "
+            "which is the distinction `OD-35` minted the field to keep."
+        )
+    if basis is PrecisionBasis.DECLARED and isinstance(report, ProvisionallyVerified):
+        return Precision(basis, declared_in=report.declared.declared_in)
+    return Precision(basis)
+
+
 def _reason(report: VerificationReport) -> str | None:
     """The report's **own** named reason, never a synthesised one (`OD-34` ③).
 
@@ -290,13 +375,14 @@ def _reason(report: VerificationReport) -> str | None:
     every other outcome, and a verified record has nothing to explain.
 
     `ProvisionallyVerified` is the one member with **no reason field at all**,
-    which `OD-34` ③ does not account for — it fixes the member at
-    `NOT_VERIFIABLE`, and `Result` refuses that outcome without a reason. What
-    is written here is composed from fields already on the report (the check's
-    operation and quantity, and the declaration's own source text) and states
-    only the rung's own admissibility premise, which
-    `verify_declared_quantity` states in the same words. Nothing is inferred
-    about the target, the contract or the comparison.
+    and under `OD-35` it is also `VERIFIED`, where `Result` permits a reason and
+    requires none. The composed sentence is kept anyway: `Result.precision`
+    carries the *basis* and the declaration's source text, and this carries the
+    part no enum member can — which quantity, and against what. Dropping it
+    would leave the record structurally honest and unreadable. It is composed
+    from fields already on the report and states only the rung's own
+    admissibility premise, in `verify_declared_quantity`'s own words; nothing is
+    inferred about the target, the contract or the comparison.
     """
     if isinstance(report, Verified):
         return None
@@ -325,6 +411,7 @@ def _build(
     payload: Any,
     staleness: Staleness,
     disclosure: str | None,
+    precision: Precision | None = None,
 ) -> Result:
     """The module's **only** `Result` construction, and the only one it may have.
 
@@ -350,6 +437,12 @@ def _build(
         corroboration=_corroboration(report),
         reason=reason,
         staleness=staleness,
+        #: `None` means *this caller held no provenance*, which is the
+        #: `result_from_report` case, and the table's own answer is then the
+        #: best available. It is not a default standing in for a fact: the
+        #: table's row for three of the four members is `NOT_STATED`, which
+        #: says exactly that.
+        precision=_precision(report) if precision is None else precision,
     )
 
 
@@ -394,12 +487,35 @@ def result_from_quantity_verification(
     the ignored declaration on it is the reader FR-058 says arrives at the
     result and nowhere else.
     """
-    disposition = verification.precision.disposition.value
+    provenance = verification.precision
+    basis = PRECISION_BASIS.get(provenance.disposition)
+    if basis is None:
+        raise UnjoinableReport(
+            f"{provenance.disposition.value} has no row in PRECISION_BASIS, "
+            "which is required to be total over DeclarationDisposition. A "
+            "disposition minted without one would take whichever basis the "
+            "lookup defaulted to, and every available default is a claim about "
+            "where the precision came from."
+        )
     return _build(
         verification.report,
         payload=payload,
         staleness=staleness,
         disclosure=(
-            f"declared precision {disposition}: {verification.precision.detail}"
+            f"declared precision {provenance.disposition.value}: "
+            f"{provenance.detail}"
+        ),
+        #: Read off the provenance rather than off the report's type, because
+        #: this caller holds the thing `result_from_report` does not. It is the
+        #: stronger answer on three of the four members: a `Verified` or a
+        #: `Disagreement` reached through the declared rung is `NOT_STATED` at
+        #: the other entry point and is named here.
+        precision=Precision(
+            basis,
+            declared_in=(
+                provenance.declared.declared_in
+                if basis is PrecisionBasis.DECLARED
+                else None
+            ),
         ),
     )
