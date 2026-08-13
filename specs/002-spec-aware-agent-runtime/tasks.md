@@ -1481,12 +1481,30 @@ input produces no signal at all.
 - [ ] T138 [US3] Source-drift detection in the **same automated check run** as the change that caused it, in `src/analysis/source_drift.py` (FR-028, **SC-008**)
 - [ ] T139 [US3] Drift signal record stating which clock moved, the artifact versions before and after, and the deployment identity, in `src/analysis/drift_signal.py` (FR-031)
 - [ ] T140 [US3] The failed-re-fetch signal shape, where there is no *after* artifact version: the specification state found, named from FR-044's four-state classification, plus the timestamp of the last successful fetch, in `src/analysis/drift_signal.py` (FR-031's narrowing, FR-047)
-- [ ] T141 [US3] Deployment-drift scheduler performing a re-fetch of the target's published specification, requiring no event from the customer's pipeline, no phone-home and no outbound request to any destination other than the target, in `src/runtime/drift_scheduler.py` (FR-046, FR-029)
-- [ ] T142 [US3] **Route the scheduler's re-fetch through the enforcement point**, in `src/runtime/drift_scheduler.py` — otherwise this is a second, continuous path to the target, and FR-014's single-enforcement-point guarantee is true of the sandbox and false of the system. That path is continuous and nobody had flagged it (**OD-12**, T-10)
-- [ ] T143 [US3] Manual on-demand drift check for **either clock at any time**, always available and not configurable away, in `src/runtime/drift_manual.py` (FR-029, **OD-20**)
-- [ ] T144 [US3] The two additional configurable triggers — a deployment event emitted by the customer's own rollout mechanism, which **must not be assumed available**, and a re-check at session start — in `src/runtime/drift_triggers.py` (FR-046)
-- [ ] T145 [US3] Record a failing path-level reachability precondition as a drift signal **backstop**, and never rely on it as a trigger design, in `src/runtime/drift_backstop.py` (FR-046)
-- [ ] T146 [US3] On detected drift disable the affected operation and surface it loudly while unaffected operations keep working, in `src/runtime/drift_disable.py` (FR-030, **SC-009**)
+
+> **The module paths in T141 through T146 were moved 2026-08-13 out of `src/runtime/drift_*.py` and
+> into `src/runtime/drift/`, and the package is load-bearing rather than tidy — do not simplify them
+> back to flat modules.** `tests/invariants/test_sandbox_reachability.py` declares `SANDBOX_ROOTS` as
+> two **directories**, `src/sandbox/` and `src/runtime/drift/`, so INV-003 reaches these modules by
+> path prefix. A module built at `src/runtime/drift_scheduler.py` is a *sibling* of that directory
+> rather than a member of it, and would therefore sit outside the only check in the tree that catches
+> a literal hostname or URL appearing in sandbox-side source — the regression that check was written
+> for, and under **OD-12** exactly how the scheduler's re-fetch becomes a second continuous path to
+> the target, which is what T142 exists to prevent.
+>
+> **Nor is the gap to be repaired from the other end by adding the flat filenames to
+> `SANDBOX_ROOTS`.** A directory scan is total over every module that will ever land in it, where a
+> file list covers only the names someone thought of on the day they wrote it; being total is why
+> `src/runtime/drift/__init__.py` was created empty and early, as its own docstring records.
+> **Nothing these rows ask for became wrong**, so this is a path substitution and not a strike: the
+> paths predate the package.
+
+- [ ] T141 [US3] Deployment-drift scheduler performing a re-fetch of the target's published specification, requiring no event from the customer's pipeline, no phone-home and no outbound request to any destination other than the target, in `src/runtime/drift/scheduler.py` (FR-046, FR-029)
+- [ ] T142 [US3] **Route the scheduler's re-fetch through the enforcement point**, in `src/runtime/drift/scheduler.py` — otherwise this is a second, continuous path to the target, and FR-014's single-enforcement-point guarantee is true of the sandbox and false of the system. That path is continuous and nobody had flagged it (**OD-12**, T-10)
+- [ ] T143 [US3] Manual on-demand drift check for **either clock at any time**, always available and not configurable away, in `src/runtime/drift/manual.py` (FR-029, **OD-20**)
+- [ ] T144 [US3] The two additional configurable triggers — a deployment event emitted by the customer's own rollout mechanism, which **must not be assumed available**, and a re-check at session start — in `src/runtime/drift/triggers.py` (FR-046)
+- [ ] T145 [US3] Record a failing path-level reachability precondition as a drift signal **backstop**, and never rely on it as a trigger design, in `src/runtime/drift/backstop.py` (FR-046)
+- [ ] T146 [US3] On detected drift disable the affected operation and surface it loudly while unaffected operations keep working, in `src/runtime/drift/disable.py` (FR-030, **SC-009**)
 - [ ] T147 [US3] Enter the stale state on the first re-fetch returning any of FR-044's three non-admissible states: mark the served-operation set stale rather than discarding it, and raise the drift signal on that same run, in `src/runtime/staleness.py` (FR-047, **OD-21** — which authorises FR-047 and the narrowings it makes at FR-001, FR-030 and FR-031, and which was recorded while this task list was being written; no requirement text changed with it)
 - [ ] T148 [US3] Carry the stale marking, the set's age and the specification state last found on every result produced while the set is stale, machine-distinguishably, in `src/runtime/staleness.py` (FR-047, **SC-021**)
 - [ ] T149 [US3] Enforce the staleness ceiling as **wall-clock from the last successful fetch**, so lengthening the interval cannot silently widen it, in `src/runtime/staleness.py` (FR-047; the ceiling is a configured default marked unvalidated under FR-043)
