@@ -3950,6 +3950,51 @@ proof "T138 — a source-drift finding is accepted on the deployment clock" \
   's = s.replace("        if self.signal.clock != SOURCE:", "        if False:")'
 
 # ---------------------------------------------------------------------------
+# T141 / T142 — the deployment-clock scheduler, and the one peer it may dial.
+#
+# T141 produces ArtifactDrift / FailedRefetch from a scheduled re-fetch. T142
+# is the peer check: a transport that dials the origin is the second continuous
+# path T-10 exists to prevent. INV-003 cannot catch that path on its own —
+# admission.fetch_over_http is not under SANDBOX_ROOTS — so the peer comparison
+# is the live arm, and its proof is the origin-dialing transport being accepted
+# once the comparison is gone.
+#
+# The DEPLOYMENT filter is Movement.clock == DEPLOYMENT, not
+# schemas.source_derived. That flag is the union of both clocks; filtering on
+# it would report a source-clock move as deployment drift, the inverse of the
+# T138 trap.
+
+proof "T142 — a transport that dials the origin is accepted as the scheduled fetch" \
+  src/runtime/drift/scheduler.py \
+  "tests/contract/test_drift_scheduler.py::test_a_transport_that_dials_the_origin_is_refused" \
+  's = s.replace("        if origin_of(fetched.peer) != self.enforcement_point:", "        if False:")'
+
+proof "T141 — a source-clock movement is kept as a deployment-clock movement" \
+  src/runtime/drift/scheduler.py \
+  "tests/contract/test_drift_scheduler.py::test_a_source_clock_move_is_not_deployment_drift" \
+  's = s.replace("if movement.clock == DEPLOYMENT", "if True")'
+
+proof "T141 — a non-admissible fetch is compared as an ArtifactDrift" \
+  src/runtime/drift/scheduler.py \
+  "tests/contract/test_drift_scheduler.py::test_a_non_admissible_fetch_is_a_failed_refetch" \
+  's = s.replace("        if classification.state not in ADMISSIBLE_STATES:", "        if False:")'
+
+proof "T141 — a source-clock last-successful reading is accepted" \
+  src/runtime/drift/scheduler.py \
+  "tests/contract/test_drift_scheduler.py::test_a_source_clock_last_successful_is_refused" \
+  's = s.replace("        if last_successful.clock != DEPLOYMENT:", "        if False:")'
+
+proof "T142 — an Authorization header is forwarded toward the target" \
+  src/runtime/drift/scheduler.py \
+  "tests/contract/test_drift_scheduler.py::test_an_authorization_header_is_refused" \
+  's = s.replace("        if any(name.lower() == \"authorization\" for name in fetched.request_headers):", "        if False:")'
+
+proof "T142 — a scheduler with no enforcement point is constructed" \
+  src/runtime/drift/scheduler.py \
+  "tests/contract/test_drift_scheduler.py::test_an_empty_enforcement_point_is_refused" \
+  's = s.replace("        if not enforcement_point.strip():", "        if False:")'
+
+# ---------------------------------------------------------------------------
 # T079 — FR-020's confused-deputy inspection, FR-056's procedure.
 #
 # Every arm here guards the same failure from a different side: a procedure

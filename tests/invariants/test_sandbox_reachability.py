@@ -203,11 +203,11 @@ def test_the_scan_reports_whether_it_covered_anything(record_property) -> None:
     first sandbox-side module lands the summary stops printing and the
     invariant starts carrying weight.
 
-    **Still vacuous after T096.** `src/sandbox/` is no longer empty, but what
-    landed in it is a build-time Dockerfile policy checker, which cannot reach
-    anything at run time because it does not run at run time. See
-    `NOT_SANDBOX_RESIDENT`. The first module that actually executes inside the
-    sandbox is what turns this off.
+    **No longer vacuous after T141/T142.** `src/runtime/drift/scheduler.py` is
+    the first scanned resident under that root. It does not run inside the
+    sandbox — it is in INV-003's scope because OD-12 routes its re-fetch
+    through Plane A. `src/sandbox/` still holds only the T096 build-time
+    checker, excluded from coverage by `NOT_SANDBOX_RESIDENT`.
     """
     sources = _sandbox_modules()
     record_property("inv003_modules_scanned", len(sources))
