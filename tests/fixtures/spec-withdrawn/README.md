@@ -88,23 +88,19 @@ fixture that answered it would be writing a requirement. The loader refuses an
 exactly-at-ceiling call and
 `test_no_call_lands_exactly_on_the_ceiling` asserts none appears.
 
-## The terminal state SC-021's third clause needs does not exist
+## The terminal state SC-021's third clause needs
 
-`src/contracts/terminal.py` is a **closed** taxonomy of twelve members, guarded
-by `tests/invariants/test_terminal_taxonomy.py`, and **not one of them names the
-staleness ceiling**. T150 requires an in-flight session past the ceiling to end
-in a named terminal state rather than by generic error; that name is not in the
-taxonomy at the time this fixture was committed.
+`src/contracts/terminal.py` is a **closed** taxonomy. T150 added
+`terminated.staleness_ceiling_reached` so an in-flight session past the ceiling
+ends in a named terminal state rather than by generic error, distinct from
+FR-005's four.
 
-So `withdraw-past-ceiling` declares `expected_terminal_state: null`, asserts only
-the negative — the session must not end generically — and the loader refuses any
-non-null name that is not already a member, so a later edit cannot smuggle one
-in through a fixture.
-
-`test_the_taxonomy_still_has_no_terminal_state_naming_the_staleness_ceiling`
-asserts the **absence itself**. The day T150 adds the member that test fails,
-deliberately, and this section plus the corpus's `null` have to move. A gap
-recorded only in prose goes stale silently; this one cannot.
+So `withdraw-past-ceiling` declares
+`expected_terminal_state: terminated.staleness_ceiling_reached`.
+`test_the_taxonomy_names_the_staleness_ceiling` asserts the member is present.
+The previous assertion — that the taxonomy still had no such member — was the
+tripwire T157 planted; it tripped. The replacement still fails if the name
+later vanishes.
 
 ## All three of FR-044's non-admissible states
 

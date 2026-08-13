@@ -156,11 +156,21 @@ ST_SESSION_RESUMED = TransitionRule(
     "the prior state: a session is resumable exactly when it is interrupted.",
 )
 
+ST_STALENESS_CEILING = TransitionRule(
+    "ST-012", "staleness_ceiling_reached", False,
+    "RUNNING → TERMINATED with terminated.staleness_ceiling_reached. FR-047: "
+    "the last-known-good served-operation set's wall-clock age from the last "
+    "successful fetch crossed the configured ceiling, so the set must not be "
+    "served. Distinct from ST-005 (FR-005's four) so the record names this "
+    "ceiling rather than a budget. Determined by that comparison; it does "
+    "not select among FR-005's four.",
+)
+
 RULES: tuple[TransitionRule, ...] = (
     ST_SESSION_STARTED, ST_LEASE_RENEWED, ST_WORK_COMPLETED,
     ST_BOUND_EXHAUSTED, ST_CEILING_REACHED, ST_CAPABILITY_LAPSED,
     ST_OPERATOR_TERMINATED, ST_UNRECOVERABLE_FAULT, ST_NO_PROGRESS,
-    ST_SESSION_INTERRUPTED, ST_SESSION_RESUMED,
+    ST_SESSION_INTERRUPTED, ST_SESSION_RESUMED, ST_STALENESS_CEILING,
 )
 RULES_BY_ID = {rule.rule_id: rule for rule in RULES}
 

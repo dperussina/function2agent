@@ -4048,6 +4048,56 @@ proof "T144 — path-level probe is accepted as a trigger" \
   's = s.replace("        if trigger not in ALLOWED_TRIGGERS:", "        if False:")'
 
 # ---------------------------------------------------------------------------
+# T147–T152 — the stale last-known-good set. One module, eight arms.
+#
+# Entering is five states (classifier minus admissible), not FR-047's three:
+# subtracting unreachable is the disposition going the other way. The ceiling
+# is wall-clock from the last successful fetch, not 3600. T148 stamps STALE
+# rather than constructing a Result. T150 names the ceiling, not
+# unrecoverable_fault. Restore past the ceiling is admission, not tick;
+# recover below it is restore. A restore that changed must evaluate as drift.
+
+proof "T147 — unreachable is excluded from the entering-stale domain" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_unreachable_enters_stale_on_the_same_rule_as_absent" \
+  's = s.replace("ENTERING_STATES: frozenset[str] = SPECIFICATION_STATE_FOUND", "ENTERING_STATES: frozenset[str] = SPECIFICATION_STATE_FOUND - frozenset((\"unreachable\", \"unparseable\"))")'
+
+proof "T149 — the ceiling comparison is against 3600 seconds" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_lengthening_the_interval_does_not_widen_the_ceiling" \
+  's = s.replace("    return age_seconds > ceiling_seconds", "    return age_seconds > 3600.0")'
+
+proof "T148 — a stale set is stamped fresh on the caller-visible result" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_a_verified_result_can_be_stale" \
+  's = s.replace("            StaleMarking.STALE,", "            StaleMarking.FRESH,")'
+
+proof "T150 — a set past the ceiling may still be served" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_a_call_at_960s_is_denied_against_a_900s_ceiling" \
+  's = s.replace("    return not crossed(state.age_seconds(now), ceiling.seconds)", "    return True")'
+
+proof "T150 — an in-flight session past the ceiling ends as an unrecoverable fault" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_in_flight_terminal_names_the_staleness_ceiling_not_a_generic_fault" \
+  's = s.replace("    return terminal.STALENESS_CEILING", "    return terminal.UNRECOVERABLE_FAULT")'
+
+proof "T151 — restore past the ceiling is accepted as a tick" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_restore_past_the_ceiling_is_refused" \
+  's = s.replace("    if crossed(state.age_seconds(now), ceiling.seconds):\n        raise StalenessError(\n            f\"{state.deployment_id}: the ceiling is crossed. Recovery past \"", "    if False:\n        raise StalenessError(\n            f\"{state.deployment_id}: the ceiling is crossed. Recovery past \"")'
+
+proof "T152 — recovery below the ceiling is accepted as admission" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_recovery_below_the_ceiling_is_refused" \
+  's = s.replace("    if not crossed(state.age_seconds(now), ceiling.seconds):", "    if False:")'
+
+proof "T151 — a restore that changed the set is recorded as zero drift" \
+  src/runtime/staleness.py \
+  "tests/contract/test_staleness.py::test_changed_restore_below_the_ceiling_is_deployment_clock_drift" \
+  's = s.replace("        signals=signals_from_movements((movement,)),", "        signals=(),")'
+
+# ---------------------------------------------------------------------------
 # T079 — FR-020's confused-deputy inspection, FR-056's procedure.
 #
 # Every arm here guards the same failure from a different side: a procedure

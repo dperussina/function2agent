@@ -57,7 +57,7 @@
       "scenario_id": "withdraw-past-ceiling",
       "deployment_id": "d-reference-app",
       "last_known_good": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
-      "why": "The specification never comes back. Two calls below the ceiling are served with a stale marking; two above it are denied. This is the only scenario carrying SC-021's second and third clauses, and the terminal state the third clause needs DOES NOT EXIST YET — see `expected_terminal_state` below and the README section that owns it.",
+      "why": "The specification never comes back. Two calls below the ceiling are served with a stale marking; two above it are denied. This is the only scenario carrying SC-021's second and third clauses. T150 names the in-flight terminal state `terminated.staleness_ceiling_reached` — see `expected_terminal_state` below.",
       "fetches": [
         {"at": "2026-08-14T02:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
         {"at": "2026-08-14T02:05:00Z", "state": "absent", "operations": null},
@@ -74,8 +74,8 @@
       "in_flight_session_at_ceiling": {
         "session_id": "s-stale-ceiling",
         "must_not_end_generically": true,
-        "expected_terminal_state": null,
-        "_comment": "SC-021 requires ZERO sessions ending in a generic error at the ceiling, and T150 requires a NAMED terminal state. `src/contracts/terminal.py` is a closed taxonomy of twelve members and NOT ONE of them names the staleness ceiling. So the name this fixture would assert does not exist at the time it was committed, and inventing one here would either fail `terminal.require()` or amount to writing T150's contract from a fixture. `expected_terminal_state` is therefore null, and `tests/unit/test_drift_fixtures.py` asserts that the taxonomy still has no staleness member — so the day T150 adds one, that assertion fails and this note has to move rather than going quietly stale."
+        "expected_terminal_state": "terminated.staleness_ceiling_reached",
+        "_comment": "T150 landed `terminated.staleness_ceiling_reached`. The previous null, and `test_the_taxonomy_still_has_no_terminal_state_naming_the_staleness_ceiling`, were the tripwire that this pass was supposed to trip. The replacement asserts this name and fails if it later vanishes."
       },
       "restored_at": null,
       "expected_drift_on_restore": null

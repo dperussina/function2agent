@@ -169,7 +169,7 @@ SUPERVISOR_KEYS: tuple[Key, ...] = (
     Key("STALENESS_CEILING_SECONDS", Kind.FLOAT, "FR-047",
         "how old a served-operation set may be before it is refused. FR-047 "
         "states the default, says it is one, and binds it to FR-043",
-        default="3600.0", unvalidated=True),
+        default="900.0", unvalidated=True),
     Key("DRIFT_CHECK_INTERVAL_SECONDS", Kind.FLOAT, "FR-028",
         "how often the drift check runs against the deployment clock",
         default="300.0", unvalidated=True),

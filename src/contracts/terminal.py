@@ -77,11 +77,23 @@ UNRECOVERABLE_FAULT = TerminalState(
     "normal outcome, and it exists so that nothing is tempted to invent a "
     "generic error when a fault does not fit above.")
 
+# FR-047's staleness ceiling. Distinct from FR-005's four so an operator
+# reading the record can tell this ceiling from spend, tokens, wall clock,
+# or turns. Reaching UNRECOVERABLE_FAULT is a defect report; reaching this
+# is the configured bound on serving a last-known-good set whose
+# specification has not been re-fetched successfully.
+STALENESS_CEILING = TerminalState(
+    "terminated.staleness_ceiling_reached", "FR-047",
+    "the served-operation set's staleness ceiling was crossed — wall-clock "
+    "from the last successful fetch — and the last-known-good set must not "
+    "be served. An in-flight session ends here rather than by generic error.")
+
 TAXONOMY: tuple[TerminalState, ...] = (
     COMPLETED,
     SPEND_CEILING, TOKEN_CEILING, WALL_CLOCK_CEILING, TURN_CEILING,
     MEMORY_BOUND, CPU_BOUND, PROCESS_BOUND,
     CAPABILITY_LAPSED, OPERATOR_TERMINATED, NO_PROGRESS, UNRECOVERABLE_FAULT,
+    STALENESS_CEILING,
 )
 
 NAMES: frozenset[str] = frozenset(state.name for state in TAXONOMY)

@@ -76,6 +76,7 @@ import pytest
 
 from src.analysis.admission import ABSENT, PUBLISHED_NON_EMPTY
 from src.analysis.deputy_inspection import ALLOWED_OUTCOMES, OUTCOMES
+from src.contracts import terminal
 from tests.fixtures.drift_corpora import CorpusInconsistent, seconds_between
 from tests.fixtures.drift_corpora import deployment as dep
 from tests.fixtures.drift_corpora import operation_added as add
@@ -522,23 +523,22 @@ def test_a_restoration_that_changes_the_set_reports_exactly_what_differs():
     assert changed.drift_on_restore
 
 
-def test_the_taxonomy_still_has_no_terminal_state_naming_the_staleness_ceiling():
-    """The gap SC-021's third clause needs closed, asserted so it cannot rot.
+def test_the_taxonomy_names_the_staleness_ceiling():
+    """T150 landed. Vanishing the member must fail this, not go quiet.
 
-    `src/contracts/terminal.py` is a closed taxonomy and none of its members
-    names the staleness ceiling. T150 requires an in-flight session past the
-    ceiling to end in a named terminal state, so that member is **owed**.
-
-    When T150 adds it this test fails — deliberately. At that point the
-    `expected_terminal_state: null` in `withdraw-past-ceiling` and the
-    paragraphs explaining it in two READMEs are wrong and have to move. A gap
-    recorded only in prose goes stale silently; this one cannot.
+    T157 planted `test_the_taxonomy_still_has_no_terminal_state_naming_the_staleness_ceiling`
+    so the day T150 added a member, that assertion failed and the corpus note
+    had to move. This is the replacement: it still fails if the name later
+    vanishes.
     """
-    assert not sw.taxonomy_names_the_staleness_ceiling(), (
-        "a terminal state now names staleness. T150 has landed, so "
-        "tests/fixtures/spec-withdrawn/corpus.json must stop declaring "
-        "expected_terminal_state as null and name it instead."
+    assert sw.taxonomy_names_the_staleness_ceiling(), (
+        "the staleness-ceiling terminal state has vanished. T150 added "
+        "terminated.staleness_ceiling_reached; restoring the T157 absence "
+        "assertion would hide that loss."
     )
+    assert terminal.is_terminal("terminated.staleness_ceiling_reached")
+    past = {s.scenario_id: s for s in sw.load_scenarios()}["withdraw-past-ceiling"]
+    assert past.expected_terminal_state == "terminated.staleness_ceiling_reached"
 
 
 def test_a_terminal_state_outside_the_taxonomy_is_refused():

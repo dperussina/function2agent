@@ -176,6 +176,7 @@ row here that names no member.
 | `terminated.operator_terminated` | FR-006 | member |
 | `terminated.unrecoverable_fault` | FR-006 | member |
 | `terminated.no_progress` | FR-006 | member |
+| `terminated.staleness_ceiling_reached` | FR-047 | member |
 | ~~`terminated.denied_operation`~~ | — | struck — **OD-26**, 2026-08-05 |
 
 **`member` means the taxonomy carries it; `owed` means it does not yet and a task says so; `struck`
