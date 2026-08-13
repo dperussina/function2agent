@@ -5642,6 +5642,54 @@ proof "T158 corpus — the population loses the scenario adding nothing, so 'ref
   "tests/unit/test_drift_fixtures.py::test_an_implementation_refusing_every_operation_fails_this_corpus" \
   's = s.replace("    return tuple(scenarios)", "    return tuple(s for s in scenarios if not s.is_negative_control)")'
 
+# --- T153 — FR-051's ordinary successful-fetch increment ----------------------
+#
+# T158 is now the consumer. These arms remove the increment's own guards:
+# refuse a non-admissible fetch, compare against the last inspected (clean)
+# set, carry pre-existing clean operations, inspect newly appearing before
+# they become available, fail closed per operation rather than per target,
+# and admit the clean member of a mixed fetch. Every selector is node-level.
+
+proof "T153 — a non-admissible fetch is inspected anyway" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_a_non_admissible_fetch_is_refused" \
+  's = s.replace("    if decision.state not in ADMISSIBLE_STATES:", "    if False:")'
+
+proof "T153 — every fetch re-inspects the already-clean set" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_republishing_an_already_inspected_set_inspects_nothing" \
+  's = s.replace("    return tuple(sorted(frozenset(fetched) - frozenset(last_inspected)))", "    return tuple(sorted(frozenset(fetched)))")'
+
+proof "T153 — pre-existing operations are dropped, so refuse-everything scores 100%" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_pre_existing_operations_stay_available_when_nothing_is_added" \
+  's = s.replace("        _still_clean(op_id) for op_id in sorted(fetched & inspected)", "        _still_clean(op_id) for op_id in sorted(frozenset())")'
+
+proof "T153 — newly appearing operations become available without inspection" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_newly_appearing_operations_are_inspected_before_they_become_available" \
+  's = s.replace("        inspect_operation(\n            op_id, handler_index=handler_index, codebase=codebase\n        )", "        _still_clean(op_id)")'
+
+proof "T153 — a mixed fetch drops the clean member because the others failed" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_a_mixed_fetch_admits_the_clean_member_and_refuses_the_others" \
+  's = s.replace("        outcomes=(*still_available, *inspected_now),", "        outcomes=(*still_available, *tuple(o for o in inspected_now if o.denied)),")'
+
+proof "T153 — a mixed fetch admits the denied members because one passed" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_a_mixed_fetch_admits_the_clean_member_and_refuses_the_others" \
+  's = s.replace("    inspected_now = new_outcomes", "    inspected_now = tuple(_still_clean(o.operation_id) for o in new_outcomes)")'
+
+proof "T153 — an uninspectable addition takes the target offline" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_an_uninspectable_addition_is_refused_and_does_not_take_the_target_offline" \
+  's = s.replace("    return Reinspection(newly_appearing=newly, report=report)", "    raise DeputyInspectionError(\x22target offline\x22)\n    return Reinspection(newly_appearing=newly, report=report)")'
+
+proof "T153 — no newly appearing operation is recorded, so additions never become available" \
+  src/analysis/reinspect.py \
+  "tests/contract/test_reinspect.py::test_every_operation_added_scenario_matches_the_loader" \
+  's = s.replace("    newly = appearing(fetched, inspected)", "    newly = ()")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
