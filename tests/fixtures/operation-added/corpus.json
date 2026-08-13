@@ -1,0 +1,108 @@
+{
+  "_comment": "T158 — the fixture in which the target ADDS an operation to a specification it never stops publishing (SC-026). The continuity is the load-bearing difference from `tests/fixtures/spec-withdrawn/`: every fetch here returns `published_non_empty`, and the loader refuses any other state. A non-published fetch would turn this into T157's fixture and score a different criterion.",
+
+  "_comment_outcomes": "`inspection_outcomes` uses FR-056's three-valued vocabulary exactly as `src/analysis/deputy_inspection.py` declares it — `clean`, `deputy`, `uninspectable` — and that module's `ALLOWED_OUTCOMES` is the one-member frozenset `{clean}`. Both non-clean outcomes are denied and they remain two outcomes: an operator told `uninspectable` has a different job from one told `deputy`.",
+
+  "baseline_anchor": {
+    "_comment": "Every `last_inspected` set is asserted to be a subset of the reference application's published operation set. Operations ADDED by a scenario are new by construction and are exempt — that is what the fixture is about.",
+    "served_operations_file": "tests/fixtures/reference-app/served_operations.json"
+  },
+
+  "scenarios": [
+    {
+      "scenario_id": "add-one-clean",
+      "deployment_id": "d-reference-app",
+      "last_inspected": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "The base case. One operation appears, inspects clean, and becomes available only after the inspection. SC-026's first clause has a subject here and nothing else does the work.",
+      "fetches": [
+        {"at": "2026-08-15T00:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-15T00:05:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment", "list_warehouses"]}
+      ],
+      "inspection_outcomes": {"list_warehouses": "clean"},
+      "expected_newly_appearing_per_fetch": [[], ["list_warehouses"]],
+      "expected_available_at_end": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments", "list_warehouses"],
+      "expected_refused": []
+    },
+
+    {
+      "scenario_id": "add-one-uninspectable",
+      "deployment_id": "d-reference-app",
+      "last_inspected": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "The subject of SC-026's THIRD clause, and without it that clause reads `100% of zero`. An operation appears whose destination is traceable to neither a build-time constant nor the target's own configuration, so FR-056 step 3 returns `uninspectable` and FR-051 fails closed. A fixture with only clean additions scores a perfect 100% on the refusal clause while never refusing anything.",
+      "fetches": [
+        {"at": "2026-08-15T01:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-15T01:05:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment", "proxy_lookup"]}
+      ],
+      "inspection_outcomes": {"proxy_lookup": "uninspectable"},
+      "expected_newly_appearing_per_fetch": [[], ["proxy_lookup"]],
+      "expected_available_at_end": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments"],
+      "expected_refused": ["proxy_lookup"]
+    },
+
+    {
+      "scenario_id": "add-one-deputy",
+      "deployment_id": "d-reference-app",
+      "last_inspected": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "The other non-clean outcome. An added operation whose destination is influenced by an input to the operation is a confused deputy, denied under FR-020 and FR-056. It is separated from `uninspectable` because FR-056 says the two are denied alike and reported differently, and a corpus carrying only one of them cannot tell whether an implementation kept them distinct.",
+      "fetches": [
+        {"at": "2026-08-15T02:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-15T02:05:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment", "fetch_url"]}
+      ],
+      "inspection_outcomes": {"fetch_url": "deputy"},
+      "expected_newly_appearing_per_fetch": [[], ["fetch_url"]],
+      "expected_available_at_end": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments"],
+      "expected_refused": ["fetch_url"]
+    },
+
+    {
+      "scenario_id": "add-three-mixed-in-one-fetch",
+      "deployment_id": "d-reference-app",
+      "last_inspected": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "All three outcomes in a single fetch. The clean one MUST become available and the other two MUST NOT — so an implementation that refuses the whole batch because part of it failed inspection is caught here, and so is one that admits the whole batch because part of it passed. Neither failure is visible in a scenario adding one operation at a time.",
+      "fetches": [
+        {"at": "2026-08-15T03:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-15T03:05:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment", "list_warehouses", "fetch_url", "proxy_lookup"]}
+      ],
+      "inspection_outcomes": {
+        "list_warehouses": "clean",
+        "fetch_url": "deputy",
+        "proxy_lookup": "uninspectable"
+      },
+      "expected_newly_appearing_per_fetch": [[], ["fetch_url", "list_warehouses", "proxy_lookup"]],
+      "expected_available_at_end": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments", "list_warehouses"],
+      "expected_refused": ["fetch_url", "proxy_lookup"]
+    },
+
+    {
+      "scenario_id": "add-then-republish-unchanged",
+      "deployment_id": "d-reference-app",
+      "last_inspected": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "The operation is added at the second fetch and the third fetch republishes the SAME set. T153 compares the newly fetched set against the LAST INSPECTED set, so the third fetch has nothing newly appearing. An implementation comparing against the last-known-good set, or re-inspecting everything on every fetch, produces a non-empty third entry here and is caught.",
+      "fetches": [
+        {"at": "2026-08-15T04:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-15T04:05:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment", "list_warehouses"]},
+        {"at": "2026-08-15T04:10:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment", "list_warehouses"]}
+      ],
+      "inspection_outcomes": {"list_warehouses": "clean"},
+      "expected_newly_appearing_per_fetch": [[], ["list_warehouses"], []],
+      "expected_available_at_end": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments", "list_warehouses"],
+      "expected_refused": []
+    },
+
+    {
+      "scenario_id": "no-operation-added",
+      "deployment_id": "d-reference-app",
+      "last_inspected": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "NEGATIVE CONTROL. The specification is republished identically three times and nothing is ever added. SC-026's second clause reads `zero become available uninspected`, which an implementation refusing EVERYTHING satisfies perfectly — and it would score 100% on a corpus made only of additions. Here every pre-existing operation must stay available and zero inspections may be triggered. This is the scenario that ablation fails.",
+      "fetches": [
+        {"at": "2026-08-15T05:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-15T05:05:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-15T05:10:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]}
+      ],
+      "inspection_outcomes": {},
+      "expected_newly_appearing_per_fetch": [[], [], []],
+      "expected_available_at_end": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments"],
+      "expected_refused": []
+    }
+  ]
+}

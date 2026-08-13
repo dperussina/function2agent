@@ -1,0 +1,120 @@
+{
+  "_comment": "T157 — the fixture that withdraws an admitted target's published specification and later restores it (SC-021). Read `README.md` before reading a result off this directory: SC-021 is a CONFORMANCE test against a fixture derived from FR-047, and FR-047 ships with zero supporting evidence because E13 never ran. This corpus does not change that and must not be written up as though it does.",
+
+  "configured": {
+    "_comment": "A configured default marked unvalidated under FR-043. T149 requires it measured as WALL CLOCK FROM THE LAST SUCCESSFUL FETCH, which is what `age_seconds` is recomputed as here — not from the moment staleness was entered, because lengthening the re-fetch interval would then silently widen the ceiling.",
+    "staleness_ceiling_seconds": 900
+  },
+
+  "_comment_boundary": "No call in this corpus falls exactly on the ceiling. The disposition of an age of EXACTLY 900 s is T149's and T150's to state, and inventing one here would pre-empt a decision with a fixture. Every call is strictly below or strictly above.",
+
+  "baseline_anchor": {
+    "_comment": "Every last-known-good set is asserted to be a subset of the reference application's published operation set.",
+    "served_operations_file": "tests/fixtures/reference-app/served_operations.json"
+  },
+
+  "scenarios": [
+    {
+      "scenario_id": "withdraw-restore-identical-below-ceiling",
+      "deployment_id": "d-reference-app",
+      "last_known_good": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "NEGATIVE CONTROL for SC-021's fourth clause. The specification goes absent and comes back IDENTICAL. Zero operations differ, so zero drift may be reported. A detector that treats every restoration as a change scores 100% on `100% of the operations that differ are reported as drift` for the scenarios where something did differ, and this is the scenario where it is caught.",
+      "fetches": [
+        {"at": "2026-08-14T00:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-14T00:05:00Z", "state": "absent", "operations": null},
+        {"at": "2026-08-14T00:10:00Z", "state": "absent", "operations": null},
+        {"at": "2026-08-14T00:12:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]}
+      ],
+      "calls": [
+        {"at": "2026-08-14T00:06:00Z", "operation_id": "get_part", "served": true, "stale": true, "age_seconds": 360, "specification_state_last_found": "absent"},
+        {"at": "2026-08-14T00:11:00Z", "operation_id": "list_parts", "served": true, "stale": true, "age_seconds": 660, "specification_state_last_found": "absent"},
+        {"at": "2026-08-14T00:13:00Z", "operation_id": "get_part", "served": true, "stale": false, "age_seconds": 60, "specification_state_last_found": "published_non_empty"}
+      ],
+      "restored_at": "2026-08-14T00:12:00Z",
+      "expected_drift_on_restore": []
+    },
+
+    {
+      "scenario_id": "withdraw-restore-changed-below-ceiling",
+      "deployment_id": "d-reference-app",
+      "last_known_good": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "The specification is unreadable by the credential — a different FR-044 non-admissible state from `absent`, and one where a document exists and nobody read it — and comes back CHANGED. Two operations are gone and one is new, so three differ and all three must be reported as drift rather than adopted silently. FR-047's own words are that a re-fetch which merely succeeds is not evidence that nothing changed.",
+      "fetches": [
+        {"at": "2026-08-14T01:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-14T01:05:00Z", "state": "unreadable_by_credential", "operations": null},
+        {"at": "2026-08-14T01:10:00Z", "state": "unreadable_by_credential", "operations": null},
+        {"at": "2026-08-14T01:13:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_warehouses"]}
+      ],
+      "calls": [
+        {"at": "2026-08-14T01:07:00Z", "operation_id": "get_part", "served": true, "stale": true, "age_seconds": 420, "specification_state_last_found": "unreadable_by_credential"},
+        {"at": "2026-08-14T01:12:00Z", "operation_id": "health", "served": true, "stale": true, "age_seconds": 720, "specification_state_last_found": "unreadable_by_credential"}
+      ],
+      "restored_at": "2026-08-14T01:13:00Z",
+      "expected_drift_on_restore": ["cancel_shipment", "list_shipments", "list_warehouses"]
+    },
+
+    {
+      "scenario_id": "withdraw-past-ceiling",
+      "deployment_id": "d-reference-app",
+      "last_known_good": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "The specification never comes back. Two calls below the ceiling are served with a stale marking; two above it are denied. This is the only scenario carrying SC-021's second and third clauses, and the terminal state the third clause needs DOES NOT EXIST YET — see `expected_terminal_state` below and the README section that owns it.",
+      "fetches": [
+        {"at": "2026-08-14T02:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-14T02:05:00Z", "state": "absent", "operations": null},
+        {"at": "2026-08-14T02:10:00Z", "state": "absent", "operations": null},
+        {"at": "2026-08-14T02:15:00Z", "state": "unreachable", "operations": null},
+        {"at": "2026-08-14T02:20:00Z", "state": "unreachable", "operations": null}
+      ],
+      "calls": [
+        {"at": "2026-08-14T02:07:00Z", "operation_id": "get_part", "served": true, "stale": true, "age_seconds": 420, "specification_state_last_found": "absent"},
+        {"at": "2026-08-14T02:14:00Z", "operation_id": "list_parts", "served": true, "stale": true, "age_seconds": 840, "specification_state_last_found": "absent"},
+        {"at": "2026-08-14T02:16:00Z", "operation_id": "get_part", "served": false, "stale": true, "age_seconds": 960, "specification_state_last_found": "unreachable"},
+        {"at": "2026-08-14T02:21:00Z", "operation_id": "health", "served": false, "stale": true, "age_seconds": 1260, "specification_state_last_found": "unreachable"}
+      ],
+      "in_flight_session_at_ceiling": {
+        "session_id": "s-stale-ceiling",
+        "must_not_end_generically": true,
+        "expected_terminal_state": null,
+        "_comment": "SC-021 requires ZERO sessions ending in a generic error at the ceiling, and T150 requires a NAMED terminal state. `src/contracts/terminal.py` is a closed taxonomy of twelve members and NOT ONE of them names the staleness ceiling. So the name this fixture would assert does not exist at the time it was committed, and inventing one here would either fail `terminal.require()` or amount to writing T150's contract from a fixture. `expected_terminal_state` is therefore null, and `tests/unit/test_drift_fixtures.py` asserts that the taxonomy still has no staleness member — so the day T150 adds one, that assertion fails and this note has to move rather than going quietly stale."
+      },
+      "restored_at": null,
+      "expected_drift_on_restore": null
+    },
+
+    {
+      "scenario_id": "never-withdrawn",
+      "deployment_id": "d-reference-app",
+      "last_known_good": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "NEGATIVE CONTROL for the corpus as a whole. The specification is published at every one of four fetches. Zero results carry a stale marking, zero calls are denied, and no session terminates. SC-021's first clause reads `100% of results returned WHILE THE SET IS STALE`, whose denominator is zero here — and an implementation that marks every result stale satisfies that clause vacuously on a corpus in which the set is always stale. This is the scenario where it fails instead.",
+      "fetches": [
+        {"at": "2026-08-14T03:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-14T03:05:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-14T03:10:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-14T03:15:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]}
+      ],
+      "calls": [
+        {"at": "2026-08-14T03:03:00Z", "operation_id": "get_part", "served": true, "stale": false, "age_seconds": 180, "specification_state_last_found": "published_non_empty"},
+        {"at": "2026-08-14T03:12:00Z", "operation_id": "list_parts", "served": true, "stale": false, "age_seconds": 120, "specification_state_last_found": "published_non_empty"}
+      ],
+      "restored_at": null,
+      "expected_drift_on_restore": null
+    },
+
+    {
+      "scenario_id": "withdraw-readable-no-operations-restore-identical",
+      "deployment_id": "d-reference-app",
+      "last_known_good": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "why": "The third of FR-044's three non-admissible states — the specification is fetched successfully and describes no operations. T147 enters the stale state on the first re-fetch returning ANY of the three, and a corpus exercising only `absent` would leave two thirds of that rule unexercised. A document that parses and is empty is the state most likely to be mistaken for a successful fetch.",
+      "fetches": [
+        {"at": "2026-08-14T04:00:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+        {"at": "2026-08-14T04:05:00Z", "state": "readable_no_operations", "operations": []},
+        {"at": "2026-08-14T04:08:00Z", "state": "published_non_empty", "operations": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]}
+      ],
+      "calls": [
+        {"at": "2026-08-14T04:06:00Z", "operation_id": "cancel_shipment", "served": true, "stale": true, "age_seconds": 360, "specification_state_last_found": "readable_no_operations"}
+      ],
+      "restored_at": "2026-08-14T04:08:00Z",
+      "expected_drift_on_restore": []
+    }
+  ]
+}

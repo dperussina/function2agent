@@ -1,0 +1,431 @@
+{
+  "_comment": "T154 — the source-change synthetic corpus (FR-053, SC-008). Each entry in `revisions` carries its FULL contract rather than a patch, so the loader can DIFF consecutive revisions and compare the computed diff against the declared `change_kinds`, `breaking` and `drifted_operations`. Nothing here is an oracle a reader typed: every declared field is recomputed by `__init__.py` from the two contracts either side of it, and a disagreement fails at load time. See README.md for why the non-breaking revisions are load-bearing rather than filler.",
+
+  "clock": "source",
+
+  "_comment_change_time": "The source clock's change time IS the revision. There is no wall clock here and none is invented: SC-008 asks for detection `in the same automated check run as the commit that introduced them`, so the corpus controls its change time by binding exactly one check run to exactly one revision. The loader refuses a run that observes two revisions, because `the same run as the commit` is unfalsifiable once a run spans a range.",
+
+  "baseline_anchor": {
+    "_comment": "The base revision's operation identifiers are asserted to be a subset of the reference application's published set, so this corpus describes drift on a target this repository actually has rather than on five invented names. Added operations at later revisions are new by construction and are exempt.",
+    "served_operations_file": "tests/fixtures/reference-app/served_operations.json"
+  },
+
+  "revisions": [
+    {
+      "revision_id": "C-000",
+      "parent": null,
+      "check_run_id": "R-000",
+      "change_kinds": [],
+      "breaking": false,
+      "drifted_operations": [],
+      "expected_detection_run": null,
+      "why": "The base revision. It has no predecessor, so it can carry no diff and raises no signal. It exists so that every later revision is scored against a contract that was committed rather than assumed.",
+      "contract": {
+        "health": {
+          "summary": "Liveness and the seed version the deployment is serving.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {},
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "string", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        },
+        "cancel_shipment": {
+          "summary": "Cancel a shipment.",
+          "parameters": {"shipment_id": {"type": "string", "required": true}},
+          "returns": {"shipment_id": "string", "cancelled": "boolean"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-001",
+      "parent": "C-000",
+      "check_run_id": "R-001",
+      "change_kinds": ["parameter_type_changed"],
+      "breaking": true,
+      "drifted_operations": ["get_part"],
+      "expected_detection_run": "R-001",
+      "why": "E13's second named mutation — change a parameter type. `get_part.part_id` goes string to integer. Every caller that was passing a well-formed identifier now passes the wrong type, and nothing about the operation's name or arity moved, so a detector keyed on the operation list alone sees nothing.",
+      "contract": {
+        "health": {
+          "summary": "Liveness and the seed version the deployment is serving.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {},
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        },
+        "cancel_shipment": {
+          "summary": "Cancel a shipment.",
+          "parameters": {"shipment_id": {"type": "string", "required": true}},
+          "returns": {"shipment_id": "string", "cancelled": "boolean"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-002",
+      "parent": "C-001",
+      "check_run_id": "R-002",
+      "change_kinds": ["operation_removed"],
+      "breaking": true,
+      "drifted_operations": ["cancel_shipment"],
+      "expected_detection_run": "R-002",
+      "why": "E13's third named mutation — delete an endpoint. The one write-tier operation the reference application has, so its removal is also the largest change in blast radius the corpus carries.",
+      "contract": {
+        "health": {
+          "summary": "Liveness and the seed version the deployment is serving.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {},
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-003",
+      "parent": "C-002",
+      "check_run_id": "R-003",
+      "change_kinds": ["operation_renamed"],
+      "breaking": true,
+      "drifted_operations": ["list_shipments", "list_all_shipments"],
+      "renamed": [{"from": "list_shipments", "to": "list_all_shipments"}],
+      "expected_detection_run": "R-003",
+      "why": "E13's first named mutation — rename a route. The loader verifies the rename is a rename and not a coincidence: the removed operation's parameters and returns must be identical to the added one's, or the declaration is refused. A structural differ that reports remove-plus-add is not wrong here, but it is a different signal and the corpus distinguishes them.",
+      "contract": {
+        "health": {
+          "summary": "Liveness and the seed version the deployment is serving.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {},
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-004",
+      "parent": "C-003",
+      "check_run_id": "R-004",
+      "change_kinds": ["required_parameter_added"],
+      "breaking": true,
+      "drifted_operations": ["list_parts"],
+      "expected_detection_run": "R-004",
+      "why": "A required parameter appears where there was none. Every existing call becomes invalid, and the operation count does not move — the case that separates a detector reading signatures from one reading an operation list.",
+      "contract": {
+        "health": {
+          "summary": "Liveness and the seed version the deployment is serving.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {"warehouse_id": {"type": "string", "required": true}},
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-005",
+      "parent": "C-004",
+      "check_run_id": "R-005",
+      "change_kinds": ["optional_parameter_added"],
+      "breaking": false,
+      "drifted_operations": [],
+      "expected_detection_run": null,
+      "why": "NEGATIVE CONTROL. An optional parameter appears. The signature moved, so a detector that fires on `the signature is not byte-identical` reports drift here — and would then score 100% on SC-008 while being useless. This revision is the reason that detector fails instead.",
+      "contract": {
+        "health": {
+          "summary": "Liveness and the seed version the deployment is serving.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {
+            "warehouse_id": {"type": "string", "required": true},
+            "limit": {"type": "integer", "required": false}
+          },
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-006",
+      "parent": "C-005",
+      "check_run_id": "R-006",
+      "change_kinds": ["operation_added"],
+      "breaking": false,
+      "drifted_operations": [],
+      "expected_detection_run": null,
+      "why": "NEGATIVE CONTROL. A wholly new operation. The operation list moved and no existing caller is affected. A detector keyed on `the operation set changed` fires here; SC-008 is about BREAKING changes and this is not one.",
+      "contract": {
+        "health": {
+          "summary": "Liveness and the seed version the deployment is serving.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {
+            "warehouse_id": {"type": "string", "required": true},
+            "limit": {"type": "integer", "required": false}
+          },
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        },
+        "list_warehouses": {
+          "summary": "Every warehouse the deployment knows.",
+          "parameters": {},
+          "returns": {"warehouses": "array<warehouse>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-007",
+      "parent": "C-006",
+      "check_run_id": "R-007",
+      "change_kinds": ["summary_changed"],
+      "breaking": false,
+      "drifted_operations": [],
+      "expected_detection_run": null,
+      "why": "NEGATIVE CONTROL. Prose only. Nothing about the callable surface moved. A detector that hashes the whole contract document fires here, which is the false-alarm channel FR-055's canonical serialization exists to close.",
+      "contract": {
+        "health": {
+          "summary": "Liveness, the seed version, and the build identifier.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {
+            "warehouse_id": {"type": "string", "required": true},
+            "limit": {"type": "integer", "required": false}
+          },
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        },
+        "list_warehouses": {
+          "summary": "Every warehouse the deployment knows.",
+          "parameters": {},
+          "returns": {"warehouses": "array<warehouse>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-008",
+      "parent": "C-007",
+      "check_run_id": "R-008",
+      "change_kinds": [],
+      "breaking": false,
+      "drifted_operations": [],
+      "expected_detection_run": null,
+      "why": "NEGATIVE CONTROL, and the strongest one. The contract is IDENTICAL to its parent — this is re-analysis of unchanged source. Scoring a battery of these is T156's job and T156 is not built; what this revision does here is make the identical-input case present in the corpus that SC-008 is measured on, so a detector cannot be scored only on revisions where something moved.",
+      "contract": {
+        "health": {
+          "summary": "Liveness, the seed version, and the build identifier.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {
+            "warehouse_id": {"type": "string", "required": true},
+            "limit": {"type": "integer", "required": false}
+          },
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string", "attestation": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        },
+        "list_warehouses": {
+          "summary": "Every warehouse the deployment knows.",
+          "parameters": {},
+          "returns": {"warehouses": "array<warehouse>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-009",
+      "parent": "C-008",
+      "check_run_id": "R-009",
+      "change_kinds": ["return_field_removed"],
+      "breaking": true,
+      "drifted_operations": ["get_part"],
+      "expected_detection_run": "R-009",
+      "why": "The breaking change on the OUTPUT side. `get_part` stops returning `attestation`, which is the field T114's evidence path reads. Nothing on the input side moved, so a detector that compares only parameters sees nothing — the mirror image of C-001.",
+      "contract": {
+        "health": {
+          "summary": "Liveness, the seed version, and the build identifier.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {
+            "warehouse_id": {"type": "string", "required": true},
+            "limit": {"type": "integer", "required": false}
+          },
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"part_id": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        },
+        "list_warehouses": {
+          "summary": "Every warehouse the deployment knows.",
+          "parameters": {},
+          "returns": {"warehouses": "array<warehouse>"}
+        }
+      }
+    },
+
+    {
+      "revision_id": "C-010",
+      "parent": "C-009",
+      "check_run_id": "R-010",
+      "change_kinds": ["optional_parameter_added", "parameter_removed"],
+      "breaking": true,
+      "drifted_operations": ["list_all_shipments"],
+      "expected_detection_run": "R-010",
+      "why": "One revision carrying a breaking change AND a non-breaking one at once. A detector that stops at the first diff it finds, or that classifies a revision by its first change kind, gets this wrong in one direction or the other. `drifted_operations` names only the operation the BREAKING half touched, which is why the two kinds cannot be collapsed into a per-revision boolean and left there.",
+      "contract": {
+        "health": {
+          "summary": "Liveness, the seed version, and the build identifier.",
+          "parameters": {},
+          "returns": {"status": "string", "seed_version": "string"}
+        },
+        "list_parts": {
+          "summary": "Every part, each carrying its opaque attestation.",
+          "parameters": {
+            "warehouse_id": {"type": "string", "required": true},
+            "limit": {"type": "integer", "required": false}
+          },
+          "returns": {"parts": "array<part>"}
+        },
+        "get_part": {
+          "summary": "One part by identifier.",
+          "parameters": {"part_id": {"type": "integer", "required": true}},
+          "returns": {"part_id": "string", "name": "string"}
+        },
+        "list_all_shipments": {
+          "summary": "Shipments, optionally filtered by part_id.",
+          "parameters": {"since": {"type": "string", "required": false}},
+          "returns": {"shipments": "array<shipment>"}
+        },
+        "list_warehouses": {
+          "summary": "Every warehouse the deployment knows.",
+          "parameters": {},
+          "returns": {"warehouses": "array<warehouse>"}
+        }
+      }
+    }
+  ]
+}

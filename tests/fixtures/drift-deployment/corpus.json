@@ -1,0 +1,199 @@
+{
+  "_comment": "T155 — the deployment-change synthetic corpus (SC-009, SC-020). Every scenario declares its own `change.at` as PRIMARY DATA. That is the entire reason this corpus exists: plan.md's Complexity Tracking row at line 830 records that deployment-clock drift latency is not measurable on real traffic unless the customer emits a deployment event FR-046 says may not be assumed, and that inferring the change time from first observation `measures the detector against itself`. Here the change time is controlled, and `tests/fixtures/drift_corpora/deployment.py` refuses any scenario whose declared change time coincides with an observation — which is the mechanical form of not deriving it from one.",
+
+  "clock": "deployment",
+
+  "configured": {
+    "_comment": "Both values are configured defaults marked unvalidated under FR-043. They are NOT findings and no measurement stands behind either.",
+    "detection_window_seconds": 900,
+    "poll_interval_seconds": 300
+  },
+
+  "deployment_events": [],
+  "_comment_deployment_events": "Empty, and asserted empty. SC-020 requires detection `with no event supplied by a deployment pipeline`, and FR-046 says such an event may not be assumed available. An event added here would make every latency below trivial and would silently convert this corpus into a measurement of a channel the requirement forbids relying on.",
+
+  "baseline_anchor": {
+    "_comment": "Every scenario's `served_before` is asserted to be a subset of the reference application's published operation set, so these are withdrawals from a deployment this repository actually has.",
+    "served_operations_file": "tests/fixtures/reference-app/served_operations.json"
+  },
+
+  "scenarios": [
+    {
+      "scenario_id": "withdraw-one-operation",
+      "deployment_id": "d-reference-app",
+      "served_before": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "change": {
+        "kind": "operations_withdrawn",
+        "at": "2026-08-13T00:07:30Z",
+        "withdrawn": ["cancel_shipment"],
+        "unaffected": ["get_part", "health", "list_parts", "list_shipments"]
+      },
+      "why": "The single-withdrawal base case, and the write-tier operation is the one withdrawn. The change instant sits 150 seconds after the 00:05:00 poll and 150 seconds before the 00:10:00 poll — deliberately at neither.",
+      "arms": {
+        "scheduled": {
+          "trigger": "default_automated",
+          "observations": [
+            {"at": "2026-08-13T00:00:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T00:05:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T00:10:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments"]},
+            {"at": "2026-08-13T00:15:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments"]}
+          ],
+          "expected_detected_at": "2026-08-13T00:10:00Z",
+          "expected_latency_seconds": 150
+        },
+        "manual": {
+          "trigger": "manual_on_demand",
+          "observations": [
+            {"at": "2026-08-13T00:08:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments"]}
+          ],
+          "expected_detected_at": "2026-08-13T00:08:00Z",
+          "expected_latency_seconds": 30
+        }
+      },
+      "expected_disabled": ["cancel_shipment"],
+      "expected_remain_enabled": ["get_part", "health", "list_parts", "list_shipments"]
+    },
+
+    {
+      "scenario_id": "withdraw-two-operations",
+      "deployment_id": "d-reference-app",
+      "served_before": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "change": {
+        "kind": "operations_withdrawn",
+        "at": "2026-08-13T01:02:20Z",
+        "withdrawn": ["cancel_shipment", "get_part"],
+        "unaffected": ["health", "list_parts", "list_shipments"]
+      },
+      "why": "More than one operation withdrawn in one deployment. A detector that reports the first difference it finds and stops detects one of these two and scores 50% on a criterion written as 100% of withdrawn operations.",
+      "arms": {
+        "scheduled": {
+          "trigger": "default_automated",
+          "observations": [
+            {"at": "2026-08-13T01:00:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T01:05:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "list_shipments"]},
+            {"at": "2026-08-13T01:10:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "list_shipments"]}
+          ],
+          "expected_detected_at": "2026-08-13T01:05:00Z",
+          "expected_latency_seconds": 160
+        },
+        "manual": {
+          "trigger": "manual_on_demand",
+          "observations": [
+            {"at": "2026-08-13T01:09:45Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "list_shipments"]}
+          ],
+          "expected_detected_at": "2026-08-13T01:09:45Z",
+          "expected_latency_seconds": 445
+        }
+      },
+      "expected_disabled": ["cancel_shipment", "get_part"],
+      "expected_remain_enabled": ["health", "list_parts", "list_shipments"]
+    },
+
+    {
+      "scenario_id": "withdraw-all-but-one",
+      "deployment_id": "d-reference-app",
+      "served_before": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "change": {
+        "kind": "operations_withdrawn",
+        "at": "2026-08-13T02:11:10Z",
+        "withdrawn": ["cancel_shipment", "get_part", "list_parts", "list_shipments"],
+        "unaffected": ["health"]
+      },
+      "why": "The bulk case, and the one where `zero unaffected operations are disabled` is hardest: a detector that responds to a large withdrawal by disabling the whole target satisfies the first half of SC-009 and fails the second. One operation must survive.",
+      "arms": {
+        "scheduled": {
+          "trigger": "default_automated",
+          "observations": [
+            {"at": "2026-08-13T02:00:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T02:05:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T02:10:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T02:15:00Z", "specification_state": "published_non_empty", "served": ["health"]}
+          ],
+          "expected_detected_at": "2026-08-13T02:15:00Z",
+          "expected_latency_seconds": 230
+        },
+        "manual": {
+          "trigger": "manual_on_demand",
+          "observations": [
+            {"at": "2026-08-13T02:14:20Z", "specification_state": "published_non_empty", "served": ["health"]}
+          ],
+          "expected_detected_at": "2026-08-13T02:14:20Z",
+          "expected_latency_seconds": 190
+        }
+      },
+      "expected_disabled": ["cancel_shipment", "get_part", "list_parts", "list_shipments"],
+      "expected_remain_enabled": ["health"]
+    },
+
+    {
+      "scenario_id": "withdraw-one-of-two-neighbours",
+      "deployment_id": "d-reference-app",
+      "served_before": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "change": {
+        "kind": "operations_withdrawn",
+        "at": "2026-08-13T04:03:40Z",
+        "withdrawn": ["list_shipments"],
+        "unaffected": ["cancel_shipment", "get_part", "health", "list_parts"]
+      },
+      "why": "`list_shipments` is withdrawn and `list_parts` — same prefix, same shape, same tier — is not. SC-009's second clause has no teeth against a detector matching on a name prefix or a path stem unless the corpus contains a neighbour it could plausibly take down with it.",
+      "arms": {
+        "scheduled": {
+          "trigger": "default_automated",
+          "observations": [
+            {"at": "2026-08-13T04:00:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T04:05:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "cancel_shipment"]},
+            {"at": "2026-08-13T04:10:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "cancel_shipment"]}
+          ],
+          "expected_detected_at": "2026-08-13T04:05:00Z",
+          "expected_latency_seconds": 80
+        },
+        "manual": {
+          "trigger": "manual_on_demand",
+          "observations": [
+            {"at": "2026-08-13T04:04:10Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "cancel_shipment"]}
+          ],
+          "expected_detected_at": "2026-08-13T04:04:10Z",
+          "expected_latency_seconds": 30
+        }
+      },
+      "expected_disabled": ["list_shipments"],
+      "expected_remain_enabled": ["cancel_shipment", "get_part", "health", "list_parts"]
+    },
+
+    {
+      "scenario_id": "no-withdrawal",
+      "deployment_id": "d-reference-app",
+      "served_before": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"],
+      "change": {
+        "kind": "none",
+        "at": null,
+        "withdrawn": [],
+        "unaffected": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments"]
+      },
+      "why": "NEGATIVE CONTROL. The deployment keeps serving everything across four scheduled polls and one manual invocation. SC-009 and SC-020 both read 100% of WITHDRAWN operations, and a detector that disables the target on every poll satisfies both on a corpus made only of withdrawals. This scenario is the one it fails. Its `change.at` is null because there is no change, and the loader requires a null change time here rather than allowing an instant nothing happened at.",
+      "arms": {
+        "scheduled": {
+          "trigger": "default_automated",
+          "observations": [
+            {"at": "2026-08-13T03:00:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T03:05:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T03:10:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]},
+            {"at": "2026-08-13T03:15:00Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]}
+          ],
+          "expected_detected_at": null,
+          "expected_latency_seconds": null
+        },
+        "manual": {
+          "trigger": "manual_on_demand",
+          "observations": [
+            {"at": "2026-08-13T03:07:30Z", "specification_state": "published_non_empty", "served": ["health", "list_parts", "get_part", "list_shipments", "cancel_shipment"]}
+          ],
+          "expected_detected_at": null,
+          "expected_latency_seconds": null
+        }
+      },
+      "expected_disabled": [],
+      "expected_remain_enabled": ["cancel_shipment", "get_part", "health", "list_parts", "list_shipments"]
+    }
+  ]
+}

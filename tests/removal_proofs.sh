@@ -5113,6 +5113,115 @@ proof "T133 — the independence refusal goes, so a derivation validates against
   "tests/contract/test_provenance_coverage.py::test_the_constructor_refuses_both_defects_as_well" \
   's = s.replace("        if validated and self.validated_against == self.source_file:", "        if False:")'
 
+# --- T154/T155/T157/T158, Phase 6's four committed drift corpora --------------
+#
+# These four corpora are committed with NO consumer: every Phase 6 module that
+# would score them, T137 through T153, is open. So there is no detector here to
+# remove, and the mechanisms these arms remove are the corpora's OWN — the
+# recomputations that stop a committed declaration becoming an oracle, and the
+# negative-control populations that stop a trivially wrong detector scoring
+# 100%.
+#
+# That makes the block divide the way T131/T132's does. Some arms remove a
+# GUARD and require its planted-defect test to notice; others remove part of a
+# POPULATION and require an ablation test to notice. The second kind is the one
+# that matters here: every criterion these corpora serve — SC-008, SC-009,
+# SC-020, SC-021, SC-026 — is phrased as 100% or zero, which is the
+# experiment-design skill's Rule 8 shape exactly, and its tell is a perfect
+# score on an ablation suite. An arm below that stopped failing would mean the
+# corpus had quietly become one only a correct detector could be measured on.
+#
+# Every selector is node-level. A bare-file selector on
+# tests/unit/test_drift_fixtures.py would be scored UNUSABLE the moment any one
+# of its 57 tests failed untampered.
+
+proof "T154 corpus — a check run may observe two revisions, so SC-008's 'same run as the commit' stops being falsifiable" \
+  tests/fixtures/drift_corpora/source.py \
+  "tests/unit/test_drift_fixtures.py::test_a_check_run_observing_two_revisions_is_refused" \
+  's = s.replace("    if len(set(runs)) != len(runs):", "    if False:")'
+
+proof "T154 corpus — the declared breaking verdict stops being recomputed, so a committed boolean becomes the oracle" \
+  tests/fixtures/drift_corpora/source.py \
+  "tests/unit/test_drift_fixtures.py::test_a_declared_breaking_verdict_that_disagrees_with_the_diff_is_refused" \
+  's = s.replace("    if bool(entry[\x22breaking\x22]) != breaking:", "    if False:")'
+
+proof "T154 corpus — a rename may change the signature, so two changes are reported as one" \
+  tests/fixtures/drift_corpora/source.py \
+  "tests/unit/test_drift_fixtures.py::test_a_rename_whose_signature_moved_is_refused" \
+  's = s.replace("        if _signature(before[old]) != _signature(after[new]):", "        if False:")'
+
+# The Rule 8 arm for the source clock: with the non-breaking revisions gone,
+# 'always report drift' scores a perfect 100% on SC-008 and nothing notices.
+proof "T154 corpus — the population loses its non-breaking revisions, so a detector that always fires scores 100%" \
+  tests/fixtures/drift_corpora/source.py \
+  "tests/unit/test_drift_fixtures.py::test_a_detector_that_reports_drift_on_every_revision_fails_this_corpus" \
+  's = s.replace("    return tuple(revisions)", "    return tuple(r for r in revisions if r.breaking or r.parent is None)")'
+
+# The subset-presented-as-a-total defect, planted directly: the scoreable
+# denominator silently becomes the whole corpus, including the base revision
+# that can carry no diff at all.
+proof "T154 corpus — the scoreable denominator becomes the whole corpus, so the partition stops summing to its total" \
+  tests/fixtures/drift_corpora/source.py \
+  "tests/unit/test_drift_fixtures.py::test_the_source_corpuss_scoreable_denominator_excludes_the_base_revision" \
+  's = s.replace("        \x22revisions_with_a_parent_and_therefore_a_diff\x22: len(scoreable),", "        \x22revisions_with_a_parent_and_therefore_a_diff\x22: len(revisions),")'
+
+# plan.md line 830: inferring the change time from first observation measures
+# the detector against itself. This arm lets the corpus do exactly that.
+proof "T155 corpus — a change time may coincide with an observation, so it can be read off the detector's own reading" \
+  tests/fixtures/drift_corpora/deployment.py \
+  "tests/unit/test_drift_fixtures.py::test_a_change_time_read_off_an_observation_is_refused" \
+  's = s.replace("            if observation[\x22at\x22] == change_at:", "            if False:")'
+
+proof "T155 corpus — the declared latency stops being recomputed, so a committed number becomes the measurement" \
+  tests/fixtures/drift_corpora/deployment.py \
+  "tests/unit/test_drift_fixtures.py::test_a_declared_latency_that_disagrees_with_the_clock_is_refused" \
+  's = s.replace("            if latency != arm[\x22expected_latency_seconds\x22]:", "            if False:")'
+
+proof "T155 corpus — the population loses the scenario with nothing withdrawn, so 'disable everything' scores 100%" \
+  tests/fixtures/drift_corpora/deployment.py \
+  "tests/unit/test_drift_fixtures.py::test_a_detector_that_disables_the_target_on_every_poll_fails_this_corpus" \
+  's = s.replace("    return tuple(scenarios)", "    return tuple(s for s in scenarios if not s.is_negative_control)")'
+
+proof "T157 corpus — a fixture may name a terminal state outside the taxonomy, so FR-006's closed set opens through test data" \
+  tests/fixtures/drift_corpora/spec_withdrawn.py \
+  "tests/unit/test_drift_fixtures.py::test_a_terminal_state_outside_the_taxonomy_is_refused" \
+  's = s.replace("    if name not in terminal.NAMES:", "    if False:")'
+
+proof "T157 corpus — the age stops being recomputed from the last successful fetch, so T149's anchor is unenforced" \
+  tests/fixtures/drift_corpora/spec_withdrawn.py \
+  "tests/unit/test_drift_fixtures.py::test_a_declared_age_that_disagrees_with_the_wall_clock_is_refused" \
+  's = s.replace("            if age != call[\x22age_seconds\x22]:", "            if False:")'
+
+proof "T157 corpus — the calls lose every non-stale one, so 'mark every result stale' satisfies SC-021's first clause" \
+  tests/fixtures/drift_corpora/spec_withdrawn.py \
+  "tests/unit/test_drift_fixtures.py::test_an_implementation_marking_every_result_stale_fails_this_corpus" \
+  's = s.replace("            calls=tuple(calls),", "            calls=tuple(c for c in calls if c.stale),")'
+
+proof "T157 corpus — the population loses its unchanged restorations, so 'report drift on every restore' scores 100%" \
+  tests/fixtures/drift_corpora/spec_withdrawn.py \
+  "tests/unit/test_drift_fixtures.py::test_an_implementation_reporting_drift_on_every_restoration_fails" \
+  's = s.replace("    return tuple(scenarios)", "    return tuple(s for s in scenarios if s.drift_on_restore)")'
+
+proof "T158 corpus — a withdrawal may enter the corpus, so SC-026 is scored on T157's timeline instead of its own" \
+  tests/fixtures/drift_corpora/operation_added.py \
+  "tests/unit/test_drift_fixtures.py::test_a_withdrawal_planted_into_this_corpus_is_refused" \
+  's = s.replace("        if fetch[\x22state\x22] != PUBLISHED_NON_EMPTY:", "        if False:")'
+
+proof "T158 corpus — an outcome may be declared for an operation that never appears, so an expectation exercises nothing" \
+  tests/fixtures/drift_corpora/operation_added.py \
+  "tests/unit/test_drift_fixtures.py::test_an_outcome_declared_for_an_operation_that_never_appears_is_refused" \
+  's = s.replace("    if declared != reached:", "    if False:")'
+
+proof "T158 corpus — a newly appearing operation may carry no outcome, so FR-051's fail-closed is asserted by omission" \
+  tests/fixtures/drift_corpora/operation_added.py \
+  "tests/unit/test_drift_fixtures.py::test_an_addition_with_no_declared_outcome_is_refused" \
+  's = s.replace("            if op_id not in outcomes:", "            if False:")'
+
+proof "T158 corpus — the population loses the scenario adding nothing, so 'refuse every operation' scores 100%" \
+  tests/fixtures/drift_corpora/operation_added.py \
+  "tests/unit/test_drift_fixtures.py::test_an_implementation_refusing_every_operation_fails_this_corpus" \
+  's = s.replace("    return tuple(scenarios)", "    return tuple(s for s in scenarios if not s.is_negative_control)")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
