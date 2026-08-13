@@ -4820,6 +4820,150 @@ proof "T212 — the displacement-naming requirement goes, so a declaration repor
 # type. Named here rather than proved, because a proof shaped to pass is worse
 # than a declared gap.
 
+# --- T213, the verification seam (FR-025, OD-34) ------------------------------
+#
+# Ten arms over two files. The seam is the FIRST route by which a verification
+# outcome reaches a caller-visible record — before it, `verify_quantity` was
+# referenced nowhere in `src/` outside its own module and `Result` was built
+# only by `validate.py`'s two `to_result` methods — so every arm here is about a
+# path that did not previously exist and none of them can be carried by an
+# older guard.
+#
+# The block divides in two, and the halves fail in opposite directions:
+#
+#   - SIX arms remove a MAPPING ROW or a carried field in
+#     `src/runtime/result_join.py`, and fail into a record that misreports a
+#     verification the verifier got right;
+#   - FOUR arms remove the INVARIANT'S OWN SCANNER in
+#     `tests/invariants/test_result_constructor.py`, and fail into an invariant
+#     that reports nothing. That half exists because the construction-site arms
+#     are the ones that had never fired before this task: a scanner returning an
+#     empty list satisfies every membership arm above it, which is the same
+#     shape as the 48-proved-having-tested-nothing failure this file opens with.
+#
+# Every tamper below produces a working module and a named assertion. NONE of
+# them is scored on a crash, and two candidate arms were DROPPED for being
+# crashes rather than retargeted to something weaker:
+#
+#   - mapping `ProvisionallyVerified` onto VERIFIED leaves `PROVISIONAL` beside
+#     it, and `Result.__post_init__` refuses that pair. OD-34 ③ names exactly
+#     that — *"a mapping that tried it would raise rather than mislead"* — so
+#     the defect is UNCONSTRUCTIBLE and there is no scoreable arm. This is the
+#     `test_the_declared_rung_reaches_no_not_verifiable_state` treatment above:
+#     a declared gap, not an arm shaped to pass.
+#   - mapping `Refusal` onto MODEL_ASSESSED is caught by `_refuse_unjoinable`
+#     and raises. The exclusion is proved through the table and the backstop
+#     separately instead, which is two arms and not one.
+
+# The Principle I half of OD-34 ③, and the row the register and T212 disagree
+# about. Under this variant the record says an INDEPENDENT ARTIFACT validated a
+# precision that only the caller's own request states — which is the one thing
+# `Corroboration.CORROBORATED` means, and the admitted rung's own admissibility
+# premise is that no artifact source supplies one.
+proof "T213 — the provisionally-verified corroboration row goes, so a caller-declared precision reads as independently corroborated" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_a_provisionally_verified_report_reaches_no_verified_record" \
+  's = s.replace("    ProvisionallyVerified: Corroboration.PROVISIONAL,", "    ProvisionallyVerified: Corroboration.CORROBORATED,")'
+
+# A DOWNGRADE rather than an upgrade, and it is the sharper direction: VERIFIED
+# is unconstructible here (see the block note), where NOT_VERIFIABLE is legal
+# and silent. A recomputation that DISAGREED — the one thing FR-022 exists to
+# catch — is then reported as a result nobody could check, which moves a
+# detected fault out of SC-005's numerator and into T130's not-verifiable share.
+proof "T213 — the disagreement row goes, so a detected fault is reported as a result nobody could check" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_a_disagreement_becomes_a_failed_record_that_says_nobody_corroborated" \
+  's = s.replace("    Disagreement: VerificationOutcome.FAILED,", "    Disagreement: VerificationOutcome.NOT_VERIFIABLE,")'
+
+# OD-34 ③: *"MODEL_ASSESSED has no source in this union and must not acquire one
+# here"*. The subtraction is what makes the exclusion by-name; without it every
+# member of the enum is emittable and the seam becomes a second route past the
+# boundary `tests/invariants/test_import_graph.py` holds structurally.
+proof "T213 — the emittable-outcome subtraction goes, so a model's opinion becomes an outcome the seam may write" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_the_seam_can_never_emit_a_model_assessment" \
+  's = s.replace(") - {VerificationOutcome.MODEL_ASSESSED}", ")")'
+
+# The backstop, proved SEPARATELY from the table above, because a checker and
+# its backstop that are the same check are one check. The arm forces the table
+# to hold the forbidden row and requires the seam to refuse anyway.
+proof "T213 — the emittable-outcome backstop goes, so a tampered table is transcribed instead of refused" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_the_backstop_refuses_an_outcome_the_table_should_never_hold" \
+  's = s.replace("    if outcome not in JOINABLE_OUTCOMES:", "    if False:")'
+
+# Totality read OFF THE UNION rather than off a list somebody maintains. With a
+# row gone the union and the table disagree, and the arm that compares them is
+# the only thing between that and a `VerificationReport` member the seam
+# silently cannot join.
+proof "T213 — a mapping row goes, so a member of the union has no outcome and the table stops being total" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_the_join_is_total_over_the_union_read_off_the_union" \
+  's = s.replace("    Refusal: VerificationOutcome.NOT_VERIFIABLE,\n", "")'
+
+# The one refusal reason that reports on the CONTRACT, and the row that makes
+# this seam AGREE with `ProvisionalContract.to_result` rather than merely not
+# contradict it. Without it one provisional contract yields two caller-visible
+# records that disagree about what stood behind it, depending on which producer
+# the caller reached.
+proof "T213 — the provisional-contract corroboration row goes, so the seam and validate.py's own bridge disagree about one contract" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_the_join_agrees_with_the_provisional_bridge_on_a_provisional_contract" \
+  's = s.replace("    RefusalReason.CONTRACT_PROVISIONAL: Corroboration.PROVISIONAL,", "    RefusalReason.CONTRACT_PROVISIONAL: Corroboration.NOT_STATED,")'
+
+# OD-34 ③ requires each non-verified arm to carry *"the report's own named
+# reason rather than a synthesised one"*. A synthesised reason is not a smaller
+# version of the real one: `reports/not_verifiable.py` already records that
+# `Result.reason` is free text a breakdown cannot key on, so the detail is the
+# only place the operands of a disagreement survive to a reader.
+proof "T213 — the disagreement's own reason goes, so a failed record explains itself with a sentence the seam wrote" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_a_disagreement_becomes_a_failed_record_that_says_nobody_corroborated" \
+  's = s.replace("        return report.detail", "        return \"verification did not succeed\"")'
+
+# FR-024 property 5s closing sub-bullet, one layer further out than T212 proved
+# it: *an ignored declaration MUST be disclosed on the result, not silently
+# dropped*. T212 put the disclosure on the object `verify.py` returns; this arm
+# is about whether it survives onto the CALLER-VISIBLE record, which is where
+# FR-058 says the reader arrives. The tampered seam drops it on a plainly
+# VERIFIED result, where `Result` requires no reason and nothing else complains.
+proof "T213 — the disclosure is dropped at the record, so an ignored declaration is disclosed nowhere a caller reads" \
+  src/runtime/result_join.py \
+  "tests/unit/test_result_join.py::test_an_ignored_declaration_is_disclosed_on_the_caller_visible_record" \
+  's = s.replace("    if disclosure is not None:", "    if False:")'
+
+# --- and the four that remove the invariant's own instrument ------------------
+#
+# INV-001's construction-site arms are the half of its sentence that was
+# UNMEASURED until this task: a `src/` module constructing
+# `Result(VerificationOutcome.VERIFIED, …)` with no verifier in it was planted
+# on 2026-08-12 and passed all 200 invariants and all three static gates. The
+# arms exist now; these are what keep them from passing over nothing.
+
+proof "T213 invariant — the construction-site scan returns nothing, so an unauthorised Result site is free" \
+  tests/invariants/test_result_constructor.py \
+  "tests/invariants/test_result_constructor.py::test_the_checker_fires_on_an_unverified_construction_site" \
+  's = s.replace("    found: list[str] = []", "    return []\n    found: list[str] = []")'
+
+proof "T213 invariant — the scanner reads only the from-import spelling, so an aliased module path constructs freely" \
+  tests/invariants/test_result_constructor.py \
+  "tests/invariants/test_result_constructor.py::test_the_checker_sees_a_site_reached_through_the_module_path" \
+  's = s.replace("                and _dotted(func.value) in module_paths", "                and False")'
+
+proof "T213 invariant — the artifact test admits every module, so an allowlist edit is the whole of the defence" \
+  tests/invariants/test_result_constructor.py \
+  "tests/invariants/test_result_constructor.py::test_the_artifact_check_fires_on_a_module_that_holds_none" \
+  's = s.replace("    return _names_in_scope(tree) & VERIFICATION_ARTIFACTS", "    return _names_in_scope(tree) | VERIFICATION_ARTIFACTS")'
+
+# The negative control's own arm. A scanner that reports every module naming
+# the type would make the allowlist a list of IMPORTERS — a different and much
+# weaker property, and one `src/runtime/serving.py` already violates by holding
+# `Result` for an annotation and constructing none.
+proof "T213 invariant — the scanner reports a module that merely names the type, so the allowlist degrades to a list of importers" \
+  tests/invariants/test_result_constructor.py \
+  "tests/invariants/test_result_constructor.py::test_the_checker_ignores_a_module_that_only_names_the_type" \
+  's = s.replace("        if not bare and not module_paths:\n            continue", "        found.append(path.relative_to(root).as_posix() + \":0\")")'
+
 # --- T131/T132, the value-fault corpus and its shape-and-type-only control ----
 #
 # SC-006 asserts a verifier detects NOTHING, which is Rule 8's shape: the

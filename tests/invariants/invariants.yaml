@@ -21,7 +21,7 @@
 # supposed to depend on it, and reports UNPROVEN for any test that still passes.
 
 schema_version: "1.0.0"
-version: "1.6.0"
+version: "1.7.0"
 updated: "2026-08-12"
 
 invariants:
@@ -32,8 +32,16 @@ invariants:
       outcome.
     test: tests/invariants/test_result_constructor.py
     removal_proof: >
-      Give Result.verification a default, or remove the __post_init__ type
-      check in src/contracts/result.py. The test asserts construction raises.
+      Two halves, because the statement has two readings and only the first was
+      measured before T213. FIELD PRESENCE: give Result.verification a default,
+      or remove the __post_init__ type check in src/contracts/result.py — the
+      test asserts construction raises. CONSTRUCTION SITE: add a src/ module
+      that builds a Result with no verifier in it, or empty the scanner in
+      construction_sites() — the test enumerates every Result( call under src/
+      against AUTHORISED_CONSTRUCTION_SITES and requires each declared module
+      to hold a verification artifact. The second half was written for T213
+      under OD-34; before the seam at src/runtime/result_join.py existed it
+      would have ranged over nothing.
     runtime: milliseconds
     model_in_loop: false
 
