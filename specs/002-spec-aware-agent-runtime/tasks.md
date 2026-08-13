@@ -1532,11 +1532,11 @@ input produces no signal at all.
 - [ ] T151 [US3] Leaving the stale state below the ceiling: replace the last-known-good set, clear the marking, and **evaluate the difference between the two sets as drift** rather than adopting it silently, in `src/runtime/staleness.py` (FR-047 — a re-fetch that merely succeeds is not evidence that nothing changed)
 - [ ] T152 [US3] Recovery from past the ceiling running the **full admission sequence** — T073 then T079 — and recording a new admission decision, with no operator restart required, in `src/runtime/staleness.py` (FR-047; past the ceiling the system holds no founded belief about what the deployment serves)
 - [ ] T153 [US3] On every successful fetch, compare the newly fetched set against the last **inspected** set and inspect every operation present in the first and absent from the second before it becomes available, failing closed on any it cannot inspect, in `src/analysis/reinspect.py` (FR-051, **SC-026**)
-- [x] T154 [P] [US3] Source-change synthetic corpus controlling its own change time, committed alongside the capability, in `tests/fixtures/drift-source/` (FR-053, SC-008)
-- [x] T155 [P] [US3] Deployment-change synthetic corpus controlling its own change time, in `tests/fixtures/drift-deployment/` (SC-009, **SC-020**)
+- [X] T154 [P] [US3] Source-change synthetic corpus controlling its own change time, committed alongside the capability, in `tests/fixtures/drift-source/` (FR-053, SC-008)
+- [X] T155 [P] [US3] Deployment-change synthetic corpus controlling its own change time, in `tests/fixtures/drift-deployment/` (SC-009, **SC-020**)
 - [ ] T156 [P] [US3] **Negative test: across a battery in which source is held constant and only re-analysis is repeated, zero source-clock drift signals are raised**, in `tests/batteries/test_drift_negative.py` (**SC-029** second clause — this is the only false-alarm figure v1's drift capability has any way to produce before production, and it is the clause that proves T010 actually closed the false-alarm channel)
-- [x] T157 [P] [US3] Fixture withdrawing an admitted target's published specification and later restoring it, in `tests/fixtures/spec-withdrawn/` (**SC-021**)
-- [x] T158 [P] [US3] Fixture adding an operation to a specification the target never stops publishing, in `tests/fixtures/operation-added/` (**SC-026**)
+- [X] T157 [P] [US3] Fixture withdrawing an admitted target's published specification and later restoring it, in `tests/fixtures/spec-withdrawn/` (**SC-021**)
+- [X] T158 [P] [US3] Fixture adding an operation to a specification the target never stops publishing, in `tests/fixtures/operation-added/` (**SC-026**)
 
 **Checkpoint**: all three core capabilities are independently functional.
 
