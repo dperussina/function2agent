@@ -3792,6 +3792,116 @@ proof "T137 — the declared anchor is hashed into the source clock, so re-decla
   's = s.replace("        return content_address({kind: value for kind, value in self.versions})", "        return content_address({\x22source_ref\x22: self.source_ref, **{kind: value for kind, value in self.versions}})")'
 
 # ---------------------------------------------------------------------------
+# T139 and T140 — the drift signal, as a sum over two shapes (FR-031, FR-047).
+#
+# FR-031 requires every drift signal to state which clock moved, the versions
+# before and after, and the deployment identity. FR-047 narrows it: a failed
+# re-fetch has no *after* version "because no artifact was obtained", and the
+# after term becomes FR-044's specification state plus the timestamp of the last
+# successful fetch. Two shapes, one requirement.
+#
+# THE THREE ARMS THAT CARRY THE TYPE CHOICE are the last three in this block,
+# and they are the reason the rest exist at all. The cheap encoding is one
+# record with `version_after: str | None`, and it passes every field-presence
+# test ever written: a `None` there cannot be told apart from a field nobody
+# filled in, which is this repository's recorded worst defect class — the
+# wall-clock numerator, and `spend_usd: float | None` holding UNPRICED apart
+# from COST NOTHING. So those three tampers do not remove a guard. They ADD the
+# optional field back, at the type, at the serialized document, and at the
+# discriminant that tells a reader which shape it is holding. Each restores the
+# ambiguity at a different layer, and each turns exactly one test red.
+#
+# The refusal arms above them are grouped by which shape they guard. Two are
+# worth naming: the successful-fetch refusal is what stops the two arms of the
+# sum from overlapping through the VALUE domain after the type system closed
+# the structural route, and the naive-timestamp refusal guards the failure that
+# produces an answer rather than an error — an age computed from a naive instant
+# is compared against FR-047's ceiling and believed.
+
+proof "T139 — a drift signal is raised on a clock outside the two, attributing movement to nothing" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_signal_on_a_third_clock_is_refused" \
+  's = s.replace("        if self.clock not in CLOCKS:", "        if False:")'
+
+proof "T139 — a drift signal states no deployment identity, so FR-030's responder cannot say whose" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_signal_for_no_deployment_is_refused" \
+  's = s.replace("        if not self.deployment_id:", "        if False:")'
+
+proof "T139 — a signal carries one version as both before and after, reporting drift and stating none" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_signal_whose_two_versions_are_equal_is_refused" \
+  's = s.replace("        if self.version_before == self.version_after:", "        if False:")'
+
+proof "T139 — a signal names no artifact kind as moved, so it was not built from a comparison" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_signal_naming_no_moved_kind_is_refused" \
+  's = s.replace("        if not self.kinds_moved:", "        if False:")'
+
+proof "T139 — a signal is raised for a clock that did not move, which is drift on a system at rest" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_signal_from_an_unmoved_clock_is_refused" \
+  's = s.replace("        if not movement.moved:", "        if False:")'
+
+# The phase's Independent Test names this negative outright: re-analysing
+# unchanged input produces no signal at all. `compare_each` returns one movement
+# per clock whether or not it moved, so the filter is the whole mechanism — with
+# it gone every run of a system where nothing changed reports drift on both
+# clocks, and every downstream count of operations disabled is then measured
+# against a detector that always fires.
+proof "T139 — every clock emits a signal every run, so unchanged input reports drift on both" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_unchanged_input_produces_no_signal_at_all" \
+  's = s.replace("for movement in movements if movement.moved", "for movement in movements if True")'
+
+# T140's value-domain guard, and it is the counterpart of the structural ones
+# below. `published_non_empty` is a fetch that WORKED; recording it in the shape
+# that means *no artifact was obtained* makes the two arms of the sum overlap,
+# so a success and a failure become indistinguishable — the same collapse the
+# optional field causes, arriving through the value domain instead of the type.
+proof "T140 — a successful fetch is recorded in the shape meaning no artifact was obtained" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_successful_fetch_is_refused_in_the_failed_refetch_shape" \
+  's = s.replace("        if self.specification_state in ADMISSIBLE_STATES:", "        if False:")'
+
+proof "T140 — a string no classifier produces is recorded as the specification state found" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_state_no_classifier_produces_is_refused" \
+  's = s.replace("        if self.specification_state not in SPECIFICATION_STATE_FOUND:", "        if False:")'
+
+proof "T140 — a failed re-fetch is attributed to the source clock, where there is nothing to re-fetch" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_failed_refetch_from_a_source_reading_is_refused" \
+  's = s.replace("    if before.clock != DEPLOYMENT:", "    if False:")'
+
+proof "T140 — an unparseable last-successful-fetch yields an age of zero instead of a refusal" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_an_unparseable_last_successful_fetch_is_refused" \
+  's = s.replace("    except ValueError:", "    except ValueError:\n        return 0.0")'
+
+proof "T140 — a naive last-successful-fetch is admitted, so FR-047's ceiling is measured in an unrecorded offset" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_a_naive_last_successful_fetch_is_refused" \
+  's = s.replace("    if parsed.tzinfo is None:", "    if False:")'
+
+# The three that carry the type choice. Each ADDS the product type back at a
+# different layer rather than removing a guard.
+proof "T140 — the narrowed shape regains an optional after version, collapsing no-artifact into nobody-filled-it-in" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_the_narrowed_shape_has_no_after_version_attribute" \
+  's = s.replace("    last_successful_fetch: str\n", "    last_successful_fetch: str\n    version_after: str | None = None\n")'
+
+proof "T140 — the narrowed record serializes a null after version, restoring the ambiguity at the boundary" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_the_narrowed_document_carries_no_after_version_key" \
+  's = s.replace("            \x22specification_state\x22: self.specification_state,", "            \x22version_after\x22: None,\n            \x22specification_state\x22: self.specification_state,")'
+
+proof "T139/T140 — the discriminant is dropped, so which shape a record is must be inferred from missing keys" \
+  src/analysis/drift_signal.py \
+  "tests/contract/test_drift_signal.py::test_the_two_documents_are_distinguishable_by_an_explicit_discriminant" \
+  's = s.replace("            \x22signal_kind\x22: FAILED_REFETCH,\n", "")'
+
+# ---------------------------------------------------------------------------
 # T079 — FR-020's confused-deputy inspection, FR-056's procedure.
 #
 # Every arm here guards the same failure from a different side: a procedure
