@@ -5781,7 +5781,7 @@ proof "T172 instrument — the contradiction scan matches nothing, so 'no unrefu
 proof "T172 — preflight stops stating Linux only, so the platform claim is gone" \
   src/supervisor/preflight.py \
   "tests/contract/test_platform_statement.py::test_every_required_surface_states_linux_only" \
-  's = s.replace("**OD-17**: Linux only, no degraded mode.", "**OD-17**: any Unix.")'
+  's = s.replace("**OD-17**: Linux only, no degraded mode.", "**OD-17**: any Unix.").replace("Linux-only by construction", "Unix-only by construction")'
 
 proof "T172 — README offers macOS without the OD-17 refusal" \
   README.md \
