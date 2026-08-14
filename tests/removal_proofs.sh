@@ -6394,15 +6394,15 @@ proof "T189 instrument — _unrefused returns nothing, so a planted claim is fre
   "tests/contract/test_claims_audit.py::test_the_four_shape_scanners_fire_on_a_planted_claim" \
   's = s.replace("def _unrefused(pattern: re.Pattern[str], collapsed: str) -> list[str]:\n    hits: list[str] = []", "def _unrefused(pattern: re.Pattern[str], collapsed: str) -> list[str]:\n    return []\n    hits: list[str] = []")'
 
-proof "T189 — README claims a capability advantage for the curated tool surface" \
-  README.md \
+proof "T189 — spec-kit-workflow claims a capability advantage for the curated tool surface" \
+  docs/spec-kit-workflow.md \
   "tests/contract/test_claims_audit.py::test_live_trees_have_none_of_the_four_prohibited_shapes" \
-  's = s.replace("capability half of the thesis is not supported and the spec may not assert it.", "curated tool surface has a capability advantage and the spec may assert it.")'
+  's = s.replace("GitHub Spec Kit is the spec-driven development process of record for this repo.", "GitHub Spec Kit is the spec-driven development process of record for this repo. The curated tool surface has a capability advantage.")'
 
-proof "T189 — README asserts that synthesis is safer" \
-  README.md \
+proof "T189 — spec-kit-workflow asserts that synthesis is safer" \
+  docs/spec-kit-workflow.md \
   "tests/contract/test_claims_audit.py::test_live_trees_have_none_of_the_four_prohibited_shapes" \
-  's = s.replace("\"synthesis is safer\" may not be asserted at all.", "synthesis is safer than a hand-written surface.")'
+  's = s.replace("This is the operating manual: what is installed, what to run, and in what order.", "This is the operating manual: synthesis is safer than a hand-written surface.")'
 
 proof "T189 — README quotes a session cost with no basis or scope" \
   README.md \
