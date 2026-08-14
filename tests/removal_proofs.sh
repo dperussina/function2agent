@@ -7021,6 +7021,48 @@ proof "T214 — the Result is not attached, so GET /result stays 409" \
   src/runtime/answer.py \
   "tests/contract/test_startup_entry_points.py::test_a_run_fills_the_served_result" \
   's = s.replace("RESULT_IS_ATTACHED = True", "RESULT_IS_ATTACHED = False")'
+
+# --- T193 / T194 — attribution from the span trace; node terms mapped -----
+#
+# T193 scores SC-012 over the named failed-session fixture in
+# test_attribution.py: kind, position, typed outcome, terminal, and
+# rule_id on a denial, from the stored span records alone. T194 maps
+# FR-038's struck node terms onto turn and step, and records the terms
+# with no v1 subject rather than inventing them. Retry versus repair
+# stays T195's register. T196 / T198 / T200 / T202–T205 stay [ ].
+# T195 / T197 / T199 / T201 / T214 / T215 stay [X]. Every arm plants
+# rather than reasons, names a node, and uses a needle unique in its
+# file.
+
+proof "T193 — span position is inferred from list order, so a human names the failed span" \
+  src/runtime/trace_node.py \
+  "tests/contract/test_attribution.py::test_a_trace_missing_span_position_is_not_attributed_by_ordering" \
+  's = s.replace("INFER_FAILED_SPAN_FROM_ORDERING = False", "INFER_FAILED_SPAN_FROM_ORDERING = True")'
+
+proof "T193 — a denial without rule_id still attributes, so FR-011 is optional on the failing span" \
+  src/runtime/trace_node.py \
+  "tests/contract/test_attribution.py::test_a_denial_without_rule_id_is_not_attributable" \
+  's = s.replace("DENIAL_WITHOUT_RULE_ID_IS_ATTRIBUTABLE = False", "DENIAL_WITHOUT_RULE_ID_IS_ATTRIBUTABLE = True")'
+
+proof "T193 — an empty population scores 100%, so SC-012 is vacuously green" \
+  src/runtime/trace_node.py \
+  "tests/contract/test_attribution.py::test_an_empty_population_is_vacuous" \
+  's = s.replace("EMPTY_POPULATION_IS_ONE_HUNDRED_PERCENT = False", "EMPTY_POPULATION_IS_ONE_HUNDRED_PERCENT = True")'
+
+proof "T193 — attribution is planted to re-run the session, so the trace alone is not enough" \
+  src/runtime/trace_node.py \
+  "tests/contract/test_attribution.py::test_attribution_does_not_re_run_the_session" \
+  's = s.replace("ATTRIBUTION_IMPORTS_THE_LOOP = False", "ATTRIBUTION_IMPORTS_THE_LOOP = True")'
+
+proof "T194 — a missing node identity is repaired by minting one, so v1 grows a graph it does not emit" \
+  src/runtime/trace_node.py \
+  "tests/contract/test_attribution.py::test_a_missing_node_identity_is_not_repaired_by_minting_one" \
+  's = s.replace("MINT_NODE_ID = False", "MINT_NODE_ID = True")'
+
+proof "T194 — a retry definition is invented, so an undefined distinction looks settled in the mapping" \
+  src/runtime/trace_node.py \
+  "tests/contract/test_attribution.py::test_retry_versus_repair_points_at_the_register_and_does_not_define" \
+  's = s.replace("RETRY_DEFINITION = None", "RETRY_DEFINITION = \"A retry is a repeated span\"")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"
