@@ -7063,6 +7063,77 @@ proof "T194 — a retry definition is invented, so an undefined distinction look
   src/runtime/trace_node.py \
   "tests/contract/test_attribution.py::test_retry_versus_repair_points_at_the_register_and_does_not_define" \
   's = s.replace("RETRY_DEFINITION = None", "RETRY_DEFINITION = \"A retry is a repeated span\"")'
+
+# --- T202 / T203 / T204 — enforcement-point review, SC-001 scope, re-check -
+#
+# T202 walks the four named failure classes; dropping one, or claiming
+# U-44 closed, fails. T203 quotes the T116 size and the one codegraph
+# datapoint; inventing a reference-app node count, or closing U-21,
+# fails. T204 re-checks the eight principles; marking VI Held, or
+# treating OD-36 as undischarged, fails. T193 / T194 / T195 / T197 /
+# T199 / T201 / T214 / T215 stay [X]. T205 stays [ ]. Every arm plants
+# rather than reasons, names a node, and uses a needle unique in its
+# file.
+
+proof "T202 — security-review drops request smuggling, so a named class is unaudited" \
+  docs/security-review.md \
+  "tests/contract/test_security_review.py::test_the_review_exists_and_names_all_four_classes" \
+  's = s.replace("Request smuggling", "Request framing-desync")'
+
+proof "T202 — U-44 is planted closed, so the confused-deputy composition looks discharged" \
+  docs/security-review.md \
+  "tests/contract/test_security_review.py::test_u44_is_not_claimed_closed" \
+  's = s.replace("that unmeasured property. U-44 is **open**.", "that unmeasured property. U-44 is closed.")'
+
+proof "T202 instrument — u44_closed_hits returns nothing, so a closed-gap claim is free" \
+  tests/contract/test_security_review.py \
+  "tests/contract/test_security_review.py::test_the_class_and_u44_scanners_fire_on_a_plant" \
+  's = s.replace("def u44_closed_hits(text: str) -> list[str]:\n    collapsed = _collapsed(text)\n    hits: list[str] = []", "def u44_closed_hits(text: str) -> list[str]:\n    return []\n    collapsed = _collapsed(text)\n    hits: list[str] = []")'
+
+proof "T202 — REQUIRED_CLASSES drops request smuggling, so the four-class floor is free" \
+  tests/contract/test_security_review.py \
+  "tests/contract/test_security_review.py::test_the_review_exists_and_names_all_four_classes" \
+  's = s.replace("    \"request smuggling\",\n", "")'
+
+proof "T203 — sc001-scope invents a reference-app node count from U-21s ratio" \
+  docs/sc001-scope.md \
+  "tests/contract/test_sc001_scope.py::test_the_scope_file_does_not_invent_a_reference_app_node_count" \
+  's = s.replace("no node count for this application has ever been taken", "the reference application node count is 1842")'
+
+proof "T203 — U-21 is planted closed, so the scale claim looks tested" \
+  docs/sc001-scope.md \
+  "tests/contract/test_sc001_scope.py::test_u21_is_not_claimed_closed" \
+  's = s.replace("U-21 is **open**.", "U-21 is closed.")'
+
+proof "T203 instrument — invented_node_counts returns nothing, so a derived count is free" \
+  tests/contract/test_sc001_scope.py \
+  "tests/contract/test_sc001_scope.py::test_the_node_count_and_u21_scanners_fire_on_a_plant" \
+  's = s.replace("def invented_node_counts(text: str) -> list[str]:\n    collapsed = _collapsed(text)\n    hits: list[str] = []", "def invented_node_counts(text: str) -> list[str]:\n    return []\n    collapsed = _collapsed(text)\n    hits: list[str] = []")'
+
+proof "T203 — the T116 line count is dropped, so SC-001 loses its denominator" \
+  docs/sc001-scope.md \
+  "tests/contract/test_sc001_scope.py::test_the_scope_file_quotes_the_t116_figures_and_the_gap" \
+  's = s.replace("606 lines", "many lines")'
+
+proof "T204 — Principle VI is planted Held, so an unmet residual looks discharged" \
+  docs/constitution-recheck.md \
+  "tests/contract/test_constitution_recheck.py::test_principle_vi_is_unmet_and_not_marked_held" \
+  's = s.replace("Observability Is a Prerequisite — Unmet", "Observability Is a Prerequisite — Held")'
+
+proof "T204 instrument — unmet_marked_held returns nothing, so a Held plant is free" \
+  tests/contract/test_constitution_recheck.py \
+  "tests/contract/test_constitution_recheck.py::test_the_unmet_as_held_scanner_fires_on_a_plant" \
+  's = s.replace("def unmet_marked_held(text: str) -> list[str]:\n    collapsed = _collapsed(text)\n    return [", "def unmet_marked_held(text: str) -> list[str]:\n    return []\n    collapsed = _collapsed(text)\n    return [")'
+
+proof "T204 — 5.14 is planted TESTED, so OD-17s untested floor looks measured" \
+  docs/constitution-recheck.md \
+  "tests/contract/test_constitution_recheck.py::test_current_head_residuals_are_named" \
+  's = s.replace("DERIVED NOT TESTED", "TESTED")'
+
+proof "T204 — EIGHT_PRINCIPLES drops Observability, so the eight-principle floor is free" \
+  tests/contract/test_constitution_recheck.py \
+  "tests/contract/test_constitution_recheck.py::test_the_recheck_exists_and_names_all_eight_principles" \
+  's = s.replace("    \"Observability Is a Prerequisite\",\n", "")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"

@@ -12,7 +12,8 @@ after analysis is work whose cost is a function of the question; analysis is
 work whose cost is a function of the *repository*, and **U-21** records
 `codegraph`'s scale claim as untested on a single small-repository datapoint
 (`adk-python`, 1,867 files, 48,154 nodes, 7.8 s — a small fraction of the
-claimed file count, extrapolating nothing).
+claimed file count, extrapolating nothing). The reference application's
+stated size and that datapoint are recorded in `docs/sc001-scope.md` (T203).
 
 Reported as one figure the criterion is quietly true on small inputs and
 quietly false on large ones, and no reader can tell which they are holding.

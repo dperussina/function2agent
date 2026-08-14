@@ -67,9 +67,10 @@ involved** (T-13); artifacts are canonically serialized and content-addressed.
 
 **Analysis wall time is reported separately**, and the reference application's size is stated
 alongside it. SC-001's fifteen-minute window contains this step, and **U-21** records `codegraph`'s
-scale claim as untested with one small-repository datapoint. Reporting the two separately is what
-makes SC-001 assessable instead of quietly true on small inputs ([`research.md`](./research.md)
-§7.2).
+scale claim as untested with one small-repository datapoint. The stated size, the `codegraph` gap,
+and the one measured datapoint are recorded in [`docs/sc001-scope.md`](../../docs/sc001-scope.md)
+(T203). Reporting the two separately is what makes SC-001 assessable instead of quietly true on
+small inputs ([`research.md`](./research.md) §7.2).
 
 ### 4 · Inspect before running
 
