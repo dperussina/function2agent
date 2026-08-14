@@ -56,20 +56,18 @@ INVENTED_REFAPP_NODES = re.compile(
 )
 
 U21_CLOSED = re.compile(
-    r"U-21.{0,40}(?:is\s+)?(?:closed|discharged|resolved|tested|met)\b"
+    r"U-21.{0,40}(?:is\s+)?(?<!un)(?:closed|discharged|resolved|tested|met)\b"
     r"|(?:closed|discharged|resolved)\s+U-21",
     re.I | re.S,
 )
 
+#: Only the gap sentence and the audit's own description. "untested" and
+#: "extrapolates nothing" sit next to both the open claim and a planted
+#: closed claim, so they cannot be the refusal.
 REFUSAL = re.compile(
     r"U-21 is \*\*open\*\*"
     r"|U-21 is open"
     r"|U-21 stays open"
-    r"|untested"
-    r"|extrapolates nothing"
-    r"|never taken"
-    r"|deliberately `?null`?"
-    r"|not a scale datapoint"
     r"|fails that test"
     r"|claims U-21 closed",
     re.I,
@@ -86,12 +84,12 @@ def invented_node_counts(text: str) -> list[str]:
     collapsed = _collapsed(text)
     hits: list[str] = []
     for match in INVENTED_REFAPP_NODES.finditer(collapsed):
-        window = collapsed[max(0, match.start() - 80) : match.end() + 80]
-        if REFUSAL.search(window):
+        snippet = collapsed[max(0, match.start() - 48) : match.end() + 48]
+        # A nearby `null` is the gap sentence. A digit in the match is
+        # an invented count; do not let the gap sentence hide it.
+        if not re.search(r"\d", match.group(0)):
             continue
-        if "null" in window.lower() or "never taken" in window.lower():
-            continue
-        hits.append(collapsed[max(0, match.start() - 48) : match.end() + 48])
+        hits.append(snippet)
     return hits
 
 
