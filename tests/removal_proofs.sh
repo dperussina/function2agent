@@ -6296,6 +6296,79 @@ proof "T167 skip — missing docker no longer names the daemon" \
   "tests/batteries/test_environment_not_inherited.py::test_a_missing_docker_daemon_skip_names_the_daemon" \
   's = s.replace("Docker daemon is absent: `docker` is not on PATH", "docker is not on PATH")'
 
+# --- T173 / T174 — shadow judge off the request path, three inject modes ------
+#
+# FR-039 / SC-025. The writer is a typed verdict function, not a vendor SDK
+# (T058 still PARTIAL). T175's differential battery is not these arms; they
+# only keep the three modes selectable and the write off the request path.
+# Every arm plants rather than reasons, names a node, and uses a needle
+# that is unique in its file. T214 is still open: no run produces a Result.
+
+proof "T173 — consider writes the verdict inline, so the request path waits on the judge" \
+  src/runtime/judge/shadow.py \
+  "tests/unit/test_shadow_judge.py::test_consider_returns_before_the_verdict_is_written" \
+  's = s.replace("        self._queue.put(_VerdictJob(result_id, session_id, verifier_label))", "        self._write_verdict(_VerdictJob(result_id, session_id, verifier_label))")'
+
+proof "T173 — the stream sink writes a verdict, so consumption is a success-path insert" \
+  src/runtime/judge/shadow.py \
+  "tests/unit/test_shadow_judge.py::test_consuming_the_stream_writes_no_row" \
+  's = s.replace("        self._queue.put(_EventJob(event))", "        self._seen.append(event)\n        self._write_verdict(_VerdictJob(\"from-event\", event.session_id, \"correct\"))")'
+
+proof "T173 — an empty result id is accepted, so a verdict is keyed to nothing" \
+  src/runtime/judge/shadow.py \
+  "tests/unit/test_shadow_judge.py::test_an_empty_result_id_is_refused" \
+  's = s.replace("        if not result_id:", "        if False:")'
+
+proof "T173 — a success-path role may construct the writer" \
+  src/runtime/judge/shadow.py \
+  "tests/unit/test_shadow_judge.py::test_a_success_path_role_cannot_write_the_table" \
+  's = s.replace("        if repository.role != ROLE_SHADOW_JUDGE:", "        if False and repository.role != ROLE_SHADOW_JUDGE:")'
+
+proof "T173 — off mode still starts the worker thread" \
+  src/runtime/judge/shadow.py \
+  "tests/unit/test_shadow_judge.py::test_off_mode_starts_no_thread_and_writes_nothing" \
+  's = s.replace("        if self._decide is not None:", "        if True:")'
+
+proof "T173 — the judge-to-result plant scan appends nothing, so a planted import is free" \
+  tests/unit/test_shadow_judge.py \
+  "tests/unit/test_shadow_judge.py::test_the_judge_import_scan_fires_on_a_planted_result_import" \
+  's = s.replace("                edges.append(f\"{path.name} imports {imported}\")", "                pass")'
+
+proof "T173 — the success-path-to-judge plant scan appends nothing, so a planted edge is free" \
+  tests/unit/test_shadow_judge.py \
+  "tests/unit/test_shadow_judge.py::test_the_success_path_import_scan_fires_on_a_planted_judge_edge" \
+  's = s.replace("            found.append(imported)", "            pass")'
+
+proof "T173 — T214 residual is marked closed, so a missing Result from a run reads as discharged" \
+  tests/unit/test_shadow_judge.py \
+  "tests/unit/test_shadow_judge.py::test_no_run_produces_a_result_t214_is_still_open" \
+  's = s.replace("T214_RESIDUAL_NO_RUN_PRODUCES_A_RESULT = True", "T214_RESIDUAL_NO_RUN_PRODUCES_A_RESULT = False")'
+
+proof "T174 — off mode returns the agreeing function, so not-running still writes" \
+  src/runtime/judge/inject.py \
+  "tests/unit/test_judge_inject.py::test_off_writes_no_verdict" \
+  's = s.replace("    if mode == MODE_OFF:\n        return None", "    if mode == MODE_OFF:\n        return _agree")'
+
+proof "T174 — agree mode returns the disagreeing function" \
+  src/runtime/judge/inject.py \
+  "tests/unit/test_judge_inject.py::test_agree_writes_the_verifier_label" \
+  's = s.replace("    if mode == MODE_AGREE:\n        return _agree", "    if mode == MODE_AGREE:\n        return _disagree")'
+
+proof "T174 — disagree mode returns the agreeing function" \
+  src/runtime/judge/inject.py \
+  "tests/unit/test_judge_inject.py::test_disagree_writes_the_other_label" \
+  's = s.replace("    if mode == MODE_DISAGREE:\n        return _disagree", "    if mode == MODE_DISAGREE:\n        return _agree")'
+
+proof "T174 — an unknown mode is returned rather than refused" \
+  src/runtime/judge/inject.py \
+  "tests/unit/test_judge_inject.py::test_an_unknown_mode_is_refused" \
+  's = s.replace("    raise JudgeInjectError(", "    return _agree\n    raise JudgeInjectError(")'
+
+proof "T174 — MODES drops off, so the third run cannot be named" \
+  src/runtime/judge/inject.py \
+  "tests/unit/test_judge_inject.py::test_the_three_modes_are_selectable" \
+  's = s.replace("MODES: tuple[str, ...] = (MODE_AGREE, MODE_DISAGREE, MODE_OFF)", "MODES: tuple[str, ...] = (MODE_AGREE, MODE_DISAGREE)")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
