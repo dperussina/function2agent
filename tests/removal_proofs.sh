@@ -6060,6 +6060,53 @@ proof "T164 select — MODEL_PROVIDER is ignored, so every run shares one vendor
   "tests/batteries/test_four_providers.py::test_the_us1_path_is_selectable_for_every_provider" \
   's = s.replace("        \"MODEL_PROVIDER\": provider,\n", "        \"MODEL_PROVIDER\": PROVIDERS[0],\n")'
 
+# --- T170 — cassette-backed tests over the core path -------------------------
+#
+# Every arm plants rather than reasons, and names a node. The loop hook, the
+# journal column, the client flag that would collapse this file to T061, a
+# missing cassette, a shared vendor, a fake call, a derived cassette cited as
+# recorded, and the isolation assertion that T061 does not drive the loop.
+
+proof "T170 core-path hook — the client ignores the loops provider_states" \
+  tests/conformance/test_core_path_cassettes.py \
+  "tests/conformance/test_core_path_cassettes.py::test_the_loop_round_trips_cassette_state_for_every_provider" \
+  's = s.replace("CORE_PATH_STATES = True", "CORE_PATH_STATES = False")'
+
+proof "T170 loop record — _record drops provider_state so the next turn carries nothing" \
+  src/runtime/loop.py \
+  "tests/conformance/test_core_path_cassettes.py::test_the_loop_round_trips_cassette_state_for_every_provider" \
+  's = s.replace("            provider=response.provider,\n            provider_state=response.provider_state,\n            tool_calls=tuple(response.tool_calls),", "            provider=response.provider,\n            provider_state=None,\n            tool_calls=tuple(response.tool_calls),")'
+
+proof "T170 journal — commit_outcome omits the opaque column the loop just received" \
+  src/runtime/loop.py \
+  "tests/conformance/test_core_path_cassettes.py::test_the_loop_round_trips_cassette_state_for_every_provider" \
+  's = s.replace("            payload=encode_model_outcome(response),\n            provider_state=response.provider_state, at=self.clock())", "            payload=encode_model_outcome(response),\n            provider_state=None, at=self.clock())")'
+
+proof "T170 select — MODEL_PROVIDER is ignored, so every cassette shares one vendor" \
+  tests/conformance/test_core_path_cassettes.py \
+  "tests/conformance/test_core_path_cassettes.py::test_the_loop_round_trips_cassette_state_for_every_provider" \
+  's = s.replace("        \"MODEL_PROVIDER\": cassette.provider,\n", "        \"MODEL_PROVIDER\": \"anthropic\",\n")'
+
+proof "T170 coverage — CORE_PATH_CASSETTES drops a closed provider" \
+  tests/conformance/test_core_path_cassettes.py \
+  "tests/conformance/test_core_path_cassettes.py::test_every_closed_provider_has_a_core_path_cassette" \
+  's = s.replace("CORE_PATH_CASSETTES = PROVIDER_CASSETTES", "CORE_PATH_CASSETTES = PROVIDER_CASSETTES[:-1]")'
+
+proof "T170 call — the client invokes ProviderDriver.call instead of the player" \
+  tests/conformance/test_core_path_cassettes.py \
+  "tests/conformance/test_core_path_cassettes.py::test_the_loop_round_trips_cassette_state_for_every_provider" \
+  's = s.replace("        payload = self.player.respond(\n            index, request, conversation_length=len(turns))", "        payload = self.selected.driver.call(request)")'
+
+proof "T170 provenance — a derived cassette is cited as a live measurement" \
+  tests/conformance/test_core_path_cassettes.py \
+  "tests/conformance/test_core_path_cassettes.py::test_the_loop_round_trips_cassette_state_for_every_provider" \
+  's = s.replace("    with pytest.raises(harness.ProvenanceError, match=\"synthetic\"):\n        cassette.require_recorded()", "    cassette.require_recorded()")'
+
+proof "T170 isolation — T061 is allowed to name the loop this file uniquely owns" \
+  tests/conformance/test_core_path_cassettes.py \
+  "tests/conformance/test_core_path_cassettes.py::test_this_file_drives_the_loop_and_t061_does_not" \
+  's = s.replace("    assert \"AgentLoop\" not in there", "    assert \"AgentLoop\" in there")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
