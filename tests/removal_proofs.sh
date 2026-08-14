@@ -140,6 +140,11 @@ mkdir -p "$WORK" || exit 1
 #       a document in `specs/*/contracts/`. The WHOLE tree, not `002` alone,
 #       because tools/corpuscheck walks `specs/*/findings` and a partial copy
 #       trades one missing-file baseline failure for another.
+#   docs
+#       added under T189/T190. tests/contract/test_claims_audit.py and
+#       test_support_audit.py read docs/claims-audit.md and docs/support-audit.md
+#       as the record, and walk the docs/ tree as a live surface. T172 already
+#       walked docs/ but did not require a file inside it.
 #
 # The Go arms need the fixtures at the relative path the tests use
 # (src/proxy/../../tests/fixtures), which `tests` already satisfies.
@@ -193,7 +198,7 @@ mkdir -p "$WORK" || exit 1
 # measurement above attached so it need not be re-derived.
 
 #: Every top-level path the work tree must contain. Asserted, not assumed.
-REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github specs .gitignore README.md"
+REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github specs .gitignore README.md docs"
 
 #: Every top-level path deliberately NOT copied, so that `unlisted_top_level`
 #: can tell "declared unnecessary" from "nobody has looked at it yet". Keeping
@@ -202,7 +207,7 @@ REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github 
 #: right direction for a list nobody is obliged to maintain.
 #:
 #: .git/.venv and the caches are environment. `examples/` is 1.38 GB of vendored
-#: read-only reference repos. `research/`, `docs/`, `LICENSE`, `.cursor/` and
+#: read-only reference repos. `research/`, `LICENSE`, `.cursor/` and
 #: `.specify/` are read by nothing under `tests/` except as dated records.
 #: **`README.md` left this list under T172** — `tests/contract/test_platform_statement.py`
 #: reads it as a supported-platform surface, the same third form (``REPO / name``)
@@ -210,6 +215,11 @@ REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github 
 #: path literals and for segment joins off a repo-root variable — the two forms
 #: `.github` and `deploy` are reached by — and that verification is what T172
 #: falsified for README.md.
+#: **`docs/` left this list under T189/T190** — `tests/contract/test_claims_audit.py`
+#: and `tests/contract/test_support_audit.py` read the audit files as the record
+#: and walk the `docs/` tree as a live surface (``REPO / AUDIT``). T172 already
+#: walked `docs/` as a live tree but left it here because no test then required
+#: a file inside it.
 #:
 #: **That verification was wrong about one entry, and the entry is instructive.**
 #: `.gitignore` sat on this list until 2026-08-11, and
@@ -225,7 +235,7 @@ REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github 
 # produces this one in the tree. Recorded as looked-at-and-not-needed so its
 # appearance is not an unrelated failure in the path-accounting guard. It cannot
 # mask a copy-list defect: nothing the suite reads lives in a type-checker cache.
-NOT_NEEDED_PATHS=".git .venv examples research docs LICENSE .cursor .specify .pytest_cache .ruff_cache .mypy_cache"
+NOT_NEEDED_PATHS=".git .venv examples research LICENSE .cursor .specify .pytest_cache .ruff_cache .mypy_cache"
 
 # unlisted_top_level <dir> -> the entries of <dir> in neither list, one per line.
 #
@@ -6368,6 +6378,91 @@ proof "T174 — MODES drops off, so the third run cannot be named" \
   src/runtime/judge/inject.py \
   "tests/unit/test_judge_inject.py::test_the_three_modes_are_selectable" \
   's = s.replace("MODES: tuple[str, ...] = (MODE_AGREE, MODE_DISAGREE, MODE_OFF)", "MODES: tuple[str, ...] = (MODE_AGREE, MODE_DISAGREE)")'
+
+# --- T189 / T190, claims audit and support audit -----------------------------
+#
+# Every arm plants rather than reasons. The two scans succeed by finding
+# nothing, so an instrument that matches nothing, a live sentence that
+# adds a prohibited shape or an unfixtured support claim, a required-
+# surface list that shrinks, a fixture catalog that invents a language,
+# and a findings file entering the walk each have an arm. Needles are
+# unique in their file — Path("README.md") and the plan.md closer each
+# appear twice, so those tampers carry surrounding context.
+
+proof "T189 instrument — _unrefused returns nothing, so a planted claim is free" \
+  tests/contract/test_claims_audit.py \
+  "tests/contract/test_claims_audit.py::test_the_four_shape_scanners_fire_on_a_planted_claim" \
+  's = s.replace("def _unrefused(pattern: re.Pattern[str], collapsed: str) -> list[str]:\n    hits: list[str] = []", "def _unrefused(pattern: re.Pattern[str], collapsed: str) -> list[str]:\n    return []\n    hits: list[str] = []")'
+
+proof "T189 — README claims a capability advantage for the curated tool surface" \
+  README.md \
+  "tests/contract/test_claims_audit.py::test_live_trees_have_none_of_the_four_prohibited_shapes" \
+  's = s.replace("capability half of the thesis is not supported and the spec may not assert it.", "curated tool surface has a capability advantage and the spec may assert it.")'
+
+proof "T189 — README asserts that synthesis is safer" \
+  README.md \
+  "tests/contract/test_claims_audit.py::test_live_trees_have_none_of_the_four_prohibited_shapes" \
+  's = s.replace("\"synthesis is safer\" may not be asserted at all.", "synthesis is safer than a hand-written surface.")'
+
+proof "T189 — README quotes a session cost with no basis or scope" \
+  README.md \
+  "tests/contract/test_claims_audit.py::test_live_trees_have_none_of_the_four_prohibited_shapes" \
+  's = s.replace("Fail closed when either one moves.", "Fail closed when either one moves. A session costs $3.50.")'
+
+proof "T189 — README uses provably for effect resolution" \
+  README.md \
+  "tests/contract/test_claims_audit.py::test_live_trees_have_none_of_the_four_prohibited_shapes" \
+  's = s.replace("denies anything that is not a read", "provably resolves every effect as a read")'
+
+proof "T189 — REQUIRED_SURFACES drops README, so the walk no longer covers it" \
+  tests/contract/test_claims_audit.py \
+  "tests/contract/test_claims_audit.py::test_every_required_surface_exists_and_is_walked" \
+  's = s.replace("REQUIRED_SURFACES = (\n    Path(\"README.md\"),\n", "REQUIRED_SURFACES = (\n")'
+
+proof "T189 — a findings file enters the claims walk" \
+  tests/contract/test_claims_audit.py \
+  "tests/contract/test_claims_audit.py::test_dated_records_are_outside_the_walk" \
+  's = s.replace("    Path(\"deploy\"),\n    Path(\"src/supervisor/main.py\"),", "    Path(\"deploy\"),\n    Path(\"specs/002-spec-aware-agent-runtime/findings/README.md\"),\n    Path(\"src/supervisor/main.py\"),")'
+
+proof "T190 instrument — the support-offer scanner matches nothing, so no claim is free" \
+  tests/contract/test_support_audit.py \
+  "tests/contract/test_support_audit.py::test_the_support_offer_scanner_fires_on_a_planted_claim" \
+  's = s.replace("    for match in SUPPORT_OFFER.finditer(collapsed):", "    for match in SUPPORT_OFFER.finditer(collapsed[:0]):")'
+
+proof "T190 — README claims TypeScript is supported" \
+  README.md \
+  "tests/contract/test_support_audit.py::test_live_trees_do_not_claim_unsupported_names_as_supported" \
+  's = s.replace("nothing here reaches another language.", "the product supports TypeScript.")'
+
+proof "T190 — README claims FastAPI is supported" \
+  README.md \
+  "tests/contract/test_support_audit.py::test_live_trees_do_not_claim_unsupported_names_as_supported" \
+  's = s.replace("powers an estimated 70% of MCP servers", "the product supports FastAPI")'
+
+proof "T190 — README claims gRPC is a supported target shape" \
+  README.md \
+  "tests/contract/test_support_audit.py::test_live_trees_do_not_claim_unsupported_names_as_supported" \
+  's = s.replace("(HTTP/RPC), never in-process (D-01)", "(HTTP/RPC); the product supports gRPC (D-01)")'
+
+proof "T190 — FIXTURE_BACKED drops the analyzer, so Python support has no fixture row" \
+  tests/contract/test_support_audit.py \
+  "tests/contract/test_support_audit.py::test_every_fixture_backed_entry_has_a_committed_fixture_and_expected_output" \
+  's = s.replace("    (\n        \"language\",\n        \"hand-written Python\",\n        Path(\"tests/fixtures/analyzer/inventory-service/service.py\"),\n        Path(\"tests/fixtures/analyzer/inventory-service/expected.json\"),\n    ),\n", "")'
+
+proof "T190 — FIXTURE_BACKED invents TypeScript with no files on disk" \
+  tests/contract/test_support_audit.py \
+  "tests/contract/test_support_audit.py::test_every_fixture_backed_entry_has_a_committed_fixture_and_expected_output" \
+  's = s.replace("        Path(\"tests/fixtures/reference-app/questions.json\"),\n    ),\n)", "        Path(\"tests/fixtures/reference-app/questions.json\"),\n    ),\n    (\n        \"language\",\n        \"TypeScript\",\n        Path(\"tests/fixtures/analyzer/typescript/app.ts\"),\n        Path(\"tests/fixtures/analyzer/typescript/expected.json\"),\n    ),\n)")'
+
+proof "T190 — SUPPORTED_SPECIFICATION_SHAPES grows OpenAPI with no fixture" \
+  src/analysis/admission.py \
+  "tests/contract/test_support_audit.py::test_supported_specification_shapes_are_exactly_the_fixture_backed_target" \
+  's = s.replace("SUPPORTED_SPECIFICATION_SHAPES: tuple[str, ...] = (\"served_operation_set\",)", "SUPPORTED_SPECIFICATION_SHAPES: tuple[str, ...] = (\"served_operation_set\", \"openapi\")")'
+
+proof "T190 — a findings file enters the support walk" \
+  tests/contract/test_support_audit.py \
+  "tests/contract/test_support_audit.py::test_dated_records_are_outside_the_walk" \
+  's = s.replace("    Path(\"deploy\"),\n    Path(\"src/supervisor/main.py\"),", "    Path(\"deploy\"),\n    Path(\"specs/002-spec-aware-agent-runtime/findings/README.md\"),\n    Path(\"src/supervisor/main.py\"),")'
 
 echo
 _verdict="$PASS proved, $FAIL unproven"

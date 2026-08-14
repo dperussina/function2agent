@@ -449,10 +449,11 @@ def test_the_three_directories_that_were_added_retroactively_are_all_required():
     still passes — `unlisted_top_level` would report it, but only if it is also
     missing from `NOT_NEEDED_PATHS`, and the cheap way to silence a note is to
     add the path there. This closes that route for the three known directories
-    and for `README.md`, which T172 made load-bearing.
+    and for `README.md`, which T172 made load-bearing, and for `docs/`,
+    which T189/T190 made load-bearing.
     """
     required, not_needed = _path_lists()
-    for path in ("deploy", ".github", "specs", "README.md"):
+    for path in ("deploy", ".github", "specs", "README.md", "docs"):
         assert path in required, (
             f"`{path}` is not in REQUIRED_PATHS. It was added to the copy list "
             "retroactively after its absence made dependent arms report "
