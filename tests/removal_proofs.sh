@@ -5960,6 +5960,59 @@ proof "T119 run-time images — RUNTIME_IMAGES drops enforcement" \
   "tests/unit/test_codegraph_invocation.py::test_run_time_images_carry_no_javascript_toolchain" \
   's = s.replace("    REPO / \"deploy\" / \"images\" / \"enforcement.Dockerfile\",\n", "")'
 
+# --- T171, fail-loud through the shipped bundle --------------------------------
+#
+# Static half only. The live docker-run arms skip when the daemon is absent
+# or the image is not loaded, so a proof that named one of those nodes would
+# skip in CI and read as coverage. Every arm plants rather than reasons,
+# names a node, and uses a needle that is unique in its file.
+
+proof "T171 runtime — CMD no longer invokes the runtime entry point" \
+  deploy/images/runtime.Dockerfile \
+  "tests/integration/test_bundle_failloud.py::test_the_runtime_image_invokes_runtime_main" \
+  's = s.replace("CMD [\"python\", \"-m\", \"src.runtime.main\"]", "CMD [\"python\", \"-c\", \"pass\"]")'
+
+proof "T171 supervisor — CMD no longer invokes the supervisor entry point" \
+  deploy/images/supervisor.Dockerfile \
+  "tests/integration/test_bundle_failloud.py::test_the_supervisor_image_invokes_supervisor_main" \
+  's = s.replace("CMD [\"python\", \"-m\", \"src.supervisor.main\"]", "CMD [\"python\", \"-c\", \"pass\"]")'
+
+proof "T171 runtime — ENTRYPOINT true swallows the fail-loud path" \
+  deploy/images/runtime.Dockerfile \
+  "tests/integration/test_bundle_failloud.py::test_the_runtime_image_invokes_runtime_main" \
+  's = s.replace("# OD-36: report+exit. Linux only, no degraded mode (OD-17).\nCMD [\"python\", \"-m\", \"src.runtime.main\"]", "# OD-36: report+exit. Linux only, no degraded mode (OD-17).\nENTRYPOINT [\"true\"]\nCMD [\"python\", \"-m\", \"src.runtime.main\"]")'
+
+proof "T171 compose — runtime tool-result bound acquires a default" \
+  deploy/compose/compose.yaml \
+  "tests/integration/test_bundle_failloud.py::test_compose_supplies_no_default_keys_as_required_substitutions" \
+  's = s.replace("      TOOL_RESULT_BOUND_TOKENS: ${TOOL_RESULT_BOUND_TOKENS:?required}", "      TOOL_RESULT_BOUND_TOKENS: ${TOOL_RESULT_BOUND_TOKENS:-8000}")'
+
+proof "T171 compose — supervisor memory bound is dropped" \
+  deploy/compose/compose.yaml \
+  "tests/integration/test_bundle_failloud.py::test_compose_supplies_no_default_keys_as_required_substitutions" \
+  's = s.replace("      SANDBOX_MEMORY_MAX: ${SANDBOX_MEMORY_MAX:?required}\n", "")'
+
+proof "T171 analysis — unset entry check inverted so an empty module is execd" \
+  deploy/images/analysis.Dockerfile \
+  "tests/integration/test_bundle_failloud.py::test_the_analysis_image_is_not_a_third_fail_loud_main" \
+  's = s.replace("if [ -z ", "if [ -n ")'
+
+proof "T171 runtime image — target credential baked into a layer" \
+  deploy/images/runtime.Dockerfile \
+  "tests/integration/test_bundle_failloud.py::test_the_runtime_image_does_not_hold_the_target_credential" \
+  's = s.replace("CMD [\"python\", \"-m\", \"src.runtime.main\"]", "ENV F2A_TARGET_CREDENTIAL=x\nCMD [\"python\", \"-m\", \"src.runtime.main\"]")'
+
+proof "T171 supervisor image — provider credential baked into a layer" \
+  deploy/images/supervisor.Dockerfile \
+  "tests/integration/test_bundle_failloud.py::test_supervisor_analysis_and_sandbox_images_do_not_hold_the_provider_credential" \
+  's = s.replace("CMD [\"python\", \"-m\", \"src.supervisor.main\"]", "ENV F2A_PROVIDER_CREDENTIAL=x\nCMD [\"python\", \"-m\", \"src.supervisor.main\"]")'
+
+proof "T171 skip — missing docker no longer names the daemon" \
+  tests/integration/test_bundle_failloud.py \
+  "tests/integration/test_bundle_failloud.py::test_a_missing_docker_daemon_skip_names_the_daemon" \
+  's = s.replace("Docker daemon is absent: `docker` is not on PATH", "docker is not on PATH")'
+
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
