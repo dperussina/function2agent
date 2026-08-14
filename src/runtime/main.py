@@ -314,6 +314,8 @@ def bind_and_serve(
         log.refuse(f"the surface could not bind: {exc}")
 
     bound_host, bound_port = server.server_address[:2]
+    if isinstance(bound_host, (bytes, bytearray)):
+        bound_host = bound_host.decode()
     log.say(
         f"surface bound on {bound_host}:{bound_port} for admitted "
         f"session {view.session_id} (FR-033, OD-36)"
