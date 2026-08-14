@@ -6711,6 +6711,56 @@ proof "T181 — the document states 0.98 while the sentinel is unset, so a numbe
   "tests/unit/test_effect_precision.py::test_the_document_records_the_threshold_as_unset" \
   's = s.replace("            \"per_call_threshold\": None if unset else self.per_call_threshold,", "            \"per_call_threshold\": 0.98 if unset else self.per_call_threshold,")'
 
+# --- T182 / T183 / T184 — per-clock synthetic drift measurement ------------
+#
+# T182 reports detection rate, FAR and latency per clock through compare,
+# not compare_each. T183 pins the design before any rate is asserted.
+# T184 plants the world-property: deployment-clock latency is not
+# measurable on real traffic without a customer event FR-046 may not
+# assume. E13 never ran; these figures are synthetic. T180 / T185–T188 /
+# T214 / T215 are not these arms. Every arm plants rather than reasons,
+# names a node, and uses a needle unique in its file.
+
+proof "T182 — scoring without the pre-registration is allowed, so a rate runs against no design" \
+  tests/batteries/test_drift_measurement.py \
+  "tests/batteries/test_drift_measurement.py::test_the_harness_refuses_to_score_without_the_preregistration" \
+  's = s.replace("SCORING_WITHOUT_PREREGISTRATION_IS_ALLOWED = False", "SCORING_WITHOUT_PREREGISTRATION_IS_ALLOWED = True")'
+
+proof "T182 — an edited pre-registration is accepted, so a silent rewrite after the pin still scores" \
+  tests/batteries/test_drift_measurement.py \
+  "tests/batteries/test_drift_measurement.py::test_an_edited_preregistration_is_refused" \
+  's = s.replace("EDITED_PREREGISTRATION_IS_ACCEPTED = False", "EDITED_PREREGISTRATION_IS_ACCEPTED = True")'
+
+proof "T182 — compare_each is the one-clock path, so a missing clock is invented to call it" \
+  tests/batteries/test_drift_measurement.py \
+  "tests/batteries/test_drift_measurement.py::test_the_one_clock_path_is_compare_not_compare_each" \
+  's = s.replace("COMPARE_EACH_IS_THE_ONE_CLOCK_PATH = False", "COMPARE_EACH_IS_THE_ONE_CLOCK_PATH = True")'
+
+proof "T182 — the two clocks are fused into one rate, so which clock moved has no answer" \
+  tests/batteries/test_drift_measurement.py \
+  "tests/batteries/test_drift_measurement.py::test_the_clocks_are_not_fused" \
+  's = s.replace("CLOCKS_ARE_FUSED = False", "CLOCKS_ARE_FUSED = True")'
+
+proof "T182 — synthetic figures are reported as live, so E13 never having run is hidden" \
+  tests/batteries/test_drift_measurement.py \
+  "tests/batteries/test_drift_measurement.py::test_the_figures_are_synthetic_and_e13_never_ran" \
+  's = s.replace("FIGURES_ARE_LIVE_PRODUCTION_RATES = False", "FIGURES_ARE_LIVE_PRODUCTION_RATES = True")'
+
+proof "T182 — deployment change time is inferred from first detection, so the detector is scored against itself" \
+  tests/batteries/test_drift_measurement.py \
+  "tests/batteries/test_drift_measurement.py::test_deployment_latency_is_not_zero_by_self_measurement" \
+  's = s.replace("CHANGE_TIME_IS_INFERRED_FROM_FIRST_DETECTION = False", "CHANGE_TIME_IS_INFERRED_FROM_FIRST_DETECTION = True")'
+
+proof "T183 — a latency figure may omit its population, so the rate has no denominator" \
+  tests/batteries/test_drift_measurement.py \
+  "tests/batteries/test_drift_measurement.py::test_each_latency_figure_names_its_population" \
+  's = s.replace("LATENCY_FIGURE_MAY_OMIT_ITS_POPULATION = False", "LATENCY_FIGURE_MAY_OMIT_ITS_POPULATION = True")'
+
+proof "T184 — the world-property sentence is dropped, so inferring change time from first observation looks like a design gap" \
+  docs/preregistration/drift.md \
+  "tests/batteries/test_drift_measurement.py::test_t184_world_property_is_planted" \
+  's = s.replace("a property of the world, not a gap in the design", "a gap in the design we have not closed")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
