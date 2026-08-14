@@ -6464,6 +6464,67 @@ proof "T190 — a findings file enters the support walk" \
   "tests/contract/test_support_audit.py::test_dated_records_are_outside_the_walk" \
   's = s.replace("    Path(\"deploy\"),\n    Path(\"src/supervisor/main.py\"),", "    Path(\"deploy\"),\n    Path(\"specs/002-spec-aware-agent-runtime/findings/README.md\"),\n    Path(\"src/supervisor/main.py\"),")'
 
+# --- T175 — SC-025 differential: three inject modes, caller-visible identity --
+#
+# FR-052 / SC-025. T025 is the structural half. This battery compares the
+# caller-visible surfaces a run actually writes (RunOutcome, EventStream
+# frames, proxy-ingest gate dispositions) across agree / disagree / off,
+# and reads judge_verdict only to prove the three modes differed. T214
+# is still open: no run produces a Result, and a comparison of empty
+# Result lists is refused. Every arm plants rather than reasons, names a
+# node, and uses a needle that is unique in its file. T176 / T177 / T214
+# / T215 were not this slice. T189 plants above are not retargeted.
+
+proof "T175 vacuity — comparing empty Result lists is accepted as the battery" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_comparing_empty_result_lists_is_refused" \
+  's = s.replace("COMPARING_EMPTY_RESULT_LISTS_IS_THE_BATTERY = False", "COMPARING_EMPTY_RESULT_LISTS_IS_THE_BATTERY = True")'
+
+proof "T175 surfaces — gate_decisions is dropped from the population" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_the_caller_visible_surfaces_are_the_population" \
+  's = s.replace("CALLER_VISIBLE = (\n    \"run_outcome\",\n    \"event_stream\",\n    \"gate_decisions\",\n)", "CALLER_VISIBLE = (\n    \"run_outcome\",\n    \"event_stream\",\n)")'
+
+proof "T175 leak — caller-visible comparison includes judge_verdict" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_caller_visible_comparison_does_not_go_through_judge_verdict" \
+  's = s.replace("CALLER_VISIBLE = (\n    \"run_outcome\",\n    \"event_stream\",\n    \"gate_decisions\",\n)", "CALLER_VISIBLE = (\n    \"run_outcome\",\n    \"event_stream\",\n    \"gate_decisions\",\n    \"judge_verdict\",\n)")'
+
+proof "T175 identity — caller-visible surfaces are not compared" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_caller_visible_surfaces_and_gate_decisions_are_identical_across_modes" \
+  's = s.replace("SURFACES_ARE_COMPARED = True", "SURFACES_ARE_COMPARED = False")'
+
+proof "T175 modes — the three verdict populations are not required to differ" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_caller_visible_surfaces_and_gate_decisions_are_identical_across_modes" \
+  's = s.replace("THREE_MODES_WROTE_DIFFERENT_VERDICTS = True", "THREE_MODES_WROTE_DIFFERENT_VERDICTS = False")'
+
+proof "T175 off — off mode writing verdicts is accepted" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_caller_visible_surfaces_and_gate_decisions_are_identical_across_modes" \
+  's = s.replace("OFF_WRITES_NOTHING = True", "OFF_WRITES_NOTHING = False")'
+
+proof "T175 gate — empty gate dispositions are accepted" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_empty_gate_decisions_are_refused" \
+  's = s.replace("GATE_DECISIONS_MAY_BE_EMPTY = False", "GATE_DECISIONS_MAY_BE_EMPTY = True")'
+
+proof "T175 sessions — EVERY_SESSION is flipped so the second session is skipped" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_caller_visible_surfaces_and_gate_decisions_are_identical_across_modes" \
+  's = s.replace("EVERY_SESSION = True", "EVERY_SESSION = False")'
+
+proof "T175 T214 — residual is marked closed, so a missing Result from a run reads as discharged" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_no_run_produces_a_result_t214_is_still_open" \
+  's = s.replace("T214_RESIDUAL_NO_RUN_PRODUCES_A_RESULT = True", "T214_RESIDUAL_NO_RUN_PRODUCES_A_RESULT = False")'
+
+proof "T175 success-path — the planted judge import appends nothing, so a planted edge is free" \
+  tests/batteries/test_judge_differential.py \
+  "tests/batteries/test_judge_differential.py::test_the_success_path_import_scan_fires_on_a_planted_judge_edge" \
+  's = s.replace("            found.append(imported)", "            pass")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
