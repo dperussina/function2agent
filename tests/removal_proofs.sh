@@ -5788,6 +5788,52 @@ proof "T172 — README offers macOS without the OD-17 refusal" \
   "tests/contract/test_platform_statement.py::test_live_trees_do_not_add_an_unrefused_platform_contradiction" \
   's = s.replace("and Linux is the only supported\nplatform (OD-17).", "and Linux or macOS is supported.")'
 
+# --- T168 — FR-033 portability of emitted artifacts --------------------------
+#
+# Walk of the writers, not a second redaction filter. Secret already redacts;
+# FR-055 already moves hostnames out of the hashed payload. Each arm plants
+# rather than reasons. drop_bytecode is in apply_tamper.
+
+proof "T168 instrument — the leak scanner matches nothing, so no writer interpolates is free" \
+  tests/contract/test_artifact_portability.py \
+  "tests/contract/test_artifact_portability.py::test_the_scanner_catches_a_planted_leak" \
+  's = s.replace("    found: list[str] = []", "    found: list[str] = []\n    return found")'
+
+proof "T168 — WRITERS drops the journal, so the named population shrinks" \
+  tests/contract/test_artifact_portability.py \
+  "tests/contract/test_artifact_portability.py::test_named_writers_are_the_population" \
+  's = s.replace("    Path(\x22src/runtime/journal.py\x22),\n", "")'
+
+proof "T168 — admission_record fills decided_by_host from the operator hostname" \
+  src/analysis/admission_record.py \
+  "tests/contract/test_artifact_portability.py::test_no_writer_interpolates_operator_identity" \
+  's = s.replace("    if decided_by_host is not None:\n        document[\x22decided_by_host\x22] = decided_by_host", "    document[\x22decided_by_host\x22] = socket.gethostname() if decided_by_host is None else decided_by_host")'
+
+proof "T168 — journal interpolates os.getcwd into a persisted payload" \
+  src/runtime/journal.py \
+  "tests/contract/test_artifact_portability.py::test_no_writer_interpolates_operator_identity" \
+  's = s.replace("        encoded = _encode(payload)", "        encoded = _encode({**dict(payload), \x22cwd\x22: os.getcwd()})")'
+
+proof "T168 — trace interpolates Path.home into a span record" \
+  src/runtime/trace.py \
+  "tests/contract/test_artifact_portability.py::test_no_writer_interpolates_operator_identity" \
+  's = s.replace("            \x22detail\x22: dict(self.detail),", "            \x22detail\x22: dict(self.detail), \x22home\x22: Path.home(),")'
+
+proof "T168 — decision log interpolates os.Hostname into the detail column" \
+  src/proxy/decisionlog.go \
+  "tests/contract/test_artifact_portability.py::test_the_decision_log_fingerprints_credentials_rather_than_revealing_them" \
+  's = s.replace("\t\trec.CredentialFingerprint,\n\t\trec.Detail,\n", "\t\trec.CredentialFingerprint,\n\t\trec.Detail + func() string { h, _ := os.Hostname(); return h }(),\n")'
+
+proof "T168 — operator_log interpolates Secret.reveal into the channel" \
+  src/contracts/operator_log.py \
+  "tests/contract/test_artifact_portability.py::test_no_writer_interpolates_operator_identity" \
+  's = s.replace("        payload = (body + \x22\\n\x22).encode(\x22utf-8\x22, errors=\x22replace\x22)", "        payload = (body + secret.reveal() + \x22\\n\x22).encode(\x22utf-8\x22, errors=\x22replace\x22)")'
+
+proof "T168 — a feature-001 harness file enters the writer walk" \
+  tests/contract/test_artifact_portability.py \
+  "tests/contract/test_artifact_portability.py::test_dated_records_are_outside_the_walk" \
+  's = s.replace("    Path(\x22src/proxy/decisionlog.go\x22),\n)", "    Path(\x22src/proxy/decisionlog.go\x22),\n    Path(\x22specs/001-discovery-validation/harness/ceiling-test/envroot.py\x22),\n)")'
+
 # --- T161 / T162 / T163, Phase 7 credential planes, topology, selection ------
 #
 # Every arm plants rather than reasons, and names a node. Mix of planes, a

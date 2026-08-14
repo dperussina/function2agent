@@ -60,7 +60,6 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-import socket
 from dataclasses import dataclass
 from typing import Any, Mapping
 
@@ -77,7 +76,8 @@ KIND = "admission_decision"
 
 #: What `produced_by` and `moved_by` say on the artifact rows. A fixed string
 #: rather than a hostname: those two columns say which *component* wrote the
-#: record, and the host is on the record itself under FR-055's envelope.
+#: record. FR-033 forbids this module interpolating the operator's host; a
+#: caller-supplied identity may still travel in FR-055's envelope.
 PRODUCER = "src.analysis.admission_record"
 
 
@@ -257,15 +257,20 @@ def record(
     module that reads the clock itself cannot be tested against a specific one.
 
     `decided_at` is a parameter for the same reason and falls back to `now` in
-    ISO form only when the caller does not supply one. Both it and
-    `decided_by_host` are volatile under FR-055 and travel in the envelope.
+    ISO form only when the caller does not supply one. It is volatile under
+    FR-055 and travels in the envelope.
+
+    `decided_by_host` is also volatile under FR-055, and it is **not** filled
+    from the operator machine. FR-033 forbids writing an operator-specific
+    hostname into an emitted artifact. A caller may supply a fixture identity
+    that belongs in the envelope; omitting the argument is the portable
+    default, not `socket.gethostname()`.
     """
     entry = AdmissionRecord.from_decision(decision)
     document = entry.document()
     document["decided_at"] = decided_at if decided_at is not None else _iso(now)
-    document["decided_by_host"] = (
-        decided_by_host if decided_by_host is not None else socket.gethostname()
-    )
+    if decided_by_host is not None:
+        document["decided_by_host"] = decided_by_host
     return store.publish(
         KIND, document, produced_by=PRODUCER, moved_by=PRODUCER, now=now)
 
