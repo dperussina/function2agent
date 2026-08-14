@@ -175,6 +175,18 @@ OWNERSHIP: tuple[TableOwnership, ...] = (
               "table is structurally apart from every success-path "
               "table. Written by the proxy at the enforcement point; "
               "not a second writer of proxy_decision."),
+
+    # battery run → analysis; measurement only. T185's freeze.
+    _own("battery_run", ROLE_ANALYSIS,
+         note="FR-053 / U-47: the frozen measurement artifact. "
+              "NEVER read by the success path. The empty reader set is "
+              "the same shape as judge_verdict and effect_gate_observation "
+              "— a mapped reader role could start treating a freeze as "
+              "a success-path input. Written by analysis at freeze time; "
+              "T187 will assert this table is structurally apart. The "
+              "writer lives in src/runtime/batteries/freeze.py and is "
+              "not imported from loop.py, serving.py, main.py, or "
+              "result.py."),
 )
 
 BY_TABLE: Mapping[str, TableOwnership] = {row.table: row for row in OWNERSHIP}

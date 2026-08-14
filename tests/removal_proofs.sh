@@ -6810,6 +6810,35 @@ proof "T180 — the judge import scan appends nothing, so a planted shadow-judge
   tests/batteries/test_effect_gate_oracle.py \
   "tests/batteries/test_effect_gate_oracle.py::test_the_judge_import_scan_fires_on_a_planted_edge" \
   's = s.replace("                found.append(imported)", "                pass")'
+
+# --- T185 / T186 — BatteryRun freeze, U-47 four terms ----------------------
+#
+# T185 freezes a BatteryRun carrying U-47's four terms. T186 is four
+# loader refusals, one per term, each failing rather than warning. A
+# freeze that only hashes a prompt file is not the success path. T187
+# / T188 / T191 / T192 / T214 / T215 are not these arms. Every arm
+# plants rather than reasons, names a node, and uses a needle unique
+# in its file.
+
+proof "T186 — the in-record prompt check is dropped, so an edited prompt rebases the corpus" \
+  src/runtime/batteries/freeze.py \
+  "tests/contract/test_battery_loader.py::test_an_edited_prompt_fails_rather_than_warns" \
+  's = s.replace("IN_RECORD_PROMPT_CHECK_IS_DROPPED = False", "IN_RECORD_PROMPT_CHECK_IS_DROPPED = True")'
+
+proof "T186 — a changed battery version is accepted, so a pin that moved still loads" \
+  src/runtime/batteries/freeze.py \
+  "tests/contract/test_battery_loader.py::test_a_changed_battery_version_fails_rather_than_warns" \
+  's = s.replace("CHANGED_BATTERY_VERSION_IS_ACCEPTED = False", "CHANGED_BATTERY_VERSION_IS_ACCEPTED = True")'
+
+proof "T186 — the census re-check is skipped, so a corpus that changed shape reports rather than fails" \
+  src/runtime/batteries/freeze.py \
+  "tests/contract/test_battery_loader.py::test_a_census_mismatch_fails_rather_than_warns" \
+  's = s.replace("CENSUS_RECHECK_IS_SKIPPED = False", "CENSUS_RECHECK_IS_SKIPPED = True")'
+
+proof "T186 — a cross-battery join is performed, so the analysis path mixes batteries" \
+  src/runtime/batteries/freeze.py \
+  "tests/contract/test_battery_loader.py::test_a_cross_battery_join_fails_rather_than_warns" \
+  's = s.replace("CROSS_BATTERY_JOIN_IS_PERFORMED = False", "CROSS_BATTERY_JOIN_IS_PERFORMED = True")'
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
