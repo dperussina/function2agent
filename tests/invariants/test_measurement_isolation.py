@@ -81,6 +81,7 @@ SUCCESS_PATH_PREFIXES = (
     "src/runtime/runner.py",
     "src/runtime/serving.py",
     "src/runtime/main.py",
+    "src/runtime/answer.py",
     "src/runtime/journal.py",
     "src/runtime/trace.py",
     "src/runtime/ledger.py",

@@ -78,6 +78,7 @@ from src.contracts.credentials import (
 from src.contracts.operator_log import OperatorLog
 from src.contracts.secret import Secret
 from src.contracts.topology import RUNTIME_ADDR_KEY
+from src.runtime.answer import AnswerError, complete_served_run
 from src.runtime.events import EventStream
 from src.runtime.providers.base import ProviderError
 from src.runtime.providers.costs import CostTableError, require_priceable
@@ -105,6 +106,9 @@ BUILD_SERVER_IS_CALLED = True
 #: The view's session identity is the admitted deployment, reached through
 #: `gate`. False invents `session_id="test"` — the fixture T215 forbids.
 VIEW_COMES_FROM_ADMISSION_GATE = True
+#: T214 — the admitted session's answer path runs. False leaves
+#: `view.result` as `None` and GET /result as 409.
+ANSWER_PATH_RUNS = True
 
 #: The runtime's own store under `F2A_STATE_DIR` — the journal, the ledger and
 #: the ceilings. A different file from the supervisor's `sessions.db` because
@@ -292,6 +296,14 @@ def bind_and_serve(
     registry = Registry()
     if REGISTER_IS_CALLED:
         registry.register(view)
+    if ANSWER_PATH_RUNS:
+        try:
+            complete_served_run(registry, view.session_id)
+        except AnswerError as exc:
+            log.refuse(
+                f"the answered quantity could not become a Result "
+                f"(FR-025): {exc}"
+            )
     if not BUILD_SERVER_IS_CALLED:
         log.refuse("build_server was planted off (T215)")
     try:

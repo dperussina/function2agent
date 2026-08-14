@@ -540,11 +540,14 @@ def test_an_admitted_target_constructs_a_registry_and_binds(
         )
         assert events.status == 200
         assert "session_started" in events.read().decode()
-        with pytest.raises(urllib.error.HTTPError) as result:
-            urllib.request.urlopen(
-                f"http://127.0.0.1:{port}/sessions/d-1/result", timeout=5
-            )
-        assert result.value.code == 409
+        result = urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/sessions/d-1/result", timeout=5
+        )
+        assert result.status == 200
+        body = json.loads(result.read().decode())
+        assert body["session_id"] == "d-1"
+        assert body["verification"] != "model_assessed"
+        assert body["payload"]["lot_count"] == 3
         with pytest.raises(urllib.error.HTTPError) as unknown:
             urllib.request.urlopen(
                 f"http://127.0.0.1:{port}/sessions/test/events", timeout=5
@@ -626,6 +629,36 @@ def test_registry_and_register_and_build_server_are_live_in_src() -> None:
     assert "build_server(" in source
     assert source.count("Registry(") >= 1
     assert runtime_main.BINDS_AFTER_STARTUP is True
+
+
+def test_a_run_fills_the_served_result(log, tmp_path) -> None:
+    """T214 discharge: GET /result is a verification outcome, not 409."""
+    assert runtime_main.ANSWER_PATH_RUNS is True
+    bound: list[object] = []
+    runtime_main.main(
+        env=_bind_env(tmp_path),
+        log=log,
+        today=AS_OF,
+        fetch_specification=_published_spec,
+        serve=bound.append,
+    )
+    server = bound[0]
+    host, port = server.server_address[:2]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        result = urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/sessions/d-1/result", timeout=5
+        )
+        body = json.loads(result.read().decode())
+        assert result.status == 200
+        assert body["verification"] == "verified"
+        assert body["verification"] != "model_assessed"
+        assert body["payload"]["lot_count"] == 3
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
 
 
 def test_the_supervisor_closing_line_is_untouched() -> None:

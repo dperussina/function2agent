@@ -228,6 +228,26 @@ class Registry:
     def view(self, session_id: str) -> SessionView | None:
         return self._views.get(session_id)
 
+    def attach_result(self, session_id: str, result: Result) -> None:
+        """Put a run-produced `Result` on an already-registered view.
+
+        A second `register` is refused so a live stream cannot be replaced.
+        A completed run still has to attach what verification produced, and
+        that is a new view of the same stream, not a second session.
+        """
+        view = self._views.get(session_id)
+        if view is None:
+            raise SurfaceError(
+                f"{session_id!r} is not registered. A result cannot be "
+                "attached to a session this surface has not been told about."
+            )
+        self._views[session_id] = SessionView(
+            session_id=view.session_id,
+            stream=view.stream,
+            result=result,
+            end_of_run=view.end_of_run,
+        )
+
 
 def _end_of_run(view: SessionView) -> EndOfRun | None:
     """The marker, from the view or from the stream's last event.

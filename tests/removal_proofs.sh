@@ -6987,6 +6987,40 @@ proof "T215 — the view is a hand-built test session, so admission.gate is not 
   src/runtime/main.py \
   "tests/contract/test_startup_entry_points.py::test_the_view_is_not_a_hand_built_test_session" \
   's = s.replace("VIEW_COMES_FROM_ADMISSION_GATE = True", "VIEW_COMES_FROM_ADMISSION_GATE = False")'
+
+# --- T214 — verification call site: verify then join, Result from a run -----
+#
+# T214 obtains a reported quantity from the runtime's own answer path,
+# calls verify_quantity, and hands the report to result_from_report.
+# A caller-visible Result is produced by a run. to_result is the
+# planted invert. T205 stays [ ]. T215 stays [X]. Every arm plants
+# rather than reasons, names a node, and uses a needle unique in its
+# file.
+
+proof "T214 — the answer path is planted off, so GET /result stays 409" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_a_run_fills_the_served_result" \
+  's = s.replace("ANSWER_PATH_RUNS = True", "ANSWER_PATH_RUNS = False")'
+
+proof "T214 — verify_quantity is planted off, so no Result is produced by a run" \
+  src/runtime/answer.py \
+  "tests/unit/test_answer.py::test_a_run_produces_a_result_from_verify_then_join" \
+  's = s.replace("VERIFY_IS_CALLED = True", "VERIFY_IS_CALLED = False")'
+
+proof "T214 — the join is planted off, so the report exists and no record is produced" \
+  src/runtime/answer.py \
+  "tests/unit/test_answer.py::test_a_run_produces_a_result_from_verify_then_join" \
+  's = s.replace("JOIN_IS_CALLED = True", "JOIN_IS_CALLED = False")'
+
+proof "T214 — Result comes from to_result, so verify is skipped and layering is inverted" \
+  src/runtime/answer.py \
+  "tests/unit/test_answer.py::test_a_run_produces_a_result_from_verify_then_join" \
+  's = s.replace("RESULT_COMES_FROM_TO_RESULT = False", "RESULT_COMES_FROM_TO_RESULT = True")'
+
+proof "T214 — the Result is not attached, so GET /result stays 409" \
+  src/runtime/answer.py \
+  "tests/contract/test_startup_entry_points.py::test_a_run_fills_the_served_result" \
+  's = s.replace("RESULT_IS_ATTACHED = True", "RESULT_IS_ATTACHED = False")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"
