@@ -501,6 +501,15 @@ def test_no_engine_specific_sql_lives_above_the_repository() -> None:
         # file for write- and schema-bearing SQL, so what is suspended is
         # "no engine-specific SQL" and not "no writes".
         root / "runtime" / "proxy_ingest.py",
+        # T179. Reads the *enforcement point's* observation table — the same
+        # foreign store as the ingest, a different table, still written by
+        # Go, still without FR-035's scope columns. A report reader, not a
+        # mapped success-path reader: the ownership row's reader set stays
+        # empty. Same footing, same narrowing:
+        # `tests/unit/test_effect_corpus.py`'s
+        # `test_the_exporter_issues_no_write_statement_at_all` scans the
+        # file for write- and schema-bearing SQL.
+        root / "runtime" / "reports" / "effect_corpus.py",
     }
 
     offenders: list[str] = []
