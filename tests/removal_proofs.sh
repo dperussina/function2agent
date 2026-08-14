@@ -6869,6 +6869,29 @@ proof "T192 — NOT TESTED is weakened, so a derived floor reads as a tested one
   src/runtime/reports/unvalidated.py \
   "tests/unit/test_unvalidated_report.py::test_the_kernel_floor_wording_is_not_weaker_than_preflight" \
   's = s.replace("    \"DERIVED from documented feature introduction and NOT TESTED on that \"", "    \"DERIVED from documented feature introduction and presumed adequate on that \"")'
+
+# --- T191 — SC-017 per-runtime adoption, unused-after-demo is non-adoption -
+#
+# T191 classifies each deployed runtime against SC-017's four-week
+# window. Installed-demonstrated-then-unused is a non-adoption, not an
+# install. An empty live census is not a green share over zero. T187 /
+# T214 / T215 are not these arms. Every arm plants rather than reasons,
+# names a node, and uses a needle unique in its file.
+
+proof "T191 — unused-after-demo is counted as an install, so a non-adoption looks like success" \
+  src/runtime/reports/adoption.py \
+  "tests/unit/test_adoption_report.py::test_installed_demonstrated_then_unused_is_a_non_adoption_not_an_install" \
+  's = s.replace("NON_ADOPTION_COUNTED_AS_INSTALL = False", "NON_ADOPTION_COUNTED_AS_INSTALL = True")'
+
+proof "T191 — the four-week wait is dropped, so day-1 unused is recorded as a non-adoption" \
+  src/runtime/reports/adoption.py \
+  "tests/unit/test_adoption_report.py::test_day_one_unused_is_not_a_non_adoption" \
+  's = s.replace("FOUR_WEEK_WAIT_IS_DROPPED = False", "FOUR_WEEK_WAIT_IS_DROPPED = True")'
+
+proof "T191 — an empty live census reports a green adoption share, so zero runtimes look adopted" \
+  src/runtime/reports/adoption.py \
+  "tests/unit/test_adoption_report.py::test_an_empty_live_census_is_not_a_green_adoption_share" \
+  's = s.replace("EMPTY_LIVE_CENSUS_IS_GREEN = False", "EMPTY_LIVE_CENSUS_IS_GREEN = True")'
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
