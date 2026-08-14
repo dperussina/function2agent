@@ -38,6 +38,16 @@ THIS = Path(__file__).resolve()
 #: `test_scenario_{letter}_*` function, is the omitted-scenario defect.
 REQUIRED_SCENARIOS = ("A", "B", "C", "D", "E")
 
+#: Exact function names. A prefix match would treat
+#: `test_scenario_b_still_names_the_egress_battery` as scenario B.
+SCENARIO_TEST_NAMES = {
+    "A": "test_scenario_a_verified_answer_unattended",
+    "B": "test_scenario_b_the_write_gate_holds",
+    "C": "test_scenario_c_the_boundary_holds",
+    "D": "test_scenario_d_drift_on_both_clocks",
+    "E": "test_scenario_e_verifier_vs_judge",
+}
+
 #: Planted residuals. Flipping one is the honesty-rule failure the
 #: named test exists to catch. Do not "fix" a proof by making the flag
 #: unused: the test reads the flag, then the behaviour.
@@ -435,10 +445,7 @@ def test_every_quickstart_scenario_is_present() -> None:
     missing = [
         letter
         for letter in REQUIRED_SCENARIOS
-        if not any(
-            name.startswith(f"test_scenario_{letter.lower()}_")
-            for name in names
-        )
+        if SCENARIO_TEST_NAMES[letter] not in names
     ]
     assert missing == [], (
         f"quickstart scenario(s) omitted from this file: {missing}. "
