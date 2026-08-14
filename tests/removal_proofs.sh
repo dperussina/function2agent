@@ -6912,6 +6912,47 @@ proof "T187 — journal.py names judge_verdict, so a success-path table is coupl
   src/runtime/journal.py \
   "tests/invariants/test_measurement_isolation.py::test_no_success_path_table_references_a_measurement_table" \
   's = s.replace("TABLE = \"turn_journal\"", "TABLE = \"turn_journal\"\nCOUPLED = \"judge_verdict\"")'
+
+# --- T195 / T197 / T199 — open definitions, operator obligations, overhead --
+#
+# T195 records retry-versus-repair as undefined; inventing a definition
+# is the failure. T197 states both Assumptions-section obligations
+# without weakening T172 or FR-050. T199 quotes T101's measured figure
+# with its basis and scope; a percentage T101 did not measure is the
+# failure. T201 is a tick of existing CI and adds no proofs. T193 /
+# T194 / T196 / T198 / T200 / T202–T205 / T214 / T215 are not these
+# arms. Every arm plants rather than reasons, names a node, and uses a
+# needle unique in its file.
+
+proof "T195 — retry versus repair is defined, so an undefined distinction looks settled" \
+  docs/open-definitions.md \
+  "tests/contract/test_open_definitions.py::test_the_register_does_not_invent_a_retry_or_repair_definition" \
+  's = s.replace("**The distinction between a retry and a repair is undefined in this specification.**", "**A retry is a repeated span and a repair is a compensating write.**")'
+
+proof "T195 — the undefined sentence is dropped, so FR-038's gap is no longer recorded" \
+  docs/open-definitions.md \
+  "tests/contract/test_open_definitions.py::test_the_register_exists_and_records_the_gap" \
+  's = s.replace("**The distinction between a retry and a repair is undefined in this specification.**", "**FR-038 names retry and repair.**")'
+
+proof "T197 — the enforcement-point obligation is dropped, so one of the two Assumptions duties vanishes" \
+  docs/operator-obligations.md \
+  "tests/contract/test_operator_obligations.py::test_the_obligations_file_exists_and_states_both" \
+  's = s.replace("The operator can run the enforcement point and route the agent'\''s\nenvironment through it.", "The operator can run the runtime without an enforcement point.")'
+
+proof "T197 — the filesystem-scoped no-credential obligation is dropped, so FR-050 is gone from the operator record" \
+  docs/operator-obligations.md \
+  "tests/contract/test_operator_obligations.py::test_the_obligations_file_exists_and_states_both" \
+  's = s.replace("filesystem-scoped, processor- and memory-bounded, and holds no\ncredential outliving the session", "reused across sessions and holds long-lived credentials")'
+
+proof "T199 — a percentage T101 did not measure is quoted as the overhead figure" \
+  docs/overhead.md \
+  "tests/contract/test_overhead.py::test_overhead_md_does_not_invent_a_percentage" \
+  's = s.replace("T101 did not measure a percentage. This file quotes none.", "The syscall supervisor'\''s overhead is 5%.")'
+
+proof "T199 — shell_heavy quotes 12.00 µs/notification, a figure T101 did not measure" \
+  docs/overhead.md \
+  "tests/contract/test_overhead.py::test_overhead_md_quotes_t101s_measured_figure" \
+  's = s.replace("58.67", "12.00")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"
