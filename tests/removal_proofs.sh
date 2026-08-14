@@ -6107,6 +6107,100 @@ proof "T170 isolation — T061 is allowed to name the loop this file uniquely ow
   "tests/conformance/test_core_path_cassettes.py::test_this_file_drives_the_loop_and_t061_does_not" \
   's = s.replace("    assert \"AgentLoop\" not in there", "    assert \"AgentLoop\" in there")'
 
+# --- T165 — session-wide secret scan over the four SC-004 surfaces ------------
+#
+# Every arm plants rather than reasons, and names a node. The scanner itself,
+# the four-surface population, the zero-session refusal, a leak into model
+# context, a leak through the tool result, an emptied persisted dump, the
+# every-session flag, and a second redaction filter.
+
+proof "T165 scanner — findings returns no planted values" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_the_scanner_catches_a_planted_secret_on_each_surface" \
+  's = s.replace("    return [secret for secret in secrets if secret in blob]", "    return []")'
+
+proof "T165 surfaces — traces is dropped from the population" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_the_four_surfaces_are_the_population" \
+  's = s.replace("    \"emitted_artifacts\",\n    \"traces\",\n    \"persisted_state\",", "    \"emitted_artifacts\",\n    \"persisted_state\",")'
+
+proof "T165 vacuity — a scan over zero sessions is allowed to pass" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_a_scan_over_zero_sessions_is_refused" \
+  's = s.replace("SCAN_OVER_ZERO_SESSIONS_PASSES = False", "SCAN_OVER_ZERO_SESSIONS_PASSES = True")'
+
+proof "T165 context — the capture site appends the planted provider value" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_every_session_the_battery_produces_is_clean_on_all_four_surfaces" \
+  's = s.replace("    bucket.append(context.render() + leak)", "    bucket.append(context.render() + leak + PROVIDER_PLAINTEXT)")'
+
+proof "T165 tool result — execute returns the planted provider value" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_every_session_the_battery_produces_is_clean_on_all_four_surfaces" \
+  's = s.replace("    return TOOL_RESULT_BODY", "    return PROVIDER_PLAINTEXT")'
+
+proof "T165 persisted — the sqlite dump is emptied" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_every_session_the_battery_produces_is_clean_on_all_four_surfaces" \
+  's = s.replace("        return \"\\n\".join(parts)", "        return \"\"")'
+
+proof "T165 every session — EVERY_SESSION is flipped so the second session is skipped" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_every_session_the_battery_produces_is_clean_on_all_four_surfaces" \
+  's = s.replace("EVERY_SESSION = True", "EVERY_SESSION = False")'
+
+proof "T165 no second filter — CREDENTIAL_PATTERNS is bound as a redaction regex" \
+  tests/batteries/test_secret_scan.py \
+  "tests/batteries/test_secret_scan.py::test_the_battery_does_not_reimplement_secret_redaction" \
+  's = s.replace("def findings(blob: str, secrets: tuple[str, ...] = PLANTED) -> list[str]:", "CREDENTIAL_PATTERNS = {}\n\ndef findings(blob: str, secrets: tuple[str, ...] = PLANTED) -> list[str]:")'
+
+# --- T169 — operator-boundary check (FR-032) ----------------------------------
+#
+# Every arm plants rather than reasons, and names a node. The leave-required
+# flag, a dropped named component, target credential on runtime, provider
+# credential on analysis, a vendor SaaS topology identity, required egress at
+# runtime startup, a renamed Plane B, and a vendor image registry.
+
+proof "T169 leave — TARGET_DATA_MUST_LEAVE is flipped" \
+  tests/integration/test_operator_boundary.py \
+  "tests/integration/test_operator_boundary.py::test_no_target_data_or_credential_is_required_to_leave" \
+  's = s.replace("TARGET_DATA_MUST_LEAVE = False", "TARGET_DATA_MUST_LEAVE = True")'
+
+proof "T169 components — analysis is dropped from the named set" \
+  tests/integration/test_operator_boundary.py \
+  "tests/integration/test_operator_boundary.py::test_every_named_component_is_inside_the_operator_bundle" \
+  's = s.replace("OPERATOR_COMPONENTS = (\n    \"analysis\",\n    \"enforcement_point\",\n", "OPERATOR_COMPONENTS = (\n    \"enforcement_point\",\n")'
+
+proof "T169 runtime plane — compose puts the target credential on runtime" \
+  deploy/compose/compose.yaml \
+  "tests/integration/test_operator_boundary.py::test_target_credential_is_not_required_on_runtime" \
+  's = s.replace("      F2A_PROVIDER_CREDENTIAL: ${F2A_PROVIDER_CREDENTIAL:?required}\n      REPORTING_WINDOW_SECONDS: ${REPORTING_WINDOW_SECONDS:?required}", "      F2A_PROVIDER_CREDENTIAL: ${F2A_PROVIDER_CREDENTIAL:?required}\n      F2A_TARGET_CREDENTIAL: ${F2A_TARGET_CREDENTIAL:?required}\n      REPORTING_WINDOW_SECONDS: ${REPORTING_WINDOW_SECONDS:?required}")'
+
+proof "T169 analysis plane — compose puts the provider credential on analysis" \
+  deploy/compose/compose.yaml \
+  "tests/integration/test_operator_boundary.py::test_provider_credential_is_not_required_on_analysis_supervisor_or_sandbox" \
+  's = s.replace("      F2A_SOURCE_REF: ${F2A_SOURCE_REF:?required}\n      F2A_DEPLOYMENT_ID: ${F2A_DEPLOYMENT_ID:?required}", "      F2A_SOURCE_REF: ${F2A_SOURCE_REF:?required}\n      F2A_PROVIDER_CREDENTIAL: ${F2A_PROVIDER_CREDENTIAL:?required}\n      F2A_DEPLOYMENT_ID: ${F2A_DEPLOYMENT_ID:?required}")'
+
+proof "T169 topology — the target identity is a vendor SaaS hostname" \
+  tests/integration/test_operator_boundary.py \
+  "tests/integration/test_operator_boundary.py::test_topology_identities_are_operator_local_not_a_vendor_saas" \
+  's = s.replace("    TARGET_ADDR_KEY: \"target:9000\",", "    TARGET_ADDR_KEY: \"api.openai.com:443\",")'
+
+proof "T169 egress — runtime main requires Plane B to start" \
+  src/runtime/main.py \
+  "tests/integration/test_operator_boundary.py::test_the_product_does_not_require_runtime_egress_to_function" \
+  's = s.replace("        config = load(RUNTIME_KEYS, env=env)", "        with guarded(pin(\"203.0.113.10:443\")):\n            config = load(RUNTIME_KEYS, env=env)")'
+
+proof "T169 plane B — guarded is renamed so the watch no longer sees it" \
+  src/runtime/egress.py \
+  "tests/integration/test_operator_boundary.py::test_runtime_egress_guarded_is_not_weakened" \
+  's = s.replace("def guarded(plane: EgressPlane) -> Iterator[EgressPlane]:", "def not_guarded(plane: EgressPlane) -> Iterator[EgressPlane]:")'
+
+proof "T169 image — runtime is pulled from a vendor registry" \
+  deploy/compose/compose.yaml \
+  "tests/integration/test_operator_boundary.py::test_compose_declares_no_external_control_plane" \
+  's = s.replace("    image: f2a-runtime:local", "    image: vendor.example.com/f2a-runtime:local")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
