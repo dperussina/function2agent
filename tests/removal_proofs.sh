@@ -5769,6 +5769,21 @@ proof "T146 — identical served sets are reported as a total withdrawal" \
   "tests/contract/test_drift_disable.py::test_the_negative_control_disables_nothing" \
   's = s.replace("    return tuple(sorted(frozenset(served_before) - frozenset(served_after)))", "    return tuple(sorted(frozenset(served_before)))")'
 
+proof "T172 instrument — the contradiction scan matches nothing, so 'no unrefused offer' is free" \
+  tests/contract/test_platform_statement.py \
+  "tests/contract/test_platform_statement.py::test_the_contradiction_scan_fires_on_a_planted_offer" \
+  's = s.replace("    for match in OFFER.finditer(collapsed):", "    for match in OFFER.finditer(collapsed[:0]):")'
+
+proof "T172 — preflight stops stating Linux only, so the platform claim is gone" \
+  src/supervisor/preflight.py \
+  "tests/contract/test_platform_statement.py::test_every_required_surface_states_linux_only" \
+  's = s.replace("**OD-17**: Linux only, no degraded mode.", "**OD-17**: any Unix.")'
+
+proof "T172 — README offers macOS without the OD-17 refusal" \
+  README.md \
+  "tests/contract/test_platform_statement.py::test_live_trees_do_not_add_an_unrefused_platform_contradiction" \
+  's = s.replace("and Linux is the only supported\nplatform (OD-17).", "and Linux or macOS is supported.")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
