@@ -40,8 +40,9 @@ opened `mode=ro` so a write is refused by SQLite rather than by convention.
 ## WHAT IS OWED AND IS NOT BUILT
 
 * **T180 — the state-diff oracle.** Labels by observable state on the
-  reference application. Named here rather than sketched: this exporter
-  ships the unlabelled rows; the oracle is what makes them a labelled set.
+  reference application. `attach_labels` is the hook a caller that already
+  ran the oracle uses; this exporter still does not snapshot, issue, or
+  diff, and it still will not invent a label for a seq the oracle omitted.
 * **T181 — the per-call threshold.** Unset, in `effect_precision.py`. This
   module does not score, compare, or inherit a number.
 * **T187 — measurement isolation.** Will assert this table is structurally
@@ -54,7 +55,7 @@ from __future__ import annotations
 import inspect
 import json
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -123,9 +124,10 @@ class ModuleTextUnavailable(RuntimeError):
 class ObservationRow:
     """One `effect_gate_observation` row, as the documented projection.
 
-    `label` is T180's field. This slice never sets it. A caller that already
-    ran the oracle may pass a label through; this module will not invent one
-    and will not report the export as labelled unless every row has one.
+    `label` is T180's field. `export` / `ObservationReader` never set it.
+    A caller that already ran the oracle passes one through `attach_labels`
+    or the constructor; this module will not invent one and will not report
+    the export as labelled unless every row has one.
     """
 
     decision_seq: int
@@ -275,6 +277,32 @@ def export_rows(rows: Iterable[ObservationRow]) -> CorpusExport:
     """Range over an already-read projection of `effect_gate_observation`."""
     records: Sequence[ObservationRow] = tuple(rows)
     return CorpusExport(rows=tuple(records))
+
+
+def attach_labels(
+    rows: Iterable[ObservationRow],
+    labels: Mapping[int, str],
+) -> CorpusExport:
+    """Attach T180 labels keyed by `decision_seq`.
+
+    This is the exporter's hook, not the oracle. Every row must already
+    have an entry; a missing seq is refused rather than left `None` and
+    called labelled. The label string is T180's — this function does not
+    snapshot the application, issue the call, or invent a substitute.
+    """
+    attached: list[ObservationRow] = []
+    for row in rows:
+        if row.decision_seq not in labels:
+            raise CorpusExportError(
+                f"decision_seq {row.decision_seq} has no T180 label. "
+                "Leaving it None and reporting the export as labelled "
+                "would be the unlabelled-as-labelled defect this module "
+                "exists to make impossible."
+            )
+        attached.append(
+            replace(row, label=labels[row.decision_seq])
+        )
+    return export_rows(attached)
 
 
 def export(path: str | Path) -> CorpusExport:

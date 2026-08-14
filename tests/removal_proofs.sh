@@ -6761,6 +6761,55 @@ proof "T184 — the world-property sentence is dropped, so inferring change time
   "tests/batteries/test_drift_measurement.py::test_t184_world_property_is_planted" \
   's = s.replace("a property of the world, not a gap in the design", "a gap in the design we have not closed")'
 
+# --- T180 — FR-041 state-diff oracle on the reference application ----------
+#
+# Labels by snapshot, call, diff on a copy of Application.state. Not a
+# model judge, not a verb, not a published effect_tier. T179's exporter
+# consumes the labels via attach_labels; labelled is True when every row
+# carries one. T181's threshold stays unset. T176 / T177 / T178 / T179 /
+# T181 stay [X]. T182–T184 / T214 / T215 are not these arms. Every arm
+# plants rather than reasons, names a node, and uses a needle unique in
+# its file.
+
+proof "T180 — a mutating call is labelled read_only_correct, so a write looks like a read" \
+  tests/batteries/effect_gate_oracle.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_a_mutating_call_is_labelled_write_observed" \
+  's = s.replace("    mutated = before != after", "    mutated = False")'
+
+proof "T180 — an unchanged call is labelled write_observed, so a read looks like a write" \
+  tests/batteries/effect_gate_oracle.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_an_unchanged_call_is_labelled_read_only_correct" \
+  's = s.replace("    mutated = before != after", "    mutated = True")'
+
+proof "T180 — the call is skipped, so a write never happens and looks unchanged" \
+  tests/batteries/effect_gate_oracle.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_the_call_is_issued" \
+  's = s.replace("    _issue(app, method, target)", "    pass")'
+
+proof "T180 — the snapshot is taken after the call, so the diff is empty and a write is labelled read_only_correct" \
+  tests/batteries/effect_gate_oracle.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_the_before_snapshot_is_taken_before_the_call" \
+  's = s.replace("    before = snapshot(app)\n    _issue(app, method, target)\n    after = snapshot(app)", "    _issue(app, method, target)\n    before = snapshot(app)\n    after = snapshot(app)")'
+
+proof "T180 — a non-mutating POST is labelled write_observed because the method is POST, so the verb restates the specification" \
+  tests/batteries/effect_gate_oracle.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_a_non_mutating_write_shaped_call_is_labelled_read_only_correct" \
+  's = s.replace("    if not mutated:", "    if method in (\"GET\", \"HEAD\", \"OPTIONS\"):")'
+
+proof "T180 — attach_labels drops the label, so a corpus the oracle ran still reports unlabelled" \
+  src/runtime/reports/effect_corpus.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_the_exported_corpus_is_labelled_after_the_oracle_runs" \
+  's = s.replace("            replace(row, label=labels[row.decision_seq])", "            replace(row, label=None)")'
+
+proof "T180 — a third label is admitted, so a model judgement can enter the corpus" \
+  tests/batteries/effect_gate_oracle.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_a_third_label_is_refused" \
+  's = s.replace("    if label not in LABELS:", "    if False:")'
+
+proof "T180 — the judge import scan appends nothing, so a planted shadow-judge edge is free" \
+  tests/batteries/test_effect_gate_oracle.py \
+  "tests/batteries/test_effect_gate_oracle.py::test_the_judge_import_scan_fires_on_a_planted_edge" \
+  's = s.replace("                found.append(imported)", "                pass")'
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
