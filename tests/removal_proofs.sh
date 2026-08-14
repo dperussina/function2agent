@@ -6574,6 +6574,143 @@ go_proof "T178 — the success-path read scan appends nothing, so a planted SELE
   "TestTheObservationReadScanFiresOnAPlantedSelect" \
   's = s.replace("\t\t\thits = append(hits, strings.TrimSpace(line))", "\t\t\t_ = line")'
 
+# --- T176 / T177 — adjudication queue and FR-040 margin report ---------------
+#
+# Sampling is pre-registered before the window. human_label is a human row
+# (adjudicator + time); a model stand-in is refused. The margin report keeps
+# all three FR-040 branches intact and does not open SC-013's window over an
+# empty table. Every arm plants rather than reasons. T179–T181 / T214 / T215
+# are not these arms. T173–T175 / T178 arms above are not retargeted.
+
+proof "T176 — a sampling rule registered after the window opens is accepted" \
+  src/runtime/adjudication/sampling.py \
+  "tests/unit/test_adjudication.py::test_a_rule_cannot_be_registered_after_the_window_opens" \
+  's = s.replace("        if self.registered_at >= self.window_starts_at:", "        if False and self.registered_at >= self.window_starts_at:")'
+
+proof "T176 — an empty adjudicator is stored as a human_label row" \
+  src/runtime/adjudication/queue.py \
+  "tests/unit/test_adjudication.py::test_an_empty_adjudicator_is_refused" \
+  's = s.replace("        if not adjudicator:", "        if False:")'
+
+proof "T176 — a model stand-in is stored as a human_label row" \
+  src/runtime/adjudication/queue.py \
+  "tests/unit/test_adjudication.py::test_a_model_standin_is_refused" \
+  's = s.replace("        if adjudicator in MODEL_STANDINS:", "        if False and adjudicator in MODEL_STANDINS:")'
+
+proof "T176 — the operator surface fills suggested_label from the verifier" \
+  src/runtime/adjudication/queue.py \
+  "tests/unit/test_adjudication.py::test_the_surface_presents_evidence_and_no_suggested_label" \
+  's = s.replace("            suggested_label=None,", "            suggested_label=item.evidence.verifier_label,")'
+
+proof "T176 — a success-path role may construct the queue" \
+  src/runtime/adjudication/queue.py \
+  "tests/unit/test_adjudication.py::test_a_success_path_role_cannot_write_the_table" \
+  's = s.replace("        if repository.role != ROLE_SHADOW_JUDGE:", "        if False and repository.role != ROLE_SHADOW_JUDGE:")'
+
+proof "T176 — an empty result id is accepted, so a sample is keyed to nothing" \
+  src/runtime/adjudication/queue.py \
+  "tests/unit/test_adjudication.py::test_an_empty_result_id_is_refused" \
+  's = s.replace("        if not result_id:\n            raise AdjudicationError(\n                \"a sample is keyed to a result; an empty id keys nothing\"", "        if False:\n            raise AdjudicationError(\n                \"a sample is keyed to a result; an empty id keys nothing\"")'
+
+proof "T176 — the adjudication-to-result plant scan appends nothing, so a planted import is free" \
+  tests/unit/test_adjudication.py \
+  "tests/unit/test_adjudication.py::test_the_adjudication_import_scan_fires_on_a_planted_result_import" \
+  's = s.replace("                edges.append(f\"{path.name} imports {imported}\")", "                pass")'
+
+proof "T176 — T214 residual is marked closed, so a missing Result from a run reads as discharged" \
+  tests/unit/test_adjudication.py \
+  "tests/unit/test_adjudication.py::test_no_run_produces_a_result_t214_is_still_open" \
+  's = s.replace("T214_RESIDUAL_NO_RUN_PRODUCES_A_RESULT = True", "T214_RESIDUAL_NO_RUN_PRODUCES_A_RESULT = False")'
+
+proof "T177 — SC-013's window opens over an empty human_label table" \
+  src/runtime/reports/margin.py \
+  "tests/unit/test_margin_report.py::test_empty_labels_do_not_open_the_sc013_window" \
+  's = s.replace("            window_open=False,", "            window_open=True,")'
+
+proof "T177 — the chance branch fires when no human has labelled" \
+  src/runtime/reports/margin.py \
+  "tests/unit/test_margin_report.py::test_empty_labels_do_not_apply_the_chance_branch" \
+  's = s.replace("            applied_branch=None,", "            applied_branch=BRANCH_CHANCE,")'
+
+proof "T177 — chance is checked after headline, so a large margin hides a chance-level judge" \
+  src/runtime/reports/margin.py \
+  "tests/unit/test_margin_report.py::test_a_judge_at_chance_is_the_chance_branch_even_when_the_margin_is_large" \
+  's = s.replace("    if judge_discrimination <= 0:\n        return BRANCH_CHANCE\n    if margin_pp >= MARGIN_THRESHOLD_PP:\n        return BRANCH_HEADLINE", "    if margin_pp >= MARGIN_THRESHOLD_PP:\n        return BRANCH_HEADLINE\n    if judge_discrimination <= 0:\n        return BRANCH_CHANCE")'
+
+proof "T177 — the pre-registered threshold is changed from ten points" \
+  src/runtime/reports/margin.py \
+  "tests/unit/test_margin_report.py::test_the_threshold_is_the_pre_registered_ten_points" \
+  's = s.replace("MARGIN_THRESHOLD_PP = 10.0", "MARGIN_THRESHOLD_PP = 5.0")'
+
+proof "T177 — BRANCHES drops chance, so the third gate is no longer intact" \
+  src/runtime/reports/margin.py \
+  "tests/unit/test_margin_report.py::test_all_three_branches_are_present_when_labels_do_not_exist" \
+  's = s.replace("BRANCHES: tuple[str, ...] = (BRANCH_HEADLINE, BRANCH_INTERNAL, BRANCH_CHANCE)", "BRANCHES: tuple[str, ...] = (BRANCH_HEADLINE, BRANCH_INTERNAL)")'
+
+proof "T177 — the historical pass is recorded as performed" \
+  src/runtime/reports/margin.py \
+  "tests/unit/test_margin_report.py::test_the_historical_pass_is_recorded_as_never_performed" \
+  's = s.replace("    \"The one human adjudication pass this needed was never performed. \"", "    \"The one human adjudication pass this needed was performed. \"")'
+
+proof "T177 — empty labels are filled from the verifier, so the comparison is circular" \
+  src/runtime/reports/margin.py \
+  "tests/unit/test_margin_report.py::test_empty_labels_do_not_open_the_sc013_window" \
+  's = s.replace("    labelled: Sequence[LabelRow] = tuple(human_labels)", "    labelled: Sequence[LabelRow] = tuple(human_labels) or tuple(LabelRow(v.result_id, \"model\", v.label, 0.0) for v in verifier_calls)")'
+
+proof "T177 — the margin-to-result plant scan appends nothing, so a planted import is free" \
+  tests/unit/test_margin_report.py \
+  "tests/unit/test_margin_report.py::test_the_margin_import_scan_fires_on_a_planted_result_import" \
+  's = s.replace("            found.append(imported)", "            pass")'
+
+# --- T179 / T181 — FR-041 corpus export and the unset per-call threshold ----
+#
+# T179 exports effect_gate_observation, unlabelled. T181 records the
+# per-call threshold unset and keeps every write capability blocked.
+# T180 is the residual that produces labels; these arms do not snapshot
+# the reference application. T176 / T177 / T214 / T215 are not these
+# arms. T178 arms above are not retargeted. Every arm plants rather
+# than reasons, names a node, and uses a needle unique in its file.
+
+proof "T179 — the exporter ranges over egress_decision, so the corpus is a restated decision log" \
+  src/runtime/reports/effect_corpus.py \
+  "tests/unit/test_effect_corpus.py::test_the_exporter_ranges_over_the_observation_table_not_the_decision_log" \
+  's = s.replace("PHYSICAL_TABLE = \"effect_gate_observation\"", "PHYSICAL_TABLE = \"egress_decision\"")'
+
+proof "T179 — an unlabelled export claims to be labelled, so SC-014 can start over a set T180 has not produced" \
+  src/runtime/reports/effect_corpus.py \
+  "tests/unit/test_effect_corpus.py::test_an_unlabelled_export_does_not_claim_to_be_labelled" \
+  's = s.replace("        return all(row.label is not None for row in self.rows)", "        return True")'
+
+proof "T179 — a third disposition is admitted, so the corpus is no longer every allow and deny" \
+  src/runtime/reports/effect_corpus.py \
+  "tests/unit/test_effect_corpus.py::test_a_third_disposition_is_refused" \
+  's = s.replace("        if self.disposition not in DISPOSITIONS:", "        if False:")'
+
+proof "T179 — the reader opens writable, so a report can write the proxy's store" \
+  src/runtime/reports/effect_corpus.py \
+  "tests/unit/test_effect_corpus.py::test_the_reader_is_opened_read_only" \
+  's = s.replace("self._conn = sqlite3.connect(f\"file:{self.path}?mode=ro\", uri=True)", "self._conn = sqlite3.connect(f\"file:{self.path}?mode=rw\", uri=True)")'
+
+proof "T179 — the success-path import scan appends nothing, so a planted exporter edge is free" \
+  tests/unit/test_effect_corpus.py \
+  "tests/unit/test_effect_corpus.py::test_the_success_path_import_scan_fires_on_a_planted_exporter_edge" \
+  's = s.replace("                found.append(imported)", "                pass")'
+
+proof "T181 — the per-call threshold inherits 0.98, so the superseded per-tool number travels" \
+  src/runtime/reports/effect_precision.py \
+  "tests/unit/test_effect_precision.py::test_the_threshold_has_no_numeric_default" \
+  's = s.replace("PER_CALL_THRESHOLD: object = UNSET", "PER_CALL_THRESHOLD: object = 0.98")'
+
+proof "T181 — the unset branch releases writes, so a write capability ships while the threshold is unset" \
+  src/runtime/reports/effect_precision.py \
+  "tests/unit/test_effect_precision.py::test_writes_stay_blocked_while_the_threshold_is_unset" \
+  's = s.replace("    if PER_CALL_THRESHOLD is UNSET:\n        return False", "    if PER_CALL_THRESHOLD is UNSET:\n        return True")'
+
+proof "T181 — the document states 0.98 while the sentinel is unset, so a number is in force and nothing says so" \
+  src/runtime/reports/effect_precision.py \
+  "tests/unit/test_effect_precision.py::test_the_document_records_the_threshold_as_unset" \
+  's = s.replace("            \"per_call_threshold\": None if unset else self.per_call_threshold,", "            \"per_call_threshold\": 0.98 if unset else self.per_call_threshold,")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
