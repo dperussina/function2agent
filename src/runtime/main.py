@@ -7,10 +7,11 @@ from Go recorded there — gathering refusals rather than stopping at the first,
 and ending in a report rather than in a serve loop — hold here too and are not
 restated.
 
-What this file adds is **the two startup gates that only the runtime can run**,
+What this file adds is **the startup gates that only the runtime can run**,
 and the answer to the question `tasks.md` left open as the thing a defensible
 closure would have to name: *where `require_priceable` runs relative to
-`load()`*.
+`load()`*. T163's `select` runs in the same gathered pass, so the core path
+never names a vendor.
 
 ## Where `require_priceable` runs, and why there
 
@@ -46,9 +47,18 @@ from pathlib import Path
 from typing import Mapping
 
 from src.contracts.config import RUNTIME_KEYS, Config, ConfigError, load
+from src.contracts.credentials import (
+    HOLDER_RUNTIME,
+    PLANE_PROVIDER,
+    HolderRefusedError,
+    PlaneMixError,
+    hold,
+)
 from src.contracts.operator_log import OperatorLog
-from src.runtime.providers.base import ProviderError, require_provider
+from src.contracts.secret import Secret
+from src.runtime.providers.base import ProviderError
 from src.runtime.providers.costs import CostTableError, require_priceable
+from src.runtime.providers.select import SelectedProvider, select
 from src.runtime.providers.operator_prices import load_operator_prices
 from src.runtime.result_bound import BoundConfigError, ResultBound
 from src.runtime.session_store import Ceilings, CeilingsError
@@ -63,7 +73,7 @@ RUNTIME_DB = "runtime.db"
 
 def startup(log: OperatorLog, env: Mapping[str, str] | None = None,
             today: dt.date | None = None) -> tuple[Config, str]:
-    """Resolve configuration, then run the two gates that depend on it.
+    """Resolve configuration, then run the gates that depend on it.
 
     Returns the configuration and the line `require_priceable` produced, or
     refuses through `log` and does not return.
@@ -80,17 +90,47 @@ def startup(log: OperatorLog, env: Mapping[str, str] | None = None,
     day = dt.date.today() if today is None else today
     refusals: list[str] = []
     rate_line = ""
+    selected: SelectedProvider | None = None
+
+    # FR-036 — the runtime holds the provider plane and not the target plane.
+    # Construction refuses a mix; the value is not interpolated into this
+    # report (Secret.__str__ redacts; still do not call .reveal() here).
+    try:
+        credential = config["F2A_PROVIDER_CREDENTIAL"]
+        if not isinstance(credential, Secret):
+            raise PlaneMixError(
+                "F2A_PROVIDER_CREDENTIAL resolved to a non-Secret; the "
+                "provider plane is Kind.SECRET (FR-036)"
+            )
+        hold(secret=credential, plane=PLANE_PROVIDER, holder=HOLDER_RUNTIME)
+    except (PlaneMixError, HolderRefusedError) as exc:
+        refusals.append(
+            f"the provider credential is not holdable (FR-036): {exc}"
+        )
+
+    # FR-037 — selected by configuration, no vendor in the core path. T163
+    # is this call. Unknown providers refuse here rather than at the first
+    # turn; `require_priceable` then asks about the selected model.
+    try:
+        selected = select(config)
+    except ProviderError as exc:
+        refusals.append(
+            f"the model provider is not selectable (FR-037): {exc}"
+        )
 
     # OD-27 — the model in force is priced by something an operator can point
     # at, or this process does not start. An unpriced model reaching a session
     # is a spend ceiling compared against nothing.
     try:
-        rate_line = require_priceable(
-            provider=require_provider(str(config["MODEL_PROVIDER"])),
-            model=str(config["MODEL_ID"]),
-            as_of=day,
-            operator_prices=load_operator_prices(str(config["MODEL_PRICES_OPERATOR"])),
-        )
+        if selected is not None:
+            rate_line = require_priceable(
+                provider=selected.provider,
+                model=selected.model,
+                as_of=day,
+                operator_prices=load_operator_prices(
+                    str(config["MODEL_PRICES_OPERATOR"])
+                ),
+            )
     # `ValueError` is in the set because a declaration's `declared_on` is
     # parsed by `dt.date.fromisoformat`, which raises it rather than a
     # `CostTableError` — a malformed date in a rate card must refuse startup,

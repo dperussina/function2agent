@@ -260,6 +260,18 @@ RUNTIME_KEYS: tuple[Key, ...] = (
         "write, and a model neither this key nor the table prices fails at "
         "startup rather than at its first call",
         no_default_reason=_NO_DEFAULT_OPERATOR_PRICES),
+    # FR-036 / FR-050 — one declared key for the provider plane, Kind.SECRET
+    # so `load()` wraps it as T035's `Secret`. Not `ANTHROPIC_API_KEY` /
+    # `OPENAI_API_KEY`: those names in the core path are provider-specific
+    # behaviour in the core (FR-037). No default, and no `no_default_reason`:
+    # this is `MODEL_PROVIDER`'s class — there is no universal value to have
+    # ruled out. The target plane is `F2A_TARGET_CREDENTIAL` on the Go
+    # enforcement point and is deliberately not in this tuple: requiring it
+    # here would make the runtime hold the target credential.
+    Key("F2A_PROVIDER_CREDENTIAL", Kind.SECRET, "FR-036",
+        "the runtime-held model-provider credential. Not the target "
+        "credential and not a session capability. Never present in the "
+        "execution environment (FR-050)"),
     # FR-045 — no default, Q-10 again, and **in the runtime's container rather
     # than a fourth one**. `ANALYSIS_KEYS` exists because the runtime never
     # reads a source reference, and the test that distinction has to pass is
@@ -305,6 +317,41 @@ ANALYSIS_KEYS: tuple[Key, ...] = (
         "checked against anything, and nothing in v1 can check it "
         "(src/analysis/correspondence.py)"),
     Key("F2A_DEPLOYMENT_ID", Kind.STR, "FR-035", "admitted deployment identity"),
+)
+
+
+#: T162, FR-034. The analysis / runtime / target boundary, as three required
+#: identities, even when all three run on one host.
+#:
+#: **A fourth tuple rather than an addition to the other three**, because
+#: the containers are per-process and these keys name the boundary between
+#: processes. T159/T160 consume them; `src/contracts/topology.py` is the
+#: fail-loud constructor. Adding them to `RUNTIME_KEYS` would make every
+#: runtime start require a listen topology the runtime does not bind
+#: (OD-36: report+exit).
+#:
+#: `F2A_PROXY_LISTEN` is a Go env on the enforcement point — the path to
+#: the target, not a fourth colocated role — and is not declared here.
+#: The target identity is `F2A_PROXY_UPSTREAM_ADDR`, the name Go already
+#: reads; declaring a second Python-only target key would be the duplicate
+#: FR-034's check for existing keys exists to prevent.
+#:
+#: No default, and no `no_default_reason`: `MODEL_PROVIDER`'s class. There
+#: is no universal host to have ruled out, and filling a missing analysis
+#: address from the runtime's would be the co-location assumption FR-034
+#: forbids.
+TOPOLOGY_KEYS: tuple[Key, ...] = (
+    Key("F2A_ANALYSIS_ADDR", Kind.STR, "FR-034",
+        "analysis-stage identity as host:port. Required even when analysis "
+        "shares a host with the runtime; a missing value is not filled from "
+        "the runtime address"),
+    Key("F2A_RUNTIME_ADDR", Kind.STR, "FR-034",
+        "runtime identity as host:port. Required even when the runtime shares "
+        "a host with analysis or the target"),
+    Key("F2A_PROXY_UPSTREAM_ADDR", Kind.STR, "FR-034",
+        "target identity as host:port — the same name the enforcement point "
+        "already reads in Go. Not F2A_PROXY_LISTEN, which is the path to the "
+        "target rather than a fourth colocated role"),
 )
 
 

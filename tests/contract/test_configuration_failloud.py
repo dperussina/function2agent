@@ -137,7 +137,8 @@ def test_nothing_is_started_when_configuration_fails(tmp_path, monkeypatch) -> N
 
 DECLARED: tuple[cfg.Key, ...] = tuple(
     {key.name: key
-     for key in (*cfg.SUPERVISOR_KEYS, *cfg.RUNTIME_KEYS, *cfg.ANALYSIS_KEYS)
+     for key in (*cfg.SUPERVISOR_KEYS, *cfg.RUNTIME_KEYS, *cfg.ANALYSIS_KEYS,
+                 *cfg.TOPOLOGY_KEYS)
      }.values()
 )
 STATES_A_REASON = tuple(k for k in DECLARED if k.no_default_reason)

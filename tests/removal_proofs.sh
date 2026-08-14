@@ -5784,6 +5784,58 @@ proof "T172 — README offers macOS without the OD-17 refusal" \
   "tests/contract/test_platform_statement.py::test_live_trees_do_not_add_an_unrefused_platform_contradiction" \
   's = s.replace("and Linux is the only supported\nplatform (OD-17).", "and Linux or macOS is supported.")'
 
+# --- T161 / T162 / T163, Phase 7 credential planes, topology, selection ------
+#
+# Every arm plants rather than reasons, and names a node. Mix of planes, a
+# holder that must never hold, a Kind.SECRET becoming a str, co-location
+# inferred from the runtime address, a topology key acquiring a default, and
+# three ways selection grows a vendor in the core path.
+
+proof "T161 planes — a target-named Secret is accepted as the runtime provider credential" \
+  src/contracts/credentials.py \
+  "tests/unit/test_credentials.py::test_a_target_named_secret_is_refused_as_the_runtime_provider_credential" \
+  's = s.replace("        if self.secret.name != expected:", "        if False:")'
+
+proof "T161 holders — analysis, the execution environment and tick may hold a credential plane" \
+  src/contracts/credentials.py \
+  "tests/unit/test_credentials.py::test_analysis_execution_and_tick_may_not_hold_either_plane" \
+  's = s.replace("        if self.holder in NEVER_HOLD:", "        if False:")'
+
+proof "T161 holders — the enforcement point may hold the provider credential" \
+  src/contracts/credentials.py \
+  "tests/unit/test_credentials.py::test_the_enforcement_point_may_not_hold_the_provider_credential" \
+  's = s.replace("        if (self.plane, self.holder) not in ALLOWED_HOLDERS:", "        if False:")'
+
+proof "T161 schema — the provider credential is loaded as a str rather than a Secret" \
+  src/contracts/config.py \
+  "tests/unit/test_credentials.py::test_the_runtime_provider_credential_is_a_secret_not_a_str" \
+  's = s.replace("Key(\"F2A_PROVIDER_CREDENTIAL\", Kind.SECRET, \"FR-036\",", "Key(\"F2A_PROVIDER_CREDENTIAL\", Kind.STR, \"FR-036\",")'
+
+proof "T162 co-location — a missing analysis address is filled from the runtime" \
+  src/contracts/topology.py \
+  "tests/unit/test_topology.py::test_a_missing_analysis_address_is_not_filled_from_the_runtime" \
+  's = s.replace("_address(ANALYSIS, ANALYSIS_ADDR_KEY, self.analysis)", "_address(ANALYSIS, ANALYSIS_ADDR_KEY, self.analysis or self.runtime)")'
+
+proof "T162 schema — the analysis address acquires a default, so co-location is assumed" \
+  src/contracts/config.py \
+  "tests/unit/test_topology.py::test_topology_keys_have_no_default" \
+  's = s.replace(chr(34)+"the runtime address"+chr(34)+"),", chr(34)+"the runtime address"+chr(34)+", default="+chr(34)+"127.0.0.1:1"+chr(34)+"),")'
+
+proof "T163 selection — an unknown provider is returned rather than refused" \
+  src/runtime/providers/select.py \
+  "tests/unit/test_provider_select.py::test_an_unknown_provider_is_refused_at_selection" \
+  's = s.replace("    provider = require_provider(str(config[\"MODEL_PROVIDER\"]))\n    model = str(config[\"MODEL_ID\"])\n    return SelectedProvider(\n        driver=driver_for(provider),\n        provider=provider,\n        model=model,\n    )", "    provider = str(config[\"MODEL_PROVIDER\"])\n    model = str(config[\"MODEL_ID\"])\n    return SelectedProvider(\n        driver=object(),\n        provider=provider,\n        model=model,\n    )")'
+
+proof "T163 selection — select.py imports a wire driver, so a vendor enters the core path" \
+  src/runtime/providers/select.py \
+  "tests/unit/test_provider_select.py::test_select_does_not_import_a_wire_driver" \
+  's = s.replace("from src.runtime.providers import driver_for\n", "from src.runtime.providers import driver_for\nfrom src.runtime.providers.wire_anthropic import AnthropicDriver\n")'
+
+proof "T163 selection — driver_for is not called, so the registry is restated" \
+  src/runtime/providers/select.py \
+  "tests/unit/test_provider_select.py::test_select_calls_driver_for_and_does_not_duplicate_the_registry" \
+  's = s.replace("        driver=driver_for(provider),", "        driver=object(),")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"

@@ -58,6 +58,7 @@ RUNTIME_ENV = {
     "MODEL_PROVIDER": "anthropic",
     "MODEL_ID": "claude-sonnet-4-5-20250929",
     "MODEL_PRICES_OPERATOR": "none",
+    "F2A_PROVIDER_CREDENTIAL": "sk-test-provider-credential-t161",
     "REPORTING_WINDOW_SECONDS": "3600",
     "F2A_TENANT_ID": "t-1",
     "F2A_DEPLOYMENT_ID": "d-1",
@@ -293,6 +294,9 @@ def test_a_priced_model_names_its_rate_on_the_readiness_report(
     assert "anthropic/claude-sonnet-4-5-20250929 — vendor rate in force on " \
         "2026-08-08" in log.text
     assert "$3.0/MTok in" in log.text
+    assert "sk-test-provider-credential-t161" not in log.text, (
+        "the provider credential reached the readiness report (FR-036)"
+    )
 
 
 def test_an_operator_declaration_prices_a_model_no_vendor_page_does(
