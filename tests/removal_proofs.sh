@@ -7199,6 +7199,70 @@ proof "T196 — the egress battery is dropped from B, so a skipped arm becomes a
   tests/integration/test_quickstart_scenarios.py \
   "tests/integration/test_quickstart_scenarios.py::test_scenario_b_still_names_the_egress_battery" \
   's = s.replace("        (\"tests/batteries/test_adversarial_egress.py\", (", "        (\"tests/batteries/test_effect_gate_oracle.py\", (")'
+# --- T198 / T200 — invariant bijection; fixture inventory vs the tree -----
+#
+# T198 confirms INV-001 … INV-014 against the test files and imports
+# runner.reconcile so a pytest run fails on drift. T200 walks the
+# Present table against the filesystem and tests/fixtures/ against the
+# table. T196 stays [X] from 974390c. T205 stays [ ]. T193–T195 /
+# T197 / T199 / T201–T204 / T214 / T215 stay [X]. Every arm plants
+# rather than reasons, names a node, and uses a needle unique in its
+# file.
+
+proof "T198 — INV-014 is retargeted, so test_measurement_isolation.py is an orphan with no yaml row" \
+  tests/invariants/invariants.yaml \
+  "tests/contract/test_invariant_reconciliation.py::test_reconciliation_is_clean_on_this_tree" \
+  's = s.replace("    test: tests/invariants/test_measurement_isolation.py", "    test: tests/invariants/test_result_constructor.py")'
+
+proof "T198 — INV-001 names a test file that does not exist" \
+  tests/invariants/invariants.yaml \
+  "tests/contract/test_invariant_reconciliation.py::test_reconciliation_is_clean_on_this_tree" \
+  's = s.replace("    test: tests/invariants/test_result_constructor.py", "    test: tests/invariants/test_does_not_exist.py")'
+
+proof "T198 instrument — the orphan walk ranges over nothing, so a new test_*.py is free" \
+  tests/invariants/runner.py \
+  "tests/contract/test_invariant_reconciliation.py::test_an_orphan_test_file_is_reported" \
+  's = s.replace("    for name in sorted(present - declared - NOT_A_TEST):", "    for name in sorted(set() - declared - NOT_A_TEST):")'
+
+proof "T198 instrument — the existence check is planted off, so a missing named file is free" \
+  tests/invariants/runner.py \
+  "tests/contract/test_invariant_reconciliation.py::test_a_missing_named_file_is_reported" \
+  's = s.replace("        if not (repo / test).exists():", "        if False and not (repo / test).exists():")'
+
+proof "T198 — EXPECTED_IDS drops INV-014, so the bijection floor is free" \
+  tests/contract/test_invariant_reconciliation.py \
+  "tests/contract/test_invariant_reconciliation.py::test_the_declared_ids_are_inv001_through_inv014" \
+  's = s.replace("EXPECTED_IDS = tuple(f\"INV-{i:03d}\" for i in range(1, 15))", "EXPECTED_IDS = tuple(f\"INV-{i:03d}\" for i in range(1, 14))")'
+
+proof "T200 — the admission Present row is dropped while tests/fixtures/admission/ remains" \
+  tests/fixtures/README.md \
+  "tests/contract/test_fixture_inventory.py::test_every_committed_fixture_child_is_inventoried" \
+  's = s.replace("| Admission fixture set, fourteen origin responses | FR-053, T075, SC-018 | `tests/fixtures/admission/` |\n", "")'
+
+proof "T200 — Owed still says the scheduler does not exist after the row moved" \
+  tests/fixtures/README.md \
+  "tests/contract/test_fixture_inventory.py::test_owed_does_not_claim_a_built_fixture_is_absent" \
+  's = s.replace("A corpus of frames captured from a second parser, rather than invented here, was never collected.", "The scheduler does not exist. A corpus of frames captured from a second parser, rather than invented here, was never collected.")'
+
+proof "T200 — Present names a fixture path that is not in the tree" \
+  tests/fixtures/README.md \
+  "tests/contract/test_fixture_inventory.py::test_every_present_location_exists" \
+  's = s.replace("| Ceilings under resume | SC-030, T055 | `tests/batteries/test_ceilings_under_resume.py` |", "| Ceilings under resume | SC-030, T055 | `tests/batteries/test_ceilings_under_resume.py` |\n| Invented corpus | FR-053 | `tests/fixtures/does-not-exist/` |")'
+
+proof "T200 instrument — the stale-absence scanner matches nothing, so a built fixture can look absent" \
+  tests/contract/test_fixture_inventory.py \
+  "tests/contract/test_fixture_inventory.py::test_the_stale_absence_scanner_fires_on_a_plant" \
+  's = s.replace("    r\"The scheduler does not exist\"", "    r\"(?!)\"")'
+
+proof "T200 — NAMED_OUTSIDE drops the cassettes, so a named set can vanish from the walk" \
+  tests/contract/test_fixture_inventory.py \
+  "tests/contract/test_fixture_inventory.py::test_named_sets_outside_fixtures_are_inventoried_and_present" \
+  's = s.replace("    Path(\"tests/conformance/cassettes\"),\n", "")'
+
+proof "T200 instrument — present_locations returns nothing, so the existence walk is free" \
+  tests/contract/test_fixture_inventory.py \
+  "tests/contract/test_fixture_inventory.py::test_every_present_location_exists" \
+  's = s.replace("    section = _section(text, PRESENT_HEADING, OWED_HEADING)\n    found: list[str] = []", "    return []\n    section = _section(text, PRESENT_HEADING, OWED_HEADING)\n    found: list[str] = []")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"

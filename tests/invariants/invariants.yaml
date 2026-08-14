@@ -9,6 +9,14 @@
 #   1. Every invariant here has a test.
 #   2. Every test in tests/invariants/ has an invariant here.
 #
+# T198 (2026-08-14): bijection confirmed on this HEAD. INV-001 … INV-014
+# name fourteen test files; the thirteen tests/invariants/test_*.py files
+# plus INV-008's tests/unit/test_session_conformance.py. runner.py
+# reconcile() (the function, and the `if problems: return 1` at main)
+# fails the process on drift; tests/contract/test_invariant_reconciliation.py
+# imports that same function so a pytest run sees it. runner.py /
+# conftest.py / __init__.py are not invariants. No row was added.
+#
 # And one rule about the tests themselves, which is the harder one and the one
 # this corpus has been burned by: **a passing fixture is not evidence a
 # mechanism works.** Each entry below names a `removal_proof` — the specific

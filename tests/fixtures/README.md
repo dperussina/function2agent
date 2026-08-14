@@ -1,6 +1,6 @@
 # Committed fixtures — FR-053's discipline, and the inventory each capability owes
 
-**Requirement**: FR-053. **Task**: T008.
+**Requirement**: FR-053. **Task**: T008, reconciled by **T200**.
 
 ## The discipline
 
@@ -52,6 +52,27 @@ Present, with the requirement each discharges:
 | Cross-language capability boundary | FR-014, FR-050 | `tests/fixtures/session_conformance.{py,json,sqlite3}` |
 | Reference application, seeded state and known-correct answers | FR-053, T116 | `tests/fixtures/reference-app/` |
 | Sandbox image FR-021 properties | FR-021, T096 | `deploy/images/sandbox.Dockerfile`, `tests/invariants/test_sandbox_image.py` |
+| Admission fixture set, fourteen origin responses | FR-053, T075, SC-018 | `tests/fixtures/admission/` |
+| Analyzer fixtures, positive and negative | FR-053, Principle VII, T135 | `tests/fixtures/analyzer/` |
+| codegraph schema pin | T118 | `tests/fixtures/codegraph-schema/` |
+| Source-change synthetic corpus | FR-053, SC-008, T154 | `tests/fixtures/drift-source/` |
+| Deployment-change synthetic corpus | FR-053, SC-009, SC-020, T155 | `tests/fixtures/drift-deployment/` |
+| Drift corpus loaders | FR-053 | `tests/fixtures/drift_corpora/` |
+| Operation-added corpus | SC-026, T158 | `tests/fixtures/operation-added/` |
+| Spec-withdrawn corpus | SC-021, T157 | `tests/fixtures/spec-withdrawn/` |
+| Injected value-fault corpus and shape-fault control | SC-005, SC-006, T131, T132 | `tests/fixtures/value-faults/` |
+| Resume-across-crash session fixture | FR-007, T054 | `tests/fixtures/resume_session.py` |
+| Resume across a crash boundary (`SIGKILL` from a third process) | FR-007, T054 | `tests/integration/test_resume_sigkill.py` |
+| Concurrent-writer probe against this store | T-06, T050 | `tests/integration/test_store_concurrent_writers.py` |
+| Drift-scheduler egress path | FR-046, OD-12, T141, T142 | `src/runtime/drift/scheduler.py` |
+| Provider cassettes | Principle VII, T060 | `tests/conformance/cassettes/` |
+| Effect-gate oracle on the reference application | FR-041, T180 | `tests/batteries/effect_gate_oracle.py` |
+| Framing-ambiguity cases | **Q-01**, T094 | `src/proxy/framing_test.go` |
+| Ceilings under resume | SC-030, T055 | `tests/batteries/test_ceilings_under_resume.py` |
+
+T200 (2026-08-14) walked `tests/fixtures/`, `tests/batteries/`, `tests/conformance/cassettes/`, the analyzer and admission sets, the drift corpora, the effect-gate oracle, and the reference application. A named Present location that is not in the tree, or a committed child of `tests/fixtures/` that this table forgot, fails `tests/contract/test_fixture_inventory.py`.
+
+**Residuals on rows that moved out of Owed, recorded rather than closed.** The scheduler exists; T144's additional triggers are unwired, `due` is the interval predicate, and no thread calls `tick`. T054 measures one platform, one process pair, one kill per session — completed inner turns do not re-execute and recorded local effects do not repeat. Finding 006 measured resume over ADK, which OD-15 dropped; that substrate remains unobserved. T050 measures this store on this platform; it does not make concurrent writing safe in general, and finding 006's session service remains unobserved. T094's framing cases are the cases we thought of, measured on go1.24.3; they are not an independent captured-frame corpus.
 
 `session_conformance.sqlite3` is the one committed **binary** fixture, and it is committed on
 purpose: it is a session table written by the supervisor's own writer and read by the enforcement
@@ -82,11 +103,8 @@ Owed, and named here so the absence is visible rather than inferred:
 
 | Fixture | Requirement | Why it is not here yet |
 | --- | --- | --- |
-| Reference-application overhead | **Q-09**, T101 | ~~The reference application does not exist.~~ **It does now (T116, `tests/fixtures/reference-app/`).** What is still owed is the *measurement*: `tests/batteries/test_seccomp_overhead.py` measures three proxy workloads and records that it does **not** discharge this. T101 also asks for a shell-heavy arm, which the reference application is not — it is an HTTP surface. |
-| Concurrent-writer probe | T-06, T050 | Finding 006 did not test its session service under concurrent writers, and T-06's narrowing records that v1's store has **no** observed substrate. One process with one lock is not that measurement. |
-| Framing-ambiguity corpus | **Q-01** | The named failure Q-01 buys a second language to prevent. `src/proxy/framing_test.go` covers the cases we thought of; a corpus is a different artefact. |
-| Drift-scheduler egress path | FR-046, OD-12 | The scheduler does not exist. When it does, its re-fetch must traverse the same enforcement point or FR-014 is true of the sandbox and false of the system. |
-| Resume across a crash boundary | FR-007 | Finding 006 measured resume over a substrate v1 does not ship, so **v1 has no measured resume**. |
+| Reference-application overhead | **Q-09**, T101 | ~~The reference application does not exist.~~ **It does now (T116, `tests/fixtures/reference-app/`).** What is still owed is the *measurement*: `tests/batteries/test_seccomp_overhead.py` measures three proxy workloads and records that it does **not** discharge this. T101 also asks for a shell-heavy arm, which the reference application is not — it is an HTTP surface. T101 stays PARTIAL; T199 named this clause and did not close it. |
+| Independent captured-frame corpus | **Q-01** | T094 landed the cases we thought of in `src/proxy/framing_test.go` (Present). A corpus of frames captured from a second parser, rather than invented here, was never collected. Do not invent one to close this row. |
 
 ## Running them
 

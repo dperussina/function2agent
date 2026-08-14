@@ -46,7 +46,19 @@ def load() -> dict:
         return yaml.safe_load(handle)
 
 
-def reconcile(document: dict) -> list[str]:
+def reconcile(
+    document: dict,
+    here: Path | None = None,
+    repo: Path | None = None,
+) -> list[str]:
+    """Every invariant names a test that exists; every test file has a row.
+
+    `here` and `repo` default to this directory and the repository root.
+    Tests pass a planted tree so an emptied checker fails the plant rather
+    than passing over the live set (T198).
+    """
+    here = here if here is not None else HERE
+    repo = repo if repo is not None else REPO
     problems: list[str] = []
     declared: set[str] = set()
 
@@ -64,23 +76,23 @@ def reconcile(document: dict) -> list[str]:
         if not test:
             continue
         declared.add(Path(test).name)
-        if not (REPO / test).exists():
+        if not (repo / test).exists():
             problems.append(f"{entry['id']}: names {test}, which does not exist")
 
         # `also` names an arm this runner cannot execute — a Go test, say.
         # Its existence is still checked, because an invariant whose second
         # arm has been deleted is an invariant that quietly halved.
         also = entry.get("also")
-        if also and not (REPO / also).exists():
+        if also and not (repo / also).exists():
             problems.append(
                 f"{entry['id']}: names a second arm {also}, which does not "
                 "exist. Run it with the toolchain it belongs to."
             )
 
     present = {
-        path.name for path in HERE.glob("test_*.py")
+        path.name for path in here.glob("test_*.py")
     } | {
-        path.name for path in HERE.glob("*.py") if path.name.startswith("test")
+        path.name for path in here.glob("*.py") if path.name.startswith("test")
     }
     for name in sorted(present - declared - NOT_A_TEST):
         problems.append(
