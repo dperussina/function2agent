@@ -255,14 +255,42 @@ def javascript_toolchain_mentions(text: str) -> list[str]:
     return found
 
 
-def test_the_sandbox_image_carries_no_javascript_toolchain() -> None:
-    """The run-time image half, read off the image definition rather than asserted.
+RUNTIME_IMAGES = (
+    REPO / "deploy" / "images" / "sandbox.Dockerfile",
+    REPO / "deploy" / "images" / "runtime.Dockerfile",
+    REPO / "deploy" / "images" / "supervisor.Dockerfile",
+    REPO / "deploy" / "images" / "enforcement.Dockerfile",
+)
 
-    `codegraph` is a Node program. An image with no node, no npm and no
-    `codegraph` cannot run one whatever the code says, which is the same
-    construction `sandbox.Dockerfile` already uses for package indexes: the
-    image removes the *means*, and the egress policy denies the *request*.
+
+def test_run_time_images_carry_no_javascript_toolchain() -> None:
+    """T119: codegraph is an analysis-time producer, absent from run-time images.
+
+    Analysis may grow a JavaScript toolchain when the git-ignored pin is
+    bundleable; these four may not. The named set is the population: a
+    silent shrink is a new run-time image shipping a toolchain un-scanned.
     """
+    assert len(RUNTIME_IMAGES) >= 4
+    names = {path.name for path in RUNTIME_IMAGES}
+    assert names == {
+        "sandbox.Dockerfile",
+        "runtime.Dockerfile",
+        "supervisor.Dockerfile",
+        "enforcement.Dockerfile",
+    }
+    offenders: list[str] = []
+    for path in RUNTIME_IMAGES:
+        mentions = javascript_toolchain_mentions(path.read_text())
+        if mentions:
+            offenders.append(f"{path.name}:\n  " + "\n  ".join(mentions))
+    assert offenders == [], (
+        "T119: `codegraph` is an analysis-time producer and must be absent "
+        "from every run-time image:\n" + "\n".join(offenders)
+    )
+
+
+def test_the_sandbox_image_carries_no_javascript_toolchain() -> None:
+    """Kept as the original named node so T119's removal proof still resolves."""
     text = (REPO / "deploy" / "images" / "sandbox.Dockerfile").read_text()
     mentions = javascript_toolchain_mentions(text)
     assert mentions == [], (

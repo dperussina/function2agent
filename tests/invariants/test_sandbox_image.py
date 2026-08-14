@@ -58,7 +58,23 @@ from src.sandbox.image_policy import (
 )
 
 REPO = Path(__file__).resolve().parents[2]
-SANDBOX = REPO / "deploy" / "images" / "sandbox.Dockerfile"
+IMAGES = REPO / "deploy" / "images"
+SANDBOX = IMAGES / "sandbox.Dockerfile"
+DEV = IMAGES / "dev.Dockerfile"
+
+#: Python product images plus the sandbox. `image_policy.check_path` is
+#: invoked on exactly this set — it is not a directory walk. `dev.Dockerfile`
+#: is the T007 test image and is known SBX-IMG-005 (unpinned GO fetch in the
+#: shipped stage). `enforcement.Dockerfile` is Go; SBX-IMG-001 is a pip-lock
+#: rule and that image's lock is `src/proxy/go.sum`. Both are excluded here
+#: on purpose, and shrinking this tuple is the walk passing over a new
+#: Python image.
+PYTHON_PRODUCT_IMAGES = (
+    SANDBOX,
+    IMAGES / "analysis.Dockerfile",
+    IMAGES / "runtime.Dockerfile",
+    IMAGES / "supervisor.Dockerfile",
+)
 
 #: A minimal image that satisfies every rule. Each planted defect below is this
 #: text plus one violation, so a fired rule is attributable to the change and
@@ -95,6 +111,114 @@ def test_the_sandbox_image_exists() -> None:
 def test_the_committed_sandbox_image_has_no_findings() -> None:
     findings = check_path(SANDBOX)
     assert not findings, "\n".join(str(f) for f in findings)
+
+
+def test_image_policy_walks_a_named_python_set_not_every_dockerfile() -> None:
+    """Checked, not assumed: adding a Dockerfile does not enroll it.
+
+    A directory walk would fail `dev.Dockerfile` (SBX-IMG-005, recorded) and
+    `enforcement.Dockerfile` (SBX-IMG-001: no pip lock). The named set is
+    the population; a silent shrink is a new Python image shipping un-scanned.
+    """
+    assert len(PYTHON_PRODUCT_IMAGES) >= 4
+    names = {path.name for path in PYTHON_PRODUCT_IMAGES}
+    assert names == {
+        "sandbox.Dockerfile",
+        "analysis.Dockerfile",
+        "runtime.Dockerfile",
+        "supervisor.Dockerfile",
+    }
+    for path in PYTHON_PRODUCT_IMAGES:
+        assert path.is_file(), f"{path.name} is named in the walk and missing"
+
+
+def test_each_python_product_image_has_no_findings() -> None:
+    offenders: list[str] = []
+    for path in PYTHON_PRODUCT_IMAGES:
+        findings = check_path(path)
+        if findings:
+            offenders.append(
+                f"{path.name}:\n  " + "\n  ".join(str(f) for f in findings)
+            )
+    assert offenders == [], (
+        "FR-021 findings in a Python product image:\n" + "\n".join(offenders)
+    )
+
+
+def test_runtime_and_dev_share_a_base_and_a_lock() -> None:
+    """T007's one-image rule. T159 creates runtime.Dockerfile; it must honour it."""
+    runtime = IMAGES / "runtime.Dockerfile"
+    assert runtime.is_file(), "T159 owes runtime.Dockerfile; T007 already claimed it"
+    dev_from = [
+        i.body.split()[0]
+        for i in image_policy.parse(DEV.read_text())
+        if i.verb == "FROM"
+    ]
+    runtime_from = [
+        i.body.split()[0]
+        for i in image_policy.parse(runtime.read_text())
+        if i.verb == "FROM"
+    ]
+    assert dev_from, "dev.Dockerfile has no FROM"
+    assert runtime_from, "runtime.Dockerfile has no FROM"
+    assert runtime_from[0] == dev_from[0], (
+        f"runtime starts FROM {runtime_from[0]!r}, dev FROM {dev_from[0]!r}. "
+        "T007: one base, one lock."
+    )
+    assert "requirements.lock" in runtime.read_text()
+    assert "requirements.lock" in DEV.read_text()
+
+
+def test_src_analysis_has_no_main_and_the_image_fails_loud() -> None:
+    """Residual: analysis is a stage. Do not invent a serve loop (OD-36)."""
+    import ast
+
+    mains: list[str] = []
+    for path in sorted((REPO / "src" / "analysis").rglob("*.py")):
+        tree = ast.parse(path.read_text(), filename=str(path))
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef) and node.name == "main":
+                mains.append(path.relative_to(REPO).as_posix())
+    assert mains == [], (
+        "src/analysis/ grew a def main; the analysis image residual is stale:\n  "
+        + "\n  ".join(mains)
+    )
+    text = (IMAGES / "analysis.Dockerfile").read_text()
+    assert "F2A_ANALYSIS_ENTRY" in text
+    assert "no process to start" in text
+    assert "python -m src.analysis.main" not in text
+    assert "ServeEnforcement" not in text
+
+
+def test_enforcement_requires_go_sha256_and_does_not_fetch_in_the_shipped_stage() -> None:
+    """dev.Dockerfile's SBX-IMG-005 must not regress here.
+
+    image_policy is not applied to this file (pip-lock rule). This test is
+    the Go-image equivalent: GO_SHA256 has no default, and the shipped stage
+    does not fetch.
+    """
+    path = IMAGES / "enforcement.Dockerfile"
+    text = path.read_text()
+    instructions = image_policy.parse(text)
+    shipped = image_policy.final_stage(instructions)
+    for inst in instructions:
+        if inst.verb == "ARG" and inst.body.split()[0] == "GO_SHA256":
+            assert inst.stage != shipped or "=" not in inst.body, (
+                "GO_SHA256 carries a default; that is SBX-IMG-005 wearing an ARG"
+            )
+            assert "=" not in inst.body, (
+                "GO_SHA256 has a default. Pass the checksum or fail; do not "
+                "invent one (T096 / SBX-IMG-005)."
+            )
+    shipped_runs = " ".join(
+        i.body for i in instructions if i.verb == "RUN" and i.stage == shipped
+    )
+    for reaching in ("curl", "wget"):
+        assert not re.search(rf"\b{reaching}\b", shipped_runs), (
+            f"the enforcement shipped stage names {reaching!r}"
+        )
+    assert "GO_SHA256 is required" in text
+    assert "ServeEnforcement" in text or "f2a-enforcement" in text
 
 
 def test_the_image_ships_a_shell_and_a_toolchain() -> None:

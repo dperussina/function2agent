@@ -16,10 +16,10 @@ direction:
    without the OD-17 refusal fails.
 
 Dated records that correctly describe a past host are outside the walk
-(frozen-sites ruling). ``deploy/compose/`` is an empty placeholder; T160
-will ship the files. An empty directory is not a pass on compose — a
-named assertion fails the day a compose file appears, forcing it onto
-the walk.
+(frozen-sites ruling). ``deploy/compose/`` is a live surface as of T160;
+its files are on REQUIRED_SURFACES. The empty-directory tripwire is
+retired; its replacement fails if the bundle later offers the whole
+filter or a degraded sandbox.
 """
 
 from __future__ import annotations
@@ -41,6 +41,11 @@ REQUIRED_SURFACES = (
     Path("specs/002-spec-aware-agent-runtime/quickstart.md"),
     Path("specs/002-spec-aware-agent-runtime/plan.md"),
     Path("specs/002-spec-aware-agent-runtime/tasks.md"),
+    Path("deploy/compose/compose.yaml"),
+    Path("deploy/images/analysis.Dockerfile"),
+    Path("deploy/images/runtime.Dockerfile"),
+    Path("deploy/images/supervisor.Dockerfile"),
+    Path("deploy/images/enforcement.Dockerfile"),
 )
 
 #: Live product-and-plan trees a new platform sentence would land in.
@@ -140,9 +145,9 @@ def live_files() -> list[Path]:
 
 def test_every_required_surface_states_linux_only() -> None:
     """The claim cannot be deleted from a surface that already makes it."""
-    assert len(REQUIRED_SURFACES) >= 8, (
+    assert len(REQUIRED_SURFACES) >= 13, (
         "REQUIRED_SURFACES shrank below the set that stated the rule at "
-        "0376820. A shorter list is the required-surface test passing over "
+        "T160. A shorter list is the required-surface test passing over "
         "nothing."
     )
     missing: list[str] = []
@@ -221,22 +226,43 @@ def _compose_files() -> list[Path]:
     return [path for path in compose.rglob("*") if path.is_file()]
 
 
-def test_compose_has_no_files_until_t160() -> None:
-    """T160 ships deploy/compose/. An empty directory is not that.
+def test_compose_bundle_does_not_offer_unconfined_or_a_degraded_sandbox() -> None:
+    """T172 tripwire, retargeted at T160.
 
-    ``deploy/compose/`` exists as an empty placeholder. Walking
-    existing files would pass over it for free. This assertion fails
-    the day a compose file appears, which is the named reason that
-    forces those files onto LIVE_TREES rather than treating absence
-    as a compose audit.
+    The empty-directory assertion failed the day a compose file appeared,
+    which is why those files are on REQUIRED_SURFACES rather than treated
+    as a compose pass by absence. Its job now is: a later edit that
+    offers the whole filter, or a degraded sandbox, still fails. Matched
+    in comments too — an offered alternative in a comment is an offer.
     """
-    files = [path.relative_to(REPO).as_posix() for path in _compose_files()]
-    assert files == [], (
-        "T160 shipped compose files; add deploy/compose/ to LIVE_TREES "
-        "and REQUIRED_SURFACES and delete this assertion. Absence of "
-        "compose files was not a pass on compose. Found:\n  "
-        + "\n  ".join(files)
+    files = [path for path in _compose_files()]
+    assert files, (
+        "T160 shipped compose files and they have gone missing. Absence "
+        "of compose files is not a pass on compose."
     )
+    offenders: list[str] = []
+    for path in files:
+        text = path.read_text()
+        collapsed = _collapsed(text)
+        if "unconfined" in collapsed.lower():
+            offenders.append(f"{path.relative_to(REPO)}: names unconfined")
+        if "degraded sandbox" in collapsed.lower():
+            offenders.append(f"{path.relative_to(REPO)}: offers a degraded sandbox")
+        if "best-effort sandbox" in collapsed.lower():
+            offenders.append(
+                f"{path.relative_to(REPO)}: offers a best-effort sandbox"
+            )
+    assert offenders == [], (
+        "the compose bundle offers a whole-filter or degraded sandbox:\n  "
+        + "\n  ".join(offenders)
+        + "\nFinding 024: the operator's action is the profile this bundle "
+        "ships. A degraded mode is a sandbox missing one of Principle IV "
+        "bullet 1's terms."
+    )
+    compose = REPO / "deploy" / "compose" / "compose.yaml"
+    assert compose in [REPO / p for p in REQUIRED_SURFACES] or any(
+        p.as_posix() == "deploy/compose/compose.yaml" for p in REQUIRED_SURFACES
+    ), "compose.yaml left REQUIRED_SURFACES; the Linux-only claim is then free"
 
 
 def test_dated_records_are_outside_the_walk() -> None:

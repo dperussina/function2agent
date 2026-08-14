@@ -1,0 +1,163 @@
+# T160 — the compose bundle we author (T-11, OD-08).
+#
+# Linux only, no degraded mode (OD-17). Every other platform is unsupported
+# rather than best-effort. Fargate, Cloud Run, ACI and GKE Autopilot expose
+# no operator-changeable seccomp profile, so FR-048's namespace cannot be
+# entered on those surfaces; they are unsupported, not a weaker tier.
+#
+# Four product images plus the sandbox execution-environment image. Analysis,
+# runtime and supervisor are report+exit today (OD-36) except the enforcement
+# point, which ServeEnforcement-listens. No serve loop is invented here.
+#
+# FR-043: the three host:port values under x-fixture-topology are fixture
+# configuration for tests/fixtures/reference-app/, marked unvalidated. They
+# are not product defaults. An operator replaces them with the three
+# identities of their own deployment. Same-host is still three identities
+# (FR-034). Reference-application hostnames are not what this bundle ships.
+#
+# Session store (finding 033 / T159): T016's SessionTable → Repository
+# migration is closed. The first limb — created once, before any second
+# process attaches — is the depends_on below. Supervisor opens sessions.db
+# and exits; runtime and enforcement wait on that completion. They do not
+# start against a missing store concurrently.
+#
+# FR-049 cost, stated rather than narrowed: the supervisor bind of
+# /sys/fs/cgroup is read-write with cgroup: host, which is write access to
+# the host's entire cgroup tree, not a delegated subtree. No route to
+# narrowing that has been found.
+#
+# The operator's seccomp action is a file this bundle ships
+# (seccomp/session.json), referenced by security_opt. Finding 024: Docker's
+# default plus eight names reachable without CAP_SYS_ADMIN, and the clone
+# argument mask removed. Do not reach for CAP_SYS_ADMIN — pivot_root is in
+# no default-profile rule, so the mount tree builds and fails at containment.
+
+name: f2a
+
+x-fixture-topology:
+  # unvalidated (FR-043): fixture configuration, not a product default.
+  F2A_ANALYSIS_ADDR: analysis:8080
+  F2A_RUNTIME_ADDR: runtime:8081
+  F2A_PROXY_UPSTREAM_ADDR: target:9000
+
+services:
+  analysis:
+    image: f2a-analysis:local
+    build:
+      context: ../..
+      dockerfile: deploy/images/analysis.Dockerfile
+    environment:
+      F2A_SOURCE_REF: ${F2A_SOURCE_REF:?required}
+      F2A_DEPLOYMENT_ID: ${F2A_DEPLOYMENT_ID:?required}
+      # unvalidated (FR-043): fixture configuration, not a product default.
+      F2A_ANALYSIS_ADDR: analysis:8080
+      F2A_RUNTIME_ADDR: runtime:8081
+      F2A_PROXY_UPSTREAM_ADDR: target:9000
+    # Holds neither credential plane (FR-036). Does not open the session store.
+
+  supervisor:
+    image: f2a-supervisor:local
+    build:
+      context: ../..
+      dockerfile: deploy/images/supervisor.Dockerfile
+    environment:
+      SANDBOX_MEMORY_MAX: ${SANDBOX_MEMORY_MAX:?required}
+      SANDBOX_CPU_MAX: ${SANDBOX_CPU_MAX:?required}
+      SANDBOX_CPU_TOTAL: ${SANDBOX_CPU_TOTAL:?required}
+      SANDBOX_PIDS_MAX: ${SANDBOX_PIDS_MAX:?required}
+      SESSION_CEILING_SPEND_USD: ${SESSION_CEILING_SPEND_USD:?required}
+      SESSION_CEILING_TOKENS: ${SESSION_CEILING_TOKENS:?required}
+      SESSION_CEILING_WALL_CLOCK_SECONDS: ${SESSION_CEILING_WALL_CLOCK_SECONDS:?required}
+      SESSION_CEILING_TURNS: ${SESSION_CEILING_TURNS:?required}
+      F2A_STATE_DIR: /var/lib/f2a
+      F2A_LOCATION_SET: ${F2A_LOCATION_SET:?required}
+      F2A_TENANT_ID: ${F2A_TENANT_ID:?required}
+      F2A_DEPLOYMENT_ID: ${F2A_DEPLOYMENT_ID:?required}
+      # unvalidated (FR-043): fixture configuration, not a product default.
+      F2A_ANALYSIS_ADDR: analysis:8080
+      F2A_RUNTIME_ADDR: runtime:8081
+      F2A_PROXY_UPSTREAM_ADDR: target:9000
+    volumes:
+      - f2a-state:/var/lib/f2a
+      - type: bind
+        source: /sys/fs/cgroup
+        target: /sys/fs/cgroup
+        read_only: false
+    cgroup: host
+    security_opt:
+      - seccomp=./seccomp/session.json
+    # Holds neither credential plane (FR-036). Opens sessions.db once, then
+    # exits (OD-36). That completion is what runtime and enforcement wait on.
+
+  runtime:
+    image: f2a-runtime:local
+    build:
+      context: ../..
+      dockerfile: deploy/images/runtime.Dockerfile
+    environment:
+      SESSION_CEILING_SPEND_USD: ${SESSION_CEILING_SPEND_USD:?required}
+      SESSION_CEILING_TOKENS: ${SESSION_CEILING_TOKENS:?required}
+      SESSION_CEILING_WALL_CLOCK_SECONDS: ${SESSION_CEILING_WALL_CLOCK_SECONDS:?required}
+      SESSION_CEILING_TURNS: ${SESSION_CEILING_TURNS:?required}
+      TOOL_RESULT_BOUND_TOKENS: ${TOOL_RESULT_BOUND_TOKENS:?required}
+      MODEL_CONTEXT_WINDOW_TOKENS: ${MODEL_CONTEXT_WINDOW_TOKENS:?required}
+      RESULT_RETENTION_MAX_BYTES: ${RESULT_RETENTION_MAX_BYTES:?required}
+      MODEL_PROVIDER: ${MODEL_PROVIDER:?required}
+      MODEL_ID: ${MODEL_ID:?required}
+      MODEL_PRICES_OPERATOR: ${MODEL_PRICES_OPERATOR:?required}
+      F2A_PROVIDER_CREDENTIAL: ${F2A_PROVIDER_CREDENTIAL:?required}
+      REPORTING_WINDOW_SECONDS: ${REPORTING_WINDOW_SECONDS:?required}
+      F2A_STATE_DIR: /var/lib/f2a
+      F2A_TENANT_ID: ${F2A_TENANT_ID:?required}
+      F2A_DEPLOYMENT_ID: ${F2A_DEPLOYMENT_ID:?required}
+      # unvalidated (FR-043): fixture configuration, not a product default.
+      F2A_ANALYSIS_ADDR: analysis:8080
+      F2A_RUNTIME_ADDR: runtime:8081
+      F2A_PROXY_UPSTREAM_ADDR: target:9000
+    volumes:
+      - f2a-state:/var/lib/f2a
+    depends_on:
+      supervisor:
+        condition: service_completed_successfully
+    # Provider plane only. Does not hold F2A_TARGET_CREDENTIAL. Opens
+    # runtime.db, not sessions.db; still waits so a future shared-store
+    # attach cannot race the conversion.
+
+  enforcement:
+    image: f2a-enforcement:local
+    build:
+      context: ../..
+      dockerfile: deploy/images/enforcement.Dockerfile
+      args:
+        GO_SHA256: ${GO_SHA256:?required}
+        TARGETARCH: ${TARGETARCH:?required}
+    environment:
+      F2A_PROXY_LISTEN: ${F2A_PROXY_LISTEN:?required}
+      F2A_PROXY_UPSTREAM_ORIGIN: ${F2A_PROXY_UPSTREAM_ORIGIN:?required}
+      F2A_PROXY_UPSTREAM_ADDR: target:9000
+      F2A_PROXY_POLICY: ${F2A_PROXY_POLICY:?required}
+      F2A_PROXY_SESSION_DB: /var/lib/f2a/sessions.db
+      F2A_PROXY_DECISION_DB: /var/lib/f2a/decisions.db
+      F2A_TARGET_CREDENTIAL: ${F2A_TARGET_CREDENTIAL:?required}
+      F2A_TARGET_CREDENTIAL_HEADER: ${F2A_TARGET_CREDENTIAL_HEADER:?required}
+    volumes:
+      - f2a-state:/var/lib/f2a
+    depends_on:
+      supervisor:
+        condition: service_completed_successfully
+    # Target plane only. F2A_PROXY_LISTEN is a Go env on this service only.
+    # F2A_PROXY_UPSTREAM_ADDR above is the same FR-043 fixture identity.
+
+  sandbox:
+    image: f2a-sandbox:local
+    build:
+      context: ../..
+      dockerfile: deploy/images/sandbox.Dockerfile
+    profiles:
+      - sandbox-build
+    # T096: no ENTRYPOINT, no CMD, no credential, no package index. Listed so
+    # `docker compose build` produces the execution-environment image. Not a
+    # running service. Holds neither credential plane.
+
+volumes:
+  f2a-state:

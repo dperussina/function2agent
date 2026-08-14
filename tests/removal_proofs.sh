@@ -5886,6 +5886,80 @@ proof "T163 selection — driver_for is not called, so the registry is restated"
   "tests/unit/test_provider_select.py::test_select_calls_driver_for_and_does_not_duplicate_the_registry" \
   's = s.replace("        driver=driver_for(provider),", "        driver=object(),")'
 
+# --- T159 / T160, Phase 7 images and compose ---------------------------------
+#
+# Every arm plants rather than reasons, and names a node. A named image walk
+# that shrinks, the one-image rule, analysis inventing a process, an unpinned
+# Go checksum, finding 024's eight names and clone mask, the T172 tripwire
+# retargeted onto unconfined, session-store-once, the credential planes, FR-043
+# fixture marking, FR-049 host cgroupns, compose leaving REQUIRED_SURFACES,
+# and the T119 run-time image population.
+
+proof "T159 walk — PYTHON_PRODUCT_IMAGES drops analysis, so a Python image ships un-scanned" \
+  tests/invariants/test_sandbox_image.py \
+  "tests/invariants/test_sandbox_image.py::test_image_policy_walks_a_named_python_set_not_every_dockerfile" \
+  's = s.replace("    IMAGES / \"analysis.Dockerfile\",\n", "")'
+
+proof "T159 one-image — runtime starts FROM a different base than dev" \
+  deploy/images/runtime.Dockerfile \
+  "tests/invariants/test_sandbox_image.py::test_runtime_and_dev_share_a_base_and_a_lock" \
+  's = s.replace("FROM python:3.12-slim-bookworm AS builder", "FROM python:3.11-slim-bookworm AS builder")'
+
+proof "T159 analysis — the image invents a serve loop instead of failing loud" \
+  deploy/images/analysis.Dockerfile \
+  "tests/invariants/test_sandbox_image.py::test_src_analysis_has_no_main_and_the_image_fails_loud" \
+  's = s.replace("no process to start", "starting analysis")'
+
+proof "T159 enforcement — GO_SHA256 acquires a default, so the checksum is optional" \
+  deploy/images/enforcement.Dockerfile \
+  "tests/invariants/test_sandbox_image.py::test_enforcement_requires_go_sha256_and_does_not_fetch_in_the_shipped_stage" \
+  's = s.replace("ARG GO_SHA256", "ARG GO_SHA256 =deadbeef")'
+
+proof "T160 finding 024 — pivot_root leaves the unconditional eight-name rule" \
+  deploy/compose/seccomp/session.json \
+  "tests/contract/test_compose_bundle.py::test_finding_024_profile_exposes_the_eight_names_without_the_capability_gate" \
+  's = s.replace("        \"pivot_root\",\n", "")'
+
+proof "T160 finding 024 — the non-CAP_SYS_ADMIN clone rule gets its argument mask back" \
+  deploy/compose/seccomp/session.json \
+  "tests/contract/test_compose_bundle.py::test_finding_024_clone_argument_mask_is_removed" \
+  's = s.replace("      \"names\": [\n        \"clone\"\n      ],\n      \"action\": \"SCMP_ACT_ALLOW\",\n      \"excludes\": {\n        \"caps\": [\n          \"CAP_SYS_ADMIN\"\n        ],\n        \"arches\": [\n          \"s390\",\n          \"s390x\"\n        ]\n      }", "      \"names\": [\n        \"clone\"\n      ],\n      \"action\": \"SCMP_ACT_ALLOW\",\n      \"excludes\": {\n        \"caps\": [\n          \"CAP_SYS_ADMIN\"\n        ],\n        \"arches\": [\n          \"s390\",\n          \"s390x\"\n        ]\n      },\n      \"args\": [{\n        \"index\": 0,\n        \"value\": 2114060288,\n        \"op\": \"SCMP_CMP_MASKED_EQ\"\n      }]")'
+
+proof "T160 tripwire — compose offers seccomp=unconfined as an alternative" \
+  deploy/compose/compose.yaml \
+  "tests/contract/test_platform_statement.py::test_compose_bundle_does_not_offer_unconfined_or_a_degraded_sandbox" \
+  's = s.replace("The operator'\''s seccomp action is a file this bundle ships", "The operator may set seccomp=unconfined instead")'
+
+proof "T160 session-store-once — runtime starts without waiting for supervisor" \
+  deploy/compose/compose.yaml \
+  "tests/contract/test_compose_bundle.py::test_the_session_store_is_created_before_any_second_process_attaches" \
+  's = s.replace("    volumes:\n      - f2a-state:/var/lib/f2a\n    depends_on:\n      supervisor:\n        condition: service_completed_successfully\n    # Provider plane only.", "    volumes:\n      - f2a-state:/var/lib/f2a\n    # Provider plane only.")'
+
+proof "T160 planes — analysis holds the provider credential" \
+  deploy/compose/compose.yaml \
+  "tests/contract/test_compose_bundle.py::test_credentials_sit_on_the_right_services_only" \
+  's = s.replace("      F2A_PROXY_UPSTREAM_ADDR: target:9000\n    # Holds neither credential plane (FR-036). Does not open the session store.", "      F2A_PROXY_UPSTREAM_ADDR: target:9000\n      F2A_PROVIDER_CREDENTIAL: ${F2A_PROVIDER_CREDENTIAL:?required}\n    # Holds neither credential plane (FR-036). Does not open the session store.")'
+
+proof "T160 FR-043 — compose names a reference-application hostname" \
+  deploy/compose/compose.yaml \
+  "tests/contract/test_compose_bundle.py::test_fixture_topology_is_marked_unvalidated_not_a_product_default" \
+  's = s.replace("Reference-application hostnames are not what this bundle ships.", "Mealie hostnames are not what this bundle ships.")'
+
+proof "T160 FR-049 — supervisor loses host cgroupns" \
+  deploy/compose/compose.yaml \
+  "tests/contract/test_compose_bundle.py::test_supervisor_alone_gets_the_cgroup_mount_and_the_seccomp_profile" \
+  's = s.replace("    cgroup: host\n", "")'
+
+proof "T172 retarget — compose.yaml leaves REQUIRED_SURFACES" \
+  tests/contract/test_platform_statement.py \
+  "tests/contract/test_platform_statement.py::test_every_required_surface_states_linux_only" \
+  's = s.replace("    Path(\"deploy/compose/compose.yaml\"),\n", "")'
+
+proof "T119 run-time images — RUNTIME_IMAGES drops enforcement" \
+  tests/unit/test_codegraph_invocation.py \
+  "tests/unit/test_codegraph_invocation.py::test_run_time_images_carry_no_javascript_toolchain" \
+  's = s.replace("    REPO / \"deploy\" / \"images\" / \"enforcement.Dockerfile\",\n", "")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
