@@ -32,7 +32,7 @@ here, and lines are not converted into nodes.**
 T119 is now a PARTIAL subprocess wrapper (`src/analysis/codegraph.py`). That
 does not close the gap: the wrapper has never been pointed at this
 application, so **no node or edge count for the reference application has
-ever been taken**. A number derived from 606 lines and U-21's one ratio
+ever been taken**. A number derived from that line count and U-21's one ratio
 would read as a measurement. It is not written here.
 
 **This application is small and is not a scale datapoint.** It does not
