@@ -18,9 +18,11 @@ import "context"
 
 // resolution is what stage 5 computes and stage 6 and stage 7 read.
 type resolution struct {
-	Tier        string
-	OperationID string
-	DenyRuleID  string // set only when the deny list matched
+	Tier            string
+	OperationID     string
+	DenyRuleID      string // set only when the deny list matched
+	MatchedTemplate string
+	SpecMetadata    string
 }
 
 // resolveEffect is the tier resolution, as a pure function of the policy and the call.
@@ -29,26 +31,55 @@ type resolution struct {
 // set AND it matches no entry in the deny list. Everything else is not read_only.
 func resolveEffect(policy *Policy, method, path string) resolution {
 	if policy == nil {
-		return resolution{Tier: tierUnresolved}
+		return resolution{Tier: tierUnresolved, SpecMetadata: emptySpecMetadata}
 	}
-	// The deny list is consulted first. A known side-effecting read is by construction an
-	// operation the served set also describes, so checking the served set first and returning
-	// early would make the deny list unreachable for exactly the calls it exists to stop.
-	if d := policy.MatchDenyEntry(method, path); d != nil {
-		return resolution{Tier: tierReversibleWrite, DenyRuleID: d.RuleID}
-	}
+	// Observation looks the served operation up regardless of the deny-list
+	// hit: the corpus needs the template and the specification metadata even
+	// when the call is denied. The deny list is still what decides the tier.
+	// Returning early from a served-set match would make the deny list
+	// unreachable for exactly the calls it exists to stop; this lookup does
+	// not return.
 	op := policy.MatchOperation(method, path)
+	template := ""
+	opID := ""
+	if op != nil {
+		template = op.PathTemplate
+		opID = op.OperationID
+	}
+	meta := specMetadataOf(op)
+	if d := policy.MatchDenyEntry(method, path); d != nil {
+		if template == "" {
+			template = d.PathTemplate
+		}
+		return resolution{
+			Tier:            tierReversibleWrite,
+			DenyRuleID:      d.RuleID,
+			OperationID:     opID,
+			MatchedTemplate: template,
+			SpecMetadata:    meta,
+		}
+	}
 	if op == nil {
-		return resolution{Tier: tierUnresolved}
+		return resolution{Tier: tierUnresolved, SpecMetadata: emptySpecMetadata}
 	}
 	if !op.Safe || !safeMethods[method] {
 		// The served set describes it, but not as a read. The tier is not read_only and the
 		// call is denied; nothing here tries to distinguish reversible from irreversible,
 		// because both are denied and guessing between them would be a claim with nothing
 		// behind it.
-		return resolution{Tier: tierReversibleWrite, OperationID: op.OperationID}
+		return resolution{
+			Tier:            tierReversibleWrite,
+			OperationID:     op.OperationID,
+			MatchedTemplate: template,
+			SpecMetadata:    meta,
+		}
 	}
-	return resolution{Tier: tierReadOnly, OperationID: op.OperationID}
+	return resolution{
+		Tier:            tierReadOnly,
+		OperationID:     op.OperationID,
+		MatchedTemplate: template,
+		SpecMetadata:    meta,
+	}
 }
 
 // EffectStage is stage 5.
@@ -69,6 +100,8 @@ func (s *EffectStage) Evaluate(_ context.Context, rc *requestContext) (stageResu
 	res := resolveEffect(s.policy, rc.Method, rc.Path)
 	rc.Tier = res.Tier
 	rc.OperationID = res.OperationID
+	rc.MatchedTemplate = res.MatchedTemplate
+	rc.SpecMetadata = res.SpecMetadata
 
 	if res.DenyRuleID != "" {
 		return denyResultWithPolicyRule(RuleKnownSideEffectingRead, res.DenyRuleID,

@@ -165,6 +165,15 @@ OWNERSHIP: tuple[TableOwnership, ...] = (
               "test_import_graph.py keeps the module boundary structural."),
     _own("human_label", ROLE_SHADOW_JUDGE,
          note="Adjudication queue. Same reader restriction."),
+
+    # effect-gate observation → proxy; measurement only.
+    _own("effect_gate_observation", ROLE_PROXY,
+         note="FR-041: the per-request record that is the corpus. "
+              "NEVER read by the success path. The empty reader set is "
+              "the point — T179's exporter is not this slice, and T187 "
+              "will assert this table is structurally apart from every "
+              "success-path table. Written by the proxy at the "
+              "enforcement point; not a second writer of proxy_decision."),
 )
 
 BY_TABLE: Mapping[str, TableOwnership] = {row.table: row for row in OWNERSHIP}

@@ -6525,6 +6525,55 @@ proof "T175 success-path — the planted judge import appends nothing, so a plan
   "tests/batteries/test_judge_differential.py::test_the_success_path_import_scan_fires_on_a_planted_judge_edge" \
   's = s.replace("            found.append(imported)", "            pass")'
 
+# --- T178 — FR-041 per-request observation at the enforcement point ----------
+#
+# The record is the corpus. It is not a second decision log: DecisionRecord
+# already carries tier, rule, method, disposition; observation adds the
+# matched template, the specification metadata, and decision_seq. Every arm
+# plants rather than reasons, names a node, and uses a needle unique in its
+# file. T179–T181 / T176 / T177 / T214 / T215 are not these arms. T175
+# arms above are not retargeted.
+
+go_proof "T178 — observation insert becomes a no-op, so the corpus is empty" \
+  src/proxy/observation.go \
+  "TestEveryDecisionHasAnObservation" \
+  's = s.replace("\t_, err := tx.ExecContext(ctx, `\n\t\tINSERT INTO effect_gate_observation\n\t\t  (decision_seq, resolved_tier, rule_id, matched_template, method, spec_metadata, disposition)\n\t\tVALUES (?,?,?,?,?,?,?)`,\n\t\trec.DecisionSeq,\n\t\trec.ResolvedTier,\n\t\trec.RuleID,\n\t\trec.MatchedTemplate,\n\t\trec.Method,\n\t\trec.SpecMetadata,\n\t\trec.Disposition,\n\t)\n\treturn err", "\treturn nil")'
+
+go_proof "T178 — allows are dropped from the corpus" \
+  src/proxy/observation.go \
+  "TestObservationFiresForAllowAndDeny" \
+  's = s.replace("\treturn disposition == dispositionAllow || disposition == dispositionDeny", "\treturn disposition == dispositionDeny")'
+
+go_proof "T178 — denies are dropped from the corpus" \
+  src/proxy/observation.go \
+  "TestObservationFiresForAllowAndDeny" \
+  's = s.replace("\treturn disposition == dispositionAllow || disposition == dispositionDeny", "\treturn disposition == dispositionAllow")'
+
+go_proof "T178 — the matched operation template is not recorded" \
+  src/proxy/observation.go \
+  "TestObservationCarriesMatchedTemplate" \
+  's = s.replace("\t\tMatchedTemplate: rec.MatchedTemplate,", "\t\tMatchedTemplate: \"\",")'
+
+go_proof "T178 — the specification metadata is emptied" \
+  src/proxy/observation.go \
+  "TestObservationCarriesSpecificationMetadata" \
+  's = s.replace("\t\tSpecMetadata:    meta,", "\t\tSpecMetadata:    emptySpecMetadata,")'
+
+go_proof "T178 — decision_seq is zeroed, so the row is not keyed to a decision" \
+  src/proxy/decisionlog.go \
+  "TestObservationKeysBackToTheDecision" \
+  's = s.replace("\t\tobs := observationFrom(rec, seq)", "\t\tseq = 0\n\t\tobs := observationFrom(rec, seq)")'
+
+go_proof "T178 — a missing observation table no longer fails the request closed" \
+  src/proxy/observation.go \
+  "TestUnwritableObservationFailsClosed" \
+  's = s.replace("\t_, err := tx.ExecContext(ctx, `\n\t\tINSERT INTO effect_gate_observation\n\t\t  (decision_seq, resolved_tier, rule_id, matched_template, method, spec_metadata, disposition)\n\t\tVALUES (?,?,?,?,?,?,?)`,\n\t\trec.DecisionSeq,\n\t\trec.ResolvedTier,\n\t\trec.RuleID,\n\t\trec.MatchedTemplate,\n\t\trec.Method,\n\t\trec.SpecMetadata,\n\t\trec.Disposition,\n\t)\n\treturn err", "\treturn nil")'
+
+go_proof "T178 — the success-path read scan appends nothing, so a planted SELECT is free" \
+  src/proxy/observation_test.go \
+  "TestTheObservationReadScanFiresOnAPlantedSelect" \
+  's = s.replace("\t\t\thits = append(hits, strings.TrimSpace(line))", "\t\t\t_ = line")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"

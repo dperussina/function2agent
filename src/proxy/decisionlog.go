@@ -44,6 +44,13 @@ type DecisionRecord struct {
 	// CredentialFingerprint is a truncated SHA-256 of the target credential, present only on
 	// records for requests that were re-originated. Never the value.
 	CredentialFingerprint string
+
+	// FR-041 extras. Not columns of egress_decision. DecisionLog.Write persists
+	// them on effect_gate_observation with a key back to this decision. The
+	// typed projection (tier, rule, method, disposition) is copied from the
+	// fields above; these two are what the decision log does not already carry.
+	MatchedTemplate string
+	SpecMetadata    string
 }
 
 // RuleID returns the rule identifier. There is no setter: FR-011 requires every disposition to
@@ -155,6 +162,10 @@ func OpenDecisionLog(path string) (*DecisionLog, error) {
 		db.Close()
 		return nil, fmt.Errorf("decisionlog: cannot initialise %q: %w", abs, err)
 	}
+	if _, err := db.Exec(observationSchema); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("decisionlog: cannot initialise observation %q: %w", abs, err)
+	}
 	return &DecisionLog{db: db}, nil
 }
 
@@ -178,7 +189,12 @@ func (l *DecisionLog) Write(ctx context.Context, rec DecisionRecord) error {
 	notifyDecisionObserver(rec)
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	_, err := l.db.ExecContext(ctx, `
+	tx, err := l.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("decisionlog: begin: %w", err)
+	}
+	defer tx.Rollback()
+	res, err := tx.ExecContext(ctx, `
 		INSERT INTO egress_decision
 		  (ts, disposition, rule_id, reason, requirement, method, path, resolved_tier,
 		   session_id, policy_version, absolute_https_denied, credential_fpr, detail)
@@ -199,6 +215,19 @@ func (l *DecisionLog) Write(ctx context.Context, rec DecisionRecord) error {
 	)
 	if err != nil {
 		return fmt.Errorf("decisionlog: write failed: %w", err)
+	}
+	seq, err := res.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("decisionlog: no decision seq: %w", err)
+	}
+	if observationShouldPersist(rec.Disposition) {
+		obs := observationFrom(rec, seq)
+		if err := persistObservation(ctx, tx, obs); err != nil {
+			return fmt.Errorf("observation: write failed: %w", err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("decisionlog: commit: %w", err)
 	}
 	return nil
 }

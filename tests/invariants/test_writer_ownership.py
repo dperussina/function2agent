@@ -78,6 +78,24 @@ def test_the_judge_tables_have_no_readers_in_the_success_path() -> None:
                 ownership.require_read(table, consumer)
 
 
+def test_effect_gate_observation_has_no_success_path_readers() -> None:
+    """FR-041's corpus is measurement. T187 will assert the tables are apart.
+
+    The empty reader set is the same shape as `judge_verdict`: a success-path
+    role that could open it for read could start deciding allow/deny from it.
+    """
+    row = ownership.BY_TABLE["effect_gate_observation"]
+    assert row.writer == ownership.ROLE_PROXY
+    assert row.readers == frozenset(), (
+        f"effect_gate_observation gained reader {sorted(row.readers)}. "
+        "The corpus is not a success-path input."
+    )
+    for consumer in (ownership.ROLE_RUNTIME, ownership.ROLE_SUPERVISOR,
+                     ownership.ROLE_ANALYSIS, ownership.ROLE_SHADOW_JUDGE):
+        with pytest.raises(ownership.OwnershipError):
+            ownership.require_read("effect_gate_observation", consumer)
+
+
 def test_an_undeclared_table_has_no_writer() -> None:
     with pytest.raises(ownership.OwnershipError, match="no declared writer"):
         ownership.writer_of("some_table_nobody_decided")

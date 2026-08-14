@@ -84,6 +84,8 @@ type requestContext struct {
 	SessionID        string
 	Tier             string
 	OperationID      string
+	MatchedTemplate  string
+	SpecMetadata     string
 
 	Request *http.Request
 }
@@ -269,6 +271,8 @@ func (p *Pipeline) record(res stageResult, rc *requestContext, credFingerprint s
 		Detail:                res.detail,
 		AbsoluteHTTPSDenied:   AbsoluteHTTPSDeniedCount(),
 		CredentialFingerprint: credFingerprint,
+		MatchedTemplate:       sanitizeDetail(rc.MatchedTemplate),
+		SpecMetadata:          rc.SpecMetadata,
 	})
 }
 
