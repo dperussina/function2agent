@@ -7134,6 +7134,71 @@ proof "T204 — EIGHT_PRINCIPLES drops Observability, so the eight-principle flo
   tests/contract/test_constitution_recheck.py \
   "tests/contract/test_constitution_recheck.py::test_the_recheck_exists_and_names_all_eight_principles" \
   's = s.replace("    \"Observability Is a Prerequisite\",\n", "")'
+
+# --- T196 — quickstart A–E composed from the harnesses that already close ---
+#
+# T196 names each quickstart validation scenario and calls the batteries
+# that already close its arms. Deleting scenario B, making A an empty
+# pass, or dropping the four-providers assertion fails. A skip is not a
+# pass and not an absence. T198 / T200 / T205 stay [ ]. T193–T195 /
+# T197 / T199 / T201–T204 / T214 / T215 stay [X]. Every arm plants
+# rather than reasons, names a node, and uses a needle unique in its
+# file.
+
+proof "T196 — scenario B is deleted, so a quickstart validation scenario is omitted" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_every_quickstart_scenario_is_present" \
+  's = s.replace("def test_scenario_b_the_write_gate_holds() -> None:", "def _dropped_write_gate_scenario() -> None:")'
+
+proof "T196 — scenario A is an empty pass, so a named scenario no longer composes" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_no_named_scenario_is_an_empty_pass" \
+  's = s.replace("    _compose_scenario_a(tmp_path)", "    pass")'
+
+proof "T196 — the four-providers assertion is dropped, so SC-010 shrinks to a subset" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_scenario_a_asserts_four_independent_providers" \
+  's = s.replace("    four_providers.test_sc010_requires_four_independent_providers()", "    pass")'
+
+proof "T196 instrument — empty_pass_scenarios returns nothing, so an empty A is free" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_the_empty_pass_scanner_fires_on_a_plant" \
+  's = s.replace("def empty_pass_scenarios(tree: ast.AST) -> list[str]:", "def empty_pass_scenarios(tree: ast.AST) -> list[str]:\n    return []")'
+
+proof "T196 — a live verified provider answer is claimed, so T058 PARTIAL looks discharged" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_scenario_a_does_not_claim_a_live_verified_provider_answer" \
+  's = s.replace("LIVE_VERIFIED_PROVIDER_ANSWER_IS_CLAIMED = False", "LIVE_VERIFIED_PROVIDER_ANSWER_IS_CLAIMED = True")'
+
+proof "T196 — T181 threshold is planted set, so SC-014 looks pre-registered" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_t181_stays_unset_and_sc014_is_not_retired" \
+  's = s.replace("T181_THRESHOLD_IS_SET = False", "T181_THRESHOLD_IS_SET = True")'
+
+proof "T196 — SC-014 is planted retired, so an unset threshold looks measured" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_t181_stays_unset_and_sc014_is_not_retired" \
+  's = s.replace("SC014_IS_RETIRED = False", "SC014_IS_RETIRED = True")'
+
+proof "T196 — SC-013 window is planted open, so labels that do not exist look scored" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_sc013_window_stays_closed" \
+  's = s.replace("SC013_WINDOW_IS_OPEN = False", "SC013_WINDOW_IS_OPEN = True")'
+
+proof "T196 — drift clocks are planted fused, so a one-clock tick looks compared across both" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_drift_clocks_are_not_fused_and_e13_never_ran" \
+  's = s.replace("CLOCKS_ARE_FUSED = False", "CLOCKS_ARE_FUSED = True")'
+
+proof "T196 — E13 is planted as having run, so synthetic figures look like live measurements" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_drift_clocks_are_not_fused_and_e13_never_ran" \
+  's = s.replace("E13_RAN = False", "E13_RAN = True")'
+
+proof "T196 — the egress battery is dropped from B, so a skipped arm becomes an absence" \
+  tests/integration/test_quickstart_scenarios.py \
+  "tests/integration/test_quickstart_scenarios.py::test_scenario_b_still_names_the_egress_battery" \
+  's = s.replace("        (\"tests/batteries/test_adversarial_egress.py\", (", "        (\"tests/batteries/test_effect_gate_oracle.py\", (")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"
