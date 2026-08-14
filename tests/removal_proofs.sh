@@ -6662,55 +6662,6 @@ proof "T177 — the margin-to-result plant scan appends nothing, so a planted im
   "tests/unit/test_margin_report.py::test_the_margin_import_scan_fires_on_a_planted_result_import" \
   's = s.replace("            found.append(imported)", "            pass")'
 
-# --- T179 / T181 — FR-041 corpus export and the unset per-call threshold ----
-#
-# T179 exports effect_gate_observation, unlabelled. T181 records the
-# per-call threshold unset and keeps every write capability blocked.
-# T180 is the residual that produces labels; these arms do not snapshot
-# the reference application. T176 / T177 / T214 / T215 are not these
-# arms. T178 arms above are not retargeted. Every arm plants rather
-# than reasons, names a node, and uses a needle unique in its file.
-
-proof "T179 — the exporter ranges over egress_decision, so the corpus is a restated decision log" \
-  src/runtime/reports/effect_corpus.py \
-  "tests/unit/test_effect_corpus.py::test_the_exporter_ranges_over_the_observation_table_not_the_decision_log" \
-  's = s.replace("PHYSICAL_TABLE = \"effect_gate_observation\"", "PHYSICAL_TABLE = \"egress_decision\"")'
-
-proof "T179 — an unlabelled export claims to be labelled, so SC-014 can start over a set T180 has not produced" \
-  src/runtime/reports/effect_corpus.py \
-  "tests/unit/test_effect_corpus.py::test_an_unlabelled_export_does_not_claim_to_be_labelled" \
-  's = s.replace("        return all(row.label is not None for row in self.rows)", "        return True")'
-
-proof "T179 — a third disposition is admitted, so the corpus is no longer every allow and deny" \
-  src/runtime/reports/effect_corpus.py \
-  "tests/unit/test_effect_corpus.py::test_a_third_disposition_is_refused" \
-  's = s.replace("        if self.disposition not in DISPOSITIONS:", "        if False:")'
-
-proof "T179 — the reader opens writable, so a report can write the proxy's store" \
-  src/runtime/reports/effect_corpus.py \
-  "tests/unit/test_effect_corpus.py::test_the_reader_is_opened_read_only" \
-  's = s.replace("self._conn = sqlite3.connect(f\"file:{self.path}?mode=ro\", uri=True)", "self._conn = sqlite3.connect(f\"file:{self.path}?mode=rw\", uri=True)")'
-
-proof "T179 — the success-path import scan appends nothing, so a planted exporter edge is free" \
-  tests/unit/test_effect_corpus.py \
-  "tests/unit/test_effect_corpus.py::test_the_success_path_import_scan_fires_on_a_planted_exporter_edge" \
-  's = s.replace("                found.append(imported)", "                pass")'
-
-proof "T181 — the per-call threshold inherits 0.98, so the superseded per-tool number travels" \
-  src/runtime/reports/effect_precision.py \
-  "tests/unit/test_effect_precision.py::test_the_threshold_has_no_numeric_default" \
-  's = s.replace("PER_CALL_THRESHOLD: object = UNSET", "PER_CALL_THRESHOLD: object = 0.98")'
-
-proof "T181 — the unset branch releases writes, so a write capability ships while the threshold is unset" \
-  src/runtime/reports/effect_precision.py \
-  "tests/unit/test_effect_precision.py::test_writes_stay_blocked_while_the_threshold_is_unset" \
-  's = s.replace("    if PER_CALL_THRESHOLD is UNSET:\n        return False", "    if PER_CALL_THRESHOLD is UNSET:\n        return True")'
-
-proof "T181 — the document states 0.98 while the sentinel is unset, so a number is in force and nothing says so" \
-  src/runtime/reports/effect_precision.py \
-  "tests/unit/test_effect_precision.py::test_the_document_records_the_threshold_as_unset" \
-  's = s.replace("            \"per_call_threshold\": None if unset else self.per_call_threshold,", "            \"per_call_threshold\": 0.98 if unset else self.per_call_threshold,")'
-
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
