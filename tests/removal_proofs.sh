@@ -6012,6 +6012,53 @@ proof "T171 skip — missing docker no longer names the daemon" \
   "tests/integration/test_bundle_failloud.py::test_a_missing_docker_daemon_skip_names_the_daemon" \
   's = s.replace("Docker daemon is absent: `docker` is not on PATH", "docker is not on PATH")'
 
+# --- T164 — SC-010 four-provider US1 battery ---------------------------------
+#
+# Every arm plants rather than reasons, and names a node. A vendor string
+# constant in the battery or the core path, a missing configured model, a
+# three-provider set, a skip, a vendor SDK import, select ignoring
+# MODEL_PROVIDER, and the transport residual returning a body instead of
+# refusing.
+
+proof "T164 battery — a vendor name enters this file as a string constant" \
+  tests/batteries/test_four_providers.py \
+  "tests/batteries/test_four_providers.py::test_the_battery_and_core_path_name_no_vendor" \
+  's = s.replace("CONFIGURATION_ONLY = True", "CONFIGURATION_ONLY = \"anthropic\"")'
+
+proof "T164 core path — loop.py names a vendor as a string constant" \
+  src/runtime/loop.py \
+  "tests/batteries/test_four_providers.py::test_the_battery_and_core_path_name_no_vendor" \
+  's = s.replace("_ANY_PROVIDER = \"\\x00no-prior-provider\"", "_ANY_PROVIDER = \"anthropic\"")'
+
+proof "T164 transport — call returns a body instead of TransportUnavailableError" \
+  src/runtime/providers/base.py \
+  "tests/batteries/test_four_providers.py::test_the_first_turn_transport_is_unavailable" \
+  's = s.replace("        raise TransportUnavailableError(\n            f\"{self.provider}: the transport half of this driver requires \"", "        return {}; raise TransportUnavailableError(\n            f\"{self.provider}: the transport half of this driver requires \"")'
+
+proof "T164 skip — the first-turn arm skips instead of asserting the residual" \
+  tests/batteries/test_four_providers.py \
+  "tests/batteries/test_four_providers.py::test_the_battery_does_not_skip_a_provider" \
+  's = s.replace("    selected = _select(provider)\n    request = selected.driver.build_request(", "    pytest.skip(\"live vendor SDK\")\n    selected = _select(provider)\n    request = selected.driver.build_request(")'
+
+proof "T164 coverage — MODEL_BY_PROVIDER drops a closed provider" \
+  tests/batteries/test_four_providers.py \
+  "tests/batteries/test_four_providers.py::test_every_closed_provider_has_a_configured_model" \
+  's = s.replace("    XAI: \"grok-4.5\",\n", "")'
+
+proof "T164 four — SC-010 accepts three independent providers" \
+  tests/batteries/test_four_providers.py \
+  "tests/batteries/test_four_providers.py::test_sc010_requires_four_independent_providers" \
+  's = s.replace("    assert len(PROVIDERS) == 4, (", "    assert len(PROVIDERS) == 3, (")'
+
+proof "T164 sdk — the battery imports a vendor SDK as a required dependency" \
+  tests/batteries/test_four_providers.py \
+  "tests/batteries/test_four_providers.py::test_the_battery_does_not_import_a_wire_driver_or_vendor_sdk" \
+  's = s.replace("def test_the_residual_is_recorded() -> None:\n    record_evidence(", "def test_the_residual_is_recorded() -> None:\n    import anthropic\n    record_evidence(")'
+
+proof "T164 select — MODEL_PROVIDER is ignored, so every run shares one vendor" \
+  tests/batteries/test_four_providers.py \
+  "tests/batteries/test_four_providers.py::test_the_us1_path_is_selectable_for_every_provider" \
+  's = s.replace("        \"MODEL_PROVIDER\": provider,\n", "        \"MODEL_PROVIDER\": PROVIDERS[0],\n")'
 
 echo
 _verdict="$PASS proved, $FAIL unproven"
