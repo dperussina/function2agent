@@ -6892,7 +6892,28 @@ proof "T191 — an empty live census reports a green adoption share, so zero run
   src/runtime/reports/adoption.py \
   "tests/unit/test_adoption_report.py::test_an_empty_live_census_is_not_a_green_adoption_share" \
   's = s.replace("EMPTY_LIVE_CENSUS_IS_GREEN = False", "EMPTY_LIVE_CENSUS_IS_GREEN = True")'
+
+# --- T187 — measurement tables structurally apart from the success path --
+#
+# Ownership already gives the four tables an empty success-path reader
+# set. T187 makes that emptiness structural: no success-path module
+# imports a writer, and no success-path table names one of the four.
+# Reports, judge, adjudication, batteries and the ownership map stay
+# off the walk. T191 / T214 / T215 are not these arms. Every arm plants
+# rather than reasons, names a node, and uses a needle unique in its
+# file.
+
+proof "T187 — loop.py imports the freeze writer, so a green run can start reading battery_run" \
+  src/runtime/loop.py \
+  "tests/invariants/test_measurement_isolation.py::test_no_success_path_module_imports_a_measurement_writer" \
+  's = s.replace("from src.contracts import terminal", "from src.runtime.batteries.freeze import BatteryFreeze\nfrom src.contracts import terminal")'
+
+proof "T187 — journal.py names judge_verdict, so a success-path table is coupled to a measurement table" \
+  src/runtime/journal.py \
+  "tests/invariants/test_measurement_isolation.py::test_no_success_path_table_references_a_measurement_table" \
+  's = s.replace("TABLE = \"turn_journal\"", "TABLE = \"turn_journal\"\nCOUPLED = \"judge_verdict\"")'
 echo
+
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
 # Named unconditionally when non-zero and never folded into the others, because

@@ -21,8 +21,8 @@
 # supposed to depend on it, and reports UNPROVEN for any test that still passes.
 
 schema_version: "1.0.0"
-version: "1.7.0"
-updated: "2026-08-12"
+version: "1.8.0"
+updated: "2026-08-14"
 
 invariants:
   - id: INV-001
@@ -326,5 +326,34 @@ invariants:
       upward_edges so an equal-or-higher destination is accepted, or make the
       walk read every node instead of tree.body so the declared deferred import
       is reported and the rule fires on the tree's one legitimate escape.
+    runtime: milliseconds
+    model_in_loop: false
+
+  # T187. Ownership already gives the four measurement tables an empty
+  # success-path reader set. That emptiness is a policy until something
+  # walks the tree. This entry is the walk: no success-path module imports
+  # a writer, and no success-path table names one of the four.
+  - id: INV-014
+    discharges: FR-052, FR-041, FR-053, constitution Principle I
+    statement: >
+      The measurement tables — judge_verdict, human_label,
+      effect_gate_observation and battery_run — are structurally apart
+      from the success path. No success-path table references them and
+      no success-path module imports the modules that write them. The
+      model-judge boundary INV-002 already holds for recording modules;
+      this extends that shape to the live loop, serve, session and
+      result writers a green run depends on. Reports that are handed
+      measurement rows, the writer packages, and the ownership map that
+      names the tables are not the success path.
+    test: tests/invariants/test_measurement_isolation.py
+    removal_proof: >
+      Two, both in tests/removal_proofs.sh and both established by
+      planting rather than by reasoning. Plant a success-path import of
+      src.runtime.batteries.freeze in src/runtime/loop.py — the
+      writer-import walk reports it. Plant a "judge_verdict" string in
+      src/runtime/journal.py — the table-name walk reports it. The test
+      file also plants both defects in a synthetic tree so a checker
+      whose prefix list were emptied would fail the planted arms rather
+      than pass over an empty set.
     runtime: milliseconds
     model_in_loop: false
