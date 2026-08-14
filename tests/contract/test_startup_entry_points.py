@@ -25,13 +25,22 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import threading
+import urllib.error
+import urllib.request
+from pathlib import Path
 
 import pytest
 
+from src.analysis.admission import fetch_from_file
 from src.contracts import config as cfg
 from src.contracts.operator_log import EXIT_STARTUP_REFUSED, OperatorLog
+from src.contracts.topology import RUNTIME_ADDR_KEY
 from src.runtime import main as runtime_main
 from src.supervisor import main as supervisor_main
+
+REPO = Path(__file__).resolve().parents[2]
+PUBLISHED_SPEC = REPO / "tests" / "fixtures" / "reference-app" / "served_operations.json"
 
 SUPERVISOR_ENV = {
     "SANDBOX_MEMORY_MAX": "512Mi",
@@ -286,14 +295,18 @@ def test_a_priced_model_names_its_rate_on_the_readiness_report(
         log, tmp_path) -> None:
     """`require_priceable` returns a line rather than `None`, and this is why:
     the rate a session will be charged at is a thing to read *before* the
-    session runs."""
+    session runs. T215 binds after the report; without a bind address the
+    process refuses, and the rate is still on the report that preceded it."""
     env = {**RUNTIME_ENV, "F2A_STATE_DIR": str(tmp_path)}
 
-    assert runtime_main.main(env=env, log=log, today=AS_OF) == 0
+    with pytest.raises(SystemExit) as caught:
+        runtime_main.main(env=env, log=log, today=AS_OF)
 
+    assert caught.value.code == EXIT_STARTUP_REFUSED != 0
     assert "anthropic/claude-sonnet-4-5-20250929 — vendor rate in force on " \
         "2026-08-08" in log.text
     assert "$3.0/MTok in" in log.text
+    assert RUNTIME_ADDR_KEY in log.text
     assert "sk-test-provider-credential-t161" not in log.text, (
         "the provider credential reached the readiness report (FR-036)"
     )
@@ -319,8 +332,10 @@ def test_an_operator_declaration_prices_a_model_no_vendor_page_does(
            "MODEL_ID": "claude-sonnet-99",
            "MODEL_PRICES_OPERATOR": str(declaration)}
 
-    assert runtime_main.main(env=env, log=log, today=AS_OF) == 0
+    with pytest.raises(SystemExit) as caught:
+        runtime_main.main(env=env, log=log, today=AS_OF)
 
+    assert caught.value.code == EXIT_STARTUP_REFUSED != 0
     assert "operator rate in force" in log.text, (
         "the declared rate was admitted but its provenance is not on the "
         "report; a figure from a contract must not read like one from a "
@@ -385,22 +400,34 @@ def test_a_readiness_report_marks_the_unvalidated_values(
     assert "(FR-043)" in log.text
 
 
-@pytest.mark.parametrize("entry", [supervisor_main, runtime_main],
-                         ids=["supervisor", "runtime"])
-def test_exit_zero_does_not_claim_a_running_process(entry, log, monkeypatch,
-                                                    tmp_path) -> None:
-    """Both entry points end in a report rather than in a serve loop, because
-    there is nothing yet to serve. Said in terms, so that an exit 0 is not read
-    as a healthy daemon."""
+def test_the_supervisor_still_exits_after_its_report(log, monkeypatch,
+                                                     tmp_path) -> None:
+    """OD-36 ⑤: the supervisor's closing line is a different absence and
+    is not replaced. An exit 0 here is still not a running supervisor."""
     monkeypatch.setattr(supervisor_main, "preflight", lambda: None)
-    env = {**(SUPERVISOR_ENV if entry is supervisor_main else RUNTIME_ENV),
-           "F2A_STATE_DIR": str(tmp_path)}
-    kwargs = {} if entry is supervisor_main else {"today": AS_OF}
+    env = {**SUPERVISOR_ENV, "F2A_STATE_DIR": str(tmp_path)}
 
-    assert entry.main(env=env, log=log, **kwargs) == 0
+    assert supervisor_main.main(env=env, log=log) == 0
 
     assert "startup complete and this process now exits" in log.text
-    assert "not that a" in log.text
+    assert "no session workload is built" in log.text
+    assert "not that a supervisor is running" in log.text
+
+
+def test_the_runtime_no_longer_exits_after_a_report_only_startup(
+        log, tmp_path) -> None:
+    """OD-36: the runtime's superseded sentence is gone. Required config
+    without a bind address refuses rather than exiting 0 after the report."""
+    assert runtime_main.BINDS_AFTER_STARTUP is True
+    env = {**RUNTIME_ENV, "F2A_STATE_DIR": str(tmp_path)}
+
+    with pytest.raises(SystemExit) as caught:
+        runtime_main.main(env=env, log=log, today=AS_OF)
+
+    assert caught.value.code == EXIT_STARTUP_REFUSED != 0
+    assert "no agent loop is started and no surface is bound" not in log.text
+    assert "Phase 3 and Phase 4 work" not in log.text
+    assert "startup complete and this process now exits" not in log.text
 
 
 @pytest.mark.parametrize("entry", [supervisor_main, runtime_main],
@@ -457,3 +484,153 @@ def test_the_entry_points_read_the_environment_when_not_given_one(
 
     assert "SESSION_CEILING_TURNS" in log.text
     assert os.environ.get("SESSION_CEILING_TURNS") is None
+
+
+# ---------------------------------------------------------------------------
+# T215 — Registry-and-bind after the readiness report (OD-36).
+# ---------------------------------------------------------------------------
+
+
+def _published_spec() -> object:
+    return fetch_from_file(PUBLISHED_SPEC)
+
+
+def _bind_env(tmp_path) -> dict[str, str]:
+    return {
+        **RUNTIME_ENV,
+        "F2A_STATE_DIR": str(tmp_path),
+        RUNTIME_ADDR_KEY: "127.0.0.1:0",
+    }
+
+
+def test_an_admitted_target_constructs_a_registry_and_binds(
+        log, tmp_path) -> None:
+    """Discharge: Registry(, .register(, build_server, view from gate."""
+    bound: list[object] = []
+
+    assert runtime_main.BINDS_AFTER_STARTUP is True
+    assert runtime_main.REGISTRY_IS_CONSTRUCTED is True
+    assert runtime_main.REGISTER_IS_CALLED is True
+    assert runtime_main.BUILD_SERVER_IS_CALLED is True
+    assert runtime_main.VIEW_COMES_FROM_ADMISSION_GATE is True
+
+    code = runtime_main.main(
+        env=_bind_env(tmp_path),
+        log=log,
+        today=AS_OF,
+        fetch_specification=_published_spec,
+        serve=bound.append,
+    )
+
+    assert code == 0
+    assert bound, "build_server returned nothing to serve"
+    server = bound[0]
+    host, port = server.server_address[:2]
+    assert host == "127.0.0.1"
+    assert port > 0
+    assert "surface bound on" in log.text
+    assert "d-1" in log.text
+    assert "no agent loop is started and no surface is bound" not in log.text
+
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        events = urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/sessions/d-1/events", timeout=5
+        )
+        assert events.status == 200
+        assert "session_started" in events.read().decode()
+        with pytest.raises(urllib.error.HTTPError) as result:
+            urllib.request.urlopen(
+                f"http://127.0.0.1:{port}/sessions/d-1/result", timeout=5
+            )
+        assert result.value.code == 409
+        with pytest.raises(urllib.error.HTTPError) as unknown:
+            urllib.request.urlopen(
+                f"http://127.0.0.1:{port}/sessions/test/events", timeout=5
+            )
+        assert unknown.value.code == 404
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_a_missing_bind_address_refuses_rather_than_defaulting(
+        log, tmp_path) -> None:
+    """F2A_RUNTIME_ADDR is an existing key. No localhost:8080 default."""
+    env = {**RUNTIME_ENV, "F2A_STATE_DIR": str(tmp_path)}
+
+    with pytest.raises(SystemExit) as caught:
+        runtime_main.main(
+            env=env, log=log, today=AS_OF,
+            fetch_specification=_published_spec, serve=lambda _s: None,
+        )
+
+    assert caught.value.code == EXIT_STARTUP_REFUSED
+    assert RUNTIME_ADDR_KEY in log.text
+    assert "127.0.0.1:8080" not in log.text
+    assert "8081" not in log.text
+
+
+def test_no_specification_location_is_an_admission_refusal(
+        log, tmp_path) -> None:
+    """Process default is no_location_configured, not a fixture path."""
+    with pytest.raises(SystemExit) as caught:
+        runtime_main.main(
+            env=_bind_env(tmp_path), log=log, today=AS_OF,
+            serve=lambda _s: None,
+        )
+
+    assert caught.value.code == EXIT_STARTUP_REFUSED
+    assert "NOT admitted" in log.text
+    assert "absent" in log.text
+
+
+def test_the_view_is_not_a_hand_built_test_session(log, tmp_path) -> None:
+    """Plant: VIEW_COMES_FROM_ADMISSION_GATE = False invents session_id=test."""
+    assert runtime_main.VIEW_COMES_FROM_ADMISSION_GATE is True
+    bound: list[object] = []
+    runtime_main.main(
+        env=_bind_env(tmp_path),
+        log=log,
+        today=AS_OF,
+        fetch_specification=_published_spec,
+        serve=bound.append,
+    )
+    server = bound[0]
+    host, port = server.server_address[:2]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        with pytest.raises(urllib.error.HTTPError) as unknown:
+            urllib.request.urlopen(
+                f"http://127.0.0.1:{port}/sessions/test/events", timeout=5
+            )
+        assert unknown.value.code == 404
+        events = urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/sessions/d-1/events", timeout=5
+        )
+        assert events.status == 200
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_registry_and_register_and_build_server_are_live_in_src() -> None:
+    """rg-checkable discharge: the constructions are in src/, not comments."""
+    source = Path(runtime_main.__file__).read_text()
+    assert "Registry(" in source
+    assert ".register(" in source
+    assert "build_server(" in source
+    assert source.count("Registry(") >= 1
+    assert runtime_main.BINDS_AFTER_STARTUP is True
+
+
+def test_the_supervisor_closing_line_is_untouched() -> None:
+    """OD-36 ⑤: this task does not replace the supervisor's workload line."""
+    text = Path(supervisor_main.__file__).read_text()
+    assert "no session workload is " in text
+    assert "Admission, the runner handshake and the session lifecycle are " in text
+    assert "Phase 4's (T105-T112)" in text

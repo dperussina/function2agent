@@ -6953,6 +6953,40 @@ proof "T199 — shell_heavy quotes 12.00 µs/notification, a figure T101 did not
   docs/overhead.md \
   "tests/contract/test_overhead.py::test_overhead_md_quotes_t101s_measured_figure" \
   's = s.replace("58.67", "12.00")'
+
+# --- T215 — serving assembly: Registry, admission gate, bind ---------------
+#
+# T215 constructs a Registry, registers a SessionView reached through
+# analysis admission.gate, and calls build_server from main.py. The
+# superseded report+exit sentence is the planted-off branch. T214 is
+# not ticked. T205 stays [ ]. T195 / T197 / T199 stay [X]. Every arm
+# plants rather than reasons, names a node, and uses a needle unique
+# in its file.
+
+proof "T215 — bind is planted off, so the superseded report+exit sentence is the process path again" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_the_runtime_no_longer_exits_after_a_report_only_startup" \
+  's = s.replace("BINDS_AFTER_STARTUP = True", "BINDS_AFTER_STARTUP = False")'
+
+proof "T215 — Registry construction is planted off, so src/ has no live Registry(" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_an_admitted_target_constructs_a_registry_and_binds" \
+  's = s.replace("REGISTRY_IS_CONSTRUCTED = True", "REGISTRY_IS_CONSTRUCTED = False")'
+
+proof "T215 — register is planted off, so the admitted view never reaches the surface" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_an_admitted_target_constructs_a_registry_and_binds" \
+  's = s.replace("REGISTER_IS_CALLED = True", "REGISTER_IS_CALLED = False")'
+
+proof "T215 — build_server is planted off, so the process reports ready and never binds" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_an_admitted_target_constructs_a_registry_and_binds" \
+  's = s.replace("BUILD_SERVER_IS_CALLED = True", "BUILD_SERVER_IS_CALLED = False")'
+
+proof "T215 — the view is a hand-built test session, so admission.gate is not the path" \
+  src/runtime/main.py \
+  "tests/contract/test_startup_entry_points.py::test_the_view_is_not_a_hand_built_test_session" \
+  's = s.replace("VIEW_COMES_FROM_ADMISSION_GATE = True", "VIEW_COMES_FROM_ADMISSION_GATE = False")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"

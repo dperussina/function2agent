@@ -2,10 +2,15 @@
 
 Same anchor as `src/supervisor/main.py` and the same shape:
 `src/proxy/main.go:359` constructs its channel, resolves configuration and
-refuses before it binds. Read that module's docstring first; the two deviations
-from Go recorded there — gathering refusals rather than stopping at the first,
-and ending in a report rather than in a serve loop — hold here too and are not
-restated.
+refuses before it binds. Read that module's docstring first. The first
+deviation from Go recorded there — gathering refusals rather than stopping
+at the first — still holds. The second — ending in a report rather than in
+a serve loop — is the stance **OD-36** supersedes: after the gates pass,
+this process constructs a `Registry`, admits a `SessionView` through
+`src.analysis.admission.gate`, and binds via `serving.build_server`.
+
+The supervisor's closing line is a different absence (session workload) and
+is not replaced here (OD-36 ⑤).
 
 What this file adds is **the startup gates that only the runtime can run**,
 and the answer to the question `tasks.md` left open as the thing a defensible
@@ -43,10 +48,26 @@ moved.
 from __future__ import annotations
 
 import datetime as dt
+import time
+from http.server import ThreadingHTTPServer
 from pathlib import Path
-from typing import Mapping
+from typing import Callable, Mapping
 
-from src.contracts.config import RUNTIME_KEYS, Config, ConfigError, load
+from src.analysis.admission import (
+    AdmissionDecision,
+    FetchResponse,
+    NotAdmitted,
+    check,
+    gate,
+    no_location_configured,
+)
+from src.contracts.config import (
+    RUNTIME_KEYS,
+    TOPOLOGY_KEYS,
+    Config,
+    ConfigError,
+    load,
+)
 from src.contracts.credentials import (
     HOLDER_RUNTIME,
     PLANE_PROVIDER,
@@ -56,12 +77,34 @@ from src.contracts.credentials import (
 )
 from src.contracts.operator_log import OperatorLog
 from src.contracts.secret import Secret
+from src.contracts.topology import RUNTIME_ADDR_KEY
+from src.runtime.events import EventStream
 from src.runtime.providers.base import ProviderError
 from src.runtime.providers.costs import CostTableError, require_priceable
 from src.runtime.providers.select import SelectedProvider, select
 from src.runtime.providers.operator_prices import load_operator_prices
 from src.runtime.result_bound import BoundConfigError, ResultBound
+from src.runtime.serving import Registry, SessionView, SurfaceError, build_server
 from src.runtime.session_store import Ceilings, CeilingsError
+
+# ---------------------------------------------------------------------------
+# Planted flags. Each one is a removal-proof needle. Flipping it is the
+# defect the named T215 test exists to catch. Do not "fix" a proof by
+# making the flag unused: the test reads the flag, then the behaviour.
+# ---------------------------------------------------------------------------
+
+#: The assembly after the readiness report. False restores the superseded
+#: report-and-exit sentence OD-36 replaces.
+BINDS_AFTER_STARTUP = True
+#: `Registry(` is a live construction, not a comment. False drops it.
+REGISTRY_IS_CONSTRUCTED = True
+#: `.register(` puts the admitted view in. False drops the call.
+REGISTER_IS_CALLED = True
+#: `build_server` is called from this process. False skips the bind.
+BUILD_SERVER_IS_CALLED = True
+#: The view's session identity is the admitted deployment, reached through
+#: `gate`. False invents `session_id="test"` — the fixture T215 forbids.
+VIEW_COMES_FROM_ADMISSION_GATE = True
 
 #: The runtime's own store under `F2A_STATE_DIR` — the journal, the ledger and
 #: the ceilings. A different file from the supervisor's `sessions.db` because
@@ -162,25 +205,152 @@ def startup(log: OperatorLog, env: Mapping[str, str] | None = None,
     return config, rate_line
 
 
+def view_from_admission(
+    decision: AdmissionDecision,
+    *,
+    clock: Callable[[], float],
+) -> SessionView:
+    """Wrap an admitted decision as a `SessionView`.
+
+    The session identity is the deployment `check` already required
+    (FR-035). It is not a string this module invented. A rejected
+    decision never reaches here: `gate` is the only caller, and it
+    raises `NotAdmitted` rather than calling `start`.
+    """
+    if not VIEW_COMES_FROM_ADMISSION_GATE:
+        stream = EventStream("test", clock=clock)
+        stream.start()
+        return SessionView(session_id="test", stream=stream)
+    session_id = decision.deployment_id
+    stream = EventStream(session_id, clock=clock)
+    stream.start()
+    return SessionView(session_id=session_id, stream=stream)
+
+
+def _bind_address(env: Mapping[str, str] | None) -> tuple[str, int]:
+    """`F2A_RUNTIME_ADDR` as host, port. Existing key; no invented default.
+
+    The key already lives on `TOPOLOGY_KEYS` (FR-034). It is not added to
+    `RUNTIME_KEYS`: requiring the analysis and target identities here
+    would make this process set values it does not bind. A missing
+    runtime address is a loud refusal, not `127.0.0.1:8080`.
+    """
+    keys = tuple(key for key in TOPOLOGY_KEYS if key.name == RUNTIME_ADDR_KEY)
+    config = load(keys, env=env)
+    raw = str(config[RUNTIME_ADDR_KEY]).strip()
+    host, sep, port_text = raw.rpartition(":")
+    if not sep or not host or not port_text:
+        raise SurfaceError(
+            f"{RUNTIME_ADDR_KEY}={raw!r} is not host:port. FR-034: an "
+            "identity, refused rather than defaulted (FR-043)."
+        )
+    try:
+        port = int(port_text)
+    except ValueError as exc:
+        raise SurfaceError(
+            f"{RUNTIME_ADDR_KEY}={raw!r} has a non-integer port"
+        ) from exc
+    return host, port
+
+
+def _serve_forever(server: ThreadingHTTPServer) -> None:
+    server.serve_forever()
+
+
+def bind_and_serve(
+    config: Config,
+    log: OperatorLog,
+    *,
+    env: Mapping[str, str] | None,
+    fetch_specification: Callable[[], FetchResponse] | None,
+    clock: Callable[[], float],
+    serve: Callable[[ThreadingHTTPServer], None],
+) -> int:
+    """Admit a session into a `Registry` and bind. OD-36's missing step.
+
+    `fetch_specification` is a seam so a test can supply the published
+    specification the analysis admission sequence already knows how to
+    classify. The process default is `no_location_configured` — FR-044's
+    `ABSENT`, refused rather than a path this module invented. There is
+    no specification-location key on `RUNTIME_KEYS`; that absence is a
+    residual, not a silent file path.
+    """
+    try:
+        host, port = _bind_address(env)
+    except (ConfigError, SurfaceError) as exc:
+        log.refuse(f"the bind address is not usable (FR-033, FR-034): {exc}")
+
+    fetch = no_location_configured if fetch_specification is None else fetch_specification
+    decision = check(fetch(), deployment_id=str(config["F2A_DEPLOYMENT_ID"]))
+    try:
+        view = gate(decision, lambda: view_from_admission(decision, clock=clock))
+    except NotAdmitted as exc:
+        log.refuse(exc.decision.operator_message())
+
+    if not REGISTRY_IS_CONSTRUCTED:
+        log.refuse("Registry construction was planted off (T215)")
+    registry = Registry()
+    if REGISTER_IS_CALLED:
+        registry.register(view)
+    if not BUILD_SERVER_IS_CALLED:
+        log.refuse("build_server was planted off (T215)")
+    try:
+        server = build_server(registry, host=host, port=port)
+    except OSError as exc:
+        log.refuse(f"the surface could not bind {host}:{port}: {exc}")
+    except SurfaceError as exc:
+        log.refuse(f"the surface could not bind: {exc}")
+
+    bound_host, bound_port = server.server_address[:2]
+    log.say(
+        f"surface bound on {bound_host}:{bound_port} for admitted "
+        f"session {view.session_id} (FR-033, OD-36)"
+    )
+    serve(server)
+    return 0
+
+
 def main(env: Mapping[str, str] | None = None,
          log: OperatorLog | None = None,
-         today: dt.date | None = None) -> int:
-    """Start the runtime, or refuse loudly and start nothing."""
+         today: dt.date | None = None,
+         *,
+         fetch_specification: Callable[[], FetchResponse] | None = None,
+         clock: Callable[[], float] | None = None,
+         serve: Callable[[ThreadingHTTPServer], None] | None = None) -> int:
+    """Start the runtime, or refuse loudly and start nothing.
+
+    After the gates, this process binds. `serve` defaults to
+    `serve_forever`; a test injects a no-op so the bind is observable
+    without hanging the suite. An exit 0 after a no-op serve means the
+    surface bound, not that a daemon is running. The process entry
+    (`python -m src.runtime.main`) does not return after a successful
+    bind.
+    """
     log = OperatorLog("f2a-runtime") if log is None else log
     log.adopt_thread_exceptions()
 
     config, rate_line = startup(log, env, today)
     log.say(_ready(config, rate_line))
 
-    log.say(
-        "startup complete and this process now exits: no agent loop is "
-        "started and no surface is bound. `serving.build_server` needs a "
-        "registry of live sessions and there is no admission path to fill "
-        "one; the loop, the runner and the provider drivers are Phase 3 and "
-        "Phase 4 work. An exit 0 here means the startup sequence passed, not "
-        "that a runtime is running."
+    if not BINDS_AFTER_STARTUP:
+        log.say(
+            "startup complete and this process now exits: no agent loop is "
+            "started and no surface is bound. `serving.build_server` needs a "
+            "registry of live sessions and there is no admission path to fill "
+            "one; the loop, the runner and the provider drivers are Phase 3 and "
+            "Phase 4 work. An exit 0 here means the startup sequence passed, not "
+            "that a runtime is running."
+        )
+        return 0
+
+    return bind_and_serve(
+        config,
+        log,
+        env=env,
+        fetch_specification=fetch_specification,
+        clock=time.monotonic if clock is None else clock,
+        serve=_serve_forever if serve is None else serve,
     )
-    return 0
 
 
 def _ready(config: Config, rate_line: str) -> str:

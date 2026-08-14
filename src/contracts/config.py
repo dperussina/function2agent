@@ -327,8 +327,10 @@ ANALYSIS_KEYS: tuple[Key, ...] = (
 #: the containers are per-process and these keys name the boundary between
 #: processes. T159/T160 consume them; `src/contracts/topology.py` is the
 #: fail-loud constructor. Adding them to `RUNTIME_KEYS` would make every
-#: runtime start require a listen topology the runtime does not bind
-#: (OD-36: report+exit).
+#: runtime start require the analysis and target identities this process
+#: does not bind. T215 consumes `F2A_RUNTIME_ADDR` from this tuple for
+#: the bind; the other two stay here so a missing analysis address is
+#: not filled from the runtime's (FR-034).
 #:
 #: `F2A_PROXY_LISTEN` is a Go env on the enforcement point — the path to
 #: the target, not a fourth colocated role — and is not declared here.

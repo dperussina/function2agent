@@ -23,8 +23,9 @@ process this tree does not have, arriving through the least-examined door.
 > ### ⚠️ THIS MODULE IS NOT A PROCESS ENTRY POINT, AND THAT IS DELIBERATE
 >
 > There is no `def main`, no `__main__` block, no `[project.scripts]` entry and
-> no socket bound at import. `build_server` binds when a caller calls it, and in
-> this tree the callers are two contract-test modules.
+> no socket bound at import. `build_server` binds when a caller calls it. The
+> process caller is `src/runtime/main.py` (T215, OD-36). Contract tests still
+> call it directly. This module still admits nothing and opens no store.
 >
 > **Two things hang off that and both are recorded rather than acted on.**
 >
@@ -33,10 +34,11 @@ process this tree does not have, arriving through the least-examined door.
 > (FR-005), `_NO_DEFAULT_RESULT_BOUND` (FR-058) and `_NO_DEFAULT_OPERATOR_PRICES`
 > (OD-27) — require a required-value-with-no-default to fail loudly at startup,
 > `src/contracts/config.py::_report` already writes the operator's report, and
-> none of it is reachable because the startup it names does not exist. **This
-> module does not make it reachable.** It reads no configuration key: it takes a
-> `Registry` and a bind address from its caller, and `config.load()` is still
-> called from nowhere in `src/`. `require_priceable` is likewise still uncalled.
+> none of it is reachable from *this* module. **This module does not make it
+> reachable.** It reads no configuration key: it takes a `Registry` and a bind
+> address from its caller. `src/runtime/main.py` is the process that loads
+> configuration, runs `require_priceable`, fills the registry from admission,
+> and calls `build_server`.
 >
 > **OD-28's ground ① is untouched for the same reason.** That deferral expires
 > *"the moment a supervisor process constructs a `SessionTable` against a store
@@ -45,13 +47,11 @@ process this tree does not have, arriving through the least-examined door.
 > concurrent-first-open WAL race stays unreachable and the migration stays
 > deferred on the ground OD-28 states.
 >
-> **What that costs, stated rather than left as an omission.** An operator
-> cannot run this. Serving a session needs a process that loads configuration,
-> builds the runtime, registers a view and calls `build_server` — and that
-> process is the seam, not this file. Delivering T070 with one would have
-> wired the startup preflight and retired OD-28's ground ① in the same commit,
-> on this pass's own authority, which is three decisions this task does not
-> carry.
+> **The process that was missing when T070 landed is `src/runtime/main.py`.**
+> This file still does not open a `SessionTable` (OD-28 stays discharged on
+> the supervisor). A `SessionView` is still handed over already built — the
+> admission path that builds it lives in `main.py`, over
+> `src.analysis.admission.gate`, not here.
 
 ## Refusals are composed from a registry and never from the request
 
@@ -416,8 +416,8 @@ def build_server(
     everywhere has to be typed.
 
     This function is the whole of the surface's lifecycle and it stops here: it
-    does not serve, does not spawn a thread, and is not called from anywhere in
-    `src/`. See the entry-point note in the module docstring.
+    does not serve and does not spawn a thread. `src/runtime/main.py` is the
+    caller that starts it. See the entry-point note in the module docstring.
     """
     if not host or host in ("0.0.0.0", "::", "*"):
         raise SurfaceError(
