@@ -6839,6 +6839,36 @@ proof "T186 — a cross-battery join is performed, so the analysis path mixes ba
   src/runtime/batteries/freeze.py \
   "tests/contract/test_battery_loader.py::test_a_cross_battery_join_fails_rather_than_warns" \
   's = s.replace("CROSS_BATTERY_JOIN_IS_PERFORMED = False", "CROSS_BATTERY_JOIN_IS_PERFORMED = True")'
+
+# --- T188 / T192 — reporting window marked; standing unvalidated catalog --
+#
+# T188 puts FR-045's window in windows.py and marks the operator-typed
+# length when emitted. No default length is invented. T192 names every
+# value still marked unvalidated, with the Linux 5.14 floor as a
+# distinct DERIVED / NOT TESTED kind. T205 is not claimed. T185 / T186
+# stay [X]. T187 / T191 / T214 / T215 are not these arms. Every arm
+# plants rather than reasons, names a node, and uses a needle unique
+# in its file.
+
+proof "T188 — the window length is emitted unmarked, so an operator-typed guess looks measured" \
+  src/runtime/reports/windows.py \
+  "tests/contract/test_unvalidated_marking.py::test_the_reporting_window_length_is_marked_on_the_t130_surface" \
+  's = s.replace("        \"length_seconds\": window.marked_length.marked_record(),", "        \"length_seconds\": window.length_seconds,")'
+
+proof "T192 — the kernel floor is folded into the configured list, so a derived constant looks typed" \
+  src/runtime/reports/unvalidated.py \
+  "tests/unit/test_unvalidated_report.py::test_the_kernel_floor_is_a_distinct_kind_not_a_configured_value" \
+  's = s.replace("            \"configured\": [entry.document() for entry in self.configured],", "            \"configured\": [entry.document() for entry in self.configured] + [self.kernel_floor.document()],")'
+
+proof "T192 — FR-049 bounds are dropped because they lack unvalidated=True, so required guesses vanish" \
+  src/runtime/reports/unvalidated.py \
+  "tests/unit/test_unvalidated_report.py::test_fr049_bounds_appear_though_they_lack_unvalidated_true" \
+  's = s.replace("    for name in sorted(PROVENANCES):", "    for name in sorted(SHIPPED_DEFAULTS):")'
+
+proof "T192 — NOT TESTED is weakened, so a derived floor reads as a tested one" \
+  src/runtime/reports/unvalidated.py \
+  "tests/unit/test_unvalidated_report.py::test_the_kernel_floor_wording_is_not_weaker_than_preflight" \
+  's = s.replace("    \"DERIVED from documented feature introduction and NOT TESTED on that \"", "    \"DERIVED from documented feature introduction and presumed adequate on that \"")'
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"

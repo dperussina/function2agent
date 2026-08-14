@@ -93,6 +93,24 @@ class Unvalidated(Generic[T]):
 # check the external surfaces against, and so adding an unmeasured value is a
 # visible diff in one file.
 
+# Keys that ship a default and are wrapped at load (`Key.unvalidated=True`).
+# Config.unvalidated is exactly this set. Required-with-no-default keys are
+# still FR-043 values — they are marked when reported, not at load — and
+# putting them here would collapse "nobody was asked" into "we shipped a guess".
+SHIPPED_DEFAULTS: frozenset[str] = frozenset({
+    "STALENESS_CEILING_SECONDS",
+    "DRIFT_CHECK_INTERVAL_SECONDS",
+    "CAPABILITY_LEASE_INTERVAL_SECONDS",
+})
+
+# Required, no default (Q-10). An operator-typed number is still unmeasured.
+# Not in Config.unvalidated. mark() wraps them when a surface emits the number.
+MARKED_WHEN_REPORTED: frozenset[str] = frozenset({
+    "REPORTING_WINDOW_SECONDS",
+    "SANDBOX_MEMORY_MAX",
+    "SANDBOX_CPU_MAX",
+})
+
 PROVENANCES: dict[str, str] = {
     "STALENESS_CEILING_SECONDS": (
         "FR-047's stated default. Bound to FR-043 by FR-047 itself so it "
@@ -109,6 +127,28 @@ PROVENANCES: dict[str, str] = {
         "Introduced by research §3.3. The residual authority window after a "
         "supervisor crash is one interval; no measurement establishes what "
         "window is acceptable."
+    ),
+    "REPORTING_WINDOW_SECONDS": (
+        "FR-045 and SC-019 speak of each reporting window with no length "
+        "defined. Loose requirements item 5 records that the absence of a "
+        "window is not stated as deliberate. An operator-typed length is "
+        "still a number with no measurement behind it. Inventing 3600 or "
+        "86400 as a shipped default is the thing Q-10 exists to prevent; "
+        "the key stays required with no default, and the value is marked "
+        "when reported."
+    ),
+    "SANDBOX_MEMORY_MAX": (
+        "FR-049 states no default for either bound and Q-10 was accepted as "
+        "required configuration. Nothing in feature 001's evidence base "
+        "bears on an agent's working set, so any number an operator types "
+        "is still unmeasured. Not a shipped default — Config.unvalidated "
+        "does not list this key."
+    ),
+    "SANDBOX_CPU_MAX": (
+        "FR-049's cpu.max rate. Same class as SANDBOX_MEMORY_MAX: required "
+        "with no default, unmeasured, marked when reported rather than "
+        "wrapped at load. No measurement of a safe co-located-host quota "
+        "exists in feature 001's evidence base."
     ),
 }
 

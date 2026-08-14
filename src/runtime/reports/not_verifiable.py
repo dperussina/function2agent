@@ -106,6 +106,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
 from src.contracts.result import REPORTED_STATE, ReportedState, VerificationOutcome
+from src.runtime.reports.windows import ReportingWindow, interval_document
 from src.runtime.verify import RefusalReason
 
 #: Bumped when a field is added, removed or given a new meaning. Carried on the
@@ -245,49 +246,6 @@ class ReportedOutcome:
 
 
 @dataclass(frozen=True)
-class ReportingWindow:
-    """A fixed-length interval, and whether it has closed.
-
-    FR-045 requires the length to be **fixed** rather than per-report, so that
-    two consecutive reports are comparable. It is required configuration with
-    no default — `REPORTING_WINDOW_SECONDS` in `RUNTIME_KEYS`, whose
-    `no_default_reason` is quoted back to the operator at startup.
-    """
-
-    #: Seconds since the epoch. A number rather than a `datetime` because the
-    #: document is machine-readable and a timezone-naive datetime in JSON is a
-    #: second way to be wrong about an interval.
-    starts_at: float
-    length_seconds: float
-
-    def __post_init__(self) -> None:
-        if self.length_seconds <= 0:
-            raise ReportInputError(
-                f"the reporting window is {self.length_seconds!r} seconds. "
-                "FR-045 rules out an unbounded window and a single window "
-                "covering all of time; a non-positive one is both at once."
-            )
-
-    @property
-    def ends_at(self) -> float:
-        return self.starts_at + self.length_seconds
-
-    def has_closed(self, now: float) -> bool:
-        return now >= self.ends_at
-
-    @classmethod
-    def from_config(cls, config: Any, starts_at: float) -> "ReportingWindow":
-        """Read the length from FR-033's resolved schema and nowhere else.
-
-        Going through `Config` rather than taking a float is what makes the
-        unset case a *startup* failure with its reason quoted, instead of a
-        caller's default arriving here already looking like a decision.
-        """
-        return cls(starts_at=starts_at,
-                   length_seconds=float(config["REPORTING_WINDOW_SECONDS"]))
-
-
-@dataclass(frozen=True)
 class NotVerifiableReport:
     """FR-045's artifact. Every field it names, and no comparison.
 
@@ -346,16 +304,9 @@ class NotVerifiableReport:
             "schema_version": SCHEMA_VERSION,
             "deployment_id": self.deployment_id,
             "tenant_id": self.tenant_id,
-            "interval": {
-                "starts_at": self.window.starts_at,
-                "ends_at": self.window.ends_at,
-                "length_seconds": self.window.length_seconds,
-                # FR-045: a report over a window that has not closed MUST say
-                # so. A partial interval's share is over a smaller population
-                # than the next report's and is not comparable to it.
-                "closed": self.interval_closed,
-                "partial": not self.interval_closed,
-            },
+            "interval": interval_document(
+                self.window, closed=self.interval_closed,
+            ),
             "total_results": self.total_results,
             "not_verifiable_total": self.not_verifiable_total,
             "share": self.share,

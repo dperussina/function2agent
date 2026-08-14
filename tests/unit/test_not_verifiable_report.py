@@ -36,7 +36,9 @@ import pytest
 
 from src.contracts import config as cfg
 from src.contracts.result import REPORTED_STATE, ReportedState, VerificationOutcome
+from src.contracts.unvalidated import is_marked
 from src.runtime.reports import not_verifiable as nv
+from src.runtime.reports.windows import WindowError
 from src.runtime.verify import RefusalReason
 
 WINDOW = nv.ReportingWindow(starts_at=1_000.0, length_seconds=3_600.0)
@@ -239,7 +241,11 @@ def test_the_document_states_the_interval_and_the_total_beside_the_share() -> No
     assert document["not_verifiable_total"] == 2
     assert document["interval"]["starts_at"] == WINDOW.starts_at
     assert document["interval"]["ends_at"] == WINDOW.ends_at
-    assert document["interval"]["length_seconds"] == WINDOW.length_seconds
+    assert is_marked(document["interval"]["length_seconds"]), (
+        "the window length reached the document unmarked. An operator-typed "
+        "length is still a number with no measurement behind it (FR-043)."
+    )
+    assert document["interval"]["length_seconds"]["value"] == WINDOW.length_seconds
     # Recomputable by the reader from the two counts, which is what makes the
     # share checkable rather than merely stated.
     assert (
@@ -411,6 +417,11 @@ def test_the_window_length_is_declared_configuration_with_no_default() -> None:
         "caller's problem rather than a startup failure"
     )
     assert key.default is None
+    assert key.unvalidated is False, (
+        "REPORTING_WINDOW_SECONDS acquired unvalidated=True. That plus a "
+        "default is inventing a length; the key stays required-with-no-default "
+        "and the value is marked when reported."
+    )
     assert key.requirement == "FR-045"
     assert key.no_default_reason and "Q-10" in key.no_default_reason
 
@@ -432,10 +443,15 @@ def test_the_window_is_read_from_configuration_and_not_from_a_number() -> None:
     window = nv.ReportingWindow.from_config(resolved, starts_at=0.0)
     assert window.length_seconds == 900.0
     assert window.ends_at == 900.0
+    from src.runtime.reports.windows import ReportingWindow as WindowType
+    assert nv.ReportingWindow is WindowType, (
+        "T130 and T188 constructed two different window types. There is one "
+        "constructor, in windows.py; not_verifiable re-exports it."
+    )
 
 
 def test_a_window_of_no_length_is_refused() -> None:
     """FR-045 rules out unbounded and all-of-time; zero is both at once."""
     for length in (0.0, -1.0):
-        with pytest.raises(nv.ReportInputError, match="FR-045"):
+        with pytest.raises(WindowError, match="FR-045"):
             nv.ReportingWindow(starts_at=0.0, length_seconds=length)

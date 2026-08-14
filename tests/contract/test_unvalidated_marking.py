@@ -16,8 +16,10 @@ import pytest
 
 from src.contracts import config as cfg
 from src.contracts.unvalidated import (
+    MARKED_WHEN_REPORTED,
     MARKER,
     NAMES,
+    SHIPPED_DEFAULTS,
     Unvalidated,
     UnvalidatedError,
     is_marked,
@@ -32,18 +34,27 @@ def loaded():
 
 
 def test_every_declared_fr043_value_is_in_the_schema(loaded) -> None:
-    assert set(loaded.unvalidated) == NAMES, (
-        "the FR-043 registry and the configuration schema disagree about "
-        f"which values are unmeasured: {set(loaded.unvalidated) ^ NAMES}"
+    """Load-time wrapping is the shipped defaults. The registry is larger.
+
+    Required-with-no-default keys are FR-043 values marked when reported.
+    Putting them in Config.unvalidated would require a shipped default.
+    """
+    assert set(loaded.unvalidated) == SHIPPED_DEFAULTS, (
+        "the shipped-default set and the configuration schema disagree about "
+        f"which values are wrapped at load: {set(loaded.unvalidated) ^ SHIPPED_DEFAULTS}"
     )
-    assert NAMES == {
+    assert SHIPPED_DEFAULTS == {
         "STALENESS_CEILING_SECONDS",
         "DRIFT_CHECK_INTERVAL_SECONDS",
         "CAPABILITY_LEASE_INTERVAL_SECONDS",
     }
+    assert SHIPPED_DEFAULTS <= NAMES
+    assert MARKED_WHEN_REPORTED <= NAMES
+    assert MARKED_WHEN_REPORTED.isdisjoint(loaded.unvalidated)
+    assert NAMES == SHIPPED_DEFAULTS | MARKED_WHEN_REPORTED
 
 
-@pytest.mark.parametrize("name", sorted(NAMES))
+@pytest.mark.parametrize("name", sorted(SHIPPED_DEFAULTS))
 def test_string_interpolation_carries_the_marking(name: str, loaded) -> None:
     """The commonest external surface: an f-string in a log line."""
     value = loaded[name]
@@ -54,7 +65,7 @@ def test_string_interpolation_carries_the_marking(name: str, loaded) -> None:
     assert is_marked("{}".format(value))
 
 
-@pytest.mark.parametrize("name", sorted(NAMES))
+@pytest.mark.parametrize("name", sorted(SHIPPED_DEFAULTS))
 def test_a_format_spec_does_not_strip_the_marking(name: str, loaded) -> None:
     """`f"{interval:.1f}"` is the subtle one: a format spec bypasses __str__."""
     value = loaded[name]
@@ -64,7 +75,7 @@ def test_a_format_spec_does_not_strip_the_marking(name: str, loaded) -> None:
     )
 
 
-@pytest.mark.parametrize("name", sorted(NAMES))
+@pytest.mark.parametrize("name", sorted(SHIPPED_DEFAULTS))
 def test_the_value_cannot_be_coerced_to_a_number_implicitly(name: str, loaded) -> None:
     """An implicit numeric conversion is an unmarked escape.
 
@@ -78,7 +89,7 @@ def test_the_value_cannot_be_coerced_to_a_number_implicitly(name: str, loaded) -
             operation(value)
 
 
-@pytest.mark.parametrize("name", sorted(NAMES))
+@pytest.mark.parametrize("name", sorted(SHIPPED_DEFAULTS))
 def test_a_log_record_carries_the_marking(name: str, loaded, caplog) -> None:
     with caplog.at_level(logging.INFO):
         logging.getLogger("f2a.test").info("configured %s = %s", name, loaded[name])
@@ -86,7 +97,7 @@ def test_a_log_record_carries_the_marking(name: str, loaded, caplog) -> None:
     assert is_marked(caplog.records[0].getMessage())
 
 
-@pytest.mark.parametrize("name", sorted(NAMES))
+@pytest.mark.parametrize("name", sorted(SHIPPED_DEFAULTS))
 def test_the_serialized_shape_carries_the_marking(name: str, loaded) -> None:
     record = loaded[name].marked_record()
     assert record[MARKER] is True
@@ -98,16 +109,31 @@ def test_the_serialized_shape_carries_the_marking(name: str, loaded) -> None:
 
 def test_the_marked_values_map_covers_every_one(loaded) -> None:
     marked = loaded.marked_values()
-    assert set(marked) == NAMES
+    assert set(marked) == SHIPPED_DEFAULTS
     for name, record in marked.items():
         assert record[MARKER] is True, f"{name} emitted unmarked"
 
 
 def test_the_bare_value_requires_an_explicit_call(loaded) -> None:
     """FR-043 does not make the number unusable, it makes reading it an act."""
-    for name in NAMES:
+    for name in SHIPPED_DEFAULTS:
         assert isinstance(loaded.raw(name), float)
         assert loaded.raw(name) == loaded[name].value
+
+
+@pytest.mark.parametrize("name,value", [
+    ("REPORTING_WINDOW_SECONDS", 3600.0),
+    ("SANDBOX_MEMORY_MAX", 512 * 2**20),
+    ("SANDBOX_CPU_MAX", "200000 100000"),
+])
+def test_a_required_no_default_value_is_marked_when_reported(
+        name: str, value: object) -> None:
+    """Q-10 keys are not wrapped at load. mark() still wraps the emitted number."""
+    wrapped = mark(name, value)
+    assert is_marked(wrapped)
+    assert is_marked(wrapped.marked_record())
+    assert is_marked(str(wrapped))
+    assert name in MARKED_WHEN_REPORTED
 
 
 def test_an_unmarked_value_has_no_provenance_to_hide_behind() -> None:
@@ -146,3 +172,22 @@ def test_every_provenance_says_where_the_number_came_from() -> None:
                     "stated default", "research")), (
             f"{name}'s provenance does not say what kind of number it is"
         )
+
+
+def test_the_reporting_window_length_is_marked_on_the_t130_surface() -> None:
+    """T034: if a surface emits the window length, the emission is marked.
+
+    Plant: `interval_document` writes `window.length_seconds` instead of
+    `window.marked_length.marked_record()`. The length arrives as a bare
+    number and this fails.
+    """
+    from src.runtime.reports.windows import ReportingWindow, interval_document
+
+    window = ReportingWindow(starts_at=0.0, length_seconds=3600.0)
+    emitted = interval_document(window, closed=True)["length_seconds"]
+    assert is_marked(emitted), (
+        "the reporting window length was emitted unmarked. An operator-typed "
+        "length is still a number with no measurement behind it."
+    )
+    assert emitted["value"] == 3600.0
+    assert emitted["name"] == "REPORTING_WINDOW_SECONDS"
