@@ -6201,6 +6201,101 @@ proof "T169 image — runtime is pulled from a vendor registry" \
   "tests/integration/test_operator_boundary.py::test_compose_declares_no_external_control_plane" \
   's = s.replace("    image: f2a-runtime:local", "    image: vendor.example.com/f2a-runtime:local")'
 
+# --- T166 — in-container scan (FR-050 not-present, SC-024) --------------------
+#
+# Static half only. The live docker-run arms skip when the daemon is absent
+# or the sandbox image is not loaded, so a proof that named one of those
+# nodes would skip in CI and read as coverage. Every arm plants rather
+# than reasons, names a node, and uses a needle that is unique in its file.
+
+proof "T166 scanner — findings returns no planted values" \
+  tests/batteries/test_in_container_scan.py \
+  "tests/batteries/test_in_container_scan.py::test_the_scanner_catches_a_planted_secret_on_each_surface" \
+  's = s.replace("    caught = [secret for secret in secrets if secret in blob]", "    caught = []")'
+
+proof "T166 surfaces — process_table is dropped from the population" \
+  tests/batteries/test_in_container_scan.py \
+  "tests/batteries/test_in_container_scan.py::test_the_three_surfaces_are_the_population" \
+  's = s.replace("SURFACES = (\n    \"environment\",\n    \"process_table\",\n    \"declared_mounts\",\n)", "SURFACES = (\n    \"environment\",\n    \"declared_mounts\",\n)")'
+
+proof "T166 vacuity — a scan over an empty dump is allowed to pass" \
+  tests/batteries/test_in_container_scan.py \
+  "tests/batteries/test_in_container_scan.py::test_a_scan_over_an_empty_dump_is_refused" \
+  's = s.replace("SCAN_OVER_EMPTY_DUMP_PASSES = False", "SCAN_OVER_EMPTY_DUMP_PASSES = True")'
+
+proof "T166 mounts — /scratch is dropped from the claimed set" \
+  tests/batteries/test_in_container_scan.py \
+  "tests/batteries/test_in_container_scan.py::test_the_scan_claims_only_the_declared_mount_set" \
+  's = s.replace("CLAIMED_MOUNTS = (\n    \"/workspace\",\n    \"/opt/toolchain\",\n    \"/scratch\",\n)", "CLAIMED_MOUNTS = (\n    \"/workspace\",\n    \"/opt/toolchain\",\n)")'
+
+proof "T166 image — provider credential baked into the sandbox ENV" \
+  deploy/images/sandbox.Dockerfile \
+  "tests/batteries/test_in_container_scan.py::test_sandbox_image_holds_neither_credential" \
+  's = s.replace("ENV PYTHONDONTWRITEBYTECODE=1 \\\n    PYTHONUNBUFFERED=1", "ENV PYTHONDONTWRITEBYTECODE=1 \\\n    PYTHONUNBUFFERED=1 \\\n    F2A_PROVIDER_CREDENTIAL=x")'
+
+proof "T166 compose — sandbox injects the provider credential" \
+  deploy/compose/compose.yaml \
+  "tests/batteries/test_in_container_scan.py::test_compose_does_not_inject_credentials_into_sandbox" \
+  's = s.replace("      - sandbox-build\n    # T096: no ENTRYPOINT, no CMD, no credential, no package index. Listed so", "      - sandbox-build\n    environment:\n      F2A_PROVIDER_CREDENTIAL: ${F2A_PROVIDER_CREDENTIAL:?required}\n    # T096: no ENTRYPOINT, no CMD, no credential, no package index. Listed so")'
+
+proof "T166 skip — missing docker no longer names the daemon" \
+  tests/batteries/test_in_container_scan.py \
+  "tests/batteries/test_in_container_scan.py::test_a_missing_docker_daemon_skip_names_the_daemon" \
+  's = s.replace("Docker daemon is absent: `docker` is not on PATH", "docker is not on PATH")'
+
+proof "T166 skip — unloaded image no longer names loaded" \
+  tests/batteries/test_in_container_scan.py \
+  "tests/batteries/test_in_container_scan.py::test_an_unloaded_image_skip_names_the_image" \
+  's = s.replace("f\"Docker daemon is present but none of {tags} is loaded; \"", "f\"Docker daemon is present but none of {tags} is missing; \"")'
+
+# --- T167 — not-inherited later session (FR-050, SC-024) ----------------------
+#
+# Static / in-process half only. The live sequential-run arm skips when the
+# daemon is absent or the sandbox image is not loaded. Isolation without
+# destroy() is the T110 arm, kept in test_session_env.py and re-asserted
+# here; neither file is deleted. Every arm plants rather than reasons,
+# names a node, and uses a needle that is unique in its file.
+
+proof "T167 scanner — findings returns no planted scratch value" \
+  tests/batteries/test_environment_not_inherited.py \
+  "tests/batteries/test_environment_not_inherited.py::test_the_scanner_catches_a_planted_scratch_value" \
+  's = s.replace("    return [secret] if secret in blob else []", "    return []")'
+
+proof "T167 t110 — the SIGKILL arm is renamed out of test_session_env.py" \
+  tests/unit/test_session_env.py \
+  "tests/batteries/test_environment_not_inherited.py::test_t110_session_env_file_still_fires" \
+  's = s.replace("def test_destroy_is_housekeeping_and_isolation_does_not_depend_on_it", "def test_destroy_is_now_the_isolation_mechanism")'
+
+proof "T167 flag — ISOLATION_DEPENDS_ON_DESTROY is flipped" \
+  tests/batteries/test_environment_not_inherited.py \
+  "tests/batteries/test_environment_not_inherited.py::test_nothing_written_in_one_session_is_readable_from_a_later_session" \
+  's = s.replace("ISOLATION_DEPENDS_ON_DESTROY = False", "ISOLATION_DEPENDS_ON_DESTROY = True")'
+
+proof "T167 flag — NEXT_IS_NEW_SESSION is flipped so the successor reuses the id" \
+  tests/batteries/test_environment_not_inherited.py \
+  "tests/batteries/test_environment_not_inherited.py::test_nothing_written_in_one_session_is_readable_from_a_later_session" \
+  's = s.replace("NEXT_IS_NEW_SESSION = True", "NEXT_IS_NEW_SESSION = False")'
+
+proof "T167 crash path — destroy() runs before the successor is created" \
+  tests/batteries/test_environment_not_inherited.py \
+  "tests/batteries/test_environment_not_inherited.py::test_nothing_written_in_one_session_is_readable_from_a_later_session" \
+  's = s.replace("    # T167: no destroy(). Isolation must hold on the crash path (T110).\n    later_id = SUCCESSOR_ID if NEXT_IS_NEW_SESSION else CRASHED_ID", "    envs.destroy(CRASHED_ID)\n    later_id = SUCCESSOR_ID if NEXT_IS_NEW_SESSION else CRASHED_ID")'
+
+proof "T167 paths — SessionEnvironments puts every session under one shared base" \
+  src/supervisor/session_env.py \
+  "tests/batteries/test_environment_not_inherited.py::test_nothing_written_in_one_session_is_readable_from_a_later_session" \
+  's = s.replace("    def _paths(self, session_id: str) -> tuple[Path, Path]:\n        base = self.root / session_id\n        return base / \"scratch\", base / \"run\"", "    def _paths(self, session_id: str) -> tuple[Path, Path]:\n        base = self.root / \"shared\"\n        return base / \"scratch\", base / \"run\"")'
+
+proof "T167 create — reuse is no longer refused" \
+  src/supervisor/session_env.py \
+  "tests/batteries/test_environment_not_inherited.py::test_create_still_refuses_reuse_rather_than_emptying" \
+  's = s.replace("        if scratch.exists():", "        if False:")'
+
+proof "T167 skip — missing docker no longer names the daemon" \
+  tests/batteries/test_environment_not_inherited.py \
+  "tests/batteries/test_environment_not_inherited.py::test_a_missing_docker_daemon_skip_names_the_daemon" \
+  's = s.replace("Docker daemon is absent: `docker` is not on PATH", "docker is not on PATH")'
+
 echo
 _verdict="$PASS proved, $FAIL unproven"
 [ "$SKIP" -gt 0 ] && _verdict="$_verdict, $SKIP skipped"
