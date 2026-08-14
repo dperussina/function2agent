@@ -193,7 +193,7 @@ mkdir -p "$WORK" || exit 1
 # measurement above attached so it need not be re-derived.
 
 #: Every top-level path the work tree must contain. Asserted, not assumed.
-REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github specs .gitignore"
+REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github specs .gitignore README.md"
 
 #: Every top-level path deliberately NOT copied, so that `unlisted_top_level`
 #: can tell "declared unnecessary" from "nobody has looked at it yet". Keeping
@@ -202,10 +202,14 @@ REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github 
 #: right direction for a list nobody is obliged to maintain.
 #:
 #: .git/.venv and the caches are environment. `examples/` is 1.38 GB of vendored
-#: read-only reference repos. `research/`, `docs/`, `README.md`, `LICENSE`,
-#: `.cursor/` and `.specify/` are read by nothing under `tests/`, verified
-#: 2026-08-10 by grep for path literals and for segment joins off a repo-root
-#: variable — the two forms `.github` and `deploy` are reached by.
+#: read-only reference repos. `research/`, `docs/`, `LICENSE`, `.cursor/` and
+#: `.specify/` are read by nothing under `tests/` except as dated records.
+#: **`README.md` left this list under T172** — `tests/contract/test_platform_statement.py`
+#: reads it as a supported-platform surface, the same third form (``REPO / name``)
+#: that moved `.gitignore` onto the copy list. Verified 2026-08-10 by grep for
+#: path literals and for segment joins off a repo-root variable — the two forms
+#: `.github` and `deploy` are reached by — and that verification is what T172
+#: falsified for README.md.
 #:
 #: **That verification was wrong about one entry, and the entry is instructive.**
 #: `.gitignore` sat on this list until 2026-08-11, and
@@ -221,7 +225,7 @@ REQUIRED_PATHS="src tests tools pyproject.toml deploy requirements.lock .github 
 # produces this one in the tree. Recorded as looked-at-and-not-needed so its
 # appearance is not an unrelated failure in the path-accounting guard. It cannot
 # mask a copy-list defect: nothing the suite reads lives in a type-checker cache.
-NOT_NEEDED_PATHS=".git .venv examples research docs README.md LICENSE .cursor .specify .pytest_cache .ruff_cache .mypy_cache"
+NOT_NEEDED_PATHS=".git .venv examples research docs LICENSE .cursor .specify .pytest_cache .ruff_cache .mypy_cache"
 
 # unlisted_top_level <dir> -> the entries of <dir> in neither list, one per line.
 #
