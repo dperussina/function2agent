@@ -1,7 +1,8 @@
 # T159 — the supervisor image. Linux only, no degraded mode (OD-17).
 #
-# Process: `python -m src.supervisor.main`. OD-36 still holds: report+exit;
-# Darwin refuses at preflight. No serve loop is invented here.
+# Process: `python -m src.supervisor.main`. OD-36 ⑤ still holds:
+# report+exit after opening SessionTable. Darwin refuses at preflight.
+# No serve loop is invented here.
 #
 # This image is where a second writer on the session store first becomes
 # possible. T016's SessionTable → Repository migration is closed (session_table
@@ -69,5 +70,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /opt/f2a
 
-# OD-36: report+exit. Linux only, no degraded mode (OD-17).
+# OD-36 ⑤: report+exit after opening SessionTable. Linux only, no
+# degraded mode (OD-17).
 CMD ["python", "-m", "src.supervisor.main"]

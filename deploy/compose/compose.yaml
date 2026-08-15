@@ -5,9 +5,11 @@
 # no operator-changeable seccomp profile, so FR-048's namespace cannot be
 # entered on those surfaces; they are unsupported, not a weaker tier.
 #
-# Four product images plus the sandbox execution-environment image. Analysis,
-# runtime and supervisor are report+exit today (OD-36) except the enforcement
-# point, which ServeEnforcement-listens. No serve loop is invented here.
+# Four product images plus the sandbox execution-environment image. Analysis
+# and supervisor are report+exit today (OD-36). Runtime admits a deployment,
+# constructs a Registry, and binds via build_server (T215); it is no longer
+# report+exit. Supervisor still is (OD-36 ⑤). Enforcement
+# ServeEnforcement-listens. No serve loop is invented here.
 #
 # FR-043: the three host:port values under x-fixture-topology are fixture
 # configuration for tests/fixtures/reference-app/, marked unvalidated. They

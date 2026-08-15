@@ -5990,7 +5990,7 @@ proof "T171 supervisor — CMD no longer invokes the supervisor entry point" \
 proof "T171 runtime — ENTRYPOINT true swallows the fail-loud path" \
   deploy/images/runtime.Dockerfile \
   "tests/integration/test_bundle_failloud.py::test_the_runtime_image_invokes_runtime_main" \
-  's = s.replace("# OD-36: report+exit. Linux only, no degraded mode (OD-17).\nCMD [\"python\", \"-m\", \"src.runtime.main\"]", "# OD-36: report+exit. Linux only, no degraded mode (OD-17).\nENTRYPOINT [\"true\"]\nCMD [\"python\", \"-m\", \"src.runtime.main\"]")'
+  's = s.replace("# T215: binds via build_server. Linux only, no degraded mode (OD-17).\nCMD [\"python\", \"-m\", \"src.runtime.main\"]", "# T215: binds via build_server. Linux only, no degraded mode (OD-17).\nENTRYPOINT [\"true\"]\nCMD [\"python\", \"-m\", \"src.runtime.main\"]")'
 
 proof "T171 compose — runtime tool-result bound acquires a default" \
   deploy/compose/compose.yaml \
@@ -7263,6 +7263,37 @@ proof "T200 instrument — present_locations returns nothing, so the existence w
   tests/contract/test_fixture_inventory.py \
   "tests/contract/test_fixture_inventory.py::test_every_present_location_exists" \
   's = s.replace("    section = _section(text, PRESENT_HEADING, OWED_HEADING)\n    found: list[str] = []", "    return []\n    section = _section(text, PRESENT_HEADING, OWED_HEADING)\n    found: list[str] = []")'
+# --- 0.1.0 release note — T205 deferred, no live vendor, no writes ----------
+#
+# Pins docs/release-0.1.0.md so dropping T205-deferred / NOT TESTED,
+# claiming a live vendor SDK, or claiming writes, fails. T205 stays [ ].
+# Every arm plants rather than reasons, names a node, and uses a needle
+# unique in its file. T189 / T197 style.
+
+proof "0.1.0 — T205 deferral is dropped, so the matrix looks as if it ran" \
+  docs/release-0.1.0.md \
+  "tests/contract/test_release_notes.py::test_t205_stays_deferred_and_not_tested_is_not_dropped" \
+  's = s.replace("T205 is deferred for this release; the matrix was not built.", "T205 ran; the matrix was built.")'
+
+proof "0.1.0 — preflight NOT TESTED pairing is dropped, so 5.14 looks tested" \
+  docs/release-0.1.0.md \
+  "tests/contract/test_release_notes.py::test_t205_stays_deferred_and_not_tested_is_not_dropped" \
+  's = s.replace("DERIVED from documented feature introduction and NOT TESTED on that kernel", "DERIVED from documented feature introduction on that kernel")'
+
+proof "0.1.0 — a live vendor SDK is claimed, so T058 PARTIAL looks shipped" \
+  docs/release-0.1.0.md \
+  "tests/contract/test_release_notes.py::test_the_note_does_not_claim_a_live_vendor_sdk_or_writes" \
+  's = s.replace("**Date: 2026-08-15.** Version `0.1.0` (`pyproject.toml`).", "**Date: 2026-08-15.** Version `0.1.0` (`pyproject.toml`). The live vendor SDK is in requirements.lock.")'
+
+proof "0.1.0 — writes are claimed, so OD-10 looks discharged" \
+  docs/release-0.1.0.md \
+  "tests/contract/test_release_notes.py::test_the_note_does_not_claim_a_live_vendor_sdk_or_writes" \
+  's = s.replace("It is not 1.0.0.", "It is not 1.0.0. v1 performs writes.")'
+
+proof "0.1.0 instrument — live_vendor_hits returns nothing, so a planted SDK claim is free" \
+  tests/contract/test_release_notes.py \
+  "tests/contract/test_release_notes.py::test_the_release_note_scanners_fire_on_a_plant" \
+  's = s.replace("def live_vendor_hits(text: str) -> list[str]:\n    collapsed = _collapsed(text)\n    hits: list[str] = []", "def live_vendor_hits(text: str) -> list[str]:\n    return []\n    collapsed = _collapsed(text)\n    hits: list[str] = []")'
 echo
 
 _verdict="$PASS proved, $FAIL unproven"

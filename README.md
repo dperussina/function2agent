@@ -32,8 +32,12 @@ Python routers, one real application; nothing here reaches another language.
 
 > **Status: discovery is closed, it re-scoped the product to about a tenth of what
 > was planned, and ~~the production spec is now blocked on one more experiment~~ all
-> three of the capabilities it left behind ship without measurement.** No
-> product code exists. Feature `001-discovery-validation` reached nine of the fifteen
+> three of the capabilities it left behind ship without measurement.** ~~No
+> product code exists.~~ **Current (2026-08-15):** feature `002-spec-aware-agent-runtime`
+> is closed except T205, which stays deferred. A process can admit a deployment,
+> bind a serving surface, and produce a cassette-shaped Result. Live vendor
+> transport is not in the lock. The kernel floor is 5.14, DERIVED and NOT TESTED.
+> v1 is read-only. Feature `001-discovery-validation` reached nine of the fifteen
 > positions on its experiment ladder for ~~**$24.82** ($24.73 + $0.09 + $0.0003)~~
 > **≈ $35.17** ($35.0817 + $0.09 + $0.0003) and
 > closed on OD-09. That total is a sum across findings — the ceiling test, E5 and E6
@@ -55,7 +59,9 @@ Python routers, one real application; nothing here reaches another language.
 > The third of them was declared **UNMEASURED** and deferred to production on
 > **OD-14**, which retires OD-11's block on the spec and records the whole disposition
 > as *a deliberate, knowing departure from this project's prove-before-build
-> discipline*. **The next artifact is the production specification again.**
+> discipline*. ~~**The next artifact is the production specification again.**~~
+> **Done 2026-08-14:** the production specification exists at
+> [`specs/002-spec-aware-agent-runtime/`](specs/002-spec-aware-agent-runtime/).
 > **The one that could kill the project came back a tie:** across
 > three families the curated tool surface never won on success rate — 27/27 against
 > 26/27 on lookups, 9/10 against 10/10 on joins, and the shell baseline wins the
@@ -153,6 +159,9 @@ agent claiming success it did not achieve.
 | [`.specify/`](.specify/) | GitHub Spec Kit 0.15.1 scaffolding. Contains the ratified [constitution](.specify/memory/constitution.md). |
 | [`.cursor/skills/`](.cursor/skills/) | 18 project skills encoding the research as decision procedures, plus 10 Spec Kit phase prompts. See the [roster](.cursor/skills/README.md). |
 | [`docs/spec-kit-workflow.md`](docs/spec-kit-workflow.md) | How to drive the spec process. |
+| [`src/`](src/) | The shipped runtime: analysis, runtime, supervisor, contracts, and the Go enforcement point under `src/proxy`. |
+| [`deploy/`](deploy/) | Compose bundle and product images. Linux only, no degraded mode (OD-17). |
+| [`docs/`](docs/) | Operator-facing records: [claims-audit](docs/claims-audit.md), [operator-obligations](docs/operator-obligations.md), [overhead](docs/overhead.md), [sc001-scope](docs/sc001-scope.md), [constitution-recheck](docs/constitution-recheck.md), [open-definitions](docs/open-definitions.md), and the [0.1.0 release note](docs/release-0.1.0.md). |
 | [`tools/`](tools/) | The instruments. [`instruments.py`](tools/instruments.py) is the census of every check that can fail, and the thing that keeps that census from drifting away from [the workflow that runs them](.github/workflows/ci.yml). |
 | `examples/` | Git-ignored. Nine vendored reference repos (codegraph, spec-kit, Google ADK, Anthropic SDK/cookbooks, NVIDIA OO Agents). Read-only. |
 
@@ -160,16 +169,22 @@ agent claiming success it did not achieve.
 
 - **New here?** [`research/README.md`](research/README.md) has reading paths for
   four different situations. Then [`14-architecture-synthesis.md`](research/14-architecture-synthesis.md).
-- **Want the current state?** [`VERDICT.md`](specs/001-discovery-validation/VERDICT.md)
-  adjudicates every success criterion, then [`findings/`](specs/001-discovery-validation/findings/).
+- **Want the current state?** Start at
+  [`quickstart.md`](specs/002-spec-aware-agent-runtime/quickstart.md),
+  [`docs/operator-obligations.md`](docs/operator-obligations.md), and the
+  [0.1.0 release note](docs/release-0.1.0.md). Discovery adjudication is still
+  [`VERDICT.md`](specs/001-discovery-validation/VERDICT.md), then
+  [`findings/`](specs/001-discovery-validation/findings/).
   Each finding opens with its gate verdict and closes with what it does *not* license.
 - **Making an architecture decision?** The synthesis carries a
   [decision register](research/14-architecture-synthesis.md#3-the-decision-register)
   (D-01 … D-22), a contradiction register, and an
   [uncertainty register](research/14-architecture-synthesis.md#5-consolidated-uncertainty-register)
   marking which entries block.
-- **Writing the spec?** [`.specify/memory/constitution.md`](.specify/memory/constitution.md)
+- **Reading the spec?** [`.specify/memory/constitution.md`](.specify/memory/constitution.md)
   first — its four non-negotiable principles are plan gates, not suggestions.
+  The production spec is at
+  [`specs/002-spec-aware-agent-runtime/`](specs/002-spec-aware-agent-runtime/).
 - **Running the checks?** `python3 tools/instruments.py` prints every instrument
   in the repository, what it checks, and where it runs; `--run` runs the fast
   ones and *names the ones it did not run*. Do not work from a remembered list.
@@ -186,6 +201,16 @@ skills in Cursor, invoked with a **hyphen**: `/speckit-specify`, not
 Every experiment pre-registers its gate before it runs; a tie is reported as a tie.
 
 ## Current state
+
+**Current (2026-08-15).** Feature `002-spec-aware-agent-runtime` is built
+except T205, deferred by owner decision: the kernel boot matrix was not
+written, and 5.14 remains DERIVED and NOT TESTED. A process can admit via
+`check`/`gate`, construct a `Registry`, bind via `build_server` (T215), and
+produce a cassette-shaped Result through `verify_quantity` and `result_join`
+(T214). `ProviderDriver.call` still raises `TransportUnavailableError`; no
+vendor SDK is in `requirements.lock` (T058 PARTIAL). Supervisor still
+report+exit after opening `SessionTable` (OD-36 ⑤). Writes are blocked
+(OD-10). Linux only, no degraded mode (OD-17).
 
 **Decided.** Tools invoke the target over its existing external interface
 (HTTP/RPC), never in-process (D-01) — which under OD-09 is not a constraint on a
@@ -352,9 +377,11 @@ one measurable error shape, a side-effecting endpoint reached by a safe method.
    compute is a plain **detection rate** over everything the oracle failed, and this
    corpus has quoted the second where the first was meant — `D_c2 = 10 of 15` is a
    detection rate and is not a number this gate can read.
-2. **Write the production specification, at the OD-09 scope** — it is item 1 again.
-   It inherits **six**
-   things it must settle rather than assume: the general-fallback requirement
+2. ~~**Write the production specification, at the OD-09 scope** — it is item 1 again.~~
+   ✅ **Done 2026-08-14** — the production spec, plan, and task list exist under
+   [`specs/002-spec-aware-agent-runtime/`](specs/002-spec-aware-agent-runtime/).
+   It inherited **six**
+   things it had to settle rather than assume: the general-fallback requirement
    against Principle IV (C-15), ~~"safer" as an assumption rather than a property
    (U-41)~~ **"safer" scoped to hand-written surfaces, with "synthesis is safer"
    forbidden outright (C-18, U-41)**, the effect gate's unmeasured precision, which OD-10 turns into the exit
@@ -380,10 +407,21 @@ one measurable error shape, a side-effecting endpoint reached by a safe method.
    until the sentence lands.~~ ✅ **Done 2026-08-02** — the constitution is at v1.1.0,
    Principle I carries OD-03's sentence, and D-17's four requirements are
    merge-blocking rather than advisory.
-6. **Then feature `002-runtime-and-verifier`** — the loop-safety primitives OD-01
+6. ~~**Then feature `002-runtime-and-verifier`** — the loop-safety primitives OD-01
    priced at 2.5–3.5 weeks (unchanged by the pivot, and now the largest item on the
    critical path, and **not blocked by item 1**), the verifier, the drift detector,
-   and the D-22 gate. `003-synthesis-spike` inherits everything OD-09 deferred.
+   and the D-22 gate. `003-synthesis-spike` inherits everything OD-09 deferred.~~
+   ✅ **Done 2026-08-14/15** — feature 002 is built except T205, which stays
+   deferred. See [`docs/release-0.1.0.md`](docs/release-0.1.0.md).
+7. **T205 remains deferred** — owner decision to measure; 5.14 stays DERIVED
+   and NOT TESTED. The matrix was not built. Not a schedule.
+8. **T058 vendor transport** — `ProviderDriver.call` still raises
+   `TransportUnavailableError`. No vendor SDK is in the lock.
+9. **U-43 / T181** — exit from read-only. Writes stay blocked (OD-10). T181
+   threshold unset.
+10. **U-44** — the target's own API can fetch URLs on the agent's behalf. Open.
+11. **Supervisor session workload** — OD-36 ⑤; supervisor still report+exit
+    after opening `SessionTable`.
 
 The point of feature 001 was to try to kill the idea cheaply. It cost ~~**$24.82**~~
 **≈ $35.17**

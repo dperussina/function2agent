@@ -5,8 +5,9 @@
 # there is answered the same way here. The development image adds test tooling
 # and nothing else; this one drops the toolchain and the test tooling.
 #
-# Process: `python -m src.runtime.main`. OD-36 still holds: report+exit. No
-# serve loop is invented here.
+# Process: `python -m src.runtime.main`. T215: admits, constructs a
+# Registry, and binds via build_server. No longer report+exit. Supervisor
+# still is (OD-36 ⑤). No serve loop is invented here.
 #
 # FR-021: dependencies resolved from the hash-pinned lock in a builder stage.
 # The shipped stage has no package manager, no index, no credential, no
@@ -66,5 +67,5 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /opt/f2a
 USER 65534:65534
 
-# OD-36: report+exit. Linux only, no degraded mode (OD-17).
+# T215: binds via build_server. Linux only, no degraded mode (OD-17).
 CMD ["python", "-m", "src.runtime.main"]
